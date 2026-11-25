@@ -3351,11 +3351,9 @@ ${p.content}
       const p = state.poems.find(x => x.id === id);
       if (!p) return;
       state.bhavPoemId = id;
-      const cleanLines = (p.content || "").split("
-").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
+      const cleanLines = (p.content || "").split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
       state.bhavLinesCount = 4;
-      state.bhavCustomText = cleanLines.slice(0, 4).join("
-");
+      state.bhavCustomText = cleanLines.slice(0, 4).join("\n");
       if (!document.getElementById("bhav-modal").classList.contains("open")) pushAppView("bhav");
       document.getElementById("bhav-modal").classList.add("open");
       renderBhavStudio();
@@ -3369,11 +3367,9 @@ ${p.content}
     function setBhavLinePreset(cnt) {
       const p = state.poems.find(x => x.id === state.bhavPoemId);
       if (!p) return;
-      const cleanLines = (p.content || "").split("
-").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
+      const cleanLines = (p.content || "").split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
       state.bhavLinesCount = cnt;
-      state.bhavCustomText = cleanLines.slice(0, cnt).join("
-");
+      state.bhavCustomText = cleanLines.slice(0, cnt).join("\n");
       renderBhavStudio();
     }
 
@@ -3513,8 +3509,7 @@ ${p.content}
 
         // Poem Lines
         const rawText = (state.bhavCustomText || p.content || "");
-        const rawLines = rawText.split("
-").map(l => l.trim()).filter(Boolean).slice(0, 8);
+        const rawLines = rawText.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 8);
         ctx.fillStyle = pal.text;
         ctx.font = "600 38px 'Noto Serif Devanagari', serif";
         const wrapped = [];
@@ -4912,8 +4907,7 @@ ${p.content}
     function renderMatraPane() {
       const box = document.getElementById("manch-matra");
       if (!box) return;
-      const lines = (state.matraInput || "").split("
-").map(l => l.trim()).filter(Boolean);
+      const lines = (state.matraInput || "").split("\n").map(l => l.trim()).filter(Boolean);
       const analyzed = lines.map(l => ({ line: l, res: analyzeHindiLine(l) }));
 
       box.innerHTML = `
@@ -4950,14 +4944,11 @@ ${p.content}
 
     function setMatraSample(kind) {
       if (kind === "doha") {
-        state.matraInput = "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।
-एक अकेला दीप भी, कर देता उजियास।।";
+        state.matraInput = "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।";
       } else if (kind === "chaupai") {
-        state.matraInput = "मंगल भवन अमंगल हारी।
-द्रवहु सुदसरथ अजिर बिहारी।।";
+        state.matraInput = "मंगल भवन अमंगल हारी।\nद्रवहु सुदसरथ अजिर बिहारी।।";
       } else if (kind === "harigeetika") {
-        state.matraInput = "संसार की समरस्थली में, धीरता धारण करो।
-चलते हुए निज इष्ट पथ पर, संकटों से मत डरो।।";
+        state.matraInput = "संसार की समरस्थली में, धीरता धारण करो।\nचलते हुए निज इष्ट पथ पर, संकटों से मत डरो।।";
       }
       renderMatraPane();
     }
