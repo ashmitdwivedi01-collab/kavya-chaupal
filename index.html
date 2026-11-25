@@ -753,6 +753,93 @@
     .vidha-group-header { display: flex; align-items: center; gap: 8px; margin: 18px 0 10px; font-family: 'Yatra One', serif; font-size: 18px; color: var(--primary); }
     .vidha-group-header::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
+    /* ================= STRUCTURED POET & ADMIN BIO CARD ================= */
+    .profile-quote {
+      position: relative;
+      margin: 12px 0 0;
+      padding: 12px 15px;
+      border-radius: 14px;
+      background: rgba(243, 212, 126, 0.12);
+      border-left: 3.5px solid #F7DC8B;
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: #FFF8EA;
+      white-space: pre-line;
+      font-style: italic;
+    }
+    .bio-card {
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .bio-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (min-width: 560px) {
+      .bio-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .bio-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .bio-item.full { grid-column: 1 / -1; }
+    .bio-ic {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--gold-soft);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .bio-lbl {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 2px;
+      letter-spacing: 0.2px;
+    }
+    .bio-val {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre-line;
+      word-break: break-word;
+    }
+    .vidha-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .template-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 11px 13px;
+      border-radius: 14px;
+      background: var(--gold-soft);
+      border: 1.5px dashed var(--gold);
+      margin-bottom: 14px;
+    }
+
     /* ================= ABOUT & SOCIAL CARDS ================= */
     .about-banner {
       background: radial-gradient(circle at 50% 10%, rgba(246, 218, 134, 0.28), transparent 60%), linear-gradient(150deg, #5F1018 0%, #31070C 68%, #1C0814 100%);
@@ -1202,9 +1289,54 @@
     };
 
     const DEFAULT_POETS = [
-      { id: "poet_rahul", name: "राहुल द्विवेदी 'स्मित'", city: "लखनऊ, उत्तर प्रदेश", photo: "", bio: "लखनऊ से जुड़े गीतकार, कवि एवं 'काव्य चौपाल' के संस्थापक। गीत, छंद, दोहा और संवेदनशील हिंदी काव्य के माध्यम से साहित्यिक परंपरा को डिजिटल मंच पर समृद्ध करने के लिए निरंतर सक्रिय।" },
-      { id: "poet_dheeraj", name: "धीरज श्रीवास्तव", city: "मनकापुर, गोण्डा", photo: "", bio: "वरिष्ठ गीतकार, छंद मर्मज्ञ एवं काव्य चौपाल की कार्यशालाओं के मार्गदर्शक। इनकी रचनाओं में लोकसंवेदना, जीवन-दर्शन और शास्त्रीय लय का अद्भुत संगम मिलता है।" },
-      { id: "poet_sunita", name: "डॉ० सुनीता आजमगढ़ी", city: "आजमगढ़, उत्तर प्रदेश", photo: "", bio: "प्रतिष्ठित कवयित्री एवं काव्य चौपाल की मासिक काव्य गोष्ठियों की संयोजिका। आपकी रचनाएँ समाज, संवेदना और मानवीय मूल्यों को सहज स्वर देती हैं।" }
+      {
+        id: "poet_rahul",
+        name: "राहुल द्विवेदी 'स्मित'",
+        birth: "11 जनवरी 1987",
+        city: "लखनऊ, उत्तर प्रदेश",
+        education: "",
+        occupation: "संस्थापक — काव्य चौपाल एवं स्वतंत्र लेखन",
+        mainGenres: "गीत, दोहा, छंद, नवगीत",
+        publications: "विभिन्न साझा काव्य संकलनों में रचनाएँ प्रकाशित",
+        awards: "साहित्यिक मंचों द्वारा विविध सम्मान",
+        special: "डिजिटल माध्यम से हिंदी कविता, छंद कार्यशालाओं एवं नवांकुर रचनाकारों के प्रोत्साहन हेतु निरंतर सक्रिय।",
+        quote: "साँझ की मैं देहरी पर प्राण देकर जा रहा था,\nरात्रि के सूने प्रहर में प्राण लेकर आ गये तुम।।",
+        socialLink: "https://www.facebook.com/KavyaChaupal",
+        photo: "",
+        bio: ""
+      },
+      {
+        id: "poet_dheeraj",
+        name: "धीरज श्रीवास्तव",
+        birth: "",
+        city: "मनकापुर, गोण्डा",
+        education: "",
+        occupation: "वरिष्ठ गीतकार एवं छंद मार्गदर्शक",
+        mainGenres: "गीत, छंद, ग़ज़ल",
+        publications: "",
+        awards: "",
+        special: "काव्य चौपाल की साप्ताहिक छंद कार्यशालाओं के वरिष्ठ मार्गदर्शक एवं संचालक।",
+        quote: "",
+        socialLink: "",
+        photo: "",
+        bio: "इनकी रचनाओं में लोकसंवेदना, जीवन-दर्शन और शास्त्रीय लय का अद्भुत संगम मिलता है।"
+      },
+      {
+        id: "poet_sunita",
+        name: "डॉ० सुनीता आजमगढ़ी",
+        birth: "",
+        city: "आजमगढ़, उत्तर प्रदेश",
+        education: "पीएच.डी.",
+        occupation: "कवयित्री एवं संयोजिका (मासिक काव्य गोष्ठी)",
+        mainGenres: "कविता, गीत, मुक्तक",
+        publications: "",
+        awards: "",
+        special: "काव्य चौपाल की मासिक काव्य गोष्ठियों एवं सजीव कवि सम्मेलनों के संयोजन में अग्रणी भूमिका।",
+        quote: "",
+        socialLink: "",
+        photo: "",
+        bio: ""
+      }
     ];
 
     const DEFAULT_ADMINS = [
@@ -1923,6 +2055,87 @@
     function setPoetProfileGenre(g) { state.poetProfileGenre = g; renderPoetDetail(state.activePoetName); }
     function setPoetAllViewMode(mode) { state.poetAllViewMode = mode; renderPoetDetail(state.activePoetName); }
 
+    function renderStructuredBioCard(person, titleText) {
+      const items = [];
+      if (person.birth && person.birth.trim()) {
+        items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });
+      }
+      if (person.city && person.city.trim()) {
+        items.push({ ic: "📍", lbl: "स्थान", val: esc(person.city), full: false });
+      }
+      if (person.education && person.education.trim()) {
+        items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });
+      }
+      if (person.occupation && person.occupation.trim()) {
+        items.push({ ic: "💼", lbl: "सम्प्रति", val: esc(person.occupation), full: false });
+      }
+      if (person.mainGenres && person.mainGenres.trim()) {
+        const pills = person.mainGenres.split(/[,،、|]/).map(s => s.trim()).filter(Boolean);
+        const pillsHtml = `<div class="vidha-pills-row">${pills.map(g => `<span class="mini-badge">❖ ${esc(g)}</span>`).join("")}</div>`;
+        items.push({ ic: "✒️", lbl: "मुख्य विधा", val: pillsHtml, raw: true, full: true });
+      }
+      if (person.publications && person.publications.trim()) {
+        items.push({ ic: "📚", lbl: "प्रकाशित कृतियाँ", val: esc(person.publications), full: true });
+      }
+      if (person.awards && person.awards.trim()) {
+        items.push({ ic: "🏆", lbl: "प्रमुख सम्मान", val: esc(person.awards), full: true });
+      }
+      if (person.special && person.special.trim()) {
+        items.push({ ic: "✨", lbl: "विशेष", val: esc(person.special), full: true });
+      }
+      if (person.bio && person.bio.trim()) {
+        items.push({ ic: "📜", lbl: "संक्षिप्त परिचय", val: esc(person.bio), full: true });
+      }
+
+      if (!items.length && !(person.socialLink && person.socialLink.trim())) return "";
+
+      return `
+        <div class="bio-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            <h3 class="section-title" style="margin:0;">📜 ${titleText || "साहित्यिक परिचय"}</h3>
+            ${person.socialLink && person.socialLink.trim()
+              ? `<a class="clear-filter-btn" style="text-decoration:none;" href="${esc(person.socialLink)}" target="_blank" rel="noopener noreferrer">🔗 सोशल प्रोफ़ाइल ↗</a>`
+              : ""}
+          </div>
+          ${items.length ? `
+            <div class="bio-grid">
+              ${items.map(it => `
+                <div class="bio-item ${it.full ? "full" : ""}">
+                  <div class="bio-ic">${it.ic}</div>
+                  <div style="min-width:0; flex:1;">
+                    <div class="bio-lbl">${it.lbl}</div>
+                    <div class="bio-val">${it.raw ? it.val : it.val}</div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function copyBioTemplate() {
+      const tpl = `✨ *काव्य चौपाल — कवि परिचय प्रपत्र* ✨
+कृपया अपना संक्षिप्त परिचय नीचे दिए गए बिंदुओं में भरकर भेजें (अधिकतम 1-2 पंक्तियाँ प्रति बिंदु):
+
+• *नाम एवं उपनाम:* 
+• *जन्म (तिथि/स्थान):* 
+• *वर्तमान स्थान (शहर, राज्य):* 
+• *शिक्षा (वैकल्पिक):* 
+• *सम्प्रति (वर्तमान कार्य/पद):* 
+• *मुख्य विधा (जैसे: गीत, दोहा, ग़ज़ल, छंद):* 
+• *प्रकाशित कृतियाँ (यदि हों):* 
+• *प्रमुख सम्मान (यदि हों):* 
+• *विशेष (संक्षिप्त साहित्यिक योगदान):* 
+• *काव्य-मुद्रा (आपकी प्रिय 2 पंक्तियाँ):* 
+• *सोशल मीडिया लिंक (वैकल्पिक):* 
+
+*(कृपया साथ में अपनी एक स्पष्ट फ़ोटो भी संलग्न करें।)*`;
+      navigator.clipboard.writeText(tpl)
+        .then(() => showToast("परिचय प्रपत्र कॉपी हो गया! अब WhatsApp पर पेस्ट करें 📋"))
+        .catch(() => showToast("कॉपी नहीं हो सका"));
+    }
+
     function renderPoetDetail(poetName) {
       const container = document.getElementById("poet-detail-view");
       const pt = getAllPoetObjects().find(p => p.name === poetName) || { name: poetName, city: "", bio: "", photo: "" };
@@ -1949,6 +2162,8 @@
         poemsSectionHtml = `<div class="cards-grid two-col">${(genreMap[state.poetProfileGenre] || []).map(poemCardHTML).join("")}</div>`;
       }
 
+      const bioCardHtml = renderStructuredBioCard(pt, "कवि परिचय");
+
       container.innerHTML = `
         <button class="back-bar" onclick="closePoetDetail()">← सभी कवि</button>
         <div class="profile-hero">
@@ -1956,15 +2171,17 @@
             <div class="avatar-lg">${av}</div>
             <div>
               <h2 class="profile-name">${esc(pt.name)}</h2>
+              ${pt.occupation ? `<div class="profile-sub" style="color:#FCE29A; font-weight:600;">${esc(pt.occupation)}</div>` : ""}
               <div class="profile-sub">📍 ${esc(pt.city || "काव्य चौपाल परिवार")}</div>
             </div>
           </div>
-          <p class="profile-bio">${esc(pt.bio || "काव्य चौपाल के सम्मानित रचनाकार।")}</p>
+          ${pt.quote && pt.quote.trim() ? `<div class="profile-quote">“${esc(pt.quote)}”</div>` : ""}
           <div class="profile-stats">
             <span class="stat-pill">📜 कुल रचनाएँ: ${allPoems.length}</span>
             <span class="stat-pill">❖ विधाएँ: ${poetGenres.length}</span>
           </div>
         </div>
+        ${bioCardHtml}
         <div class="section-head">
           <h3 class="section-title">✦ विधावार एवं सम्पूर्ण रचना संसार</h3>
           ${state.poetProfileGenre === "सम्पूर्ण" && poetGenres.length > 1 ? `
@@ -2292,6 +2509,7 @@
       if (!a) { closeAdminDetail(); return; }
       const av = a.photo ? `<img src="${a.photo}" alt="${esc(a.name)}">` : esc(initials(a.name));
       const theirPoems = state.poems.filter(p => p.poet === a.name);
+      const bioCardHtml = renderStructuredBioCard(a, "व्यक्तिगत एवं साहित्यिक परिचय");
 
       container.innerHTML = `
         <button class="back-bar" onclick="closeAdminDetail()">← एडमिन मण्डल सूची</button>
@@ -2304,12 +2522,13 @@
               <div class="profile-sub">📍 ${esc(a.city || "काव्य चौपाल")}</div>
             </div>
           </div>
-          <p class="profile-bio">${esc(a.bio || "काव्य चौपाल के प्रबन्धकीय एवं संचालक मण्डल के प्रमुख सदस्य।")}</p>
+          ${a.quote && a.quote.trim() ? `<div class="profile-quote">“${esc(a.quote)}”</div>` : ""}
         </div>
         <div class="about-card">
           <h3 class="section-title">🏛️ मंच पर दायित्व</h3>
           <p>${esc(a.role || "काव्य चौपाल के साहित्यिक आयोजनों एवं संचालन में सक्रिय योगदान।")}</p>
         </div>
+        ${bioCardHtml}
         ${theirPoems.length ? `
           <div class="section-head">
             <h3 class="section-title">✒️ इनकी प्रकाशित रचनाएँ (${theirPoems.length})</h3>
@@ -2781,16 +3000,33 @@
         const ept = state.editingPoetId ? state.poets.find(x => x.id === state.editingPoetId) : null;
         const curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
         contentHtml = `
+          <div class="template-banner">
+            <div style="font-size:12.5px; line-height:1.45; flex:1; min-width:190px;"><strong>कवियों से संक्षिप्त परिचय मँगवाने हेतु:</strong> एक क्लिक में खाली फ़ॉर्मेट कॉपी करके WhatsApp पर भेजें।</div>
+            <button class="action-btn gold" style="padding:8px 13px; font-size:12.5px;" onclick="copyBioTemplate()">📋 परिचय प्रपत्र कॉपी करें</button>
+          </div>
           <div class="form-box">
             <h4 class="section-title" style="margin-bottom:10px;">${ept ? "✏️ कवि परिचय संपादित करें" : "➕ नया कवि परिचय जोड़ें"}</h4>
-            <div class="field"><label>कवि का पूरा नाम *</label><input id="f-poet-name" value="${esc(ept ? ept.name : "")}" /></div>
-            <div class="field"><label>शहर / स्थान</label><input id="f-poet-city" value="${esc(ept ? ept.city : "")}" /></div>
+            <div class="field"><label>नाम एवं उपनाम *</label><input id="f-poet-name" value="${esc(ept ? ept.name : "")}" placeholder="जैसे: राहुल द्विवेदी 'स्मित'" /></div>
+            <div class="two-fields">
+              <div class="field"><label>जन्म (तिथि / स्थान)</label><input id="f-poet-birth" value="${esc(ept ? ept.birth : "")}" placeholder="जैसे: 11 जनवरी 1987" /></div>
+              <div class="field"><label>स्थान (शहर, राज्य)</label><input id="f-poet-city" value="${esc(ept ? ept.city : "")}" placeholder="जैसे: लखनऊ, उ.प्र." /></div>
+            </div>
+            <div class="two-fields">
+              <div class="field"><label>शिक्षा (वैकल्पिक)</label><input id="f-poet-edu" value="${esc(ept ? ept.education : "")}" placeholder="जैसे: एम.ए. हिन्दी" /></div>
+              <div class="field"><label>सम्प्रति (वर्तमान कार्य/पद)</label><input id="f-poet-occ" value="${esc(ept ? ept.occupation : "")}" placeholder="जैसे: शिक्षक / स्वतंत्र लेखन" /></div>
+            </div>
+            <div class="field"><label>मुख्य विधा (कॉमा लगाकर लिखें)</label><input id="f-poet-genres" value="${esc(ept ? ept.mainGenres : "")}" placeholder="जैसे: गीत, दोहा, ग़ज़ल, छंद" /></div>
+            <div class="field"><label>काव्य-मुद्रा (कवि की प्रिय 2 पंक्तियाँ)</label><textarea id="f-poet-quote" style="min-height:66px;" placeholder="प्रोफ़ाइल के शीर्ष पर सुनहरे उद्धरण के रूप में दिखेगी...">${esc(ept ? ept.quote : "")}</textarea></div>
+            <div class="field"><label>प्रकाशित कृतियाँ (यदि हों)</label><input id="f-poet-pub" value="${esc(ept ? ept.publications : "")}" placeholder="पुस्तकों या साझा संकलनों के नाम" /></div>
+            <div class="field"><label>प्रमुख सम्मान / पुरस्कार (यदि हों)</label><input id="f-poet-awards" value="${esc(ept ? ept.awards : "")}" placeholder="प्रमुख साहित्यिक सम्मान" /></div>
+            <div class="field"><label>विशेष (संक्षिप्त योगदान)</label><textarea id="f-poet-special" style="min-height:68px;" placeholder="1-2 पंक्तियों में विशेष साहित्यिक उपलब्धि...">${esc(ept ? ept.special : "")}</textarea></div>
+            <div class="field"><label>सोशल प्रोफ़ाइल लिंक (वैकल्पिक)</label><input id="f-poet-social" value="${esc(ept ? ept.socialLink : "")}" placeholder="https://facebook.com/... या Instagram/YouTube" /></div>
             <div class="field">
               <label>फ़ोटो अपलोड करें</label>
               <input type="file" accept="image/*" onchange="handleImageUpload(this, 'tempPoetPhoto', 'poet-photo-prev', 280)" />
-              <div class="photo-preview-row"><div class="photo-preview-thumb" id="poet-photo-prev">${curPhoto ? `<img src="${curPhoto}">` : "✒️"}</div><span style="font-size:12px; color:var(--text-muted);">फ़ोन गैलरी से फ़ोटो चुनें।</span></div>
+              <div class="photo-preview-row"><div class="photo-preview-thumb" id="poet-photo-prev">${curPhoto ? `<img src="${curPhoto}">` : "✒️"}</div><span style="font-size:12px; color:var(--text-muted);">जो बिंदु खाली छोड़ेंगे, वे प्रोफ़ाइल पर अपने आप छिप जाएंगे।</span></div>
             </div>
-            <div class="field"><label>साहित्यिक परिचय</label><textarea id="f-poet-bio">${esc(ept ? ept.bio : "")}</textarea></div>
+            <div class="field"><label>अतिरिक्त संक्षिप्त परिचय (वैकल्पिक)</label><textarea id="f-poet-bio" style="min-height:64px;" placeholder="यदि कुछ अतिरिक्त लिखना हो...">${esc(ept ? ept.bio : "")}</textarea></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="action-btn primary" onclick="savePoetForm()">💾 कवि परिचय सहेजें</button>
               ${ept ? `<button class="action-btn" onclick="state.editingPoetId=null; state.tempPoetPhoto=''; renderAdminStudio()">रद्द करें</button>` : ""}
@@ -2815,14 +3051,27 @@
             <h4 class="section-title" style="margin-bottom:10px;">${ea ? "✏️ एडमिन सदस्य संपादित करें" : "➕ नया एडमिन सदस्य जोड़ें"}</h4>
             <div class="field"><label>नाम *</label><input id="f-adm-name" value="${esc(ea ? ea.name : "")}" /></div>
             <div class="field"><label>पद / उपाधि *</label><input id="f-adm-desig" value="${esc(ea ? ea.designation : "")}" /></div>
-            <div class="field"><label>शहर / स्थान</label><input id="f-adm-city" value="${esc(ea ? ea.city : "")}" /></div>
             <div class="field"><label>मंच पर दायित्व</label><input id="f-adm-role" value="${esc(ea ? ea.role : "")}" /></div>
+            <div class="two-fields">
+              <div class="field"><label>जन्म (वैकल्पिक)</label><input id="f-adm-birth" value="${esc(ea ? ea.birth : "")}" /></div>
+              <div class="field"><label>स्थान (शहर, राज्य)</label><input id="f-adm-city" value="${esc(ea ? ea.city : "")}" /></div>
+            </div>
+            <div class="two-fields">
+              <div class="field"><label>शिक्षा (वैकल्पिक)</label><input id="f-adm-edu" value="${esc(ea ? ea.education : "")}" /></div>
+              <div class="field"><label>सम्प्रति</label><input id="f-adm-occ" value="${esc(ea ? ea.occupation : "")}" /></div>
+            </div>
+            <div class="field"><label>मुख्य विधा</label><input id="f-adm-genres" value="${esc(ea ? ea.mainGenres : "")}" placeholder="जैसे: गीत, दोहा, छंद" /></div>
+            <div class="field"><label>काव्य-मुद्रा (प्रिय 2 पंक्तियाँ)</label><textarea id="f-adm-quote" style="min-height:60px;">${esc(ea ? ea.quote : "")}</textarea></div>
+            <div class="field"><label>प्रकाशित कृतियाँ</label><input id="f-adm-pub" value="${esc(ea ? ea.publications : "")}" /></div>
+            <div class="field"><label>प्रमुख सम्मान</label><input id="f-adm-awards" value="${esc(ea ? ea.awards : "")}" /></div>
+            <div class="field"><label>विशेष</label><textarea id="f-adm-special" style="min-height:64px;">${esc(ea ? ea.special : "")}</textarea></div>
+            <div class="field"><label>सोशल प्रोफ़ाइल लिंक</label><input id="f-adm-social" value="${esc(ea ? ea.socialLink : "")}" placeholder="https://..." /></div>
             <div class="field">
               <label>फ़ोटो अपलोड करें</label>
               <input type="file" accept="image/*" onchange="handleImageUpload(this, 'tempAdminPhoto', 'adm-photo-prev', 280)" />
               <div class="photo-preview-row"><div class="photo-preview-thumb" id="adm-photo-prev">${curPhoto ? `<img src="${curPhoto}">` : "👑"}</div><span style="font-size:12px; color:var(--text-muted);">फ़ोन गैलरी से फ़ोटो चुनें।</span></div>
             </div>
-            <div class="field"><label>विस्तृत परिचय</label><textarea id="f-adm-bio">${esc(ea ? ea.bio : "")}</textarea></div>
+            <div class="field"><label>संक्षिप्त परिचय (वैकल्पिक)</label><textarea id="f-adm-bio" style="min-height:64px;">${esc(ea ? ea.bio : "")}</textarea></div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
               <button class="action-btn primary" onclick="saveAdminMemberForm()">💾 एडमिन सहेजें</button>
               ${ea ? `<button class="action-btn" onclick="state.editingAdminId=null; state.tempAdminPhoto=''; renderAdminStudio()">रद्द करें</button>` : ""}
@@ -3037,7 +3286,22 @@
       if (!name) { showToast("कृपया कवि का नाम लिखें"); return; }
       const id = state.editingPoetId || ("poet_" + Date.now());
       const existing = state.poets.find(x => x.id === id);
-      const item = { id, name, city: document.getElementById("f-poet-city").value.trim(), bio: document.getElementById("f-poet-bio").value.trim(), photo: state.tempPoetPhoto || (existing ? existing.photo : "") };
+      const item = {
+        id,
+        name,
+        birth: document.getElementById("f-poet-birth").value.trim(),
+        city: document.getElementById("f-poet-city").value.trim(),
+        education: document.getElementById("f-poet-edu").value.trim(),
+        occupation: document.getElementById("f-poet-occ").value.trim(),
+        mainGenres: document.getElementById("f-poet-genres").value.trim(),
+        quote: document.getElementById("f-poet-quote").value.trim(),
+        publications: document.getElementById("f-poet-pub").value.trim(),
+        awards: document.getElementById("f-poet-awards").value.trim(),
+        special: document.getElementById("f-poet-special").value.trim(),
+        socialLink: document.getElementById("f-poet-social").value.trim(),
+        bio: document.getElementById("f-poet-bio").value.trim(),
+        photo: state.tempPoetPhoto || (existing ? existing.photo : "")
+      };
       if (existing) state.poets = state.poets.map(x => x.id === id ? item : x); else state.poets.push(item);
       await cloudSaveDoc("poets", id, item);
       state.editingPoetId = null; state.tempPoetPhoto = "";
@@ -3054,8 +3318,17 @@
       const existing = state.admins.find(x => x.id === id);
       const item = {
         id, name, designation,
-        city: document.getElementById("f-adm-city").value.trim(),
         role: document.getElementById("f-adm-role").value.trim(),
+        birth: document.getElementById("f-adm-birth").value.trim(),
+        city: document.getElementById("f-adm-city").value.trim(),
+        education: document.getElementById("f-adm-edu").value.trim(),
+        occupation: document.getElementById("f-adm-occ").value.trim(),
+        mainGenres: document.getElementById("f-adm-genres").value.trim(),
+        quote: document.getElementById("f-adm-quote").value.trim(),
+        publications: document.getElementById("f-adm-pub").value.trim(),
+        awards: document.getElementById("f-adm-awards").value.trim(),
+        special: document.getElementById("f-adm-special").value.trim(),
+        socialLink: document.getElementById("f-adm-social").value.trim(),
         bio: document.getElementById("f-adm-bio").value.trim(),
         photo: state.tempAdminPhoto || (existing ? existing.photo : ""),
         order: existing ? (existing.order || 99) : (state.admins.length + 1)
