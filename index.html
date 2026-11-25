@@ -1919,8 +1919,13 @@
     }
 
     let splashTimer = null;
-    function startSplashTimer() { clearTimeout(splashTimer); splashTimer = setTimeout(() => dismissSplash(), 3900); }
-    function dismissSplash() { clearTimeout(splashTimer); const el = document.getElementById("splash-screen"); if (el) el.classList.add("hide"); }
+    function startSplashTimer() { clearTimeout(splashTimer); splashTimer = setTimeout(() => dismissSplash(true), 3900); }
+    function dismissSplash(fromAuto) {
+      clearTimeout(splashTimer);
+      const el = document.getElementById("splash-screen");
+      if (el) el.classList.add("hide");
+      if (!fromAuto) pushNavState("home");
+    }
     function replaySplash() {
       const el = document.getElementById("splash-screen");
       const bar = document.getElementById("splash-bar");
@@ -1979,7 +1984,8 @@
     /* ============================================================
        6. NAVIGATION & RENDERING
        ============================================================ */
-    function switchTab(tabName) {
+    function switchTab(tabName, fromPop) {
+      if (!fromPop && state.activeTab !== tabName) pushNavState("tab-" + tabName);
       state.activeTab = tabName;
       document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
       const target = document.getElementById("tab-" + tabName);
@@ -2211,6 +2217,7 @@
 
     function openPoetProfile(poetName) {
       closeModal("reader-modal");
+      pushNavState("poet");
       state.activeTab = "poets";
       state.activePoetName = poetName;
       state.poetProfileGenre = "सम्पूर्ण";
@@ -2499,6 +2506,7 @@
           <button class="action-btn" onclick="shareVideoWhatsApp(dec('${arg(v.id)}'))">📲 WhatsApp शेयर</button>
         </div>
       `;
+      if (!document.getElementById("video-modal").classList.contains("open")) pushNavState("video");
       document.getElementById("video-modal").classList.add("open");
     }
 
@@ -2667,6 +2675,7 @@
     }
 
     function openAdminDetail(adminId) {
+      pushNavState("admin");
       state.activeAdminId = adminId;
       document.getElementById("admins-list-view").style.display = "none";
       document.getElementById("admin-detail-view").style.display = "block";
@@ -2738,6 +2747,7 @@
        ============================================================ */
     function openReader(poemId) {
       const p = state.poems.find(x => x.id === poemId);
+      if (p && !document.getElementById("reader-modal").classList.contains("open")) pushNavState("reader");
       if (!p) return;
       state.currentReaderPoemId = poemId;
       const liked = state.favorites.includes(p.id);
@@ -2894,6 +2904,7 @@
        8. ADMIN STUDIO (ALL SECTIONS + REAL LOGO UPLOAD)
        ============================================================ */
     function openAdminStudio() {
+      if (!document.getElementById("admin-modal").classList.contains("open")) pushNavState("studio");
       document.getElementById("admin-modal").classList.add("open");
       renderAdminStudio();
     }
@@ -3689,6 +3700,7 @@
        8B. PUBLIC POET & POEM SUBMISSION + ADMIN APPROVAL LOGIC
        ============================================================ */
     function openSubmitModal(tab) {
+      if (!document.getElementById("submit-modal").classList.contains("open")) pushNavState("submit");
       state.submitTab = tab || "poem";
       state.submitSuccessMsg = "";
       state.tempSubmitPhoto = "";
@@ -3998,107 +4010,87 @@
     }
 
     /* ============================================================
-       9B. SMART ANDROID / PWA BACK-BUTTON NAVIGATION MANAGER
+       9B. REAL USER-GESTURE BACK-BUTTON MANAGER (ANDROID CHROME SAFE)
        ============================================================ */
-    let backGuardActive = false;
-    let backExitTimer = null;
+    let navSeq = 0;
 
-    function armBackGuard() {
-      if (backGuardActive) return;
+    function pushNavState(tag) {
       try {
-        window.history.pushState({ kcGuard: true, ts: Date.now() }, "", window.location.href);
-        backGuardActive = true;
+        navSeq += 1;
+        window.history.pushState({ kcNav: tag, n: navSeq }, "", "#" + tag + "-" + navSeq);
       } catch (e) {}
     }
 
     function initSmartBackNavigation() {
+      // Clear any stale hash on fresh load
       try {
-        window.history.replaceState({ kcRoot: true }, "", window.location.href);
-        armBackGuard();
+        if (window.location.hash) {
+          window.history.replaceState({ kcRoot: true, n: 0 }, "", window.location.pathname + window.location.search);
+        } else {
+          window.history.replaceState({ kcRoot: true, n: 0 }, "", window.location.href);
+        }
       } catch (e) {}
 
-      // Re-arm on first user interaction (ensures Android Chrome always honors Back trap)
-      const gestureArm = () => {
-        if (!backGuardActive) {
-          clearTimeout(backExitTimer);
-          armBackGuard();
-        }
+      // Ensure first user tap anywhere creates a genuine Chrome-accepted history entry
+      const firstTapArm = () => {
+        if (navSeq === 0) pushNavState("home");
       };
-      document.addEventListener("pointerdown", gestureArm, { passive: true });
-      document.addEventListener("click", gestureArm, { passive: true });
+      document.addEventListener("click", firstTapArm, { capture: true, passive: true });
 
       window.addEventListener("popstate", () => {
-        backGuardActive = false;
-        clearTimeout(backExitTimer);
-
-        // 1. If splash screen is still visible, dismiss it
+        // 1. Dismiss splash if visible
         const splash = document.getElementById("splash-screen");
         if (splash && !splash.classList.contains("hide")) {
-          dismissSplash();
-          armBackGuard();
+          dismissSplash(true);
           return;
         }
 
-        // 2. Close topmost open modal in priority order
+        // 2. Close topmost open modal
         const adminModal = document.getElementById("admin-modal");
         if (adminModal && adminModal.classList.contains("open")) {
           closeModal("admin-modal");
-          armBackGuard();
           return;
         }
         const submitModal = document.getElementById("submit-modal");
         if (submitModal && submitModal.classList.contains("open")) {
           closeModal("submit-modal");
-          armBackGuard();
           return;
         }
         const videoModal = document.getElementById("video-modal");
         if (videoModal && videoModal.classList.contains("open")) {
           closeVideoModal();
-          armBackGuard();
           return;
         }
         const readerModal = document.getElementById("reader-modal");
         if (readerModal && readerModal.classList.contains("open")) {
           closeModal("reader-modal");
-          armBackGuard();
           return;
         }
 
-        // 3. Close Poet Detail view -> return to Poets list
+        // 3. Close Poet Detail -> Poets list
         if (state.activeTab === "poets" && state.activePoetName) {
           closePoetDetail();
-          armBackGuard();
           return;
         }
 
-        // 4. Close Admin Detail view -> return to Admins list
+        // 4. Close Admin Detail -> Admins list
         if (state.activeTab === "admins" && state.activeAdminId) {
           closeAdminDetail();
-          armBackGuard();
           return;
         }
 
-        // 5. If on any other tab -> go back to Home ('poems')
+        // 5. Return to Home tab from any other tab
         if (state.activeTab !== "poems") {
-          switchTab("poems");
-          armBackGuard();
+          switchTab("poems", true);
           return;
         }
 
-        // 6. If on Home ('poems') with active filters/search -> clear filters first
+        // 6. Clear active filters on Home screen
         if (state.selectedGenre !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch) {
           resetPoemFilters();
           showToast("सभी रचनाएँ दिखाई जा रही हैं");
-          armBackGuard();
           return;
         }
-
-        // 7. At clean Home screen: Double-Back to Exit (2.5 seconds window)
-        showToast("बाहर निकलने के लिए एक बार फिर बैक दबाएँ");
-        backExitTimer = setTimeout(() => {
-          armBackGuard();
-        }, 2500);
       });
     }
 
