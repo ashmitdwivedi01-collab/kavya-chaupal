@@ -1777,7 +1777,13 @@
   <div id="dad-burst-layer"></div>
   <div id="toast"></div>
 
-  <script>
+  <script>    window.addEventListener("error", function(ev) {
+      try {
+        var sp = document.getElementById("splash-screen");
+        if (sp) sp.classList.add("hide");
+      } catch (e) {}
+    });
+
     /* ============================================================
        1. FIREBASE CONFIGURATION (काव्य चौपाल का लाइव क्लाउड डेटाबेस)
        ============================================================ */
