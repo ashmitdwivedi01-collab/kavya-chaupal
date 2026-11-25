@@ -944,6 +944,286 @@
       border-radius: 18px;
     }
 
+    /* ================= V8.0 GRAND ROYAL FEATURES CSS ================= */
+    /* 3x2 Quick Gateway Grid */
+    .quick-grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 8px !important;
+    }
+
+    /* Floating Daad / Wah-Wah Celebration Particles */
+    #dad-burst-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9998;
+      overflow: hidden;
+    }
+    .dad-float {
+      position: fixed;
+      font-size: 28px;
+      pointer-events: none;
+      user-select: none;
+      animation: dadRise 1.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.28));
+    }
+    @keyframes dadRise {
+      0% { transform: translateY(0) scale(0.5) rotate(-10deg); opacity: 0; }
+      20% { opacity: 1; transform: translateY(-28px) scale(1.15) rotate(8deg); }
+      100% { transform: translateY(-210px) scale(0.95) rotate(-6deg); opacity: 0; }
+    }
+
+    /* Live Daad Reaction Bar & Teleprompter Strip in Reader */
+    .daad-bar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 14px 0 8px;
+      padding: 10px;
+      border-radius: 16px;
+      background: var(--gold-soft);
+      border: 1px solid var(--border);
+    }
+    .daad-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      border: 1.5px solid var(--gold);
+      background: var(--bg-elevated);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.2s ease;
+    }
+    .daad-btn:active { transform: scale(0.91); background: var(--gold-soft); }
+    .daad-cnt {
+      background: var(--primary);
+      color: #FFF7E6;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 99px;
+    }
+    [data-theme="night"] .daad-cnt { color: #160D06; }
+
+    .mehfil-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 9px 12px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      font-size: 12.5px;
+    }
+    .mehfil-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 11px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mehfil-pill.on {
+      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
+      color: #F7DC8B;
+      border-color: var(--gold);
+    }
+    [data-theme="night"] .mehfil-pill.on {
+      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
+      color: #160D06;
+    }
+
+    /* Daily Literary Riddle Card on Home */
+    .riddle-card {
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 15px;
+      margin-bottom: 15px;
+      box-shadow: var(--shadow);
+    }
+    .riddle-opts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      margin-top: 10px;
+    }
+    .riddle-opt-btn {
+      text-align: left;
+      padding: 8px 11px;
+      border-radius: 11px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .riddle-opt-btn.correct {
+      background: rgba(22, 163, 74, 0.16);
+      border-color: #16A34A;
+      color: #15803D;
+    }
+    [data-theme="night"] .riddle-opt-btn.correct { color: #86EFAC; }
+    .riddle-opt-btn.wrong {
+      background: rgba(220, 38, 38, 0.14);
+      border-color: #DC2626;
+      color: #DC2626;
+    }
+
+    /* Manch Hub 6-tab responsive grid */
+    .hub-tabs {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+    @media (min-width: 600px) {
+      .hub-tabs { grid-template-columns: repeat(6, 1fr) !important; }
+    }
+
+    /* Matra & Chhand Analyzer */
+    .matra-line-box {
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .syllable-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 8px 0;
+    }
+    .syl-chip {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 7px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      min-width: 28px;
+    }
+    .syl-wt {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .syl-wt.guru { color: #B45309; }
+    [data-theme="night"] .syl-wt.guru { color: #F7DC8B; }
+    .syl-ch {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 14.5px;
+      color: var(--text);
+    }
+
+    /* Kavya Antakshari Akshara Wheel */
+    .akshara-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    @media (min-width: 560px) {
+      .akshara-grid { grid-template-columns: repeat(10, 1fr); }
+    }
+    .ak-btn {
+      position: relative;
+      padding: 9px 2px;
+      border-radius: 11px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      font-family: 'Yatra One', serif;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .ak-btn.has-poems {
+      color: var(--primary);
+      border-color: var(--gold);
+      background: var(--gold-soft);
+    }
+    .ak-btn.active {
+      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
+      color: #F7DC8B;
+      border-color: var(--gold);
+    }
+    [data-theme="night"] .ak-btn.active {
+      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
+      color: #160D06;
+    }
+    .ak-dot {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 9px;
+      font-family: 'Noto Sans Devanagari', sans-serif;
+      font-weight: 700;
+    }
+
+    /* Bhav-Card Studio & Certificate Preview */
+    .theme-cards-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    @media (min-width: 520px) {
+      .theme-cards-row { grid-template-columns: repeat(4, 1fr); }
+    }
+    .theme-opt {
+      padding: 9px 8px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+    .theme-opt.active {
+      border-color: var(--gold);
+      background: var(--gold-soft);
+      color: var(--primary);
+    }
+    .studio-preview-img {
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto 12px;
+      display: block;
+      border-radius: 16px;
+      border: 2px solid var(--gold);
+      box-shadow: var(--shadow-strong);
+    }
+    .cert-preview-img {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto 12px;
+      display: block;
+      border-radius: 14px;
+      border: 2px solid var(--gold);
+      box-shadow: var(--shadow-strong);
+    }
+
     /* ================= ABOUT & SOCIAL CARDS ================= */
     .about-banner {
       background: radial-gradient(circle at 50% 10%, rgba(246, 218, 134, 0.28), transparent 60%), linear-gradient(150deg, #5F1018 0%, #31070C 68%, #1C0814 100%);
@@ -1145,7 +1425,7 @@
     <section id="tab-poems" class="tab-view active">
       <div id="spotlight-wrap"></div>
 
-      <!-- Quick Royal Gateway to New Sections -->
+      <!-- Quick Royal Gateway to All Grand Sections -->
       <div class="quick-grid">
         <div class="quick-tile" onclick="openManchSub('events')">
           <div class="quick-ic">📅</div>
@@ -1163,7 +1443,18 @@
           <div class="quick-ic">📚</div>
           <div class="quick-lbl">ई-बुक<br/>लाइब्रेरी</div>
         </div>
+        <div class="quick-tile" onclick="openManchSub('matra')">
+          <div class="quick-ic">⚖️</div>
+          <div class="quick-lbl">छंद व मात्रा<br/>गणक</div>
+        </div>
+        <div class="quick-tile" onclick="openManchSub('antakshari')">
+          <div class="quick-ic">🔤</div>
+          <div class="quick-lbl">काव्य<br/>अंताक्षरी</div>
+        </div>
       </div>
+
+      <!-- Daily Literary Riddle / Doha-Purti -->
+      <div id="daily-riddle-wrap"></div>
 
       <!-- Poet Self-Submission Callout -->
       <div class="submit-cta-bar">
@@ -1227,7 +1518,7 @@
       <div id="poet-detail-view" style="display:none;"></div>
     </section>
 
-    <!-- TAB 3: MANCH HUB (कार्यक्रम • वीडियो • प्रतियोगिता • ई-बुक) -->
+    <!-- TAB 3: MANCH HUB (कार्यक्रम • वीडियो • प्रतियोगिता • ई-बुक • मात्रा • अंताक्षरी) -->
     <section id="tab-manch" class="tab-view">
       <div class="hub-tabs">
         <button class="hub-tab-btn active" data-sub="events" onclick="setManchSub('events')">
@@ -1242,6 +1533,12 @@
         <button class="hub-tab-btn" data-sub="ebooks" onclick="setManchSub('ebooks')">
           <span class="hic">📚</span><span>ई-बुक</span>
         </button>
+        <button class="hub-tab-btn" data-sub="matra" onclick="setManchSub('matra')">
+          <span class="hic">⚖️</span><span>मात्रा गणक</span>
+        </button>
+        <button class="hub-tab-btn" data-sub="antakshari" onclick="setManchSub('antakshari')">
+          <span class="hic">🔤</span><span>अंताक्षरी</span>
+        </button>
       </div>
 
       <!-- SUB 1: UPCOMING EVENTS -->
@@ -1252,6 +1549,10 @@
       <div id="manch-competition" class="manch-pane" style="display:none;"></div>
       <!-- SUB 4: E-BOOK LIBRARY -->
       <div id="manch-ebooks" class="manch-pane" style="display:none;"></div>
+      <!-- SUB 5: MATRA & CHHAND ANALYZER -->
+      <div id="manch-matra" class="manch-pane" style="display:none;"></div>
+      <!-- SUB 6: KAVYA ANTAKSHARI -->
+      <div id="manch-antakshari" class="manch-pane" style="display:none;"></div>
     </section>
 
     <!-- TAB 4: ADMINS (एडमिन मण्डल) -->
@@ -1274,7 +1575,7 @@
     <section id="tab-about" class="tab-view">
       <div class="about-banner">
         <div class="about-logo-circle" id="about-logo-wrap"></div>
-        <div style="font-size:12px; letter-spacing:2px; color:#F3D47E; margin-bottom:4px;">साहित्यिक परिवार एवं मंच • संस्करण 7.0</div>
+        <div style="font-size:12px; letter-spacing:2px; color:#F3D47E; margin-bottom:4px;">साहित्यिक परिवार एवं मंच • शाही संस्करण 8.0</div>
         <h2 class="font-royal" style="font-size:34px; margin:0; color:#F7DC8B;" id="about-title">काव्य चौपाल</h2>
         <p class="font-literary" style="margin:8px 0 16px; color:#FFF4DC; font-size:15px;" id="about-tagline">शब्द जहाँ संवाद बनें, और भाव जहाँ उत्सव…</p>
         <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
@@ -1369,6 +1670,20 @@
     </div>
   </div>
 
+  <!-- ================= BHAV-CARD STUDIO MODAL (4 शाही थीम) ================= -->
+  <div class="modal-overlay" id="bhav-modal" onclick="closeModalOnBg(event, 'bhav-modal')">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('bhav-modal')">← वापस</button>
+          <h3 class="modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🎨 शाही भाव-कार्ड स्टूडियो</h3>
+        </div>
+        <button class="close-btn" onclick="closeModal('bhav-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="bhav-studio-body"></div>
+    </div>
+  </div>
+
   <!-- ================= ADMIN STUDIO MODAL ================= -->
   <div class="modal-overlay" id="admin-modal" onclick="closeModalOnBg(event, 'admin-modal')">
     <div class="modal-sheet">
@@ -1385,6 +1700,8 @@
 
   <!-- Hidden canvas for 1080x1080 Bhav Card PNG -->
   <canvas id="bhav-canvas" width="1080" height="1080" style="display:none;"></canvas>
+  <canvas id="cert-canvas" width="1400" height="1000" style="display:none;"></canvas>
+  <div id="dad-burst-layer"></div>
   <div id="toast"></div>
 
   <script>
@@ -1615,7 +1932,22 @@
       submitSuccessMsg: "",
       tempSubmitPhoto: "",
       editingPendingPoemId: null,
-      editingPendingPoetId: null
+      editingPendingPoetId: null,
+      riddleIdx: new Date().getDate() % 8,
+      riddleAnswered: null,
+      antakshariLetter: "क",
+      matraInput: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।",
+      bhavTheme: "parchment",
+      bhavLinesCount: 4,
+      bhavCustomText: "",
+      bhavIncludePhoto: true,
+      bhavPoemId: null,
+      certTitle: "चौपाल गौरव सम्मान-पत्र",
+      certName: "",
+      certAward: "प्रथम स्थान विजेता • स्वरचित काव्यपाठ प्रतियोगिता",
+      certReason: "काव्य चौपाल के साहित्यिक मंच पर आपकी उत्कृष्ट काव्य प्रस्तुति एवं सारस्वत योगदान के सम्मान में सादर भेंट।",
+      certDate: new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" }),
+      certSign: "राहुल द्विवेदी 'स्मित' (संस्थापक, काव्य चौपाल)" 
     };
 
     try {
@@ -2057,6 +2389,7 @@
 
       renderBrandLogo();
       renderSpotlight();
+      renderDailyRiddle();
       renderVidhaStrip();
       renderPoetFilterStrip();
       renderPoemsGrid();
@@ -2171,7 +2504,7 @@
           <p class="poem-card-excerpt">${esc(p.content)}</p>
           <div class="poem-card-foot">
             <span class="poem-author-link" onclick="event.stopPropagation(); openPoetProfile(dec('${arg(p.poet)}'))">✒️ ${esc(p.poet)}</span>
-            <span class="read-more-link">पढ़ें →</span>
+            <span class="read-more-link">${getTotalDaad(p) > 0 ? `👏 ${getTotalDaad(p)} • ` : ""}पढ़ें →</span>
           </div>
         </article>
       `;
@@ -2404,6 +2737,8 @@
       renderVideosPane();
       renderCompetitionPane();
       renderEbooksPane();
+      renderMatraPane();
+      renderAntakshariPane();
     }
 
     function renderEventsPane() {
@@ -2766,28 +3101,216 @@
     /* ============================================================
        7. POEM READER & 1080×1080 BHAV CARD (WITH REAL LOGO!)
        ============================================================ */
+    function getDaadCounts(p) {
+      const d = (p && p.daad) || {};
+      return {
+        wah: Number(d.wah || 0),
+        naman: Number(d.naman || 0),
+        adbhut: Number(d.adbhut || 0)
+      };
+    }
+    function getTotalDaad(p) {
+      const d = getDaadCounts(p);
+      return d.wah + d.naman + d.adbhut;
+    }
+
+    function burstCelebration(emoji) {
+      const layer = document.getElementById("dad-burst-layer");
+      if (!layer) return;
+      const icons = [emoji, "✨", "🌸", emoji];
+      for (let i = 0; i < 10; i++) {
+        const sp = document.createElement("span");
+        sp.className = "dad-float";
+        sp.textContent = icons[i % icons.length];
+        sp.style.left = (14 + Math.random() * 72) + "vw";
+        sp.style.bottom = (18 + Math.random() * 18) + "vh";
+        sp.style.animationDelay = (Math.random() * 0.25) + "s";
+        layer.appendChild(sp);
+        setTimeout(() => sp.remove(), 2100);
+      }
+    }
+
+    async function givePoemDaad(id, type) {
+      const p = state.poems.find(x => x.id === id);
+      if (!p) return;
+      const d = getDaadCounts(p);
+      d[type] = (d[type] || 0) + 1;
+      p.daad = d;
+      saveLocalCache();
+
+      const emojiMap = { wah: "👏", naman: "🪔", adbhut: "🌹" };
+      const labelMap = { wah: "वाह-वाह! मंच से दाद पहुंची", naman: "सादर नमन दर्ज हुआ", adbhut: "अद्भुत! भाव-प्रशंसा दर्ज हुई" };
+      burstCelebration(emojiMap[type] || "👏");
+      showToast(labelMap[type] || "वाह-वाह!");
+
+      const el = document.getElementById("daad-cnt-" + type);
+      if (el) el.textContent = d[type];
+      renderPoemsGrid();
+
+      if (db) {
+        try {
+          await db.collection(ROOT_COL).doc("poems").collection("items").doc(id).set({
+            daad: { [type]: firebase.firestore.FieldValue.increment(1) }
+          }, { merge: true });
+        } catch (e) {}
+      }
+    }
+
+    /* ---------- MUSHAIRA TELEPROMPTER AUTO-SCROLL ---------- */
+    let teleprompterTimer = null;
+    let teleprompterSpeed = 0; // 0 = off, 1 = slow, 2 = medium, 3 = fast
+
+    function stopTeleprompter() {
+      teleprompterSpeed = 0;
+      clearInterval(teleprompterTimer);
+      teleprompterTimer = null;
+      const btn = document.getElementById("tp-toggle-btn");
+      if (btn) { btn.classList.remove("on"); btn.textContent = "📜 मंच पाठ"; }
+    }
+
+    function toggleTeleprompter() {
+      const body = document.getElementById("reader-body");
+      if (!body) return;
+      teleprompterSpeed = (teleprompterSpeed + 1) % 4;
+      clearInterval(teleprompterTimer);
+      teleprompterTimer = null;
+      const btn = document.getElementById("tp-toggle-btn");
+      if (teleprompterSpeed === 0) {
+        if (btn) { btn.classList.remove("on"); btn.textContent = "📜 मंच पाठ"; }
+        showToast("स्वतः स्क्रॉल बंद");
+        return;
+      }
+      const speedNames = ["", "धीमी गति", "मध्यम गति", "तेज़ गति"];
+      const stepPx = [0, 1, 2, 3][teleprompterSpeed];
+      if (btn) { btn.classList.add("on"); btn.textContent = `📜 ${speedNames[teleprompterSpeed]}`; }
+      showToast(`मंच पाठ सक्रिय (${speedNames[teleprompterSpeed]})`);
+      teleprompterTimer = setInterval(() => {
+        if (!document.getElementById("reader-modal").classList.contains("open")) {
+          stopTeleprompter();
+          return;
+        }
+        body.scrollTop += stepPx;
+        if (body.scrollTop + body.clientHeight >= body.scrollHeight - 2) {
+          stopTeleprompter();
+        }
+      }, 45);
+    }
+
+    /* ---------- KAVYA-SWAR AMBIENT CLASSICAL FLUTE & TANPURA (WEB AUDIO) ---------- */
+    let mehfilAudioCtx = null;
+    let mehfilAudioTimer = null;
+    let mehfilPlaying = false;
+
+    function stopMehfilMusic() {
+      mehfilPlaying = false;
+      clearInterval(mehfilAudioTimer);
+      mehfilAudioTimer = null;
+      if (mehfilAudioCtx) {
+        try { mehfilAudioCtx.close(); } catch (e) {}
+        mehfilAudioCtx = null;
+      }
+      const btn = document.getElementById("mehfil-music-btn");
+      if (btn) { btn.classList.remove("on"); btn.textContent = "🎶 महफ़िल धुन"; }
+    }
+
+    function toggleMehfilMusic() {
+      if (mehfilPlaying) {
+        stopMehfilMusic();
+        showToast("महफ़िल धुन बंद की गई");
+        return;
+      }
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) { showToast("आपके ब्राउज़र में ऑडियो समर्थित नहीं है"); return; }
+
+      try {
+        mehfilAudioCtx = new AudioCtx();
+        mehfilPlaying = true;
+        const btn = document.getElementById("mehfil-music-btn");
+        if (btn) { btn.classList.add("on"); btn.textContent = "🎶 धुन चल रही है"; }
+        showToast("शास्त्रीय राग-यमन बांसुरी एवं तानपुरा धुन प्रारंभ 🎶");
+
+        // Soft Tanpura Drone (Sa = 130.81Hz C3, Pa = 196.00Hz G3)
+        const playDrone = (freq, gainVal) => {
+          if (!mehfilAudioCtx) return;
+          const osc = mehfilAudioCtx.createOscillator();
+          const gain = mehfilAudioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          gain.gain.value = gainVal;
+          osc.connect(gain);
+          gain.connect(mehfilAudioCtx.destination);
+          osc.start();
+        };
+        playDrone(130.81, 0.025);
+        playDrone(196.00, 0.018);
+
+        // Gentle Bansuri Flute Notes in Raag Bhopali / Yaman (Sa Re Ga Pa Dha Sa')
+        const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 440.00, 392.00, 329.63, 293.66];
+        let step = 0;
+        const playFluteNote = () => {
+          if (!mehfilPlaying || !mehfilAudioCtx) return;
+          const now = mehfilAudioCtx.currentTime;
+          const osc = mehfilAudioCtx.createOscillator();
+          const gain = mehfilAudioCtx.createGain();
+          osc.type = "triangle";
+          const f = notes[step % notes.length];
+          step += (Math.random() > 0.35 ? 1 : 2);
+          osc.frequency.setValueAtTime(f, now);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(0.045, now + 0.45);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.3);
+          osc.connect(gain);
+          gain.connect(mehfilAudioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 2.4);
+        };
+        playFluteNote();
+        mehfilAudioTimer = setInterval(playFluteNote, 2500);
+      } catch (e) {
+        stopMehfilMusic();
+      }
+    }
+
     function openReader(poemId) {
       const p = state.poems.find(x => x.id === poemId);
       if (p && !document.getElementById("reader-modal").classList.contains("open")) pushAppView("reader");
       if (!p) return;
+      stopTeleprompter();
       state.currentReaderPoemId = poemId;
       const liked = state.favorites.includes(p.id);
+      const d = getDaadCounts(p);
 
       document.getElementById("reader-head-genre").textContent = `${p.genre || "काव्य"} • काव्य पाठ`;
       document.getElementById("reader-body").innerHTML = `
+        <div class="mehfil-strip">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button id="mehfil-music-btn" class="mehfil-pill ${mehfilPlaying ? "on" : ""}" onclick="toggleMehfilMusic()">${mehfilPlaying ? "🎶 धुन चल रही है" : "🎶 महफ़िल धुन"}</button>
+            <button id="tp-toggle-btn" class="mehfil-pill" onclick="toggleTeleprompter()">📜 मंच पाठ</button>
+          </div>
+          ${p.audioUrl ? `<a class="mehfil-pill on" style="text-decoration:none;" href="${esc(p.audioUrl)}" target="_blank" rel="noopener noreferrer">🎙️ कवि स्वर पाठ ↗</a>` : `<span style="font-size:11.5px; color:var(--text-muted);">शाही काव्य-पाठ कक्ष</span>`}
+        </div>
+
         <div class="reader-paper">
           <span class="genre-tag">${esc(p.genre || "कविता")}</span>
           <h2 class="reader-poem-title">${esc(p.title)}</h2>
           <button class="reader-poet-btn" onclick="openPoetProfile(dec('${arg(p.poet)}'))">✒️ ${esc(p.poet)} • परिचय देखें</button>
           <div id="reader-poem-text" class="reader-text" style="font-size:${state.readerFontSize}px;">${esc(p.content)}</div>
         </div>
+
+        <!-- Live Wah-Wah Daad Bar -->
+        <div class="daad-bar">
+          <button class="daad-btn" onclick="givePoemDaad(dec('${arg(p.id)}'), 'wah')">👏 वाह-वाह <span class="daad-cnt" id="daad-cnt-wah">${d.wah}</span></button>
+          <button class="daad-btn" onclick="givePoemDaad(dec('${arg(p.id)}'), 'naman')">🪔 नमन <span class="daad-cnt" id="daad-cnt-naman">${d.naman}</span></button>
+          <button class="daad-btn" onclick="givePoemDaad(dec('${arg(p.id)}'), 'adbhut')">🌹 अद्भुत <span class="daad-cnt" id="daad-cnt-adbhut">${d.adbhut}</span></button>
+        </div>
+
         <div class="reader-toolbar">
           <button class="action-btn" onclick="adjustReaderFont(-2)">अ-</button>
           <button class="action-btn" onclick="adjustReaderFont(2)">अ+</button>
           <button class="action-btn" onclick="toggleFavorite(dec('${arg(p.id)}'))">${liked ? "♥ सहेजा गया" : "♡ पसंदीदा"}</button>
           <button class="action-btn" onclick="copyPoem(dec('${arg(p.id)}'))">📋 कॉपी</button>
           <button class="action-btn primary" onclick="shareWhatsApp(dec('${arg(p.id)}'))">📲 WhatsApp</button>
-          <button class="action-btn gold" onclick="downloadBhavCard(dec('${arg(p.id)}'))">🖼️ भाव कार्ड डाउनलोड</button>
+          <button class="action-btn gold" onclick="openBhavStudio(dec('${arg(p.id)}'))">🎨 भाव-कार्ड स्टूडियो</button>
         </div>
       `;
       document.getElementById("reader-modal").classList.add("open");
@@ -2802,78 +3325,198 @@
     function copyPoem(id) {
       const p = state.poems.find(x => x.id === id);
       if (!p) return;
-      const txt = `*${p.title}*\n\n${p.content}\n\n— ${p.poet}\n(${state.settings.appName})`;
+      const txt = `*${p.title}*
+
+${p.content}
+
+— ${p.poet}
+(${state.settings.appName})`;
       navigator.clipboard.writeText(txt).then(() => showToast("कविता कॉपी हो गई 📋")).catch(() => showToast("कॉपी नहीं हो सका"));
     }
 
     function shareWhatsApp(id) {
       const p = state.poems.find(x => x.id === id);
       if (!p) return;
-      const txt = `*${p.title}* (${p.genre})\n\n${p.content}\n\n— *${p.poet}*\n✨ ${state.settings.appName} ऐप से साझा`;
+      const txt = `*${p.title}* (${p.genre})
+
+${p.content}
+
+— *${p.poet}*
+✨ ${state.settings.appName} ऐप से साझा`;
       window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, "_blank");
     }
 
-    function downloadBhavCard(id) {
+    /* ---------- 4-THEME ROYAL BHAV-CARD STUDIO (1080x1080) ---------- */
+    function openBhavStudio(id) {
       const p = state.poems.find(x => x.id === id);
       if (!p) return;
+      state.bhavPoemId = id;
+      const cleanLines = (p.content || "").split("
+").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
+      state.bhavLinesCount = 4;
+      state.bhavCustomText = cleanLines.slice(0, 4).join("
+");
+      if (!document.getElementById("bhav-modal").classList.contains("open")) pushAppView("bhav");
+      document.getElementById("bhav-modal").classList.add("open");
+      renderBhavStudio();
+    }
+
+    function setBhavTheme(th) {
+      state.bhavTheme = th;
+      renderBhavStudio();
+    }
+
+    function setBhavLinePreset(cnt) {
+      const p = state.poems.find(x => x.id === state.bhavPoemId);
+      if (!p) return;
+      const cleanLines = (p.content || "").split("
+").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
+      state.bhavLinesCount = cnt;
+      state.bhavCustomText = cleanLines.slice(0, cnt).join("
+");
+      renderBhavStudio();
+    }
+
+    function renderBhavStudio() {
+      const body = document.getElementById("bhav-studio-body");
+      const p = state.poems.find(x => x.id === state.bhavPoemId);
+      if (!body || !p) return;
+      const ptObj = getAllPoetObjects().find(x => x.name === p.poet);
+      const hasPhoto = !!(ptObj && ptObj.photo);
+
+      const themes = [
+        { id: "parchment", name: "📜 प्राचीन पृष्ठ" },
+        { id: "royal_crimson", name: "👑 शाही लाल" },
+        { id: "night_mehfil", name: "🌙 रात्रि चाँदनी" },
+        { id: "swarna_darbar", name: "✨ स्वर्ण दरबार" }
+      ];
+
+      body.innerHTML = `
+        <div class="field">
+          <label>1. शाही थीम चुनें</label>
+          <div class="theme-cards-row">
+            ${themes.map(t => `<button class="theme-opt ${state.bhavTheme === t.id ? "active" : ""}" onclick="setBhavTheme('${t.id}')">${t.name}</button>`).join("")}
+          </div>
+        </div>
+
+        <div class="field">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; gap:8px;">
+            <label style="margin:0;">2. कार्ड पर छपने वाली पंक्तियाँ</label>
+            <div style="display:flex; gap:6px;">
+              <button class="sm-btn" onclick="setBhavLinePreset(2)">2 पंक्तियाँ</button>
+              <button class="sm-btn" onclick="setBhavLinePreset(4)">4 पंक्तियाँ</button>
+            </div>
+          </div>
+          <textarea id="bhav-text-input" style="min-height:84px;" oninput="state.bhavCustomText=this.value; drawBhavCardCanvas(false)">${esc(state.bhavCustomText)}</textarea>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <label style="display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:600; cursor:pointer;">
+            <input type="checkbox" ${state.bhavIncludePhoto ? "checked" : ""} onchange="state.bhavIncludePhoto=this.checked; drawBhavCardCanvas(false)" style="width:17px; height:17px;" />
+            कवि की फ़ोटो शामिल करें ${hasPhoto ? "(उपलब्ध ✓)" : "(फ़ोटो न होने पर मुहर दिखेगी)"}
+          </label>
+        </div>
+
+        <img id="bhav-preview-img" class="studio-preview-img" alt="भाव कार्ड पूर्वावलोकन" />
+
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+          <button class="action-btn gold" onclick="drawBhavCardCanvas(true)">⬇️ 1080×1080 HD डाउनलोड</button>
+          <button class="action-btn primary" onclick="shareWhatsApp(dec('${arg(p.id)}'))">📲 WhatsApp पर कविता भेजें</button>
+        </div>
+      `;
+      drawBhavCardCanvas(false);
+    }
+
+    function drawBhavCardCanvas(triggerDownload) {
+      const p = state.poems.find(x => x.id === state.bhavPoemId);
+      if (!p) return;
+      const ptObj = getAllPoetObjects().find(x => x.name === p.poet);
       const canvas = document.getElementById("bhav-canvas");
       const ctx = canvas.getContext("2d");
       const W = 1080, H = 1080;
 
-      const finishDraw = (logoImg) => {
+      const PALETTES = {
+        parchment: { bg1: "#FDF5E4", bg2: "#F6E4C1", bg3: "#E8CA96", border1: "#7B1620", border2: "#C6922C", header: "#7B1620", sub: "#8C5A12", text: "#24120B", poet: "#7B1620" },
+        royal_crimson: { bg1: "#68111B", bg2: "#420911", bg3: "#22060D", border1: "#F7DC8B", border2: "#C6922C", header: "#F7DC8B", sub: "#F3D47E", text: "#FFF8EA", poet: "#F7DC8B" },
+        night_mehfil: { bg1: "#182142", bg2: "#0F152E", bg3: "#080B1A", border1: "#E8C068", border2: "#9A7426", header: "#FCE29A", sub: "#E8C068", text: "#F6EFE2", poet: "#FCE29A" },
+        swarna_darbar: { bg1: "#FFFDF6", bg2: "#FAF0D7", bg3: "#F2DFB6", border1: "#B88022", border2: "#7B1620", header: "#7B1620", sub: "#9A6715", text: "#26140D", poet: "#7B1620" }
+      };
+      const pal = PALETTES[state.bhavTheme] || PALETTES.parchment;
+
+      const loadOptImg = (src) => new Promise((resolve) => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+
+      Promise.all([
+        loadOptImg(state.settings.logo || ""),
+        loadOptImg((state.bhavIncludePhoto && ptObj && ptObj.photo) ? ptObj.photo : "")
+      ]).then(([logoImg, poetImg]) => {
         const grad = ctx.createLinearGradient(0, 0, W, H);
-        grad.addColorStop(0, "#FDF5E4");
-        grad.addColorStop(0.5, "#F7E7C8");
-        grad.addColorStop(1, "#ECD2A4");
+        grad.addColorStop(0, pal.bg1);
+        grad.addColorStop(0.55, pal.bg2);
+        grad.addColorStop(1, pal.bg3);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
 
-        ctx.strokeStyle = "#7B1620";
+        // Double Royal Frame
+        ctx.strokeStyle = pal.border1;
         ctx.lineWidth = 10;
         ctx.strokeRect(34, 34, W - 68, H - 68);
-        ctx.strokeStyle = "#C6922C";
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = pal.border2;
+        ctx.lineWidth = 3.5;
         ctx.strokeRect(54, 54, W - 108, H - 108);
 
-        let topCursor = 145;
+        // Top Logo + Brand Name
+        ctx.textAlign = "center";
+        let topCursor = 148;
         if (logoImg) {
-          const size = 128;
+          const sz = 112;
           ctx.save();
           ctx.beginPath();
-          ctx.arc(W / 2, 134, size / 2, 0, Math.PI * 2);
+          ctx.arc(W / 2, 122, sz / 2, 0, Math.PI * 2);
           ctx.closePath();
           ctx.clip();
-          ctx.drawImage(logoImg, W / 2 - size / 2, 134 - size / 2, size, size);
+          ctx.drawImage(logoImg, W / 2 - sz / 2, 122 - sz / 2, sz, sz);
           ctx.restore();
-          ctx.strokeStyle = "#C6922C";
-          ctx.lineWidth = 4;
+          ctx.strokeStyle = pal.border2;
+          ctx.lineWidth = 3.5;
           ctx.beginPath();
-          ctx.arc(W / 2, 134, size / 2 + 2, 0, Math.PI * 2);
+          ctx.arc(W / 2, 122, sz / 2 + 2, 0, Math.PI * 2);
           ctx.stroke();
+
+          ctx.fillStyle = pal.header;
+          ctx.font = "700 34px 'Yatra One', serif";
+          ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 222);
           topCursor = 248;
         } else {
-          ctx.fillStyle = "#7B1620";
-          ctx.font = "700 56px 'Yatra One', serif";
-          ctx.textAlign = "center";
+          ctx.fillStyle = pal.header;
+          ctx.font = "700 54px 'Yatra One', serif";
           ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 145);
-          topCursor = 195;
+          topCursor = 185;
         }
 
-        ctx.strokeStyle = "#C6922C";
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = pal.border2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(W / 2 - 170, topCursor - 18);
-        ctx.lineTo(W / 2 + 170, topCursor - 18);
+        ctx.moveTo(W / 2 - 180, topCursor);
+        ctx.lineTo(W / 2 + 180, topCursor);
         ctx.stroke();
 
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#8C5A12";
-        ctx.font = "600 28px 'Noto Sans Devanagari', sans-serif";
-        ctx.fillText(`✦ ${p.genre || "काव्य"} • ${p.title} ✦`, W / 2, topCursor + 32);
+        ctx.fillStyle = pal.sub;
+        ctx.font = "600 26px 'Noto Sans Devanagari', sans-serif";
+        ctx.fillText(`✦ ${p.genre || "काव्य"} • ${p.title} ✦`, W / 2, topCursor + 44);
 
-        ctx.fillStyle = "#26140D";
-        ctx.font = "600 39px 'Noto Serif Devanagari', serif";
-        const rawLines = (p.content || "").split("\n").map(l => l.trim()).filter(Boolean).slice(0, 8);
+        // Poem Lines
+        const rawText = (state.bhavCustomText || p.content || "");
+        const rawLines = rawText.split("
+").map(l => l.trim()).filter(Boolean).slice(0, 8);
+        ctx.fillStyle = pal.text;
+        ctx.font = "600 38px 'Noto Serif Devanagari', serif";
         const wrapped = [];
         rawLines.forEach(line => {
           const words = line.split(" ");
@@ -2888,37 +3531,57 @@
           if (cur) wrapped.push(cur);
         });
 
-        const showLines = wrapped.slice(0, 9);
-        const lineH = 60;
-        const startY = Math.max(topCursor + 110, (H - showLines.length * lineH) / 2 + 40);
+        const showLines = wrapped.slice(0, 8);
+        const lineH = 58;
+        const bottomReserve = poetImg ? 255 : 195;
+        const availH = (H - bottomReserve) - (topCursor + 75);
+        const startY = (topCursor + 75) + Math.max(24, (availH - showLines.length * lineH) / 2 + 28);
         showLines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * lineH));
 
-        ctx.strokeStyle = "#C6922C";
-        ctx.beginPath();
-        ctx.moveTo(W / 2 - 140, H - 172);
-        ctx.lineTo(W / 2 + 140, H - 172);
-        ctx.stroke();
+        // Bottom Poet Photo Medallion + Signature
+        if (poetImg) {
+          const psz = 96;
+          const py = H - 178;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(W / 2, py, psz / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(poetImg, W / 2 - psz / 2, py - psz / 2, psz, psz);
+          ctx.restore();
+          ctx.strokeStyle = pal.border2;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(W / 2, py, psz / 2 + 2, 0, Math.PI * 2);
+          ctx.stroke();
 
-        ctx.fillStyle = "#7B1620";
-        ctx.font = "700 44px 'Yatra One', serif";
-        ctx.fillText(`— ${p.poet}`, W / 2, H - 110);
+          ctx.fillStyle = pal.poet;
+          ctx.font = "700 40px 'Yatra One', serif";
+          ctx.fillText(`— ${p.poet}`, W / 2, H - 86);
+        } else {
+          ctx.strokeStyle = pal.border2;
+          ctx.beginPath();
+          ctx.moveTo(W / 2 - 140, H - 158);
+          ctx.lineTo(W / 2 + 140, H - 158);
+          ctx.stroke();
 
-        const link = document.createElement("a");
-        link.download = `kavya-chaupal-${p.id}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-        showToast("भाव कार्ड (1080×1080) डाउनलोड हुआ 🖼️");
-      };
+          ctx.fillStyle = pal.poet;
+          ctx.font = "700 44px 'Yatra One', serif";
+          ctx.fillText(`— ${p.poet}`, W / 2, H - 102);
+        }
 
-      if (state.settings.logo) {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => finishDraw(img);
-        img.onerror = () => finishDraw(null);
-        img.src = state.settings.logo;
-      } else {
-        finishDraw(null);
-      }
+        const dataUrl = canvas.toDataURL("image/png");
+        const prevImg = document.getElementById("bhav-preview-img");
+        if (prevImg) prevImg.src = dataUrl;
+
+        if (triggerDownload) {
+          const link = document.createElement("a");
+          link.download = `kavya-chaupal-bhav-${p.id}.png`;
+          link.href = dataUrl;
+          link.click();
+          showToast("1080×1080 शाही भाव कार्ड डाउनलोड हुआ 🖼️");
+        }
+      });
     }
 
     /* ============================================================
@@ -2930,6 +3593,10 @@
       renderAdminStudio();
     }
     function closeModal(id, fromPop) {
+      if (id === "reader-modal") {
+        stopTeleprompter();
+        stopMehfilMusic();
+      }
       const el = document.getElementById(id);
       const wasOpen = el && el.classList.contains("open");
       if (el) el.classList.remove("open");
@@ -3146,6 +3813,7 @@
             <div class="field"><label>कवि का नाम *</label><input id="f-poem-poet" list="poet-datalist" value="${esc(ep ? ep.poet : "")}" placeholder="नाम चुनें या लिखें" /><datalist id="poet-datalist">${poets.map(pt => `<option value="${esc(pt.name)}">`).join("")}</datalist></div>
             <div class="field"><label>विधा / श्रेणी *</label><input id="f-poem-genre" list="genre-datalist" value="${esc(ep ? ep.genre : "गीत")}" placeholder="गीत, दोहा, ग़ज़ल, छंद..." /><datalist id="genre-datalist">${genres.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div>
             <div class="field"><label>संपूर्ण रचना *</label><textarea id="f-poem-content" placeholder="यहाँ पूरी कविता पेस्ट करें...">${esc(ep ? ep.content : "")}</textarea></div>
+            <div class="field"><label>🎙️ कवि स्वर पाठ ऑडियो लिंक (वैकल्पिक — MP3 / Drive / YouTube)</label><input id="f-poem-audio" value="${esc(ep ? (ep.audioUrl || "") : "")}" placeholder="https://..." /></div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
               <input type="checkbox" id="f-poem-feat" ${(ep && state.settings.featuredPoemId === ep.id) ? "checked" : ""} style="width:18px; height:18px;" />
               <label for="f-poem-feat" style="font-size:13.5px; font-weight:600;">इसे “आज का विशेष भाव” बनाएं</label>
@@ -3419,6 +4087,31 @@
         `;
       }
 
+      /* --- 7B: DIGITAL CERTIFICATE GENERATOR (चौपाल गौरव सम्मान-पत्र) --- */
+      if (state.adminTab === "certificate") {
+        const poets = getAllPoetObjects();
+        contentHtml = `
+          <div class="form-box">
+            <h4 class="section-title" style="margin-bottom:8px;">🏅 1-क्लिक ‘चौपाल गौरव’ डिजिटल सम्मान-पत्र</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 12px;">नाम व उपाधि लिखते ही नीचे काव्य चौपाल के असली लोगो और स्वर्ण मुहर वाला HD सम्मान-पत्र तैयार हो जाएगा।</p>
+            <div class="field"><label>सम्मान-पत्र शीर्षक</label><input id="cert-title-in" value="${esc(state.certTitle)}" oninput="state.certTitle=this.value; drawCertificateCanvas(false)" /></div>
+            <div class="field"><label>सम्मानित कवि / विजेता का नाम *</label><input id="cert-name-in" list="cert-poet-dl" value="${esc(state.certName)}" placeholder="जैसे: सुश्री विनीता श्रीवास्तव" oninput="state.certName=this.value; drawCertificateCanvas(false)" /><datalist id="cert-poet-dl">${poets.map(pt => `<option value="${esc(pt.name)}">`).join("")}</datalist></div>
+            <div class="field"><label>उपाधि / श्रेणी</label><input id="cert-award-in" value="${esc(state.certAward)}" oninput="state.certAward=this.value; drawCertificateCanvas(false)" /></div>
+            <div class="field"><label>प्रशस्ति वचन</label><textarea id="cert-reason-in" style="min-height:68px;" oninput="state.certReason=this.value; drawCertificateCanvas(false)">${esc(state.certReason)}</textarea></div>
+            <div class="two-fields">
+              <div class="field"><label>दिनांक</label><input id="cert-date-in" value="${esc(state.certDate)}" oninput="state.certDate=this.value; drawCertificateCanvas(false)" /></div>
+              <div class="field"><label>हस्ताक्षर / संयोजक</label><input id="cert-sign-in" value="${esc(state.certSign)}" oninput="state.certSign=this.value; drawCertificateCanvas(false)" /></div>
+            </div>
+
+            <img id="cert-preview-img" class="cert-preview-img" alt="सम्मान-पत्र पूर्वावलोकन" />
+
+            <div style="text-align:center;">
+              <button class="action-btn gold" onclick="drawCertificateCanvas(true)">⬇️ सम्मान-पत्र (HD PNG) डाउनलोड करें</button>
+            </div>
+          </div>
+        `;
+      }
+
       /* --- 8: SETTINGS & REAL LOGO --- */
       if (state.adminTab === "settings") {
         const s = state.settings;
@@ -3469,10 +4162,14 @@
           <button class="admin-tab-btn ${state.adminTab === "ebooks" ? "active" : ""}" onclick="setAdminTab('ebooks')">📚 ई-बुक</button>
           <button class="admin-tab-btn ${state.adminTab === "poets" ? "active" : ""}" onclick="setAdminTab('poets')">✒️ कवि</button>
           <button class="admin-tab-btn ${state.adminTab === "admins" ? "active" : ""}" onclick="setAdminTab('admins')">👑 एडमिन</button>
+          <button class="admin-tab-btn ${state.adminTab === "certificate" ? "active" : ""}" onclick="setAdminTab('certificate')">🏅 सम्मान-पत्र</button>
           <button class="admin-tab-btn ${state.adminTab === "settings" ? "active" : ""}" onclick="setAdminTab('settings')">⚙️ लोगो व पिन</button>
         </div>
         ${contentHtml}
       `;
+      if (state.adminUnlocked && state.adminTab === "certificate") {
+        setTimeout(() => drawCertificateCanvas(false), 30);
+      }
     }
 
     /* ---------- CRUD ACTIONS ---------- */
@@ -3486,7 +4183,8 @@
 
       const id = state.editingPoemId || ("poem_" + Date.now());
       const existing = state.poems.find(x => x.id === id);
-      const item = { id, title, poet, genre, content, createdAt: existing ? existing.createdAt : Date.now() };
+      const audioUrl = (document.getElementById("f-poem-audio")?.value || "").trim();
+      const item = { id, title, poet, genre, content, audioUrl, daad: (existing && existing.daad) ? existing.daad : { wah: 0, naman: 0, adbhut: 0 }, createdAt: existing ? existing.createdAt : Date.now() };
       if (existing) state.poems = state.poems.map(x => x.id === id ? item : x); else state.poems.unshift(item);
 
       if (!state.settings.genres.includes(genre)) { state.settings.genres.push(genre); await cloudSaveDoc("settings", "settings", state.settings); }
@@ -4015,6 +4713,487 @@
     }
 
     /* ============================================================
+       8C. CHHAND & MATRA ANALYZER + ANTAKSHARI + DAILY RIDDLE + CERTIFICATE
+       ============================================================ */
+    const HINDI_RIDDLES = [
+      {
+        q: "दोहा पंक्ति पूरी करें — “रहिमन पानी राखिए, बिन पानी सब सून। पानी गए न ऊबरै, _____ मानुस चून॥”",
+        opts: ["मोती", "हीरा", "सोना", "काया"],
+        ans: 0,
+        note: "रहीम दास जी का प्रसिद्ध श्लेष अलंकार दोहा: 'मोती, मानुस, चून'।"
+      },
+      {
+        q: "‘दोहा’ छंद के विषम चरणों (पहले और तीसरे चरण) में कितनी मात्राएँ होती हैं?",
+        opts: ["11 मात्राएँ", "13 मात्राएँ", "16 मात्राएँ", "12 मात्राएँ"],
+        ans: 1,
+        note: "दोहा अर्धसम मात्रिक छंद है — विषम चरणों में 13 तथा सम चरणों में 11 मात्राएँ होती हैं।"
+      },
+      {
+        q: "“सिंहासन हिल उठे राजवंशों ने भृकुटी तानी थी” — इस अमर रचना की कवयित्री कौन हैं?",
+        opts: ["महादेवी वर्मा", "सुभद्रा कुमारी चौहान", "मीराबाई", "अनामिका"],
+        ans: 1,
+        note: "सुभद्रा कुमारी चौहान की कालजयी रचना 'झाँसी की रानी' से।"
+      },
+      {
+        q: "‘चौपाई’ छंद के प्रत्येक चरण में कुल कितनी मात्राएँ होती हैं?",
+        opts: ["14 मात्राएँ", "15 मात्राएँ", "16 मात्राएँ", "18 मात्राएँ"],
+        ans: 2,
+        note: "चौपाई सम मात्रिक छंद है, जिसके प्रत्येक चरण में 16 मात्राएँ होती हैं।"
+      },
+      {
+        q: "पंक्ति पूरी करें — “कारवां गुज़र गया, _____ देखते रहे।” (गोपालदास 'नीरज')",
+        opts: ["सपने", "गुबार", "रास्ते", "दीप"],
+        ans: 1,
+        note: "महाकवि गोपालदास 'नीरज' का सुप्रसिद्ध गीत 'कारवां गुज़र गया, गुबार देखते रहे'।"
+      },
+      {
+        q: "‘हरिगीतिका’ छंद के प्रत्येक चरण में कुल कितनी मात्राएँ होती हैं?",
+        opts: ["24 मात्राएँ", "26 मात्राएँ", "28 मात्राएँ", "30 मात्राएँ"],
+        ans: 2,
+        note: "हरिगीतिका में 16 और 12 की यति से कुल 28 मात्राएँ होती हैं।"
+      },
+      {
+        q: "“कबीरा खड़ा बाज़ार में, मांगे सबकी खैर। ना काहू से दोस्ती, न काहू से _____॥”",
+        opts: ["बैर", "प्यार", "आस", "राग"],
+        ans: 0,
+        note: "संत कबीरदास जी की कालजयी साखी — 'न काहू से बैर'।"
+      },
+      {
+        q: "‘सोरठा’ छंद किस छंद का ठीक उल्टा (विपरीत) माना जाता है?",
+        opts: ["चौपाई", "दोहा", "रोला", "कुण्डलिया"],
+        ans: 1,
+        note: "सोरठा दोहे का उल्टा होता है — इसके विषम चरणों में 11 और सम चरणों में 13 मात्राएँ होती हैं।"
+      }
+    ];
+
+    function renderDailyRiddle() {
+      const wrap = document.getElementById("daily-riddle-wrap");
+      if (!wrap) return;
+      const r = HINDI_RIDDLES[state.riddleIdx % HINDI_RIDDLES.length];
+      wrap.innerHTML = `
+        <div class="riddle-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
+            <span class="genre-tag">🧩 आज की काव्य-पहेली</span>
+            <button class="sm-btn" onclick="nextDailyRiddle()">अगली पहेली →</button>
+          </div>
+          <div class="font-literary" style="font-size:14.5px; font-weight:600; color:var(--text); line-height:1.6;">${esc(r.q)}</div>
+          <div class="riddle-opts">
+            ${r.opts.map((opt, idx) => {
+              let cls = "riddle-opt-btn";
+              if (state.riddleAnswered !== null) {
+                if (idx === r.ans) cls += " correct";
+                else if (idx === state.riddleAnswered) cls += " wrong";
+              }
+              return `<button class="${cls}" onclick="answerDailyRiddle(${idx})">${["क", "ख", "ग", "घ"][idx]}. ${esc(opt)}</button>`;
+            }).join("")}
+          </div>
+          ${state.riddleAnswered !== null ? `<div style="margin-top:9px; font-size:12.5px; color:var(--primary); font-weight:600;">💡 ${esc(r.note)}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function answerDailyRiddle(idx) {
+      state.riddleAnswered = idx;
+      const r = HINDI_RIDDLES[state.riddleIdx % HINDI_RIDDLES.length];
+      if (idx === r.ans) showToast("वाह! बिल्कुल सही उत्तर 🎉");
+      else showToast("सही उत्तर नीचे देखें 💡");
+      renderDailyRiddle();
+    }
+
+    function nextDailyRiddle() {
+      state.riddleIdx = (state.riddleIdx + 1) % HINDI_RIDDLES.length;
+      state.riddleAnswered = null;
+      renderDailyRiddle();
+    }
+
+    /* ---------- HINDI MATRA & CHHAND ANALYZER ENGINE ---------- */
+    function analyzeHindiLine(line) {
+      const IND_LONG = new Set(["आ", "ई", "ऊ", "ए", "ऐ", "ओ", "औ", "अं", "अः"]);
+      const IND_SHORT = new Set(["अ", "इ", "उ", "ऋ"]);
+      const MATRA_LONG = new Set(["ा", "ी", "ू", "े", "ै", "ो", "ौ"]);
+      const MATRA_SHORT = new Set(["ि", "ु", "ृ"]);
+      const DIACRITICS = new Set(["ं", "ः", "ँ", "़"]);
+      const isConsonant = (ch) => {
+        const code = ch.charCodeAt(0);
+        return code >= 0x0915 && code <= 0x0939;
+      };
+
+      // Parse into syllable clusters
+      const chars = Array.from(line);
+      const tokens = [];
+      let i = 0;
+      while (i < chars.length) {
+        const ch = chars[i];
+        if (IND_LONG.has(ch) || IND_SHORT.has(ch)) {
+          let txt = ch;
+          let wt = IND_LONG.has(ch) ? 2 : 1;
+          i++;
+          while (i < chars.length && DIACRITICS.has(chars[i])) {
+            if (chars[i] === "ं" || chars[i] === "ः") wt = 2;
+            txt += chars[i];
+            i++;
+          }
+          tokens.push({ text: txt, weight: wt, isSyl: true, startsWithHalf: false });
+        } else if (isConsonant(ch)) {
+          // Check leading conjuncts (e.g. प्र, स्व, क्य)
+          let txt = ch;
+          let startsWithHalf = false;
+          i++;
+          if (i < chars.length && chars[i] === "़") { txt += chars[i]; i++; }
+          while (i + 1 < chars.length && chars[i] === "्" && isConsonant(chars[i + 1])) {
+            startsWithHalf = true;
+            txt += chars[i] + chars[i + 1];
+            i += 2;
+            if (i < chars.length && chars[i] === "़") { txt += chars[i]; i++; }
+          }
+          let wt = 1;
+          while (i < chars.length && (MATRA_LONG.has(chars[i]) || MATRA_SHORT.has(chars[i]) || DIACRITICS.has(chars[i]) || chars[i] === "्")) {
+            if (MATRA_LONG.has(chars[i]) || chars[i] === "ं" || chars[i] === "ः") wt = 2;
+            if (chars[i] === "्") wt = 0; // trailing halant
+            txt += chars[i];
+            i++;
+          }
+          tokens.push({ text: txt, weight: wt, isSyl: wt > 0, startsWithHalf });
+        } else {
+          tokens.push({ text: ch, weight: 0, isSyl: false, isBreak: /[,।॥|;!?]/.test(ch) });
+          i++;
+        }
+      }
+
+      // Apply Pingala conjunct rule: if a syllable starts with a half-consonant cluster inside a word, previous laghu becomes guru
+      for (let k = 1; k < tokens.length; k++) {
+        if (tokens[k].isSyl && tokens[k].startsWithHalf) {
+          // Find immediately preceding syllable (if no space/break in between)
+          let prev = k - 1;
+          if (prev >= 0 && tokens[prev].isSyl && tokens[prev].weight === 1) {
+            tokens[prev].weight = 2;
+          }
+        }
+      }
+
+      // Compute pad (comma-separated) totals and line total
+      const pads = [];
+      let curPad = 0;
+      let total = 0;
+      tokens.forEach(t => {
+        if (t.isSyl) {
+          curPad += t.weight;
+          total += t.weight;
+        } else if (t.isBreak && curPad > 0) {
+          pads.push(curPad);
+          curPad = 0;
+        }
+      });
+      if (curPad > 0) pads.push(curPad);
+
+      // Detect classic Hindi Chhand
+      let chhandGuess = "";
+      if (pads.length === 2) {
+        const [a, b] = pads;
+        if (a === 13 && b === 11) chhandGuess = "दोहा चरण (13 + 11 = 24)";
+        else if (a === 11 && b === 13) chhandGuess = "सोरठा / रोला चरण (11 + 13 = 24)";
+        else if (a === 16 && b === 12) chhandGuess = "हरिगीतिका चरण (16 + 12 = 28)";
+        else if (a === 14 && b === 12) chhandGuess = "गीतिका चरण (14 + 12 = 26)";
+        else if (a === 16 && b === 11) chhandGuess = "सरसी चरण (16 + 11 = 27)";
+        else if (a === 12 && b === 7) chhandGuess = "बरवै चरण (12 + 7 = 19)";
+        else if (a === 15 && b === 13) chhandGuess = "उल्लाला चरण (15 + 13 = 28)";
+      }
+      if (!chhandGuess) {
+        if (total === 16) chhandGuess = "चौपाई चरण (16 मात्राएँ)";
+        else if (total === 24) chhandGuess = "24 मात्रिक (दोहा / सोरठा / रोला)";
+        else if (total === 28) chhandGuess = "28 मात्रिक (हरिगीतिका / सार)";
+        else if (total === 26) chhandGuess = "26 मात्रिक (गीतिका)";
+        else if (total === 12) chhandGuess = "तोमर चरण (12 मात्राएँ)";
+      }
+
+      return { tokens: tokens.filter(t => t.isSyl), pads, total, chhandGuess };
+    }
+
+    function renderMatraPane() {
+      const box = document.getElementById("manch-matra");
+      if (!box) return;
+      const lines = (state.matraInput || "").split("
+").map(l => l.trim()).filter(Boolean);
+      const analyzed = lines.map(l => ({ line: l, res: analyzeHindiLine(l) }));
+
+      box.innerHTML = `
+        <div class="form-box">
+          <h3 class="section-title" style="margin-bottom:6px;">⚖️ हिंदी छंद एवं मात्रा गणक</h3>
+          <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 10px;">अपनी कविता या दोहे की पंक्तियाँ नीचे लिखें (यति के लिए कॉमा <code>,</code> लगाएँ)—प्रत्येक अक्षर की <strong>लघु (१)</strong> और <strong>गुरु (२)</strong> मात्राएँ स्वतः गिनी जाएंगी।</p>
+          <textarea id="matra-textarea" style="width:100%; min-height:95px; padding:10px 12px; border-radius:12px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-family:'Noto Serif Devanagari',serif; font-size:15px; line-height:1.65;" oninput="state.matraInput=this.value; renderMatraPane()">${esc(state.matraInput)}</textarea>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+            <button class="sm-btn" onclick="setMatraSample('doha')">दोहा उदाहरण</button>
+            <button class="sm-btn" onclick="setMatraSample('chaupai')">चौपाई उदाहरण</button>
+            <button class="sm-btn" onclick="setMatraSample('harigeetika')">हरिगीतिका उदाहरण</button>
+            <button class="sm-btn del" onclick="state.matraInput=''; renderMatraPane()">साफ़ करें</button>
+          </div>
+        </div>
+
+        ${analyzed.map((item, idx) => `
+          <div class="matra-line-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:4px;">
+              <span class="mini-badge">पंक्ति ${idx + 1} • कुल ${item.res.total} मात्राएँ ${item.res.pads.length > 1 ? `(${item.res.pads.join(" + ")})` : ""}</span>
+              ${item.res.chhandGuess ? `<span class="genre-tag">✨ ${esc(item.res.chhandGuess)}</span>` : ""}
+            </div>
+            <div class="syllable-wrap">
+              ${item.res.tokens.map(tk => `
+                <div class="syl-chip">
+                  <span class="syl-wt ${tk.weight === 2 ? "guru" : ""}">${tk.weight === 2 ? "२" : "१"}</span>
+                  <span class="syl-ch">${esc(tk.text)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+      `;
+    }
+
+    function setMatraSample(kind) {
+      if (kind === "doha") {
+        state.matraInput = "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।
+एक अकेला दीप भी, कर देता उजियास।।";
+      } else if (kind === "chaupai") {
+        state.matraInput = "मंगल भवन अमंगल हारी।
+द्रवहु सुदसरथ अजिर बिहारी।।";
+      } else if (kind === "harigeetika") {
+        state.matraInput = "संसार की समरस्थली में, धीरता धारण करो।
+चलते हुए निज इष्ट पथ पर, संकटों से मत डरो।।";
+      }
+      renderMatraPane();
+    }
+
+    /* ---------- KAVYA ANTAKSHARI (AKSHARA WHEEL) ---------- */
+    const DEVANAGARI_LETTERS = [
+      "अ", "आ", "इ", "ई", "उ", "ऊ", "ए", "ऐ", "ओ", "औ",
+      "क", "ख", "ग", "घ", "च", "छ", "ज", "झ", "ट", "ठ",
+      "ड", "ढ", "त", "थ", "द", "ध", "न", "प", "फ", "ब",
+      "भ", "म", "य", "र", "ल", "व", "श", "ष", "स", "ह"
+    ];
+
+    function getFirstHindiLetter(str) {
+      const cleaned = String(str || "").replace(/^[\s“"'‘’(\[—\-✦❖*0-9०-९.।॥,]+/, "");
+      return cleaned ? cleaned.charAt(0) : "";
+    }
+
+    function renderAntakshariPane() {
+      const box = document.getElementById("manch-antakshari");
+      if (!box) return;
+
+      const countByLetter = {};
+      state.poems.forEach(p => {
+        const l1 = getFirstHindiLetter(p.content);
+        const l2 = getFirstHindiLetter(p.title);
+        if (l1) countByLetter[l1] = (countByLetter[l1] || 0) + 1;
+        if (l2 && l2 !== l1) countByLetter[l2] = (countByLetter[l2] || 0) + 1;
+      });
+
+      const sel = state.antakshariLetter || "क";
+      const matched = state.poems.filter(p => getFirstHindiLetter(p.content) === sel || getFirstHindiLetter(p.title) === sel);
+
+      box.innerHTML = `
+        <div class="section-head" style="margin-top:0;">
+          <h2 class="section-title">🔤 काव्य-अंताक्षरी (अक्षर-चक्र)</h2>
+          <span class="section-hint">अक्षर चुनें</span>
+        </div>
+        <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 10px;">मंच या काव्य-अंताक्षरी में किसी भी अक्षर से प्रारंभ होने वाली कविताएँ व दोहे तुरंत खोजें:</p>
+        <div class="akshara-grid">
+          ${DEVANAGARI_LETTERS.map(ch => {
+            const cnt = countByLetter[ch] || 0;
+            const active = sel === ch ? "active" : "";
+            return `<button class="ak-btn ${cnt > 0 ? "has-poems" : ""} ${active}" onclick="selectAntakshariLetter('${ch}')">${ch}${cnt > 0 ? `<span class="ak-dot">${cnt}</span>` : ""}</button>`;
+          }).join("")}
+        </div>
+        <div class="section-head">
+          <h3 class="section-title">✦ ‘${esc(sel)}’ अक्षर से रचनाएँ (${matched.length})</h3>
+        </div>
+        ${matched.length
+          ? `<div class="cards-grid two-col">${matched.map(poemCardHTML).join("")}</div>`
+          : `<div class="empty-box">अभी ‘${esc(sel)}’ अक्षर से प्रारंभ होने वाली कोई रचना उपलब्ध नहीं है।</div>`}
+      `;
+    }
+
+    function selectAntakshariLetter(ch) {
+      state.antakshariLetter = ch;
+      renderAntakshariPane();
+    }
+
+    /* ---------- 1-CLICK DIGITAL CERTIFICATE GENERATOR (1400x1000) ---------- */
+    function drawCertificateCanvas(triggerDownload) {
+      const canvas = document.getElementById("cert-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const W = 1400, H = 1000;
+
+      const title = (state.certTitle || "चौपाल गौरव सम्मान-पत्र").trim();
+      const recipient = (state.certName || "सम्मानित रचनाकार").trim();
+      const award = (state.certAward || "विशिष्ट काव्य सम्मान").trim();
+      const reason = (state.certReason || "").trim();
+      const dateStr = (state.certDate || "").trim();
+      const signStr = (state.certSign || "राहुल द्विवेदी 'स्मित'").trim();
+
+      const loadLogo = (src) => new Promise((resolve) => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+
+      loadLogo(state.settings.logo || "").then((logoImg) => {
+        // Royal Ivory & Gold Background
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, "#FFFDF7");
+        grad.addColorStop(0.5, "#F9EBD0");
+        grad.addColorStop(1, "#EED4A2");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Outer Crimson & Inner Gold Borders
+        ctx.strokeStyle = "#6B111B";
+        ctx.lineWidth = 14;
+        ctx.strokeRect(32, 32, W - 64, H - 64);
+
+        ctx.strokeStyle = "#C6922C";
+        ctx.lineWidth = 5;
+        ctx.strokeRect(56, 56, W - 112, H - 112);
+
+        ctx.strokeStyle = "rgba(198, 146, 44, 0.45)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(70, 70, W - 140, H - 140);
+
+        // Corner Gold Ornaments
+        const corners = [[56, 56], [W - 56, 56], [56, H - 56], [W - 56, H - 56]];
+        corners.forEach(([cx, cy]) => {
+          ctx.fillStyle = "#7B1620";
+          ctx.beginPath();
+          ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#F7DC8B";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        });
+
+        ctx.textAlign = "center";
+        let yCur = 155;
+
+        if (logoImg) {
+          const sz = 116;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(W / 2, 138, sz / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(logoImg, W / 2 - sz / 2, 138 - sz / 2, sz, sz);
+          ctx.restore();
+          ctx.strokeStyle = "#C6922C";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(W / 2, 138, sz / 2 + 2, 0, Math.PI * 2);
+          ctx.stroke();
+          yCur = 248;
+        }
+
+        // Organization Name
+        ctx.fillStyle = "#7B1620";
+        ctx.font = "700 46px 'Yatra One', serif";
+        ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, yCur);
+
+        ctx.fillStyle = "#8C5A12";
+        ctx.font = "600 22px 'Noto Sans Devanagari', sans-serif";
+        ctx.fillText("हिंदी साहित्य, छंद एवं सृजन का गौरवशाली डिजिटल मंच", W / 2, yCur + 34);
+
+        // Certificate Title Ribbon
+        ctx.fillStyle = "#6B111B";
+        ctx.font = "700 54px 'Yatra One', serif";
+        ctx.fillText(`✦ ${title} ✦`, W / 2, yCur + 108);
+
+        // Intro line
+        ctx.fillStyle = "#4A2C1D";
+        ctx.font = "600 26px 'Noto Serif Devanagari', serif";
+        ctx.fillText("यह सम्मान-पत्र सादर प्रदान किया जाता है", W / 2, yCur + 162);
+
+        // Recipient Name
+        ctx.fillStyle = "#7B1620";
+        ctx.font = "700 62px 'Yatra One', serif";
+        ctx.fillText(recipient, W / 2, yCur + 236);
+
+        // Gold underline under name
+        ctx.strokeStyle = "#C6922C";
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(W / 2 - 280, yCur + 254);
+        ctx.lineTo(W / 2 + 280, yCur + 254);
+        ctx.stroke();
+
+        // Award / Category badge text
+        ctx.fillStyle = "#9A6715";
+        ctx.font = "700 30px 'Noto Sans Devanagari', sans-serif";
+        ctx.fillText(award, W / 2, yCur + 302);
+
+        // Wrapped Citation Text
+        ctx.fillStyle = "#26140D";
+        ctx.font = "500 26px 'Noto Serif Devanagari', serif";
+        const words = reason.split(/\s+/);
+        const lines = [];
+        let cur = "";
+        words.forEach(w => {
+          const test = cur ? cur + " " + w : w;
+          if (ctx.measureText(test).width > W - 260) {
+            if (cur) lines.push(cur);
+            cur = w;
+          } else { cur = test; }
+        });
+        if (cur) lines.push(cur);
+        lines.slice(0, 3).forEach((ln, idx) => {
+          ctx.fillText(ln, W / 2, yCur + 356 + idx * 40);
+        });
+
+        // Footer: Date (Left), Royal Seal (Center), Signatory (Right)
+        const footY = H - 115;
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#4A2C1D";
+        ctx.font = "700 24px 'Noto Sans Devanagari', sans-serif";
+        ctx.fillText(`दिनांक: ${dateStr}`, 120, footY);
+
+        // Gold Seal Center
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(W / 2, footY - 14, 46, 0, Math.PI * 2);
+        ctx.fillStyle = "#7B1620";
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#F7DC8B";
+        ctx.stroke();
+        ctx.fillStyle = "#F7DC8B";
+        ctx.textAlign = "center";
+        ctx.font = "700 18px 'Yatra One', serif";
+        ctx.fillText("काव्य चौपाल", W / 2, footY - 16);
+        ctx.font = "600 14px 'Noto Sans Devanagari', sans-serif";
+        ctx.fillText("साहित्य मुहर", W / 2, footY + 4);
+        ctx.restore();
+
+        // Signatory Right
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#7B1620";
+        ctx.font = "700 24px 'Noto Sans Devanagari', sans-serif";
+        ctx.fillText(signStr, W - 120, footY);
+
+        const dataUrl = canvas.toDataURL("image/png");
+        const prevImg = document.getElementById("cert-preview-img");
+        if (prevImg) prevImg.src = dataUrl;
+
+        if (triggerDownload) {
+          const link = document.createElement("a");
+          link.download = `kavya-chaupal-samman-${Date.now()}.png`;
+          link.href = dataUrl;
+          link.click();
+          showToast("डिजिटल सम्मान-पत्र (HD PNG) डाउनलोड हुआ 🏅");
+        }
+      });
+    }
+
+    /* ============================================================
        9. DYNAMIC PWA MANIFEST & BOOTSTRAP
        ============================================================ */
     function injectPWAManifest() {
@@ -4081,6 +5260,11 @@
       }
 
       // 2. Close topmost open modal
+      const bhavModal = document.getElementById("bhav-modal");
+      if (bhavModal && bhavModal.classList.contains("open")) {
+        closeModal("bhav-modal", true);
+        return;
+      }
       const adminModal = document.getElementById("admin-modal");
       if (adminModal && adminModal.classList.contains("open")) {
         closeModal("admin-modal", true);
