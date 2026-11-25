@@ -5188,21 +5188,15 @@ ${p.content}
        9. DYNAMIC PWA MANIFEST & BOOTSTRAP
        ============================================================ */
     function injectPWAManifest() {
-      const manifest = {
-        name: "काव्य चौपाल",
-        short_name: "काव्य चौपाल",
-        description: "हिंदी साहित्य, कविता, आगामी कार्यक्रम, लाइव वीडियो, प्रतियोगिता एवं ई-बुक लाइब्रेरी",
-        start_url: ".",
-        display: "standalone",
-        background_color: "#3E0B14",
-        theme_color: "#5B1118",
-        icons: [{ src: document.getElementById("favicon-link").href, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }]
-      };
-      const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
-      const link = document.createElement("link");
-      link.rel = "manifest";
-      link.href = URL.createObjectURL(blob);
-      document.head.appendChild(link);
+      if (!document.querySelector('link[rel="manifest"]')) {
+        const link = document.createElement("link");
+        link.rel = "manifest";
+        link.href = "./manifest.json";
+        document.head.appendChild(link);
+      }
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      }
     }
 
     /* ============================================================
