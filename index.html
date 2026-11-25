@@ -1440,6 +1440,7 @@
 
 
 
+
   <!-- ================= CINEMATIC OPENING SPLASH ================= -->
   <div id="splash-screen">
     <div class="splash-border"></div>
@@ -1780,8 +1781,8 @@
   
   
   
-  <script>
-window.addEventListener("error", function(ev) {
+  
+  <script>window.addEventListener("error", function() {
   try {
     var sp = document.getElementById("splash-screen");
     if (sp) sp.classList.add("hide");
@@ -1802,9 +1803,13 @@ var auth = null;
 var cloudStatus = "connecting";
 
 try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-  auth = firebase.auth();
+  if (window.firebase && firebase.apps && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  if (window.firebase) {
+    db = firebase.firestore();
+    auth = firebase.auth();
+  }
 } catch (e) {
   cloudStatus = "offline";
 }
@@ -1889,9 +1894,9 @@ var DEFAULT_ADMINS = [
 ];
 
 var DEFAULT_POEMS = [
-  { id: "poem_rahul_1", title: "प्राण लेकर आ गये तुम", poet: "राहुल द्विवेदी 'स्मित'", genre: "गीत", createdAt: 1732500003000, content: "साँझ की मैं देहरी पर प्राण देकर जा रहा था\nरात्रि के सूने प्रहर में प्राण लेकर आ गये तुम ।।" },
-  { id: "poem_rahul_2", title: "दीप बन कर जल चलो", poet: "राहुल द्विवेदी 'स्मित'", genre: "दोहा", createdAt: 1732500002000, content: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।" },
-  { id: "poem_dheeraj_1", title: "समय की पगडंडी", poet: "धीरज श्रीवास्तव", genre: "गीत", createdAt: 1732500001000, content: "धूप-छाँव के इस आँगन में, गीत नया इक गाना है,\nहर उलझन के पार क्षितिज पर, सूरज नया उगाना है।" }
+  { id: "poem_rahul_1", title: "प्राण लेकर आ गये तुम", poet: "राहुल द्विवेदी 'स्मित'", genre: "गीत", createdAt: 1732500003000, content: "साँझ की मैं देहरी पर प्राण देकर जा रहा था\nरात्रि के सूने प्रहर में प्राण लेकर आ गये तुम ।." },
+  { id: "poem_rahul_2", title: "दीप बन कर जल चलो", poet: "राहुल द्विवेदी 'स्मित'", genre: "दोहा", createdAt: 1732500002000, content: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।." },
+  { id: "poem_dheeraj_1", title: "समय की पगडंडी", poet: "धीरज श्रीवास्तव", genre: "गीत", createdAt: 1732500001000, content: "धूप-छाँव के इस आँगन में, गीत नया इक गाना है,\nहर उलझन के पार क्षितिज पर, सूरज नया उगाना है." }
 ];
 
 var DEFAULT_EVENTS = [
@@ -1967,7 +1972,7 @@ var state = {
   riddleIdx: new Date().getDate() % 2,
   riddleAnswered: null,
   antakshariLetter: "क",
-  matraInput: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।",
+  matraInput: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।.",
   bhavTheme: "parchment",
   bhavCustomText: "",
   bhavPoemId: null,
@@ -2040,13 +2045,11 @@ function initFirebaseSync() {
         email: (user.email || "").toLowerCase().trim(),
         displayName: user.displayName || ""
       } : null;
-
       if (state.currentUser && state.settings.adminEmail && state.currentUser.email === state.settings.adminEmail.toLowerCase().trim()) {
         state.adminUnlocked = true;
         var pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);
         if (pendTotal > 0) state.adminTab = "approvals";
       }
-
       renderAll();
       var sm = document.getElementById("submit-modal");
       if (sm && sm.classList.contains("open")) renderSubmitModal();
@@ -2054,14 +2057,12 @@ function initFirebaseSync() {
       if (am && am.classList.contains("open")) renderAdminStudio();
     });
   }
-
   if (!db) {
     cloudStatus = "offline";
     updateSyncUI();
     return;
   }
   var rootRef = db.collection(ROOT_COL);
-
   rootRef.doc("settings").onSnapshot(function(docSnap) {
     cloudStatus = "live";
     updateSyncUI();
@@ -2077,7 +2078,6 @@ function initFirebaseSync() {
     cloudStatus = (err && err.code === "permission-denied") ? "rule_error" : "offline";
     updateSyncUI();
   });
-
   rootRef.doc("poems").collection("items").onSnapshot(function(snap) {
     cloudStatus = "live";
     updateSyncUI();
@@ -2090,7 +2090,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("poets").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
       var list = [];
@@ -2101,7 +2100,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("admins").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
       var list = [];
@@ -2112,7 +2110,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("events").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
       var list = [];
@@ -2123,7 +2120,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("videos").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
       var list = [];
@@ -2134,7 +2130,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("competition").onSnapshot(function(docSnap) {
     if (docSnap.exists) {
       state.competition = Object.assign({}, DEFAULT_COMPETITION, docSnap.data());
@@ -2142,7 +2137,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("ebooks").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
       var list = [];
@@ -2153,7 +2147,6 @@ function initFirebaseSync() {
       renderAll();
     }
   });
-
   rootRef.doc("pending_poems").collection("items").onSnapshot(function(snap) {
     var list = [];
     snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
@@ -2162,7 +2155,6 @@ function initFirebaseSync() {
     saveLocalCache();
     renderAll();
   });
-
   rootRef.doc("pending_poets").collection("items").onSnapshot(function(snap) {
     var list = [];
     snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
@@ -2211,7 +2203,6 @@ function cloudDeleteDoc(section, id) {
   return db.collection(ROOT_COL).doc(section).collection("items").doc(id).delete().then(function() { return true; }).catch(function() { return false; });
 }
 
-
 var DIYA_SVG = "<svg width=\"48\" height=\"48\" viewBox=\"0 0 64 64\" fill=\"none\"><path d=\"M32 7C36.5 15.5 41 20.5 41 27C41 32 37 36 32 36C27 36 23 32 23 27C23 20.5 27.5 15.5 32 7Z\" fill=\"#F7B733\"/><path d=\"M12 37C12 47.5 21 54 32 54C43 54 52 47.5 52 37H12Z\" fill=\"#C6922C\"/></svg>";
 
 function renderBrandLogo() {
@@ -2220,7 +2211,6 @@ function renderBrandLogo() {
   var hdrEl = document.getElementById("hdr-logo-wrap");
   var aboutEl = document.getElementById("about-logo-wrap");
   var favLink = document.getElementById("favicon-link");
-
   if (logo) {
     if (splashEl) splashEl.innerHTML = "<img src=\"" + esc(logo) + "\" alt=\"काव्य चौपाल लोगो\">";
     if (hdrEl) hdrEl.innerHTML = "<img src=\"" + esc(logo) + "\" alt=\"लोगो\">";
@@ -2294,11 +2284,113 @@ function showToast(msg) {
 }
 
 function esc(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")\n    .replace(/'/g, "&#39;");\n}\nfunction arg(str) { return encodeURIComponent(String(str || "")).replace(/'/g, "%27"); }\nfunction dec(str) { try { return decodeURIComponent(str); } catch (e) { return str; } }\nfunction initials(name) { return (name || "क").trim().slice(0, 2); }\n\nfunction getAllGenres() {\n  var set = new Set(state.settings.genres || []);\n  state.poems.forEach(function(p) { if (p.genre) set.add(p.genre.trim()); });\n  return Array.from(set);\n}\n\nfunction getAllPoetObjects() {\n  var map = new Map();\n  state.poets.forEach(function(p) { map.set(p.name.trim(), p); });\n  state.poems.forEach(function(pm) {\n    var nm = (pm.poet || "").trim();\n    if (nm && !map.has(nm)) {\n      map.set(nm, { id: "auto_" + nm, name: nm, city: "काव्य चौपाल रचनाकार", photo: "", bio: "काव्य चौपाल मंच के सम्मानित रचनाकार।" });\n    }\n  });\n  return Array.from(map.values());\n}\n\nfunction switchTab(tabName, fromPop) {\n  if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);\n  state.activeTab = tabName;\n  document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });\n  var target = document.getElementById("tab-" + tabName);\n  if (target) target.classList.add("active");\n  document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === tabName); });\n  if (tabName === "poets") {\n    state.activePoetName = null;\n    document.getElementById("poets-list-view").style.display = "block";\n    document.getElementById("poet-detail-view").style.display = "none";\n  }\n  if (tabName === "admins") {\n    state.activeAdminId = null;\n    document.getElementById("admins-list-view").style.display = "block";\n    document.getElementById("admin-detail-view").style.display = "none";\n  }\n  window.scrollTo({ top: 0, behavior: "smooth" });\n  renderAll();\n}\n\nfunction openManchSub(sub) {\n  state.manchSub = sub;\n  switchTab("manch");\n  setManchSub(sub);\n}\n\nfunction setManchSub(sub) {\n  state.manchSub = sub;\n  document.querySelectorAll(".hub-tab-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.sub === sub); });\n  document.querySelectorAll(".manch-pane").forEach(function(p) { p.style.display = "none"; });\n  var target = document.getElementById("manch-" + sub);\n  if (target) target.style.display = "block";\n  renderManchHub();\n}\n\nfunction renderAll() {\n  var hdrTitle = document.getElementById("hdr-title");\n  if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";\n  var spName = document.getElementById("splash-app-name");\n  if (spName) spName.textContent = state.settings.appName || "काव्य चौपाल";\n  var spTag = document.getElementById("splash-tagline");\n  if (spTag) spTag.textContent = state.settings.tagline || "";\n  var abTitle = document.getElementById("about-title");\n  if (abTitle) abTitle.textContent = state.settings.appName || "काव्य चौपाल";\n  var abTag = document.getElementById("about-tagline");\n  if (abTag) abTag.textContent = state.settings.tagline || "";\n  var abDesc = document.getElementById("about-desc");\n  if (abDesc) abDesc.textContent = state.settings.aboutText || "";\n\n  var favBadge = document.getElementById("hdr-fav-badge");\n  if (favBadge) {\n    favBadge.textContent = state.favorites.length;\n    favBadge.classList.toggle("show", state.favorites.length > 0);\n  }\n\n  var pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);\n  var pendBadge = document.getElementById("hdr-pending-badge");\n  if (pendBadge) {\n    pendBadge.textContent = pendTotal;\n    pendBadge.classList.toggle("show", pendTotal > 0);\n  }\n\n  renderBrandLogo();\n  renderSpotlight();\n  renderDailyRiddle();\n  renderVidhaStrip();\n  renderPoetFilterStrip();\n  renderPoemsGrid();\n  renderPoetsDirectory();\n  if (state.activePoetName) renderPoetDetail(state.activePoetName);\n  renderManchHub();\n  renderFavorites();\n  renderAdminsDirectory();\n  if (state.activeAdminId) renderAdminDetail(state.activeAdminId);\n  renderSocialLinks();\n}\n\nfunction renderSpotlight() {\n  var wrap = document.getElementById("spotlight-wrap");\n  if (!wrap) return;\n  if (!state.poems.length) { wrap.innerHTML = ""; return; }\n  var feat = state.poems.find(function(p) { return p.id === state.settings.featuredPoemId; }) || state.poems[0];\n  var linesArr = (feat.content || "").split("\n").filter(function(l) { return l.trim(); }).slice(0, 2);\n  wrap.innerHTML = "<div class=\"spotlight-card\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\"><div class=\"spotlight-badge\">✦ आज का विशेष भाव • " + esc(feat.genre || "काव्य") + "</div><p class=\"spotlight-quote\">“" + esc(linesArr.join("\n")) + "”</p><div class=\"spotlight-foot\"><span>— <strong>" + esc(feat.poet) + "</strong> (" + esc(feat.title) + ")</span><span style=\"font-weight:700;\">संपूर्ण पढ़ें →</span></div></div>";
+  var s = String(str || "");
+  return s.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;").split("\"").join("&quot;").split("'").join("&#39;");
+}
+function arg(str) { return encodeURIComponent(String(str || "")).split("'").join("%27"); }
+function dec(str) { try { return decodeURIComponent(str); } catch (e) { return str; } }
+function initials(name) { return (name || "क").trim().slice(0, 2); }
+
+function getAllGenres() {
+  var set = new Set(state.settings.genres || []);
+  state.poems.forEach(function(p) { if (p.genre) set.add(p.genre.trim()); });
+  return Array.from(set);
+}
+
+function getAllPoetObjects() {
+  var map = new Map();
+  state.poets.forEach(function(p) { map.set(p.name.trim(), p); });
+  state.poems.forEach(function(pm) {
+    var nm = (pm.poet || "").trim();
+    if (nm && !map.has(nm)) {
+      map.set(nm, { id: "auto_" + nm, name: nm, city: "काव्य चौपाल रचनाकार", photo: "", bio: "काव्य चौपाल मंच के सम्मानित रचनाकार।" });
+    }
+  });
+  return Array.from(map.values());
+}
+
+function switchTab(tabName, fromPop) {
+  if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);
+  state.activeTab = tabName;
+  document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
+  var target = document.getElementById("tab-" + tabName);
+  if (target) target.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === tabName); });
+  if (tabName === "poets") {
+    state.activePoetName = null;
+    document.getElementById("poets-list-view").style.display = "block";
+    document.getElementById("poet-detail-view").style.display = "none";
+  }
+  if (tabName === "admins") {
+    state.activeAdminId = null;
+    document.getElementById("admins-list-view").style.display = "block";
+    document.getElementById("admin-detail-view").style.display = "none";
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  renderAll();
+}
+
+function openManchSub(sub) {
+  state.manchSub = sub;
+  switchTab("manch");
+  setManchSub(sub);
+}
+
+function setManchSub(sub) {
+  state.manchSub = sub;
+  document.querySelectorAll(".hub-tab-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.sub === sub); });
+  document.querySelectorAll(".manch-pane").forEach(function(p) { p.style.display = "none"; });
+  var target = document.getElementById("manch-" + sub);
+  if (target) target.style.display = "block";
+  renderManchHub();
+}
+
+function renderAll() {
+  var hdrTitle = document.getElementById("hdr-title");
+  if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";
+  var spName = document.getElementById("splash-app-name");
+  if (spName) spName.textContent = state.settings.appName || "काव्य चौपाल";
+  var spTag = document.getElementById("splash-tagline");
+  if (spTag) spTag.textContent = state.settings.tagline || "";
+  var abTitle = document.getElementById("about-title");
+  if (abTitle) abTitle.textContent = state.settings.appName || "काव्य चौपाल";
+  var abTag = document.getElementById("about-tagline");
+  if (abTag) abTag.textContent = state.settings.tagline || "";
+  var abDesc = document.getElementById("about-desc");
+  if (abDesc) abDesc.textContent = state.settings.aboutText || "";
+  var favBadge = document.getElementById("hdr-fav-badge");
+  if (favBadge) {
+    favBadge.textContent = state.favorites.length;
+    favBadge.classList.toggle("show", state.favorites.length > 0);
+  }
+  var pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);
+  var pendBadge = document.getElementById("hdr-pending-badge");
+  if (pendBadge) {
+    pendBadge.textContent = pendTotal;
+    pendBadge.classList.toggle("show", pendTotal > 0);
+  }
+  renderBrandLogo();
+  renderSpotlight();
+  renderDailyRiddle();
+  renderVidhaStrip();
+  renderPoetFilterStrip();
+  renderPoemsGrid();
+  renderPoetsDirectory();
+  if (state.activePoetName) renderPoetDetail(state.activePoetName);
+  renderManchHub();
+  renderFavorites();
+  renderAdminsDirectory();
+  if (state.activeAdminId) renderAdminDetail(state.activeAdminId);
+  renderSocialLinks();
+}
+
+function renderSpotlight() {
+  var wrap = document.getElementById("spotlight-wrap");
+  if (!wrap) return;
+  if (!state.poems.length) { wrap.innerHTML = ""; return; }
+  var feat = state.poems.find(function(p) { return p.id === state.settings.featuredPoemId; }) || state.poems[0];
+  var linesArr = (feat.content || "").split("\n").filter(function(l) { return l.trim(); }).slice(0, 2);
+  wrap.innerHTML = "<div class=\"spotlight-card\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\"><div class=\"spotlight-badge\">✦ आज का विशेष भाव • " + esc(feat.genre || "काव्य") + "</div><p class=\"spotlight-quote\">“" + esc(linesArr.join("\n")) + "”</p><div class=\"spotlight-foot\"><span>— <strong>" + esc(feat.poet) + "</strong> (" + esc(feat.title) + ")</span><span style=\"font-weight:700;\">संपूर्ण पढ़ें →</span></div></div>";
 }
 
 function renderVidhaStrip() {
@@ -2386,7 +2478,6 @@ function renderPoemsGrid() {
   if (!filtered.length) { grid.innerHTML = "<div class=\"empty-box\" style=\"grid-column:1/-1;\">कोई रचना उपलब्ध नहीं है।</div>"; return; }
   grid.innerHTML = filtered.map(poemCardHTML).join("");
 }
-
 
 function renderPoetsDirectory() {
   var qEl = document.getElementById("poet-search");
@@ -2520,7 +2611,6 @@ function renderSocialLinks() {
   }).join("");
 }
 
-
 function getDaadCounts(p) { var d = (p && p.daad) || {}; return { wah: Number(d.wah || 0), naman: Number(d.naman || 0), adbhut: Number(d.adbhut || 0) }; }
 function getTotalDaad(p) { var d = getDaadCounts(p); return d.wah + d.naman + d.adbhut; }
 function burstCelebration(emoji) {
@@ -2644,7 +2734,6 @@ function drawBhavCardCanvas(triggerDownload) {
   var url = canvas.toDataURL("image/png"); var img = document.getElementById("bhav-preview-img"); if (img) img.src = url;
   if (triggerDownload) { var a = document.createElement("a"); a.download = "kavya-chaupal-bhav-" + p.id + ".png"; a.href = url; a.click(); showToast("भाव कार्ड डाउनलोड हुआ 🖼️"); }
 }
-
 
 function openAdminStudio() { if (!document.getElementById("admin-modal").classList.contains("open")) pushAppView("studio"); document.getElementById("admin-modal").classList.add("open"); renderAdminStudio(); }
 function closeModal(id, fromPop) { if (id === "reader-modal") { stopTeleprompter(); stopMehfilMusic(); } var el = document.getElementById(id); var wasOpen = el && el.classList.contains("open"); if (el) el.classList.remove("open"); if (wasOpen && !fromPop) syncBackAfterUiClose(); }
@@ -2880,7 +2969,6 @@ function saveSettingsForm() {
   cloudSaveDoc("settings", "settings", state.settings).then(function() { renderAll(); renderAdminStudio(); showToast("सेटिंग्स सहेजी गईं ✨"); });
 }
 
-
 function getPoetByEmail(email) { var em = (email || "").toLowerCase().trim(); return em ? (state.poets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null) : null; }
 function getPendingPoetByEmail(email) { var em = (email || "").toLowerCase().trim(); return em ? (state.pendingPoets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null) : null; }
 function openSubmitModal(tab) { if (!document.getElementById("submit-modal").classList.contains("open")) pushAppView("submit"); state.submitTab = tab || "poem"; state.submitSuccessMsg = ""; document.getElementById("submit-modal").classList.add("open"); renderSubmitModal(); }
@@ -3047,7 +3135,8 @@ function analyzeHindiLine(line) {
     var ch = chars[i]; var code = ch.charCodeAt(0);
     if (code >= 0x0904 && code <= 0x0939) {
       var txt = ch; var wt = LONG.has(ch) ? 2 : 1;
-      while (i + 1 < chars.length && "ाीुूेैोौंःँ़्".indexOf(chars[i + 1]) !== -1) {
+      var matras = "ाीुूेैोौंःँ़्";
+      while (i + 1 < chars.length && matras.indexOf(chars[i + 1]) !== -1) {
         i++;
         if (LONG.has(chars[i]) || chars[i] === "ं" || chars[i] === "ः") wt = 2;
         txt += chars[i];
@@ -3069,7 +3158,19 @@ function renderMatraPane() {
 }
 
 var DEVANAGARI_LETTERS = ["अ","आ","इ","ई","उ","ऊ","ए","ऐ","ओ","औ","क","ख","ग","घ","च","छ","ज","झ","ट","ठ","ड","ढ","त","थ","द","ध","न","प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह"];
-function getFirstHindiLetter(str) { var cleaned = String(str || "").replace(/^[\s“"'‘’(\[—\-✦❖*0-9०-९.।॥,]+/, ""); return cleaned ? cleaned.charAt(0) : ""; }\nfunction renderAntakshariPane() {\n  var box = document.getElementById("manch-antakshari"); if (!box) return;\n  var sel = state.antakshariLetter || "क";\n  var matched = state.poems.filter(function(p) { return getFirstHindiLetter(p.content) === sel || getFirstHindiLetter(p.title) === sel; });\n  box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">🔤 काव्य-अंताक्षरी</h2><span class=\"section-hint\">अक्षर चुनें</span></div><div class=\"akshara-grid\">" + DEVANAGARI_LETTERS.map(function(ch) {
+function getFirstHindiLetter(str) {
+  var s = String(str || "");
+  var skipChars = " \t\n“\"\'‘’(\[—\-✦❖*0-9०-९.।॥,";
+  while (s.length && skipChars.indexOf(s.charAt(0)) !== -1) {
+    s = s.slice(1);
+  }
+  return s ? s.charAt(0) : "";
+}
+function renderAntakshariPane() {
+  var box = document.getElementById("manch-antakshari"); if (!box) return;
+  var sel = state.antakshariLetter || "क";
+  var matched = state.poems.filter(function(p) { return getFirstHindiLetter(p.content) === sel || getFirstHindiLetter(p.title) === sel; });
+  box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">🔤 काव्य-अंताक्षरी</h2><span class=\"section-hint\">अक्षर चुनें</span></div><div class=\"akshara-grid\">" + DEVANAGARI_LETTERS.map(function(ch) {
     return "<button class=\"ak-btn " + (sel === ch ? "active" : "has-poems") + "\" onclick=\"state.antakshariLetter=\'" + ch + "\'; renderAntakshariPane()\">" + ch + "</button>";
   }).join("") + "</div><h3 class=\"section-title\">✦ ‘" + esc(sel) + "’ अक्षर से रचनाएँ (" + matched.length + ")</h3>" + (matched.length ? ("<div class=\"cards-grid two-col\">" + matched.map(poemCardHTML).join("") + "</div>") : ("<div class=\"empty-box\">‘" + esc(sel) + "’ से कोई रचना नहीं मिली।</div>"));
 }
@@ -3077,7 +3178,6 @@ function getFirstHindiLetter(str) { var cleaned = String(str || "").replace(/^[\
 function drawCertificateCanvas(triggerDownload) {
   var canvas = document.getElementById("cert-canvas"); if (!canvas) return;
   var ctx = canvas.getContext("2d"); var W = 1400, H = 1000;
-
   var title = (state.certTitle || "चौपाल गौरव सम्मान-पत्र").trim();
   var recipient = (state.certName || "सम्मानित रचनाकार").trim();
   var award = (state.certAward || "विशिष्ट काव्य सम्मान").trim();
@@ -3174,7 +3274,7 @@ function drawCertificateCanvas(triggerDownload) {
     ctx.fillText(award, W / 2, nameY + 68);
 
     ctx.fillStyle = "#26140D"; ctx.font = "500 25px 'Noto Serif Devanagari', serif";
-    var words = reason.split(/\s+/);
+    var words = reason.split(" ");
     var linesOut = []; var cur = "";
     words.forEach(function(w) {
       var test = cur ? (cur + " " + w) : w;
@@ -3246,7 +3346,6 @@ injectPWAManifest();
 renderAll();
 initFirebaseSync();
 initSmartBackNavigation();
-
   </script>
 </body>
 </html>
