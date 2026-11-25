@@ -1439,6 +1439,7 @@
 
 
 
+
   <!-- ================= CINEMATIC OPENING SPLASH ================= -->
   <div id="splash-screen">
     <div class="splash-border"></div>
@@ -1778,6 +1779,7 @@
   
   
   
+  
   <script>
 window.addEventListener("error", function(ev) {
   try {
@@ -1786,7 +1788,7 @@ window.addEventListener("error", function(ev) {
   } catch (e) {}
 });
 
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyCnGLsegGezV0sgThrffn9lQnsrVTY6qQw",
   authDomain: "kavya-chaupal.firebaseapp.com",
   projectId: "kavya-chaupal",
@@ -1795,9 +1797,9 @@ const firebaseConfig = {
   appId: "1:535311269440:web:a8130ebea446ebc6c629a5"
 };
 
-let db = null;
-let auth = null;
-let cloudStatus = "connecting";
+var db = null;
+var auth = null;
+var cloudStatus = "connecting";
 
 try {
   firebase.initializeApp(firebaseConfig);
@@ -1807,7 +1809,7 @@ try {
   cloudStatus = "offline";
 }
 
-const DEFAULT_SETTINGS = {
+var DEFAULT_SETTINGS = {
   appName: "काव्य चौपाल",
   tagline: "शब्द जहाँ संवाद बनें, और भाव जहाँ उत्सव…",
   logo: "",
@@ -1826,7 +1828,7 @@ const DEFAULT_SETTINGS = {
   }
 };
 
-const DEFAULT_POETS = [
+var DEFAULT_POETS = [
   {
     id: "poet_rahul",
     name: "राहुल द्विवेदी 'स्मित'",
@@ -1880,28 +1882,28 @@ const DEFAULT_POETS = [
   }
 ];
 
-const DEFAULT_ADMINS = [
+var DEFAULT_ADMINS = [
   { id: "admin_rahul", name: "राहुल द्विवेदी 'स्मित'", designation: "संस्थापक एवं मुख्य संयोजक", city: "लखनऊ, उत्तर प्रदेश", role: "मंच परिकल्पना, सजीव प्रसारण, डिजिटल रणनीति एवं आयोजन समन्वय", photo: "", bio: "काव्य चौपाल के संस्थापक एवं सूत्रधार। साहित्य और आधुनिक डिजिटल माध्यमों के समन्वय से हिंदी कविता को जन-जन तक पहुँचाने का संकल्प।", order: 1 },
   { id: "admin_dheeraj", name: "धीरज श्रीवास्तव", designation: "वरिष्ठ मार्गदर्शक एवं संचालक", city: "मनकापुर, गोण्डा", role: "चौपाल कार्यशाला मार्गदर्शन, अध्यक्षता एवं विशेष काव्य प्रस्तुति", photo: "", bio: "काव्य चौपाल की साहित्यिक गुणवत्ता, छंद प्रशिक्षण और गोष्ठियों के सफल संचालन में अग्रणी भूमिका निभाने वाले वरिष्ठ रचनाकार।", order: 2 },
   { id: "admin_sunita", name: "डॉ० सुनीता आजमगढ़ी", designation: "संयोजिका (मासिक काव्य गोष्ठी)", city: "आजमगढ़, उत्तर प्रदेश", role: "मासिक काव्य गोष्ठी एवं सजीव कवि सम्मेलन संयोजन", photo: "", bio: "काव्य चौपाल के नियमित साहित्यिक आयोजनों एवं कवि सम्मेलनों के समन्वय और संवर्धन में समर्पित साहित्यकार।", order: 3 }
 ];
 
-const DEFAULT_POEMS = [
-  { id: "poem_rahul_1", title: "प्राण लेकर आ गये तुम", poet: "राहुल द्विवेदी 'स्मित'", genre: "गीत", createdAt: 1732500003000, content: "साँझ की मैं देहरी पर प्राण देकर जा रहा था\nरात्रि के सूने प्रहर में प्राण लेकर आ गये तुम ।।\n\nजल गये कितने पतिंगे, दीपकों ने प्राण त्यागे।\nआह ने उत्कर्ष पाया, मोह के संदर्भ भागे।\nभावना आहत पड़ी थी, मुग्धता में था अँधेरा\nऔर सहसा रोशनी के बाण लेकर आ गये तुम।।\n\nबिंध चुकी थीं कण्टकों से, सब सुकोमल भावनाएँ।\nरो रहीं थीं आर्त मन से, आत्मा की याचनाएँ।\nवायु ने की अग्नि वर्षा, तुहिन ने पाषाण फेंके\nइस प्रलय के कठिन क्षण में त्राण लेकर आ गये तुम...।\n\n--राहुल द्विवेदी 'स्मित'" },
-  { id: "poem_rahul_2", title: "दीप बन कर जल चलो", poet: "राहुल द्विवेदी 'स्मित'", genre: "दोहा", createdAt: 1732500002000, content: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।\n\nशब्दों में संवेदना, भावों में अनुराग।\nकाव्य वही जो हर हृदय, भर दे पावन राग।।" },
-  { id: "poem_dheeraj_1", title: "समय की पगडंडी", poet: "धीरज श्रीवास्तव", genre: "गीत", createdAt: 1732500001000, content: "धूप-छाँव के इस आँगन में, गीत नया इक गाना है,\nहर उलझन के पार क्षितिज पर, सूरज नया उगाना है।\n\nथके नहीं हैं पाँव अभी तक, मन में अडिग उजाला है,\nशब्दों की इस पावन चौपाल, हर दर्पण रखवाला है।" }
+var DEFAULT_POEMS = [
+  { id: "poem_rahul_1", title: "प्राण लेकर आ गये तुम", poet: "राहुल द्विवेदी 'स्मित'", genre: "गीत", createdAt: 1732500003000, content: "साँझ की मैं देहरी पर प्राण देकर जा रहा था\nरात्रि के सूने प्रहर में प्राण लेकर आ गये तुम ।।" },
+  { id: "poem_rahul_2", title: "दीप बन कर जल चलो", poet: "राहुल द्विवेदी 'स्मित'", genre: "दोहा", createdAt: 1732500002000, content: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।" },
+  { id: "poem_dheeraj_1", title: "समय की पगडंडी", poet: "धीरज श्रीवास्तव", genre: "गीत", createdAt: 1732500001000, content: "धूप-छाँव के इस आँगन में, गीत नया इक गाना है,\nहर उलझन के पार क्षितिज पर, सूरज नया उगाना है।" }
 ];
 
-const DEFAULT_EVENTS = [
+var DEFAULT_EVENTS = [
   { id: "evt_1", title: "काव्य चौपाल — मासिक सजीव काव्य गोष्ठी", date: "आगामी रविवार", time: "सायं 7:00 बजे", platform: "काव्य चौपाल फ़ेसबुक एवं यूट्यूब लाइव", host: "संयोजन: काव्य चौपाल प्रबन्धकीय मण्डल", status: "आगामी", description: "देश के विभिन्न अंचलों से आमंत्रित रचनाकारों की स्वरचित काव्य प्रस्तुतियों के साथ साहित्यिक संध्या।", link: "https://youtube.com/@kavyachaupal", poster: "", createdAt: 1732500002000 },
   { id: "evt_2", title: "चौपाल कार्यशाला — साप्ताहिक छंद अभ्यास सत्र", date: "प्रत्येक सप्ताह", time: "रात्रि 8:00 बजे", platform: "काव्य चौपाल WhatsApp कम्युनिटी", host: "संचालन: कार्यशाला प्रकोष्ठ", status: "आगामी", description: "नवांकुर एवं स्थापित कवियों के लिए शास्त्रीय छंद विधान, मात्रा गणना और भाव सौंदर्य पर विशेष अभ्यास सत्र।", link: "https://chat.whatsapp.com/CXAkhyOu74eHgHG0ucQict", poster: "", createdAt: 1732500001000 }
 ];
 
-const DEFAULT_VIDEOS = [
+var DEFAULT_VIDEOS = [
   { id: "vid_1", title: "काव्य चौपाल — विशेष सजीव प्रसारण एवं काव्य पाठ", url: "https://youtube.com/@kavyachaupal", category: "सजीव प्रसारण", date: "काव्य चौपाल यूट्यूब", isLive: false, description: "काव्य चौपाल के आधिकारिक यूट्यूब चैनल पर सभी सजीव कवि सम्मेलन, गोष्ठियाँ और प्रतियोगिता प्रसारण देखें।", createdAt: 1732500001000 }
 ];
 
-const DEFAULT_COMPETITION = {
+var DEFAULT_COMPETITION = {
   title: "काव्य चौपाल — स्वरचित काव्यपाठ प्रतियोगिता",
   edition: "नवीन संस्करण",
   status: "पंजीकरण खुला है",
@@ -1919,32 +1921,34 @@ const DEFAULT_COMPETITION = {
   ]
 };
 
-const DEFAULT_EBOOKS = [
+var DEFAULT_EBOOKS = [
   { id: "eb_1", title: "काव्य चौपाल — साझा काव्य संकलन", author: "संपादन: काव्य चौपाल साहित्य परिवार", category: "साझा संकलन", pages: "डिजिटल ई-बुक", description: "काव्य चौपाल के रचनाकारों की चुनिंदा कविताओं, गीतों, दोहों और छंदों का गरिमामय डिजिटल संकलन।", link: "https://www.facebook.com/KavyaChaupal", cover: "", createdAt: 1732500001000 }
 ];
 
-const LS_KEY = "kavya_chaupal_cache_v2";
-const FAV_KEY = "kavya_chaupal_favs_v1";
-const THEME_KEY = "kavya_chaupal_theme_v1";
+var LS_KEY = "kavya_chaupal_cache_v2";
+var FAV_KEY = "kavya_chaupal_favs_v1";
+var THEME_KEY = "kavya_chaupal_theme_v1";
 
-let state = {
-  settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
-  poems: JSON.parse(JSON.stringify(DEFAULT_POEMS)),
-  poets: JSON.parse(JSON.stringify(DEFAULT_POETS)),
-  admins: JSON.parse(JSON.stringify(DEFAULT_ADMINS)),
-  events: JSON.parse(JSON.stringify(DEFAULT_EVENTS)),
-  videos: JSON.parse(JSON.stringify(DEFAULT_VIDEOS)),
-  competition: JSON.parse(JSON.stringify(DEFAULT_COMPETITION)),
-  ebooks: JSON.parse(JSON.stringify(DEFAULT_EBOOKS)),
-  favorites: JSON.parse(localStorage.getItem(FAV_KEY) || "[]"),
+function safeParseJson(str, fallback) {
+  try { return JSON.parse(str); } catch (e) { return fallback; }
+}
+
+var state = {
+  settings: safeParseJson(JSON.stringify(DEFAULT_SETTINGS), {}),
+  poems: safeParseJson(JSON.stringify(DEFAULT_POEMS), []),
+  poets: safeParseJson(JSON.stringify(DEFAULT_POETS), []),
+  admins: safeParseJson(JSON.stringify(DEFAULT_ADMINS), []),
+  events: safeParseJson(JSON.stringify(DEFAULT_EVENTS), []),
+  videos: safeParseJson(JSON.stringify(DEFAULT_VIDEOS), []),
+  competition: safeParseJson(JSON.stringify(DEFAULT_COMPETITION), {}),
+  ebooks: safeParseJson(JSON.stringify(DEFAULT_EBOOKS), []),
+  favorites: safeParseJson(localStorage.getItem(FAV_KEY) || "[]", []),
   activeTab: "poems",
   manchSub: "events",
   selectedGenre: "सभी",
   selectedPoetFilter: "सभी",
   poemSearch: "",
   activePoetName: null,
-  poetProfileGenre: "सम्पूर्ण",
-  poetAllViewMode: "unified",
   activeAdminId: null,
   readerFontSize: 18,
   currentReaderPoemId: null,
@@ -1953,29 +1957,19 @@ let state = {
   editingPoemId: null,
   editingPoetId: null,
   editingAdminId: null,
-  editingEventId: null,
-  editingVideoId: null,
-  editingEbookId: null,
   tempPoetPhoto: "",
   tempAdminPhoto: "",
-  tempEventPoster: "",
-  tempEbookCover: "",
   tempLogoData: "",
   pendingPoems: [],
   pendingPoets: [],
   submitTab: "poem",
   submitSuccessMsg: "",
-  tempSubmitPhoto: "",
-  editingPendingPoemId: null,
-  editingPendingPoetId: null,
-  riddleIdx: new Date().getDate() % 8,
+  riddleIdx: new Date().getDate() % 2,
   riddleAnswered: null,
   antakshariLetter: "क",
   matraInput: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।।",
   bhavTheme: "parchment",
-  bhavLinesCount: 4,
   bhavCustomText: "",
-  bhavIncludePhoto: true,
   bhavPoemId: null,
   certTitle: "चौपाल गौरव सम्मान-पत्र",
   certName: "",
@@ -1984,25 +1978,22 @@ let state = {
   certDate: new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" }),
   certSign: "राहुल द्विवेदी 'स्मित' (संस्थापक, काव्य चौपाल)",
   currentUser: null,
-  authMode: "login",
-  authBusy: false
+  authMode: "login"
 };
 
-try {
-  const cached = JSON.parse(localStorage.getItem(LS_KEY) || "null");
-  if (cached) {
-    if (cached.settings) state.settings = { ...DEFAULT_SETTINGS, ...cached.settings, socials: { ...DEFAULT_SETTINGS.socials, ...(cached.settings.socials || {}) } };
-    if (Array.isArray(cached.poems) && cached.poems.length) state.poems = cached.poems;
-    if (Array.isArray(cached.poets) && cached.poets.length) state.poets = cached.poets;
-    if (Array.isArray(cached.admins) && cached.admins.length) state.admins = cached.admins;
-    if (Array.isArray(cached.events) && cached.events.length) state.events = cached.events;
-    if (Array.isArray(cached.videos) && cached.videos.length) state.videos = cached.videos;
-    if (cached.competition) state.competition = { ...DEFAULT_COMPETITION, ...cached.competition };
-    if (Array.isArray(cached.ebooks) && cached.ebooks.length) state.ebooks = cached.ebooks;
-    if (Array.isArray(cached.pendingPoems)) state.pendingPoems = cached.pendingPoems;
-    if (Array.isArray(cached.pendingPoets)) state.pendingPoets = cached.pendingPoets;
-  }
-} catch (e) {}
+var cached = safeParseJson(localStorage.getItem(LS_KEY) || "null", null);
+if (cached) {
+  if (cached.settings) state.settings = Object.assign({}, DEFAULT_SETTINGS, cached.settings, { socials: Object.assign({}, DEFAULT_SETTINGS.socials, cached.settings.socials || {}) });
+  if (Array.isArray(cached.poems) && cached.poems.length) state.poems = cached.poems;
+  if (Array.isArray(cached.poets) && cached.poets.length) state.poets = cached.poets;
+  if (Array.isArray(cached.admins) && cached.admins.length) state.admins = cached.admins;
+  if (Array.isArray(cached.events) && cached.events.length) state.events = cached.events;
+  if (Array.isArray(cached.videos) && cached.videos.length) state.videos = cached.videos;
+  if (cached.competition) state.competition = Object.assign({}, DEFAULT_COMPETITION, cached.competition);
+  if (Array.isArray(cached.ebooks) && cached.ebooks.length) state.ebooks = cached.ebooks;
+  if (Array.isArray(cached.pendingPoems)) state.pendingPoems = cached.pendingPoems;
+  if (Array.isArray(cached.pendingPoets)) state.pendingPoets = cached.pendingPoets;
+}
 
 function saveLocalCache() {
   try {
@@ -2021,12 +2012,12 @@ function saveLocalCache() {
   } catch (e) {}
 }
 
-const ROOT_COL = "kavya_chaupal_data";
-let seededOnce = false;
+var ROOT_COL = "kavya_chaupal_data";
+var seededOnce = false;
 
 function updateSyncUI() {
-  const dot = document.getElementById("sync-dot");
-  const label = document.getElementById("sync-label");
+  var dot = document.getElementById("sync-dot");
+  var label = document.getElementById("sync-label");
   if (!dot || !label) return;
   if (cloudStatus === "live") {
     dot.classList.remove("offline");
@@ -2043,7 +2034,7 @@ function updateSyncUI() {
 function initFirebaseSync() {
   if (auth) {
     auth.getRedirectResult().catch(function() {});
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(function(user) {
       state.currentUser = user ? {
         uid: user.uid,
         email: (user.email || "").toLowerCase().trim(),
@@ -2052,13 +2043,15 @@ function initFirebaseSync() {
 
       if (state.currentUser && state.settings.adminEmail && state.currentUser.email === state.settings.adminEmail.toLowerCase().trim()) {
         state.adminUnlocked = true;
-        const pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);
+        var pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);
         if (pendTotal > 0) state.adminTab = "approvals";
       }
 
       renderAll();
-      if (document.getElementById("submit-modal")?.classList.contains("open")) renderSubmitModal();
-      if (document.getElementById("admin-modal")?.classList.contains("open")) renderAdminStudio();
+      var sm = document.getElementById("submit-modal");
+      if (sm && sm.classList.contains("open")) renderSubmitModal();
+      var am = document.getElementById("admin-modal");
+      if (am && am.classList.contains("open")) renderAdminStudio();
     });
   }
 
@@ -2067,181 +2060,171 @@ function initFirebaseSync() {
     updateSyncUI();
     return;
   }
-  const rootRef = db.collection(ROOT_COL);
+  var rootRef = db.collection(ROOT_COL);
 
-  rootRef.doc("settings").onSnapshot((docSnap) => {
+  rootRef.doc("settings").onSnapshot(function(docSnap) {
     cloudStatus = "live";
     updateSyncUI();
     if (docSnap.exists) {
-      const data = docSnap.data();
-      state.settings = {
-        ...DEFAULT_SETTINGS,
-        ...data,
-        socials: { ...DEFAULT_SETTINGS.socials, ...(data.socials || {}) }
-      };
+      var data = docSnap.data() || {};
+      state.settings = Object.assign({}, DEFAULT_SETTINGS, data, { socials: Object.assign({}, DEFAULT_SETTINGS.socials, data.socials || {}) });
       saveLocalCache();
       renderAll();
     } else if (!seededOnce) {
       seedInitialCloudData();
     }
-  }, (err) => {
+  }, function(err) {
     cloudStatus = (err && err.code === "permission-denied") ? "rule_error" : "offline";
     updateSyncUI();
   });
 
-  rootRef.doc("poems").collection("items").onSnapshot((snap) => {
+  rootRef.doc("poems").collection("items").onSnapshot(function(snap) {
     cloudStatus = "live";
     updateSyncUI();
     if (!snap.empty) {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       state.poems = list;
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("poets").collection("items").onSnapshot((snap) => {
+  rootRef.doc("poets").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (a.name || "").localeCompare(b.name || "", "hi"));
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (a.name || "").localeCompare(b.name || "", "hi"); });
       state.poets = list;
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("admins").collection("items").onSnapshot((snap) => {
+  rootRef.doc("admins").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (a.order || 99) - (b.order || 99));
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (a.order || 99) - (b.order || 99); });
       state.admins = list;
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("events").collection("items").onSnapshot((snap) => {
+  rootRef.doc("events").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       state.events = list;
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("videos").collection("items").onSnapshot((snap) => {
+  rootRef.doc("videos").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0) || (b.createdAt || 0) - (a.createdAt || 0));
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       state.videos = list;
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("competition").onSnapshot((docSnap) => {
+  rootRef.doc("competition").onSnapshot(function(docSnap) {
     if (docSnap.exists) {
-      state.competition = { ...DEFAULT_COMPETITION, ...docSnap.data() };
+      state.competition = Object.assign({}, DEFAULT_COMPETITION, docSnap.data());
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("ebooks").collection("items").onSnapshot((snap) => {
+  rootRef.doc("ebooks").collection("items").onSnapshot(function(snap) {
     if (!snap.empty) {
-      const list = [];
-      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
       state.ebooks = list;
       saveLocalCache();
       renderAll();
     }
   });
 
-  rootRef.doc("pending_poems").collection("items").onSnapshot((snap) => {
-    const list = [];
-    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-    list.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
+  rootRef.doc("pending_poems").collection("items").onSnapshot(function(snap) {
+    var list = [];
+    snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+    list.sort(function(a, b) { return (b.submittedAt || 0) - (a.submittedAt || 0); });
     state.pendingPoems = list;
     saveLocalCache();
     renderAll();
   });
 
-  rootRef.doc("pending_poets").collection("items").onSnapshot((snap) => {
-    const list = [];
-    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-    list.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
+  rootRef.doc("pending_poets").collection("items").onSnapshot(function(snap) {
+    var list = [];
+    snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+    list.sort(function(a, b) { return (b.submittedAt || 0) - (a.submittedAt || 0); });
     state.pendingPoets = list;
     saveLocalCache();
     renderAll();
   });
 }
 
-async function seedInitialCloudData() {
+function seedInitialCloudData() {
   if (!db || seededOnce) return;
   seededOnce = true;
   try {
-    const batch = db.batch();
-    const rootRef = db.collection(ROOT_COL);
+    var batch = db.batch();
+    var rootRef = db.collection(ROOT_COL);
     batch.set(rootRef.doc("settings"), state.settings);
     batch.set(rootRef.doc("competition"), state.competition);
-    state.poems.forEach(p => batch.set(rootRef.doc("poems").collection("items").doc(p.id), p));
-    state.poets.forEach(p => batch.set(rootRef.doc("poets").collection("items").doc(p.id), p));
-    state.admins.forEach((a, idx) => batch.set(rootRef.doc("admins").collection("items").doc(a.id), { ...a, order: idx + 1 }));
-    state.events.forEach(e => batch.set(rootRef.doc("events").collection("items").doc(e.id), e));
-    state.videos.forEach(v => batch.set(rootRef.doc("videos").collection("items").doc(v.id), v));
-    state.ebooks.forEach(b => batch.set(rootRef.doc("ebooks").collection("items").doc(b.id), b));
-    await batch.commit();
+    state.poems.forEach(function(p) { batch.set(rootRef.doc("poems").collection("items").doc(p.id), p); });
+    state.poets.forEach(function(p) { batch.set(rootRef.doc("poets").collection("items").doc(p.id), p); });
+    state.admins.forEach(function(a, idx) { batch.set(rootRef.doc("admins").collection("items").doc(a.id), Object.assign({}, a, { order: idx + 1 })); });
+    state.events.forEach(function(e) { batch.set(rootRef.doc("events").collection("items").doc(e.id), e); });
+    state.videos.forEach(function(v) { batch.set(rootRef.doc("videos").collection("items").doc(v.id), v); });
+    state.ebooks.forEach(function(b) { batch.set(rootRef.doc("ebooks").collection("items").doc(b.id), b); });
+    batch.commit().catch(function() {});
   } catch (e) {}
 }
 
-async function cloudSaveDoc(section, id, data) {
+function cloudSaveDoc(section, id, data) {
   saveLocalCache();
-  if (!db) return false;
-  try {
-    const rootRef = db.collection(ROOT_COL);
-    if (section === "settings" || section === "competition") {
-      await rootRef.doc(section).set(data, { merge: true });
-    } else {
-      await rootRef.doc(section).collection("items").doc(id).set(data);
-    }
+  if (!db) return Promise.resolve(false);
+  var rootRef = db.collection(ROOT_COL);
+  var p = (section === "settings" || section === "competition")
+    ? rootRef.doc(section).set(data, { merge: true })
+    : rootRef.doc(section).collection("items").doc(id).set(data);
+  return p.then(function() {
     cloudStatus = "live";
     updateSyncUI();
     return true;
-  } catch (e) {
-    return false;
-  }
+  }).catch(function() { return false; });
 }
 
-async function cloudDeleteDoc(section, id) {
+function cloudDeleteDoc(section, id) {
   saveLocalCache();
-  if (!db) return false;
-  try {
-    await db.collection(ROOT_COL).doc(section).collection("items").doc(id).delete();
-    return true;
-  } catch (e) { return false; }
+  if (!db) return Promise.resolve(false);
+  return db.collection(ROOT_COL).doc(section).collection("items").doc(id).delete().then(function() { return true; }).catch(function() { return false; });
 }
 
-const DIYA_SVG = '<svg width="48" height="48" viewBox="0 0 64 64" fill="none"><path d="M32 7C36.5 15.5 41 20.5 41 27C41 32 37 36 32 36C27 36 23 32 23 27C23 20.5 27.5 15.5 32 7Z" fill="#F7B733"/><path d="M12 37C12 47.5 21 54 32 54C43 54 52 47.5 52 37H12Z" fill="#C6922C"/></svg>';
+
+var DIYA_SVG = "<svg width=\"48\" height=\"48\" viewBox=\"0 0 64 64\" fill=\"none\"><path d=\"M32 7C36.5 15.5 41 20.5 41 27C41 32 37 36 32 36C27 36 23 32 23 27C23 20.5 27.5 15.5 32 7Z\" fill=\"#F7B733\"/><path d=\"M12 37C12 47.5 21 54 32 54C43 54 52 47.5 52 37H12Z\" fill=\"#C6922C\"/></svg>";
 
 function renderBrandLogo() {
-  const logo = (state.settings.logo || "").trim();
-  const splashEl = document.getElementById("splash-logo-wrap");
-  const hdrEl = document.getElementById("hdr-logo-wrap");
-  const aboutEl = document.getElementById("about-logo-wrap");
-  const favLink = document.getElementById("favicon-link");
+  var logo = (state.settings.logo || "").trim();
+  var splashEl = document.getElementById("splash-logo-wrap");
+  var hdrEl = document.getElementById("hdr-logo-wrap");
+  var aboutEl = document.getElementById("about-logo-wrap");
+  var favLink = document.getElementById("favicon-link");
 
   if (logo) {
-    if (splashEl) splashEl.innerHTML = `<img src="${esc(logo)}" alt="काव्य चौपाल लोगो">`;
-    if (hdrEl) hdrEl.innerHTML = `<img src="${esc(logo)}" alt="लोगो">`;
-    if (aboutEl) aboutEl.innerHTML = `<img src="${esc(logo)}" alt="काव्य चौपाल लोगो">`;
+    if (splashEl) splashEl.innerHTML = "<img src=\"" + esc(logo) + "\" alt=\"काव्य चौपाल लोगो\">";
+    if (hdrEl) hdrEl.innerHTML = "<img src=\"" + esc(logo) + "\" alt=\"लोगो\">";
+    if (aboutEl) aboutEl.innerHTML = "<img src=\"" + esc(logo) + "\" alt=\"काव्य चौपाल लोगो\">";
     if (favLink) favLink.href = logo;
   } else {
     if (splashEl) splashEl.innerHTML = DIYA_SVG;
@@ -2252,18 +2235,18 @@ function renderBrandLogo() {
 
 function extractYouTubeId(url) {
   if (!url) return "";
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);
+  var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/);
   return (m && m[1]) ? m[1] : "";
 }
 
 function initSplashParticles() {
-  const box = document.getElementById("splash-particles");
+  var box = document.getElementById("splash-particles");
   if (!box) return;
   box.innerHTML = "";
-  for (let i = 0; i < 18; i++) {
-    const el = document.createElement("span");
+  for (var i = 0; i < 18; i++) {
+    var el = document.createElement("span");
     el.className = "spark";
-    el.style.left = Math.random() * 100 + "%";
+    el.style.left = (Math.random() * 100) + "%";
     el.style.top = (35 + Math.random() * 60) + "%";
     el.style.animationDelay = (Math.random() * 4) + "s";
     el.style.animationDuration = (3.5 + Math.random() * 3) + "s";
@@ -2271,17 +2254,17 @@ function initSplashParticles() {
   }
 }
 
-let splashTimer = null;
-function startSplashTimer() { clearTimeout(splashTimer); splashTimer = setTimeout(() => dismissSplash(true), 3900); }
+var splashTimer = null;
+function startSplashTimer() { clearTimeout(splashTimer); splashTimer = setTimeout(function() { dismissSplash(true); }, 3900); }
 function dismissSplash(fromAuto) {
   clearTimeout(splashTimer);
-  const el = document.getElementById("splash-screen");
+  var el = document.getElementById("splash-screen");
   if (el) el.classList.add("hide");
   if (!fromAuto) pushAppView("home");
 }
 function replaySplash() {
-  const el = document.getElementById("splash-screen");
-  const bar = document.getElementById("splash-bar");
+  var el = document.getElementById("splash-screen");
+  var bar = document.getElementById("splash-bar");
   if (!el) return;
   el.classList.remove("hide");
   if (bar) { bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "loadBar 3.8s linear forwards"; }
@@ -2291,69 +2274,240 @@ function replaySplash() {
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem(THEME_KEY, theme);
-  const btn = document.getElementById("theme-toggle-btn");
+  var btn = document.getElementById("theme-toggle-btn");
   if (btn) btn.textContent = theme === "night" ? "☀️" : "🌙";
 }
 function toggleTheme() {
-  const current = document.documentElement.getAttribute("data-theme") || "light";
-  const next = current === "night" ? "light" : "night";
+  var current = document.documentElement.getAttribute("data-theme") || "light";
+  var next = current === "night" ? "light" : "night";
   applyTheme(next);
   showToast(next === "night" ? "रात्रि महफ़िल थीम सक्रिय" : "शाही स्वर्ण थीम सक्रिय");
 }
 
 function showToast(msg) {
-  const t = document.getElementById("toast");
+  var t = document.getElementById("toast");
   if (!t) return;
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove("show"), 2600);
+  t._timer = setTimeout(function() { t.classList.remove("show"); }, 2600);
 }
 
 function esc(str) {
-  return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");\n}\nfunction arg(str) { return encodeURIComponent(String(str || "")).replace(/'/g, "%27"); }\nfunction dec(str) { try { return decodeURIComponent(str); } catch (e) { return str; } }\nfunction initials(name) { return (name || "क").trim().slice(0, 2); }\n\nfunction getAllGenres() {\n  const set = new Set(state.settings.genres || []);\n  state.poems.forEach(p => { if (p.genre) set.add(p.genre.trim()); });\n  return Array.from(set);\n}\n\nfunction getAllPoetObjects() {\n  const map = new Map();\n  state.poets.forEach(p => map.set(p.name.trim(), p));\n  state.poems.forEach(pm => {\n    const nm = (pm.poet || "").trim();\n    if (nm && !map.has(nm)) {\n      map.set(nm, { id: "auto_" + nm, name: nm, city: "काव्य चौपाल रचनाकार", photo: "", bio: "काव्य चौपाल मंच के सम्मानित रचनाकार।" });\n    }\n  });\n  return Array.from(map.values());\n}\n\nfunction switchTab(tabName, fromPop) {\n  if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);\n  state.activeTab = tabName;\n  document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));\n  const target = document.getElementById("tab-" + tabName);\n  if (target) target.classList.add("active");\n  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));\n  if (tabName === "poets") {\n    state.activePoetName = null;\n    document.getElementById("poets-list-view").style.display = "block";\n    document.getElementById("poet-detail-view").style.display = "none";\n  }\n  if (tabName === "admins") {\n    state.activeAdminId = null;\n    document.getElementById("admins-list-view").style.display = "block";\n    document.getElementById("admin-detail-view").style.display = "none";\n  }\n  window.scrollTo({ top: 0, behavior: "smooth" });\n  renderAll();\n}\n\nfunction openManchSub(sub) {\n  state.manchSub = sub;\n  switchTab("manch");\n  setManchSub(sub);\n}\n\nfunction setManchSub(sub) {\n  state.manchSub = sub;\n  document.querySelectorAll(".hub-tab-btn").forEach(b => b.classList.toggle("active", b.dataset.sub === sub));\n  document.querySelectorAll(".manch-pane").forEach(p => p.style.display = "none");\n  const target = document.getElementById("manch-" + sub);\n  if (target) target.style.display = "block";\n  renderManchHub();\n}\n\nfunction renderAll() {\n  const hdrTitle = document.getElementById("hdr-title");\n  if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";\n  const spName = document.getElementById("splash-app-name");\n  if (spName) spName.textContent = state.settings.appName || "काव्य चौपाल";\n  const spTag = document.getElementById("splash-tagline");\n  if (spTag) spTag.textContent = state.settings.tagline || "";\n  const abTitle = document.getElementById("about-title");\n  if (abTitle) abTitle.textContent = state.settings.appName || "काव्य चौपाल";\n  const abTag = document.getElementById("about-tagline");\n  if (abTag) abTag.textContent = state.settings.tagline || "";\n  const abDesc = document.getElementById("about-desc");\n  if (abDesc) abDesc.textContent = state.settings.aboutText || "";\n\n  const favBadge = document.getElementById("hdr-fav-badge");\n  if (favBadge) {\n    favBadge.textContent = state.favorites.length;\n    favBadge.classList.toggle("show", state.favorites.length > 0);\n  }\n\n  const pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);\n  const pendBadge = document.getElementById("hdr-pending-badge");\n  if (pendBadge) {\n    pendBadge.textContent = pendTotal;\n    pendBadge.classList.toggle("show", pendTotal > 0);\n  }\n\n  renderBrandLogo();\n  renderSpotlight();\n  renderDailyRiddle();\n  renderVidhaStrip();\n  renderPoetFilterStrip();\n  renderPoemsGrid();\n  renderPoetsDirectory();\n  if (state.activePoetName) renderPoetDetail(state.activePoetName);\n  renderManchHub();\n  renderFavorites();\n  renderAdminsDirectory();\n  if (state.activeAdminId) renderAdminDetail(state.activeAdminId);\n  renderSocialLinks();\n}\n\nfunction renderSpotlight() {\n  const wrap = document.getElementById("spotlight-wrap");\n  if (!wrap) return;\n  if (!state.poems.length) { wrap.innerHTML = ""; return; }\n  const feat = state.poems.find(p => p.id === state.settings.featuredPoemId) || state.poems[0];\n  const lines = (feat.content || "").split("
-").filter(l => l.trim()).slice(0, 2).join("
-");\n  wrap.innerHTML = `<div class="spotlight-card" onclick="openReader(dec('${arg(feat.id)}'))"><div class="spotlight-badge">✦ आज का विशेष भाव • ${esc(feat.genre || "काव्य")}</div><p class="spotlight-quote">“${esc(lines)}”</p><div class="spotlight-foot"><span>— <strong>${esc(feat.poet)}</strong> (${esc(feat.title)})</span><span style="font-weight:700;">संपूर्ण पढ़ें →</span></div></div>`;\n}\n\nfunction renderVidhaStrip() {\n  const el = document.getElementById("vidha-strip");\n  if (!el) return;\n  const counts = {};\n  state.poems.forEach(p => {\n    if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return;\n    counts[p.genre] = (counts[p.genre] || 0) + 1;\n  });\n  const total = Object.values(counts).reduce((a, b) => a + b, 0);\n  const genres = ["सभी", ...getAllGenres()];\n  el.innerHTML = genres.map(g => {\n    const c = g === "सभी" ? total : (counts[g] || 0);\n    if (g !== "सभी" && c === 0 && state.selectedGenre !== g) return "";\n    const active = state.selectedGenre === g ? "active" : "";\n    return `<button class="pill-chip ${active}" onclick="selectGenre(dec('${arg(g)}'))">${esc(g)} <span class="count">${c}</span></button>`;\n  }).join("");\n}\n\nfunction renderPoetFilterStrip() {\n  const el = document.getElementById("poet-strip");\n  if (!el) return;\n  const poets = getAllPoetObjects();\n  const counts = {};\n  state.poems.forEach(p => {\n    if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return;\n    counts[p.poet] = (counts[p.poet] || 0) + 1;\n  });\n  const allActive = state.selectedPoetFilter === "सभी" ? "active" : "";\n  let html = `<button class="poet-chip ${allActive}" onclick="selectPoetFilter('सभी')"><div class="avatar-sm">सब</div><div><div class="poet-chip-name">सभी कवि</div><div class="poet-chip-sub">${state.poems.length} रचनाएँ</div></div></button>`;\n  poets.forEach(pt => {\n    const c = counts[pt.name] || 0;\n    const totalByPoet = state.poems.filter(p => p.poet === pt.name).length;\n    if (totalByPoet === 0) return;\n    const active = state.selectedPoetFilter === pt.name ? "active" : "";\n    const avatar = pt.photo ? `<img src="${pt.photo}" alt="${esc(pt.name)}">` : esc(initials(pt.name));\n    html += `<button class="poet-chip ${active}" onclick="selectPoetFilter(dec('${arg(pt.name)}'))"><div class="avatar-sm">${avatar}</div><div><div class="poet-chip-name">${esc(pt.name)}</div><div class="poet-chip-sub">${c} रचनाएँ</div></div></button>`;\n  });\n  el.innerHTML = html;\n}\n\nfunction selectGenre(g) { if (g !== "सभी" && state.selectedGenre !== g) pushAppView("genre"); state.selectedGenre = g; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid(); }\nfunction selectPoetFilter(name) { if (name !== "सभी" && state.selectedPoetFilter !== name) pushAppView("pfilter"); state.selectedPoetFilter = name; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid(); }\nfunction resetPoemFilters(fromPop) {\n  state.selectedGenre = "सभी"; state.selectedPoetFilter = "सभी"; state.poemSearch = "";\n  const inp = document.getElementById("poem-search"); if (inp) inp.value = "";\n  document.getElementById("poem-search-clear")?.classList.remove("show");\n  renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid();\n  if (!fromPop) syncBackAfterUiClose();\n}\nfunction onPoemSearch() {\n  const inp = document.getElementById("poem-search"); const val = inp ? inp.value : "";\n  state.poemSearch = val.trim().toLowerCase();\n  document.getElementById("poem-search-clear")?.classList.toggle("show", val.length > 0);\n  renderPoemsGrid();\n}\nfunction clearPoemSearch() { const inp = document.getElementById("poem-search"); if (inp) inp.value = ""; onPoemSearch(); }\n\nfunction poemCardHTML(p) {\n  const liked = state.favorites.includes(p.id);\n  return `<article class="poem-card" onclick="openReader(dec('${arg(p.id)}'))"><div class="poem-card-top"><span class="genre-tag">${esc(p.genre || "कविता")}</span><button class="fav-mini ${liked ? "liked" : ""}" onclick="event.stopPropagation(); toggleFavorite(dec('${arg(p.id)}'))">${liked ? "♥" : "♡"}</button></div><h3 class="poem-card-title">${esc(p.title)}</h3><p class="poem-card-excerpt">${esc(p.content)}</p><div class="poem-card-foot"><span class="poem-author-link" onclick="event.stopPropagation(); openPoetProfile(dec('${arg(p.poet)}'))">✒️ ${esc(p.poet)}</span><span class="read-more-link">${getTotalDaad(p) > 0 ? `👏 ${getTotalDaad(p)} • ` : ""}पढ़ें →</span></div></article>`;\n}\n\nfunction renderPoemsGrid() {\n  const grid = document.getElementById("poems-grid"); if (!grid) return;\n  const bar = document.getElementById("active-filter-bar"); const barText = document.getElementById("active-filter-text");\n  const filtered = state.poems.filter(p => {\n    if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return false;\n    if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return false;\n    if (state.poemSearch && !`${p.title} ${p.poet} ${p.genre} ${p.content}`.toLowerCase().includes(state.poemSearch)) return false;\n    return true;\n  });\n  const hasFilter = state.selectedGenre !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch;\n  if (bar) bar.classList.toggle("show", hasFilter);\n  if (hasFilter && barText) {\n    const parts = [];\n    if (state.selectedGenre !== "सभी") parts.push(`विधा: <strong>${esc(state.selectedGenre)}</strong>`);\n    if (state.selectedPoetFilter !== "सभी") parts.push(`कवि: <strong>${esc(state.selectedPoetFilter)}</strong>`);\n    if (state.poemSearch) parts.push(`खोज: <strong>“${esc(state.poemSearch)}”</strong>`);\n    barText.innerHTML = parts.join(" • ");\n  }\n  const lbl = document.getElementById("poems-count-label"); if (lbl) lbl.textContent = `${filtered.length} रचनाएँ`;\n  if (!filtered.length) { grid.innerHTML = `<div class="empty-box" style="grid-column:1/-1;">कोई रचना उपलब्ध नहीं है।</div>`; return; }\n  grid.innerHTML = filtered.map(poemCardHTML).join("");\n}\n\nfunction renderPoetsDirectory() {\n  const q = (document.getElementById("poet-search")?.value || "").trim().toLowerCase();\n  const poets = getAllPoetObjects().filter(pt => !q || `${pt.name} ${pt.city} ${pt.bio}`.toLowerCase().includes(q));\n  const cntEl = document.getElementById("poets-dir-count"); if (cntEl) cntEl.textContent = `${poets.length} रचनाकार`;\n  const grid = document.getElementById("poets-dir-grid"); if (!grid) return;\n  grid.innerHTML = poets.map(pt => {\n    const poems = state.poems.filter(p => p.poet === pt.name);\n    const av = pt.photo ? `<img src="${pt.photo}" alt="${esc(pt.name)}">` : esc(initials(pt.name));\n    return `<div class="person-card" onclick="openPoetProfile(dec('${arg(pt.name)}'))"><div class="avatar-md">${av}</div><div class="person-info"><h3 class="person-name">${esc(pt.name)}</h3><div class="person-meta"><span>📍 ${esc(pt.city || "भारत")}</span></div><div class="person-meta" style="margin-top:6px;"><span class="mini-badge">${poems.length} रचनाएँ</span></div></div></div>`;\n  }).join("");\n}\n\nfunction openPoetProfile(poetName) {\n  closeModal("reader-modal", true); pushAppView("poet"); state.activeTab = "poets"; state.activePoetName = poetName; state.poetProfileGenre = "सम्पूर्ण";\n  document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));\n  document.getElementById("tab-poets").classList.add("active");\n  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === "poets"));\n  document.getElementById("poets-list-view").style.display = "none";\n  document.getElementById("poet-detail-view").style.display = "block";\n  renderPoetDetail(poetName); window.scrollTo({ top: 0, behavior: "smooth" });\n}\nfunction closePoetDetail(fromPop) { state.activePoetName = null; document.getElementById("poet-detail-view").style.display = "none"; document.getElementById("poets-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }\nfunction setPoetProfileGenre(g) { state.poetProfileGenre = g; renderPoetDetail(state.activePoetName); }\nfunction setPoetAllViewMode(mode) { state.poetAllViewMode = mode; renderPoetDetail(state.activePoetName); }\n\nfunction renderStructuredBioCard(person, titleText) {\n  const items = [];\n  if (person.birth && person.birth.trim()) items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });\n  if (person.city && person.city.trim()) items.push({ ic: "📍", lbl: "स्थान", val: esc(person.city), full: false });\n  if (person.education && person.education.trim()) items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });\n  if (person.occupation && person.occupation.trim()) items.push({ ic: "💼", lbl: "सम्प्रति", val: esc(person.occupation), full: false });\n  if (person.mainGenres && person.mainGenres.trim()) {\n    const pills = person.mainGenres.split(/[,،、|]/).map(s => s.trim()).filter(Boolean);\n    items.push({ ic: "✒️", lbl: "मुख्य विधा", val: `<div class="vidha-pills-row">${pills.map(g => `<span class="mini-badge">❖ ${esc(g)}</span>`).join("")}</div>`, raw: true, full: true });\n  }\n  if (person.publications && person.publications.trim()) items.push({ ic: "📚", lbl: "प्रकाशित कृतियाँ", val: esc(person.publications), full: true });\n  if (person.awards && person.awards.trim()) items.push({ ic: "🏆", lbl: "प्रमुख सम्मान", val: esc(person.awards), full: true });\n  if (person.special && person.special.trim()) items.push({ ic: "✨", lbl: "विशेष", val: esc(person.special), full: true });\n  if (person.bio && person.bio.trim()) items.push({ ic: "📜", lbl: "संक्षिप्त परिचय", val: esc(person.bio), full: true });\n  if (!items.length && !(person.socialLink && person.socialLink.trim())) return "";\n  return `<div class="bio-card"><h3 class="section-title" style="margin:0;">📜 ${titleText || "साहित्यिक परिचय"}</h3>${items.length ? `<div class="bio-grid">${items.map(it => `<div class="bio-item ${it.full ? "full" : ""}"><div class="bio-ic">${it.ic}</div><div style="min-width:0; flex:1;"><div class="bio-lbl">${it.lbl}</div><div class="bio-val">${it.val}</div></div></div>`).join("")}</div>` : ""}</div>`;\n}\n\nfunction renderPoetDetail(poetName) {\n  const container = document.getElementById("poet-detail-view"); if (!container) return;\n  const pt = getAllPoetObjects().find(p => p.name === poetName) || { name: poetName, city: "", bio: "", photo: "" };\n  const allPoems = state.poems.filter(p => p.poet === poetName);\n  const av = pt.photo ? `<img src="${pt.photo}" alt="${esc(pt.name)}">` : esc(initials(pt.name));\n  container.innerHTML = `\n    <button class="back-bar" onclick="closePoetDetail()">← सभी कवि</button>\n    <div class="profile-hero"><div class="profile-top"><div class="avatar-lg">${av}</div><div><h2 class="profile-name">${esc(pt.name)}</h2>${pt.occupation ? `<div class="profile-sub" style="color:#FCE29A; font-weight:600;">${esc(pt.occupation)}</div>` : ""}<div class="profile-sub">📍 ${esc(pt.city || "")}</div></div></div>${pt.quote ? `<div class="profile-quote">“${esc(pt.quote)}”</div>` : ""}</div>\n    ${renderStructuredBioCard(pt, "कवि परिचय")}\n    <h3 class="section-title">✦ इनकी रचनाएँ (${allPoems.length})</h3>\n    <div class="cards-grid two-col" style="margin-top:8px;">${allPoems.map(poemCardHTML).join("")}</div>\n  `;\n}\n\nfunction renderManchHub() { renderEventsPane(); renderVideosPane(); renderCompetitionPane(); renderEbooksPane(); renderMatraPane(); renderAntakshariPane(); }\nfunction renderEventsPane() {\n  const box = document.getElementById("manch-events"); if (!box) return;\n  box.innerHTML = `<div class="section-head" style="margin-top:0;"><h2 class="section-title">📅 आगामी कार्यक्रम</h2><span class="section-hint">${state.events.length}</span></div><div class="cards-grid">` + state.events.map(e => `<article class="event-card"><div class="event-body"><h3 class="poem-card-title">${esc(e.title)}</h3><div class="event-meta-row"><span class="event-meta-pill">🗓️ ${esc(e.date || "")}</span><span class="event-meta-pill">⏰ ${esc(e.time || "")}</span></div><p class="font-literary" style="color:var(--text-muted);">${esc(e.description || "")}</p>${e.link ? `<a class="action-btn primary" href="${esc(e.link)}" target="_blank" rel="noopener noreferrer">जुड़ें ↗</a>` : ""}</div></article>`).join("") + `</div>`;\n}\nfunction renderVideosPane() {\n  const box = document.getElementById("manch-videos"); if (!box) return;\n  box.innerHTML = `<div class="section-head" style="margin-top:0;"><h2 class="section-title">🎬 वीडियो</h2><span class="section-hint">${state.videos.length}</span></div><div class="cards-grid two-col">` + state.videos.map(v => {\n    const vidId = extractYouTubeId(v.url);\n    const thumb = vidId ? `https://img.youtube.com/vi/${vidId}/hqdefault.jpg` : "";\n    return `<article class="video-card" onclick="openVideoPlayer(dec('${arg(v.id)}'))"><div class="video-thumb-wrap">${thumb ? `<img src="${thumb}" alt="${esc(v.title)}">` : ""}<div class="play-overlay"><div class="play-circle">▶</div></div></div><div class="video-body"><h3 class="poem-card-title" style="font-size:17px;">${esc(v.title)}</h3></div></article>`;\n  }).join("") + `</div>`;\n}\nfunction openVideoPlayer(id) {\n  const v = state.videos.find(x => x.id === id); if (!v) return;\n  const vidId = extractYouTubeId(v.url);\n  if (!vidId) { if (v.url) window.open(v.url, "_blank"); return; }\n  document.getElementById("video-modal-body").innerHTML = `<div class="yt-embed-box"><iframe src="https://www.youtube.com/embed/${vidId}?autoplay=1&rel=0" allowfullscreen></iframe></div><h3 class="font-royal">${esc(v.title)}</h3>`;
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")\n    .replace(/'/g, "&#39;");\n}\nfunction arg(str) { return encodeURIComponent(String(str || "")).replace(/'/g, "%27"); }\nfunction dec(str) { try { return decodeURIComponent(str); } catch (e) { return str; } }\nfunction initials(name) { return (name || "क").trim().slice(0, 2); }\n\nfunction getAllGenres() {\n  var set = new Set(state.settings.genres || []);\n  state.poems.forEach(function(p) { if (p.genre) set.add(p.genre.trim()); });\n  return Array.from(set);\n}\n\nfunction getAllPoetObjects() {\n  var map = new Map();\n  state.poets.forEach(function(p) { map.set(p.name.trim(), p); });\n  state.poems.forEach(function(pm) {\n    var nm = (pm.poet || "").trim();\n    if (nm && !map.has(nm)) {\n      map.set(nm, { id: "auto_" + nm, name: nm, city: "काव्य चौपाल रचनाकार", photo: "", bio: "काव्य चौपाल मंच के सम्मानित रचनाकार।" });\n    }\n  });\n  return Array.from(map.values());\n}\n\nfunction switchTab(tabName, fromPop) {\n  if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);\n  state.activeTab = tabName;\n  document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });\n  var target = document.getElementById("tab-" + tabName);\n  if (target) target.classList.add("active");\n  document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === tabName); });\n  if (tabName === "poets") {\n    state.activePoetName = null;\n    document.getElementById("poets-list-view").style.display = "block";\n    document.getElementById("poet-detail-view").style.display = "none";\n  }\n  if (tabName === "admins") {\n    state.activeAdminId = null;\n    document.getElementById("admins-list-view").style.display = "block";\n    document.getElementById("admin-detail-view").style.display = "none";\n  }\n  window.scrollTo({ top: 0, behavior: "smooth" });\n  renderAll();\n}\n\nfunction openManchSub(sub) {\n  state.manchSub = sub;\n  switchTab("manch");\n  setManchSub(sub);\n}\n\nfunction setManchSub(sub) {\n  state.manchSub = sub;\n  document.querySelectorAll(".hub-tab-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.sub === sub); });\n  document.querySelectorAll(".manch-pane").forEach(function(p) { p.style.display = "none"; });\n  var target = document.getElementById("manch-" + sub);\n  if (target) target.style.display = "block";\n  renderManchHub();\n}\n\nfunction renderAll() {\n  var hdrTitle = document.getElementById("hdr-title");\n  if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";\n  var spName = document.getElementById("splash-app-name");\n  if (spName) spName.textContent = state.settings.appName || "काव्य चौपाल";\n  var spTag = document.getElementById("splash-tagline");\n  if (spTag) spTag.textContent = state.settings.tagline || "";\n  var abTitle = document.getElementById("about-title");\n  if (abTitle) abTitle.textContent = state.settings.appName || "काव्य चौपाल";\n  var abTag = document.getElementById("about-tagline");\n  if (abTag) abTag.textContent = state.settings.tagline || "";\n  var abDesc = document.getElementById("about-desc");\n  if (abDesc) abDesc.textContent = state.settings.aboutText || "";\n\n  var favBadge = document.getElementById("hdr-fav-badge");\n  if (favBadge) {\n    favBadge.textContent = state.favorites.length;\n    favBadge.classList.toggle("show", state.favorites.length > 0);\n  }\n\n  var pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);\n  var pendBadge = document.getElementById("hdr-pending-badge");\n  if (pendBadge) {\n    pendBadge.textContent = pendTotal;\n    pendBadge.classList.toggle("show", pendTotal > 0);\n  }\n\n  renderBrandLogo();\n  renderSpotlight();\n  renderDailyRiddle();\n  renderVidhaStrip();\n  renderPoetFilterStrip();\n  renderPoemsGrid();\n  renderPoetsDirectory();\n  if (state.activePoetName) renderPoetDetail(state.activePoetName);\n  renderManchHub();\n  renderFavorites();\n  renderAdminsDirectory();\n  if (state.activeAdminId) renderAdminDetail(state.activeAdminId);\n  renderSocialLinks();\n}\n\nfunction renderSpotlight() {\n  var wrap = document.getElementById("spotlight-wrap");\n  if (!wrap) return;\n  if (!state.poems.length) { wrap.innerHTML = ""; return; }\n  var feat = state.poems.find(function(p) { return p.id === state.settings.featuredPoemId; }) || state.poems[0];\n  var linesArr = (feat.content || "").split("\n").filter(function(l) { return l.trim(); }).slice(0, 2);\n  wrap.innerHTML = "<div class=\"spotlight-card\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\"><div class=\"spotlight-badge\">✦ आज का विशेष भाव • " + esc(feat.genre || "काव्य") + "</div><p class=\"spotlight-quote\">“" + esc(linesArr.join("\n")) + "”</p><div class=\"spotlight-foot\"><span>— <strong>" + esc(feat.poet) + "</strong> (" + esc(feat.title) + ")</span><span style=\"font-weight:700;\">संपूर्ण पढ़ें →</span></div></div>";
+}
+
+function renderVidhaStrip() {
+  var el = document.getElementById("vidha-strip");
+  if (!el) return;
+  var counts = {};
+  state.poems.forEach(function(p) {
+    if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return;
+    counts[p.genre] = (counts[p.genre] || 0) + 1;
+  });
+  var total = Object.values(counts).reduce(function(a, b) { return a + b; }, 0);
+  var genres = ["सभी"].concat(getAllGenres());
+  el.innerHTML = genres.map(function(g) {
+    var c = g === "सभी" ? total : (counts[g] || 0);
+    if (g !== "सभी" && c === 0 && state.selectedGenre !== g) return "";
+    var active = state.selectedGenre === g ? "active" : "";
+    return "<button class=\"pill-chip " + active + "\" onclick=\"selectGenre(dec(\'" + arg(g) + "\'))\">" + esc(g) + " <span class=\"count\">" + c + "</span></button>";
+  }).join("");
+}
+
+function renderPoetFilterStrip() {
+  var el = document.getElementById("poet-strip");
+  if (!el) return;
+  var poets = getAllPoetObjects();
+  var counts = {};
+  state.poems.forEach(function(p) {
+    if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return;
+    counts[p.poet] = (counts[p.poet] || 0) + 1;
+  });
+  var allActive = state.selectedPoetFilter === "सभी" ? "active" : "";
+  var html = "<button class=\"poet-chip " + allActive + "\" onclick=\"selectPoetFilter(\'सभी\')\"><div class=\"avatar-sm\">सब</div><div><div class=\"poet-chip-name\">सभी कवि</div><div class=\"poet-chip-sub\">" + state.poems.length + " रचनाएँ</div></div></button>";
+  poets.forEach(function(pt) {
+    var c = counts[pt.name] || 0;
+    var totalByPoet = state.poems.filter(function(p) { return p.poet === pt.name; }).length;
+    if (totalByPoet === 0) return;
+    var active = state.selectedPoetFilter === pt.name ? "active" : "";
+    var avatar = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
+    html += "<button class=\"poet-chip " + active + "\" onclick=\"selectPoetFilter(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-sm\">" + avatar + "</div><div><div class=\"poet-chip-name\">" + esc(pt.name) + "</div><div class=\"poet-chip-sub\">" + c + " रचनाएँ</div></div></button>";
+  });
+  el.innerHTML = html;
+}
+
+function selectGenre(g) { if (g !== "सभी" && state.selectedGenre !== g) pushAppView("genre"); state.selectedGenre = g; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid(); }
+function selectPoetFilter(name) { if (name !== "सभी" && state.selectedPoetFilter !== name) pushAppView("pfilter"); state.selectedPoetFilter = name; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid(); }
+function resetPoemFilters(fromPop) {
+  state.selectedGenre = "सभी"; state.selectedPoetFilter = "सभी"; state.poemSearch = "";
+  var inp = document.getElementById("poem-search"); if (inp) inp.value = "";
+  var clr = document.getElementById("poem-search-clear"); if (clr) clr.classList.remove("show");
+  renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid();
+  if (!fromPop) syncBackAfterUiClose();
+}
+function onPoemSearch() {
+  var inp = document.getElementById("poem-search"); var val = inp ? inp.value : "";
+  state.poemSearch = val.trim().toLowerCase();
+  var clr = document.getElementById("poem-search-clear"); if (clr) clr.classList.toggle("show", val.length > 0);
+  renderPoemsGrid();
+}
+function clearPoemSearch() { var inp = document.getElementById("poem-search"); if (inp) inp.value = ""; onPoemSearch(); }
+
+function poemCardHTML(p) {
+  var liked = state.favorites.indexOf(p.id) !== -1;
+  var dCnt = getTotalDaad(p);
+  return "<article class=\"poem-card\" onclick=\"openReader(dec(\'" + arg(p.id) + "\'))\"><div class=\"poem-card-top\"><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span><button class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec(\'" + arg(p.id) + "\'))\">" + (liked ? "♥" : "♡") + "</button></div><h3 class=\"poem-card-title\">" + esc(p.title) + "</h3><p class=\"poem-card-excerpt\">" + esc(p.content) + "</p><div class=\"poem-card-foot\"><span class=\"poem-author-link\" onclick=\"event.stopPropagation(); openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</span><span class=\"read-more-link\">" + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + "पढ़ें →</span></div></article>";
+}
+
+function renderPoemsGrid() {
+  var grid = document.getElementById("poems-grid"); if (!grid) return;
+  var bar = document.getElementById("active-filter-bar"); var barText = document.getElementById("active-filter-text");
+  var filtered = state.poems.filter(function(p) {
+    if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return false;
+    if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return false;
+    if (state.poemSearch && (p.title + " " + p.poet + " " + p.genre + " " + p.content).toLowerCase().indexOf(state.poemSearch) === -1) return false;
+    return true;
+  });
+  var hasFilter = state.selectedGenre !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch;
+  if (bar) bar.classList.toggle("show", hasFilter);
+  if (hasFilter && barText) {
+    var parts = [];
+    if (state.selectedGenre !== "सभी") parts.push("विधा: <strong>" + esc(state.selectedGenre) + "</strong>");
+    if (state.selectedPoetFilter !== "सभी") parts.push("कवि: <strong>" + esc(state.selectedPoetFilter) + "</strong>");
+    if (state.poemSearch) parts.push("खोज: <strong>“" + esc(state.poemSearch) + "”</strong>");
+    barText.innerHTML = parts.join(" • ");
+  }
+  var lbl = document.getElementById("poems-count-label"); if (lbl) lbl.textContent = filtered.length + " रचनाएँ";
+  if (!filtered.length) { grid.innerHTML = "<div class=\"empty-box\" style=\"grid-column:1/-1;\">कोई रचना उपलब्ध नहीं है।</div>"; return; }
+  grid.innerHTML = filtered.map(poemCardHTML).join("");
+}
+
+
+function renderPoetsDirectory() {
+  var qEl = document.getElementById("poet-search");
+  var q = (qEl ? qEl.value : "").trim().toLowerCase();
+  var poets = getAllPoetObjects().filter(function(pt) { return !q || (pt.name + " " + (pt.city || "") + " " + (pt.bio || "")).toLowerCase().indexOf(q) !== -1; });
+  var cntEl = document.getElementById("poets-dir-count"); if (cntEl) cntEl.textContent = poets.length + " रचनाकार";
+  var grid = document.getElementById("poets-dir-grid"); if (!grid) return;
+  grid.innerHTML = poets.map(function(pt) {
+    var poems = state.poems.filter(function(p) { return p.poet === pt.name; });
+    var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
+    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(pt.name) + "</h3><div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span></div></div></div>";
+  }).join("");
+}
+
+function openPoetProfile(poetName) {
+  closeModal("reader-modal", true); pushAppView("poet"); state.activeTab = "poets"; state.activePoetName = poetName;
+  document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
+  document.getElementById("tab-poets").classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === "poets"); });
+  document.getElementById("poets-list-view").style.display = "none";
+  document.getElementById("poet-detail-view").style.display = "block";
+  renderPoetDetail(poetName); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function closePoetDetail(fromPop) { state.activePoetName = null; document.getElementById("poet-detail-view").style.display = "none"; document.getElementById("poets-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
+
+function renderStructuredBioCard(person, titleText) {
+  var items = [];
+  if (person.birth && person.birth.trim()) items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });
+  if (person.city && person.city.trim()) items.push({ ic: "📍", lbl: "स्थान", val: esc(person.city), full: false });
+  if (person.education && person.education.trim()) items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });
+  if (person.occupation && person.occupation.trim()) items.push({ ic: "💼", lbl: "सम्प्रति", val: esc(person.occupation), full: false });
+  if (person.mainGenres && person.mainGenres.trim()) {
+    var pills = person.mainGenres.split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
+    items.push({ ic: "✒️", lbl: "मुख्य विधा", val: "<div class=\"vidha-pills-row\">" + pills.map(function(g) { return "<span class=\"mini-badge\">❖ " + esc(g) + "</span>"; }).join("") + "</div>", full: true });
+  }
+  if (person.publications && person.publications.trim()) items.push({ ic: "📚", lbl: "प्रकाशित कृतियाँ", val: esc(person.publications), full: true });
+  if (person.awards && person.awards.trim()) items.push({ ic: "🏆", lbl: "प्रमुख सम्मान", val: esc(person.awards), full: true });
+  if (person.special && person.special.trim()) items.push({ ic: "✨", lbl: "विशेष", val: esc(person.special), full: true });
+  if (person.bio && person.bio.trim()) items.push({ ic: "📜", lbl: "संक्षिप्त परिचय", val: esc(person.bio), full: true });
+  if (!items.length) return "";
+  return "<div class=\"bio-card\"><h3 class=\"section-title\" style=\"margin:0;\">📜 " + (titleText || "साहित्यिक परिचय") + "</h3><div class=\"bio-grid\">" + items.map(function(it) { return "<div class=\"bio-item " + (it.full ? "full" : "") + "\"><div class=\"bio-ic\">" + it.ic + "</div><div style=\"min-width:0; flex:1;\"><div class=\"bio-lbl\">" + it.lbl + "</div><div class=\"bio-val\">" + it.val + "</div></div></div>"; }).join("") + "</div></div>";
+}
+
+function renderPoetDetail(poetName) {
+  var container = document.getElementById("poet-detail-view"); if (!container) return;
+  var pt = getAllPoetObjects().find(function(p) { return p.name === poetName; }) || { name: poetName, city: "", bio: "", photo: "" };
+  var allPoems = state.poems.filter(function(p) { return p.poet === poetName; });
+  var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
+  container.innerHTML =
+    "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
+    "<div class=\"profile-hero\"><div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + "</div></div></div>" + (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") + "</div>" +
+    renderStructuredBioCard(pt, "कवि परिचय") +
+    "<h3 class=\"section-title\">✦ इनकी रचनाएँ (" + allPoems.length + ")</h3>" +
+    "<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>";
+}
+
+function renderManchHub() { renderEventsPane(); renderVideosPane(); renderCompetitionPane(); renderEbooksPane(); renderMatraPane(); renderAntakshariPane(); }
+function renderEventsPane() {
+  var box = document.getElementById("manch-events"); if (!box) return;
+  box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">📅 आगामी कार्यक्रम</h2><span class=\"section-hint\">" + state.events.length + "</span></div><div class=\"cards-grid\">" + state.events.map(function(e) {
+    return "<article class=\"event-card\"><div class=\"event-body\"><h3 class=\"poem-card-title\">" + esc(e.title) + "</h3><div class=\"event-meta-row\"><span class=\"event-meta-pill\">🗓️ " + esc(e.date || "") + "</span><span class=\"event-meta-pill\">⏰ " + esc(e.time || "") + "</span></div><p class=\"font-literary\" style=\"color:var(--text-muted);\">" + esc(e.description || "") + "</p>" + (e.link ? ("<a class=\"action-btn primary\" href=\"" + esc(e.link) + "\" target=\"_blank\" rel=\"noopener noreferrer\">जुड़ें ↗</a>") : "") + "</div></article>";
+  }).join("") + "</div>";
+}
+function renderVideosPane() {
+  var box = document.getElementById("manch-videos"); if (!box) return;
+  box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">🎬 वीडियो</h2><span class=\"section-hint\">" + state.videos.length + "</span></div><div class=\"cards-grid two-col\">" + state.videos.map(function(v) {
+    var vidId = extractYouTubeId(v.url);
+    var thumb = vidId ? ("https://img.youtube.com/vi/" + vidId + "/hqdefault.jpg") : "";
+    return "<article class=\"video-card\" onclick=\"openVideoPlayer(dec(\'" + arg(v.id) + "\'))\"><div class=\"video-thumb-wrap\">" + (thumb ? ("<img src=\"" + thumb + "\" alt=\"" + esc(v.title) + "\">") : "") + "<div class=\"play-overlay\"><div class=\"play-circle\">▶</div></div></div><div class=\"video-body\"><h3 class=\"poem-card-title\" style=\"font-size:17px;\">" + esc(v.title) + "</h3></div></article>";
+  }).join("") + "</div>";
+}
+function openVideoPlayer(id) {
+  var v = state.videos.find(function(x) { return x.id === id; }); if (!v) return;
+  var vidId = extractYouTubeId(v.url);
+  if (!vidId) { if (v.url) window.open(v.url, "_blank"); return; }
+  document.getElementById("video-modal-body").innerHTML = "<div class=\"yt-embed-box\"><iframe src=\"https://www.youtube.com/embed/" + vidId + "?autoplay=1&rel=0\" allowfullscreen></iframe></div><h3 class=\"font-royal\">" + esc(v.title) + "</h3>";
   if (!document.getElementById("video-modal").classList.contains("open")) pushAppView("video");
   document.getElementById("video-modal").classList.add("open");
 }
-function closeVideoModal(fromPop) { const b = document.getElementById("video-modal-body"); if (b) b.innerHTML = ""; closeModal("video-modal", fromPop); }
+function closeVideoModal(fromPop) { var b = document.getElementById("video-modal-body"); if (b) b.innerHTML = ""; closeModal("video-modal", fromPop); }
 function renderCompetitionPane() {
-  const box = document.getElementById("manch-competition"); if (!box) return;
-  const c = state.competition || DEFAULT_COMPETITION;
-  box.innerHTML = `<div class="comp-hero"><h2 class="font-royal" style="color:#F7DC8B;">${esc(c.title)}</h2><div class="prize-grid"><div class="prize-box"><div class="prize-rank">🥇 प्रथम</div><div class="prize-val">${esc(c.prize1)}</div></div><div class="prize-box"><div class="prize-rank">🥈 द्वितीय</div><div class="prize-val">${esc(c.prize2)}</div></div><div class="prize-box"><div class="prize-rank">🥉 तृतीय</div><div class="prize-val">${esc(c.prize3)}</div></div></div>${c.registerLink ? `<a class="action-btn gold" href="${esc(c.registerLink)}" target="_blank" rel="noopener noreferrer">पंजीकरण करें ↗</a>` : ""}</div><div class="about-card"><h3 class="section-title">📋 नियम</h3><p>${esc(c.rules)}</p></div>`;
+  var box = document.getElementById("manch-competition"); if (!box) return;
+  var c = state.competition || DEFAULT_COMPETITION;
+  box.innerHTML = "<div class=\"comp-hero\"><h2 class=\"font-royal\" style=\"color:#F7DC8B;\">" + esc(c.title) + "</h2><div class=\"prize-grid\"><div class=\"prize-box\"><div class=\"prize-rank\">🥇 प्रथम</div><div class=\"prize-val\">" + esc(c.prize1) + "</div></div><div class=\"prize-box\"><div class=\"prize-rank\">🥈 द्वितीय</div><div class=\"prize-val\">" + esc(c.prize2) + "</div></div><div class=\"prize-box\"><div class=\"prize-rank\">🥉 तृतीय</div><div class=\"prize-val\">" + esc(c.prize3) + "</div></div></div>" + (c.registerLink ? ("<a class=\"action-btn gold\" href=\"" + esc(c.registerLink) + "\" target=\"_blank\" rel=\"noopener noreferrer\">पंजीकरण करें ↗</a>") : "") + "</div><div class=\"about-card\"><h3 class=\"section-title\">📋 नियम</h3><p>" + esc(c.rules) + "</p></div>";
 }
 function renderEbooksPane() {
-  const box = document.getElementById("manch-ebooks"); if (!box) return;
-  box.innerHTML = `<div class="section-head" style="margin-top:0;"><h2 class="section-title">📚 ई-बुक लाइब्रेरी</h2></div><div class="cards-grid">` + state.ebooks.map(b => `<article class="ebook-card"><div class="ebook-cover"><div class="font-royal" style="font-size:13px;">${esc(b.title)}</div></div><div class="ebook-info"><div><h3 class="poem-card-title">${esc(b.title)}</h3><div style="font-size:12.5px; color:var(--primary);">✒️ ${esc(b.author || "")}</div><p style="font-size:13px; color:var(--text-muted);">${esc(b.description || "")}</p></div>${b.link ? `<a class="action-btn primary" href="${esc(b.link)}" target="_blank" rel="noopener noreferrer">पढ़ें ↗</a>` : ""}</div></article>`).join("") + `</div>`;
+  var box = document.getElementById("manch-ebooks"); if (!box) return;
+  box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">📚 ई-बुक लाइब्रेरी</h2></div><div class=\"cards-grid\">" + state.ebooks.map(function(b) {
+    return "<article class=\"ebook-card\"><div class=\"ebook-cover\"><div class=\"font-royal\" style=\"font-size:13px;\">" + esc(b.title) + "</div></div><div class=\"ebook-info\"><div><h3 class=\"poem-card-title\">" + esc(b.title) + "</h3><div style=\"font-size:12.5px; color:var(--primary);\">✒️ " + esc(b.author || "") + "</div><p style=\"font-size:13px; color:var(--text-muted);\">" + esc(b.description || "") + "</p></div>" + (b.link ? ("<a class=\"action-btn primary\" href=\"" + esc(b.link) + "\" target=\"_blank\" rel=\"noopener noreferrer\">पढ़ें ↗</a>") : "") + "</div></article>";
+  }).join("") + "</div>";
 }
 function toggleFavorite(id) {
-  const idx = state.favorites.indexOf(id);
+  var idx = state.favorites.indexOf(id);
   if (idx >= 0) state.favorites.splice(idx, 1); else state.favorites.push(id);
   localStorage.setItem(FAV_KEY, JSON.stringify(state.favorites));
   renderAll(); if (state.currentReaderPoemId === id) openReader(id);
 }
 function renderFavorites() {
-  const favPoems = state.poems.filter(p => state.favorites.includes(p.id));
-  const grid = document.getElementById("favorites-grid"); if (!grid) return;
-  grid.innerHTML = favPoems.length ? favPoems.map(poemCardHTML).join("") : `<div class="empty-box" style="grid-column:1/-1;">कोई पसंदीदा रचना नहीं है।</div>`;
+  var favPoems = state.poems.filter(function(p) { return state.favorites.indexOf(p.id) !== -1; });
+  var grid = document.getElementById("favorites-grid"); if (!grid) return;
+  grid.innerHTML = favPoems.length ? favPoems.map(poemCardHTML).join("") : "<div class=\"empty-box\" style=\"grid-column:1/-1;\">कोई पसंदीदा रचना नहीं है।</div>";
 }
 function renderAdminsDirectory() {
-  const q = (document.getElementById("admin-search")?.value || "").trim().toLowerCase();
-  const list = state.admins.filter(a => !q || `${a.name} ${a.designation} ${a.city}`.toLowerCase().includes(q));
-  const grid = document.getElementById("admins-dir-grid"); if (!grid) return;
-  grid.innerHTML = list.map(a => `<div class="person-card" onclick="openAdminDetail(dec('${arg(a.id)}'))"><div class="avatar-md">${a.photo ? `<img src="${a.photo}">` : esc(initials(a.name))}</div><div class="person-info"><h3 class="person-name">${esc(a.name)}</h3><div class="person-role">👑 ${esc(a.designation || "")}</div><div class="person-meta"><span>📍 ${esc(a.city || "")}</span></div></div></div>`).join("");
+  var qEl = document.getElementById("admin-search");
+  var q = (qEl ? qEl.value : "").trim().toLowerCase();
+  var list = state.admins.filter(function(a) { return !q || (a.name + " " + (a.designation || "") + " " + (a.city || "")).toLowerCase().indexOf(q) !== -1; });
+  var grid = document.getElementById("admins-dir-grid"); if (!grid) return;
+  grid.innerHTML = list.map(function(a) {
+    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec(\'" + arg(a.id) + "\'))\"><div class=\"avatar-md\">" + (a.photo ? ("<img src=\"" + a.photo + "\">") : esc(initials(a.name))) + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(a.name) + "</h3><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || "") + "</span></div></div></div>";
+  }).join("");
 }
 function openAdminDetail(id) { pushAppView("admin"); state.activeAdminId = id; document.getElementById("admins-list-view").style.display = "none"; document.getElementById("admin-detail-view").style.display = "block"; renderAdminDetail(id); }
 function closeAdminDetail(fromPop) { state.activeAdminId = null; document.getElementById("admin-detail-view").style.display = "none"; document.getElementById("admins-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 function renderAdminDetail(id) {
-  const a = state.admins.find(x => x.id === id); const c = document.getElementById("admin-detail-view"); if (!a || !c) return;
-  c.innerHTML = `<button class="back-bar" onclick="closeAdminDetail()">← वापस</button><div class="profile-hero"><h2 class="profile-name">${esc(a.name)}</h2><div class="profile-sub">👑 ${esc(a.designation)} • 📍 ${esc(a.city || "")}</div></div>${renderStructuredBioCard(a, "परिचय")}`;
+  var a = state.admins.find(function(x) { return x.id === id; }); var c = document.getElementById("admin-detail-view"); if (!a || !c) return;
+  c.innerHTML = "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button><div class=\"profile-hero\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div></div>" + renderStructuredBioCard(a, "परिचय");
 }
 function renderSocialLinks() {
-  const s = state.settings.socials || DEFAULT_SETTINGS.socials;
-  const grid = document.getElementById("social-grid"); if (!grid) return;
-  const list = [
+  var s = state.settings.socials || DEFAULT_SETTINGS.socials;
+  var grid = document.getElementById("social-grid"); if (!grid) return;
+  var list = [
     { url: s.facebook, cls: "s-fb", title: "फ़ेसबुक पेज", desc: "लाइव कवि सम्मेलन" },
     { url: s.youtube, cls: "s-yt", title: "यूट्यूब चैनल", desc: "काव्य पाठ एवं वीडियो" },
     { url: s.instagram, cls: "s-ig", title: "इंस्टाग्राम", desc: "भाव-चित्र एवं रील्स" },
@@ -2361,59 +2515,66 @@ function renderSocialLinks() {
     { url: s.whatsappCommunity, cls: "s-wa", title: "WhatsApp कम्युनिटी", desc: "रचनाकार परिवार" },
     { url: s.whatsappChannel, cls: "s-wac", title: "WhatsApp चैनल", desc: "दैनिक अपडेट" }
   ];
-  grid.innerHTML = list.filter(i => i.url).map(i => `<a class="social-card" href="${esc(i.url)}" target="_blank" rel="noopener noreferrer"><div class="social-icon ${i.cls}">✦</div><div><div class="social-title">${i.title}</div><div class="social-desc">${i.desc}</div></div></a>`).join("");
+  grid.innerHTML = list.filter(function(i) { return i.url; }).map(function(i) {
+    return "<a class=\"social-card\" href=\"" + esc(i.url) + "\" target=\"_blank\" rel=\"noopener noreferrer\"><div class=\"social-icon " + i.cls + "\">✦</div><div><div class=\"social-title\">" + i.title + "</div><div class=\"social-desc\">" + i.desc + "</div></div></a>";
+  }).join("");
 }
 
-function getDaadCounts(p) { const d = (p && p.daad) || {}; return { wah: Number(d.wah || 0), naman: Number(d.naman || 0), adbhut: Number(d.adbhut || 0) }; }
-function getTotalDaad(p) { const d = getDaadCounts(p); return d.wah + d.naman + d.adbhut; }
+
+function getDaadCounts(p) { var d = (p && p.daad) || {}; return { wah: Number(d.wah || 0), naman: Number(d.naman || 0), adbhut: Number(d.adbhut || 0) }; }
+function getTotalDaad(p) { var d = getDaadCounts(p); return d.wah + d.naman + d.adbhut; }
 function burstCelebration(emoji) {
-  const layer = document.getElementById("dad-burst-layer"); if (!layer) return;
-  for (let i = 0; i < 8; i++) {
-    const sp = document.createElement("span"); sp.className = "dad-float"; sp.textContent = emoji;
+  var layer = document.getElementById("dad-burst-layer"); if (!layer) return;
+  for (var i = 0; i < 8; i++) {
+    var sp = document.createElement("span"); sp.className = "dad-float"; sp.textContent = emoji;
     sp.style.left = (15 + Math.random() * 70) + "vw"; sp.style.bottom = "20vh";
-    layer.appendChild(sp); setTimeout(() => sp.remove(), 1800);
+    layer.appendChild(sp); (function(node) { setTimeout(function() { node.remove(); }, 1800); })(sp);
   }
 }
-async function givePoemDaad(id, type) {
-  const p = state.poems.find(x => x.id === id); if (!p) return;
-  const d = getDaadCounts(p); d[type] = (d[type] || 0) + 1; p.daad = d; saveLocalCache();
+function givePoemDaad(id, type) {
+  var p = state.poems.find(function(x) { return x.id === id; }); if (!p) return;
+  var d = getDaadCounts(p); d[type] = (d[type] || 0) + 1; p.daad = d; saveLocalCache();
   burstCelebration(type === "wah" ? "👏" : (type === "naman" ? "🪔" : "🌹"));
   showToast("दाद पहुंची ✨");
-  const el = document.getElementById("daad-cnt-" + type); if (el) el.textContent = d[type];
+  var el = document.getElementById("daad-cnt-" + type); if (el) el.textContent = d[type];
   renderPoemsGrid();
-  if (db) { try { await db.collection(ROOT_COL).doc("poems").collection("items").doc(id).set({ daad: { [type]: firebase.firestore.FieldValue.increment(1) } }, { merge: true }); } catch (e) {} }
+  if (db) {
+    var incObj = { daad: {} };
+    incObj.daad[type] = firebase.firestore.FieldValue.increment(1);
+    db.collection(ROOT_COL).doc("poems").collection("items").doc(id).set(incObj, { merge: true }).catch(function() {});
+  }
 }
 
-let teleprompterTimer = null, teleprompterSpeed = 0;
-function stopTeleprompter() { teleprompterSpeed = 0; clearInterval(teleprompterTimer); teleprompterTimer = null; const b = document.getElementById("tp-toggle-btn"); if (b) { b.classList.remove("on"); b.textContent = "📜 मंच पाठ"; } }
+var teleprompterTimer = null, teleprompterSpeed = 0;
+function stopTeleprompter() { teleprompterSpeed = 0; clearInterval(teleprompterTimer); teleprompterTimer = null; var b = document.getElementById("tp-toggle-btn"); if (b) { b.classList.remove("on"); b.textContent = "📜 मंच पाठ"; } }
 function toggleTeleprompter() {
-  const body = document.getElementById("reader-body"); if (!body) return;
+  var body = document.getElementById("reader-body"); if (!body) return;
   teleprompterSpeed = (teleprompterSpeed + 1) % 4; clearInterval(teleprompterTimer); teleprompterTimer = null;
-  const b = document.getElementById("tp-toggle-btn");
+  var b = document.getElementById("tp-toggle-btn");
   if (teleprompterSpeed === 0) { if (b) { b.classList.remove("on"); b.textContent = "📜 मंच पाठ"; } return; }
-  const sp = [0, 1, 2, 3][teleprompterSpeed];
-  if (b) { b.classList.add("on"); b.textContent = `📜 गति ${teleprompterSpeed}x`; }
-  teleprompterTimer = setInterval(() => {
+  var sp = [0, 1, 2, 3][teleprompterSpeed];
+  if (b) { b.classList.add("on"); b.textContent = "📜 गति " + teleprompterSpeed + "x"; }
+  teleprompterTimer = setInterval(function() {
     if (!document.getElementById("reader-modal").classList.contains("open")) { stopTeleprompter(); return; }
     body.scrollTop += sp;
     if (body.scrollTop + body.clientHeight >= body.scrollHeight - 2) stopTeleprompter();
   }, 45);
 }
 
-let mehfilAudioCtx = null, mehfilAudioTimer = null, mehfilPlaying = false;
-function stopMehfilMusic() { mehfilPlaying = false; clearInterval(mehfilAudioTimer); mehfilAudioTimer = null; if (mehfilAudioCtx) { try { mehfilAudioCtx.close(); } catch (e) {} mehfilAudioCtx = null; } const b = document.getElementById("mehfil-music-btn"); if (b) { b.classList.remove("on"); b.textContent = "🎶 महफ़िल धुन"; } }
+var mehfilAudioCtx = null, mehfilAudioTimer = null, mehfilPlaying = false;
+function stopMehfilMusic() { mehfilPlaying = false; clearInterval(mehfilAudioTimer); mehfilAudioTimer = null; if (mehfilAudioCtx) { try { mehfilAudioCtx.close(); } catch (e) {} mehfilAudioCtx = null; } var b = document.getElementById("mehfil-music-btn"); if (b) { b.classList.remove("on"); b.textContent = "🎶 महफ़िल धुन"; } }
 function toggleMehfilMusic() {
   if (mehfilPlaying) { stopMehfilMusic(); showToast("धुन बंद"); return; }
-  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   try {
     mehfilAudioCtx = new AC(); mehfilPlaying = true;
-    const b = document.getElementById("mehfil-music-btn"); if (b) { b.classList.add("on"); b.textContent = "🎶 धुन चल रही है"; }
-    const osc = mehfilAudioCtx.createOscillator(); const g = mehfilAudioCtx.createGain();
+    var b = document.getElementById("mehfil-music-btn"); if (b) { b.classList.add("on"); b.textContent = "🎶 धुन चल रही है"; }
+    var osc = mehfilAudioCtx.createOscillator(); var g = mehfilAudioCtx.createGain();
     osc.type = "sine"; osc.frequency.value = 196; g.gain.value = 0.02; osc.connect(g); g.connect(mehfilAudioCtx.destination); osc.start();
-    const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; let k = 0;
-    const fn = () => {
+    var notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25]; var k = 0;
+    var fn = function() {
       if (!mehfilPlaying || !mehfilAudioCtx) return;
-      const now = mehfilAudioCtx.currentTime; const o = mehfilAudioCtx.createOscillator(); const gn = mehfilAudioCtx.createGain();
+      var now = mehfilAudioCtx.currentTime; var o = mehfilAudioCtx.createOscillator(); var gn = mehfilAudioCtx.createGain();
       o.type = "triangle"; o.frequency.setValueAtTime(notes[k++ % notes.length], now);
       gn.gain.setValueAtTime(0.0001, now); gn.gain.exponentialRampToValueAtTime(0.04, now + 0.35); gn.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
       o.connect(gn); gn.connect(mehfilAudioCtx.destination); o.start(now); o.stop(now + 2.1);
@@ -2423,107 +2584,78 @@ function toggleMehfilMusic() {
 }
 
 function openReader(poemId) {
-  const p = state.poems.find(x => x.id === poemId);
+  var p = state.poems.find(function(x) { return x.id === poemId; });
   if (p && !document.getElementById("reader-modal").classList.contains("open")) pushAppView("reader");
   if (!p) return; stopTeleprompter(); state.currentReaderPoemId = poemId;
-  const liked = state.favorites.includes(p.id); const d = getDaadCounts(p);
-  document.getElementById("reader-head-genre").textContent = `${p.genre || "काव्य"} • काव्य पाठ`;
-  document.getElementById("reader-body").innerHTML = `
-    <div class="mehfil-strip">
-      <div style="display:flex; gap:6px;"><button id="mehfil-music-btn" class="mehfil-pill ${mehfilPlaying ? "on" : ""}" onclick="toggleMehfilMusic()">${mehfilPlaying ? "🎶 धुन चल रही है" : "🎶 महफ़िल धुन"}</button><button id="tp-toggle-btn" class="mehfil-pill" onclick="toggleTeleprompter()">📜 मंच पाठ</button></div>
-    </div>
-    <div class="reader-paper">
-      <span class="genre-tag">${esc(p.genre || "कविता")}</span>
-      <h2 class="reader-poem-title">${esc(p.title)}</h2>
-      <button class="reader-poet-btn" onclick="openPoetProfile(dec('${arg(p.poet)}'))">✒️ ${esc(p.poet)}</button>
-      <div id="reader-poem-text" class="reader-text" style="font-size:${state.readerFontSize}px;">${esc(p.content)}</div>
-    </div>
-    <div class="daad-bar">
-      <button class="daad-btn" onclick="givePoemDaad(dec('${arg(p.id)}'), 'wah')">👏 वाह-वाह <span class="daad-cnt" id="daad-cnt-wah">${d.wah}</span></button>
-      <button class="daad-btn" onclick="givePoemDaad(dec('${arg(p.id)}'), 'naman')">🪔 नमन <span class="daad-cnt" id="daad-cnt-naman">${d.naman}</span></button>
-      <button class="daad-btn" onclick="givePoemDaad(dec('${arg(p.id)}'), 'adbhut')">🌹 अद्भुत <span class="daad-cnt" id="daad-cnt-adbhut">${d.adbhut}</span></button>
-    </div>
-    <div class="reader-toolbar">
-      <button class="action-btn" onclick="adjustReaderFont(-2)">अ-</button>
-      <button class="action-btn" onclick="adjustReaderFont(2)">अ+</button>
-      <button class="action-btn" onclick="toggleFavorite(dec('${arg(p.id)}'))">${liked ? "♥ सहेजा गया" : "♡ पसंदीदा"}</button>
-      <button class="action-btn" onclick="copyPoem(dec('${arg(p.id)}'))">📋 कॉपी</button>
-      <button class="action-btn primary" onclick="shareWhatsApp(dec('${arg(p.id)}'))">📲 WhatsApp</button>
-      <button class="action-btn gold" onclick="openBhavStudio(dec('${arg(p.id)}'))">🎨 भाव-कार्ड स्टूडियो</button>
-    </div>
-  `;
+  var liked = state.favorites.indexOf(p.id) !== -1; var d = getDaadCounts(p);
+  document.getElementById("reader-head-genre").textContent = (p.genre || "काव्य") + " • काव्य पाठ";
+  document.getElementById("reader-body").innerHTML =
+    "<div class=\"mehfil-strip\"><div style=\"display:flex; gap:6px;\"><button id=\"mehfil-music-btn\" class=\"mehfil-pill " + (mehfilPlaying ? "on" : "") + "\" onclick=\"toggleMehfilMusic()\">" + (mehfilPlaying ? "🎶 धुन चल रही है" : "🎶 महफ़िल धुन") + "</button><button id=\"tp-toggle-btn\" class=\"mehfil-pill\" onclick=\"toggleTeleprompter()\">📜 मंच पाठ</button></div></div>" +
+    "<div class=\"reader-paper\"><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span><h2 class=\"reader-poem-title\">" + esc(p.title) + "</h2><button class=\"reader-poet-btn\" onclick=\"openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</button><div id=\"reader-poem-text\" class=\"reader-text\" style=\"font-size:" + state.readerFontSize + "px;\">" + esc(p.content) + "</div></div>" +
+    "<div class=\"daad-bar\"><button class=\"daad-btn\" onclick=\"givePoemDaad(dec(\'" + arg(p.id) + "\'), \'wah\')\">👏 वाह-वाह <span class=\"daad-cnt\" id=\"daad-cnt-wah\">" + d.wah + "</span></button><button class=\"daad-btn\" onclick=\"givePoemDaad(dec(\'" + arg(p.id) + "\'), \'naman\')\">🪔 नमन <span class=\"daad-cnt\" id=\"daad-cnt-naman\">" + d.naman + "</span></button><button class=\"daad-btn\" onclick=\"givePoemDaad(dec(\'" + arg(p.id) + "\'), \'adbhut\')\">🌹 अद्भुत <span class=\"daad-cnt\" id=\"daad-cnt-adbhut\">" + d.adbhut + "</span></button></div>" +
+    "<div class=\"reader-toolbar\"><button class=\"action-btn\" onclick=\"adjustReaderFont(-2)\">अ-</button><button class=\"action-btn\" onclick=\"adjustReaderFont(2)\">अ+</button><button class=\"action-btn\" onclick=\"toggleFavorite(dec(\'" + arg(p.id) + "\'))\">" + (liked ? "♥ सहेजा गया" : "♡ पसंदीदा") + "</button><button class=\"action-btn\" onclick=\"copyPoem(dec(\'" + arg(p.id) + "\'))\">📋 कॉपी</button><button class=\"action-btn primary\" onclick=\"shareWhatsApp(dec(\'" + arg(p.id) + "\'))\">📲 WhatsApp</button><button class=\"action-btn gold\" onclick=\"openBhavStudio(dec(\'" + arg(p.id) + "\'))\">🎨 भाव-कार्ड स्टूडियो</button></div>";
   document.getElementById("reader-modal").classList.add("open");
 }
 
-function adjustReaderFont(delta) { state.readerFontSize = Math.max(14, Math.min(28, state.readerFontSize + delta)); const el = document.getElementById("reader-poem-text"); if (el) el.style.fontSize = state.readerFontSize + "px"; }
-function copyPoem(id) { const p = state.poems.find(x => x.id === id); if (!p) return; navigator.clipboard.writeText(`*${p.title}*
-
-${p.content}
-
-— ${p.poet}`).then(() => showToast("कविता कॉपी हो गई 📋")); }
-function shareWhatsApp(id) { const p = state.poems.find(x => x.id === id); if (!p) return; window.open("https://wa.me/?text=" + encodeURIComponent(`*${p.title}*
-
-${p.content}
-
-— *${p.poet}*`), "_blank"); }
+function adjustReaderFont(delta) { state.readerFontSize = Math.max(14, Math.min(28, state.readerFontSize + delta)); var el = document.getElementById("reader-poem-text"); if (el) el.style.fontSize = state.readerFontSize + "px"; }
+function copyPoem(id) { var p = state.poems.find(function(x) { return x.id === id; }); if (!p) return; navigator.clipboard.writeText("*" + p.title + "*\n\n" + p.content + "\n\n— " + p.poet).then(function() { showToast("कविता कॉपी हो गई 📋"); }); }
+function shareWhatsApp(id) { var p = state.poems.find(function(x) { return x.id === id; }); if (!p) return; window.open("https://wa.me/?text=" + encodeURIComponent("*" + p.title + "*\n\n" + p.content + "\n\n— *" + p.poet + "*"), "_blank"); }
 
 function openBhavStudio(id) {
-  const p = state.poems.find(x => x.id === id); if (!p) return;
+  var p = state.poems.find(function(x) { return x.id === id; }); if (!p) return;
   state.bhavPoemId = id;
-  const lines = (p.content || "").split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
-  state.bhavCustomText = lines.slice(0, 4).join("\n");
+  var linesArr = (p.content || "").split("\n").map(function(l) { return l.trim(); }).filter(function(l) { return l && l.indexOf("--") !== 0; });
+  state.bhavCustomText = linesArr.slice(0, 4).join("\n");
   if (!document.getElementById("bhav-modal").classList.contains("open")) pushAppView("bhav");
   document.getElementById("bhav-modal").classList.add("open");
   renderBhavStudio();
 }
 function setBhavTheme(th) { state.bhavTheme = th; renderBhavStudio(); }
-function setBhavLinePreset(cnt) {
-  const p = state.poems.find(x => x.id === state.bhavPoemId); if (!p) return;
-  const lines = (p.content || "").split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("--"));
-  state.bhavCustomText = lines.slice(0, cnt).join("\n"); renderBhavStudio();
-}
 function renderBhavStudio() {
-  const body = document.getElementById("bhav-studio-body"); const p = state.poems.find(x => x.id === state.bhavPoemId); if (!body || !p) return;
-  const themes = [
+  var body = document.getElementById("bhav-studio-body"); var p = state.poems.find(function(x) { return x.id === state.bhavPoemId; }); if (!body || !p) return;
+  var themes = [
     { id: "parchment", name: "📜 प्राचीन पृष्ठ" },
     { id: "royal_crimson", name: "👑 शाही लाल" },
     { id: "night_mehfil", name: "🌙 रात्रि चाँदनी" },
     { id: "swarna_darbar", name: "✨ स्वर्ण दरबार" }
   ];
-  body.innerHTML = `<div class="field"><label>1. थीम</label><div class="theme-cards-row">${themes.map(t => `<button class="theme-opt ${state.bhavTheme === t.id ? "active" : ""}" onclick="setBhavTheme('${t.id}')">${t.name}</button>`).join("")}</div></div><div class="field"><label>2. पंक्तियाँ</label><textarea style="min-height:84px;" oninput="state.bhavCustomText=this.value; drawBhavCardCanvas(false)">${esc(state.bhavCustomText)}</textarea></div><img id="bhav-preview-img" class="studio-preview-img" /><div style="text-align:center;"><button class="action-btn gold" onclick="drawBhavCardCanvas(true)">⬇️ 1080×1080 डाउनलोड</button></div>`;
+  body.innerHTML = "<div class=\"field\"><label>1. थीम</label><div class=\"theme-cards-row\">" + themes.map(function(t) { return "<button class=\"theme-opt " + (state.bhavTheme === t.id ? "active" : "") + "\" onclick=\"setBhavTheme(\'" + t.id + "\')\">" + t.name + "</button>"; }).join("") + "</div></div><div class=\"field\"><label>2. पंक्तियाँ</label><textarea style=\"min-height:84px;\" oninput=\"state.bhavCustomText=this.value; drawBhavCardCanvas(false)\">" + esc(state.bhavCustomText) + "</textarea></div><img id=\"bhav-preview-img\" class=\"studio-preview-img\" /><div style=\"text-align:center;\"><button class=\"action-btn gold\" onclick=\"drawBhavCardCanvas(true)\">⬇️ 1080×1080 डाउनलोड</button></div>";
   drawBhavCardCanvas(false);
 }
 function drawBhavCardCanvas(triggerDownload) {
-  const p = state.poems.find(x => x.id === state.bhavPoemId); if (!p) return;
-  const canvas = document.getElementById("bhav-canvas"); const ctx = canvas.getContext("2d");
-  const W = 1080, H = 1080;
-  const PAL = {
+  var p = state.poems.find(function(x) { return x.id === state.bhavPoemId; }); if (!p) return;
+  var canvas = document.getElementById("bhav-canvas"); var ctx = canvas.getContext("2d");
+  var W = 1080, H = 1080;
+  var PAL_MAP = {
     parchment: { bg1: "#FDF5E4", bg2: "#E8CA96", hd: "#7B1620", tx: "#24120B" },
     royal_crimson: { bg1: "#68111B", bg2: "#22060D", hd: "#F7DC8B", tx: "#FFF8EA" },
     night_mehfil: { bg1: "#182142", bg2: "#080B1A", hd: "#FCE29A", tx: "#F6EFE2" },
     swarna_darbar: { bg1: "#FFFDF6", bg2: "#F2DFB6", hd: "#7B1620", tx: "#26140D" }
-  }[state.bhavTheme] || { bg1: "#FDF5E4", bg2: "#E8CA96", hd: "#7B1620", tx: "#24120B" };
-  const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, PAL.bg1); g.addColorStop(1, PAL.bg2);
+  };
+  var PAL = PAL_MAP[state.bhavTheme] || PAL_MAP.parchment;
+  var g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, PAL.bg1); g.addColorStop(1, PAL.bg2);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 8; ctx.strokeRect(36, 36, W - 72, H - 72);
   ctx.textAlign = "center"; ctx.fillStyle = PAL.hd; ctx.font = "700 48px 'Yatra One', serif";
   ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 140);
   ctx.fillStyle = PAL.tx; ctx.font = "600 38px 'Noto Serif Devanagari', serif";
-  (state.bhavCustomText || p.content || "").split("\n").map(l => l.trim()).filter(Boolean).slice(0, 8).forEach((l, i) => ctx.fillText(l, W / 2, 340 + i * 62));
-  ctx.fillStyle = PAL.hd; ctx.font = "700 42px 'Yatra One', serif"; ctx.fillText(`— ${p.poet}`, W / 2, H - 110);
-  const url = canvas.toDataURL("image/png"); const img = document.getElementById("bhav-preview-img"); if (img) img.src = url;
-  if (triggerDownload) { const a = document.createElement("a"); a.download = `kavya-chaupal-bhav-${p.id}.png`; a.href = url; a.click(); showToast("भाव कार्ड डाउनलोड हुआ 🖼️"); }
+  (state.bhavCustomText || p.content || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean).slice(0, 8).forEach(function(l, i) { ctx.fillText(l, W / 2, 340 + i * 62); });
+  ctx.fillStyle = PAL.hd; ctx.font = "700 42px 'Yatra One', serif"; ctx.fillText("— " + p.poet, W / 2, H - 110);
+  var url = canvas.toDataURL("image/png"); var img = document.getElementById("bhav-preview-img"); if (img) img.src = url;
+  if (triggerDownload) { var a = document.createElement("a"); a.download = "kavya-chaupal-bhav-" + p.id + ".png"; a.href = url; a.click(); showToast("भाव कार्ड डाउनलोड हुआ 🖼️"); }
 }
 
+
 function openAdminStudio() { if (!document.getElementById("admin-modal").classList.contains("open")) pushAppView("studio"); document.getElementById("admin-modal").classList.add("open"); renderAdminStudio(); }
-function closeModal(id, fromPop) { if (id === "reader-modal") { stopTeleprompter(); stopMehfilMusic(); } const el = document.getElementById(id); const wasOpen = el && el.classList.contains("open"); if (el) el.classList.remove("open"); if (wasOpen && !fromPop) syncBackAfterUiClose(); }
+function closeModal(id, fromPop) { if (id === "reader-modal") { stopTeleprompter(); stopMehfilMusic(); } var el = document.getElementById(id); var wasOpen = el && el.classList.contains("open"); if (el) el.classList.remove("open"); if (wasOpen && !fromPop) syncBackAfterUiClose(); }
 function closeModalOnBg(e, id) { if (e.target.id === id) { if (id === "video-modal") closeVideoModal(); else closeModal(id); } }
 
 function unlockAdmin() {
-  const val = (document.getElementById("admin-pin-input")?.value || "").trim();
+  var pinEl = document.getElementById("admin-pin-input");
+  var val = (pinEl ? pinEl.value : "").trim();
   if (val === String(state.settings.adminPin || "1234")) {
     state.adminUnlocked = true;
-    const pendTotal = state.pendingPoems.length + state.pendingPoets.length;
+    var pendTotal = state.pendingPoems.length + state.pendingPoets.length;
     if (pendTotal > 0) state.adminTab = "approvals";
     renderAdminStudio(); showToast("एडमिन स्टूडियो खुल गया 👑");
   } else { showToast("ग़लत पिन!"); }
@@ -2531,25 +2663,24 @@ function unlockAdmin() {
 
 function setAdminTab(t) {
   state.adminTab = t; state.editingPoemId = null; state.editingPoetId = null; state.editingAdminId = null;
-  state.editingEventId = null; state.editingVideoId = null; state.editingEbookId = null;
-  state.editingPendingPoemId = null; state.editingPendingPoetId = null;
   renderAdminStudio();
 }
 
-function handleImageUpload(input, targetKey, previewId, maxDim = 320, keepPng = false) {
-  const file = input.files && input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const img = new Image();
-    img.onload = () => {
-      let w = img.width, h = img.height;
+function handleImageUpload(input, targetKey, previewId, maxDim, keepPng) {
+  if (!maxDim) maxDim = 320;
+  var file = input.files && input.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height;
       if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
       else if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
-      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      var c = document.createElement("canvas"); c.width = w; c.height = h;
       c.getContext("2d").drawImage(img, 0, 0, w, h);
-      const dataUrl = (keepPng && file.type === "image/png") ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.82);
+      var dataUrl = (keepPng && file.type === "image/png") ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.82);
       state[targetKey] = dataUrl;
-      const prev = document.getElementById(previewId); if (prev) prev.innerHTML = `<img src="${dataUrl}" alt="preview">`;
+      var prev = document.getElementById(previewId); if (prev) prev.innerHTML = "<img src=\"" + dataUrl + "\" alt=\"preview\">";
       showToast("फ़ोटो तैयार है ✓");
     };
     img.src = ev.target.result;
@@ -2558,291 +2689,564 @@ function handleImageUpload(input, targetKey, previewId, maxDim = 320, keepPng = 
 }
 
 function renderAdminStudio() {
-  const body = document.getElementById("admin-body"); if (!body) return;
+  var body = document.getElementById("admin-body"); if (!body) return;
   if (!state.adminUnlocked) {
-    body.innerHTML = `
-      <div class="auth-gate-box" style="text-align:center;">
-        <div style="font-size:42px; margin-bottom:6px;">👑</div>
-        <h3 class="font-royal" style="font-size:24px; margin:0 0 6px; color:var(--primary);">एडमिन खाता एवं पिन प्रवेश</h3>
-        <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 12px;">मोबाइल/ऐप में Google लॉगिन रीडायरेक्ट से, या ईमेल-पासवर्ड अथवा पिन से सीधे खोलें।</p>
-        <button class="google-auth-btn" onclick="signInWithGoogle('admin')"><span>🔐</span><span>Google से एडमिन खाता लॉगिन करें</span></button>
-        <div class="auth-divider">— या एडमिन ईमेल व पासवर्ड से लॉगिन करें —</div>
-        <div class="field" style="text-align:left;"><label>एडमिन ईमेल</label><input id="adm-login-email" type="email" value="${esc(state.settings.adminEmail || "")}" placeholder="आपका एडमिन ईमेल" /></div>
-        <div class="field" style="text-align:left;"><label>पासवर्ड</label><input id="adm-login-pass" type="password" placeholder="खाता पासवर्ड" onkeydown="if(event.key==='Enter') signInAdminEmailPass()" /></div>
-        <div style="margin-bottom:14px;"><button class="action-btn gold" style="width:100%;" onclick="signInAdminEmailPass()">ईमेल-पासवर्ड से एडमिन लॉगिन</button></div>
-        <div class="auth-divider">— या त्वरित पिन से खोलें —</div>
-        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="पिन लिखें..." style="max-width:220px; text-align:center; font-size:20px; letter-spacing:6px; padding:10px; border-radius:12px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); margin-bottom:12px;" onkeydown="if(event.key==='Enter') unlockAdmin()" />
-        <div><button class="action-btn primary" onclick="unlockAdmin()">पिन से स्टूडियो खोलें →</button></div>
-      </div>
-    `;
+    body.innerHTML =
+      "<div class=\"auth-gate-box\" style=\"text-align:center;\">" +
+      "<div style=\"font-size:42px; margin-bottom:6px;\">👑</div>" +
+      "<h3 class=\"font-royal\" style=\"font-size:24px; margin:0 0 6px; color:var(--primary);\">एडमिन खाता एवं पिन प्रवेश</h3>" +
+      "<p style=\"font-size:12.5px; color:var(--text-muted); margin:0 0 12px;\">मोबाइल/ऐप में Google लॉगिन रीडायरेक्ट से, या ईमेल-पासवर्ड अथवा पिन से सीधे खोलें।</p>" +
+      "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle(\'admin\')\"><span>🔐</span><span>Google से एडमिन खाता लॉगिन करें</span></button>" +
+      "<div class=\"auth-divider\">— या एडमिन ईमेल व पासवर्ड से लॉगिन करें —</div>" +
+      "<div class=\"field\" style=\"text-align:left;\"><label>एडमिन ईमेल</label><input id=\"adm-login-email\" type=\"email\" value=\"" + esc(state.settings.adminEmail || "") + "\" placeholder=\"आपका एडमिन ईमेल\" /></div>" +
+      "<div class=\"field\" style=\"text-align:left;\"><label>पासवर्ड</label><input id=\"adm-login-pass\" type=\"password\" placeholder=\"खाता पासवर्ड\" onkeydown=\"if(event.key===\'Enter\') signInAdminEmailPass()\" /></div>" +
+      "<div style=\"margin-bottom:14px;\"><button class=\"action-btn gold\" style=\"width:100%;\" onclick=\"signInAdminEmailPass()\">ईमेल-पासवर्ड से एडमिन लॉगिन</button></div>" +
+      "<div class=\"auth-divider\">— या त्वरित पिन से खोलें —</div>" +
+      "<input id=\"admin-pin-input\" type=\"password\" inputmode=\"numeric\" placeholder=\"पिन लिखें...\" style=\"max-width:220px; text-align:center; font-size:20px; letter-spacing:6px; padding:10px; border-radius:12px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); margin-bottom:12px;\" onkeydown=\"if(event.key===\'Enter\') unlockAdmin()\" />" +
+      "<div><button class=\"action-btn primary\" onclick=\"unlockAdmin()\">पिन से स्टूडियो खोलें →</button></div>" +
+      "</div>";
     return;
   }
 
-  let contentHtml = "";
+  var contentHtml = "";
   if (state.adminTab === "approvals") {
-    const poemsQ = state.pendingPoems.map(p => `<div class="pending-card"><span class="genre-tag">${esc(p.genre || "कविता")}</span><div class="font-royal" style="font-size:19px; color:var(--primary); margin-top:4px;">${esc(p.title)}</div><div class="pending-meta"><span>✒️ <strong>${esc(p.poet)}</strong></span>${p.ownerEmail ? `<span>✉️ ${esc(p.ownerEmail)}</span>` : ""}</div><div class="pending-poem-preview">${esc(p.content)}</div><div class="pending-actions"><button class="btn-approve" onclick="approvePendingPoem(dec('${arg(p.id)}'))">✅ स्वीकृत व प्रकाशित करें</button><button class="btn-reject" onclick="rejectPendingPoem(dec('${arg(p.id)}'))">❌ अस्वीकार</button></div></div>`).join("") || `<div class="empty-box">कोई लंबित रचना नहीं है।</div>`;
-    const poetsQ = state.pendingPoets.map(pt => `<div class="pending-card"><div class="font-royal" style="font-size:19px; color:var(--primary);">${esc(pt.name)}</div><div class="pending-meta"><span>📍 ${esc(pt.city || "")}</span>${pt.ownerEmail ? `<span>✉️ ${esc(pt.ownerEmail)}</span>` : ""}</div><div class="pending-actions"><button class="btn-approve" onclick="approvePendingPoet(dec('${arg(pt.id)}'))">✅ स्वीकृत व प्रकाशित करें</button><button class="btn-reject" onclick="rejectPendingPoet(dec('${arg(pt.id)}'))">❌ अस्वीकार</button></div></div>`).join("") || `<div class="empty-box">कोई लंबित कवि परिचय नहीं है।</div>`;
-    contentHtml = `<h4 class="section-title">📜 लंबित रचनाएँ (${state.pendingPoems.length})</h4>${poemsQ}<h4 class="section-title" style="margin-top:14px;">✒️ लंबित कवि परिचय (${state.pendingPoets.length})</h4>${poetsQ}`;
+    var poemsQ = state.pendingPoems.map(function(p) {
+      return "<div class=\"pending-card\"><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span><div class=\"font-royal\" style=\"font-size:19px; color:var(--primary); margin-top:4px;\">" + esc(p.title) + "</div><div class=\"pending-meta\"><span>✒️ <strong>" + esc(p.poet) + "</strong></span>" + (p.ownerEmail ? ("<span>✉️ " + esc(p.ownerEmail) + "</span>") : "") + "</div><div class=\"pending-poem-preview\">" + esc(p.content) + "</div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoem(dec(\'" + arg(p.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoem(dec(\'" + arg(p.id) + "\'))\">❌ अस्वीकार</button></div></div>";
+    }).join("") || "<div class=\"empty-box\">कोई लंबित रचना नहीं है।</div>";
+    var poetsQ = state.pendingPoets.map(function(pt) {
+      return "<div class=\"pending-card\"><div class=\"font-royal\" style=\"font-size:19px; color:var(--primary);\">" + esc(pt.name) + "</div><div class=\"pending-meta\"><span>📍 " + esc(pt.city || "") + "</span>" + (pt.ownerEmail ? ("<span>✉️ " + esc(pt.ownerEmail) + "</span>") : "") + "</div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoet(dec(\'" + arg(pt.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार</button></div></div>";
+    }).join("") || "<div class=\"empty-box\">कोई लंबित कवि परिचय नहीं है।</div>";
+    contentHtml = "<h4 class=\"section-title\">📜 लंबित रचनाएँ (" + state.pendingPoems.length + ")</h4>" + poemsQ + "<h4 class=\"section-title\" style=\"margin-top:14px;\">✒️ लंबित कवि परिचय (" + state.pendingPoets.length + ")</h4>" + poetsQ;
   } else if (state.adminTab === "poems") {
-    const ep = state.editingPoemId ? state.poems.find(x => x.id === state.editingPoemId) : null;
-    const genres = getAllGenres(); const poets = getAllPoetObjects();
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">${ep ? "✏️ रचना संपादित करें" : "➕ नई रचना जोड़ें"}</h4><div class="field"><label>शीर्षक *</label><input id="f-poem-title" value="${esc(ep ? ep.title : "")}" /></div><div class="field"><label>कवि *</label><input id="f-poem-poet" list="adm-poet-dl" value="${esc(ep ? ep.poet : "")}" /><datalist id="adm-poet-dl">${poets.map(pt => `<option value="${esc(pt.name)}">`).join("")}</datalist></div><div class="field"><label>विधा *</label><input id="f-poem-genre" list="adm-genre-dl" value="${esc(ep ? ep.genre : "गीत")}" /><datalist id="adm-genre-dl">${genres.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div><div class="field"><label>संपूर्ण रचना *</label><textarea id="f-poem-content">${esc(ep ? ep.content : "")}</textarea></div><button class="action-btn primary" onclick="savePoemForm()">💾 सहेजें व पब्लिश करें</button></div>` + state.poems.map(p => `<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">${esc(p.title)}</div><div class="admin-item-sub">${esc(p.poet)} • ${esc(p.genre)}</div></div><div class="admin-item-btns"><button class="sm-btn" onclick="editPoem(dec('${arg(p.id)}'))">संपादित</button><button class="sm-btn del" onclick="deletePoem(dec('${arg(p.id)}'))">हटाएँ</button></div></div>`).join("");
+    var ep = state.editingPoemId ? state.poems.find(function(x) { return x.id === state.editingPoemId; }) : null;
+    var genres = getAllGenres(); var poets = getAllPoetObjects();
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ep ? "✏️ रचना संपादित करें" : "➕ नई रचना जोड़ें") + "</h4><div class=\"field\"><label>शीर्षक *</label><input id=\"f-poem-title\" value=\"" + esc(ep ? ep.title : "") + "\" /></div><div class=\"field\"><label>कवि *</label><input id=\"f-poem-poet\" list=\"adm-poet-dl\" value=\"" + esc(ep ? ep.poet : "") + "\" /><datalist id=\"adm-poet-dl\">" + poets.map(function(pt) { return "<option value=\"" + esc(pt.name) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>विधा *</label><input id=\"f-poem-genre\" list=\"adm-genre-dl\" value=\"" + esc(ep ? ep.genre : "गीत") + "\" /><datalist id=\"adm-genre-dl\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"f-poem-content\">" + esc(ep ? ep.content : "") + "</textarea></div><button class=\"action-btn primary\" onclick=\"savePoemForm()\">💾 सहेजें व पब्लिश करें</button></div>" + state.poems.map(function(p) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(p.title) + "</div><div class=\"admin-item-sub\">" + esc(p.poet) + " • " + esc(p.genre) + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editPoem(dec(\'" + arg(p.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoem(dec(\'" + arg(p.id) + "\'))\">हटाएँ</button></div></div>";
+    }).join("");
   } else if (state.adminTab === "poets") {
-    const ept = state.editingPoetId ? state.poets.find(x => x.id === state.editingPoetId) : null;
-    const curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">${ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें"}</h4><div class="field"><label>नाम *</label><input id="f-poet-name" value="${esc(ept ? ept.name : "")}" /></div><div class="two-fields"><div class="field"><label>जन्म</label><input id="f-poet-birth" value="${esc(ept ? ept.birth || "" : "")}" /></div><div class="field"><label>स्थान</label><input id="f-poet-city" value="${esc(ept ? ept.city || "" : "")}" /></div></div><div class="field"><label>मुख्य विधा</label><input id="f-poet-genres" value="${esc(ept ? ept.mainGenres || "" : "")}" /></div><div class="field"><label>काव्य-मुद्रा</label><textarea id="f-poet-quote" style="min-height:56px;">${esc(ept ? ept.quote || "" : "")}</textarea></div><div class="field"><label>विशेष / परिचय</label><textarea id="f-poet-special" style="min-height:60px;">${esc(ept ? ept.special || ept.bio || "" : "")}</textarea></div><div class="field"><label>फ़ोटो</label><input type="file" accept="image/*" onchange="handleImageUpload(this, 'tempPoetPhoto', 'poet-photo-prev', 280)" /><div class="photo-preview-row"><div class="photo-preview-thumb" id="poet-photo-prev">${curPhoto ? `<img src="${curPhoto}">` : "✒️"}</div></div></div><button class="action-btn primary" onclick="savePoetForm()">💾 कवि सहेजें</button></div>` + state.poets.map(pt => `<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">${esc(pt.name)}</div><div class="admin-item-sub">📍 ${esc(pt.city || "")}</div></div><div class="admin-item-btns"><button class="sm-btn" onclick="editPoet(dec('${arg(pt.id)}'))">संपादित</button><button class="sm-btn del" onclick="deletePoet(dec('${arg(pt.id)}'))">हटाएँ</button></div></div>`).join("");
+    var ept = state.editingPoetId ? state.poets.find(function(x) { return x.id === state.editingPoetId; }) : null;
+    var curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें") + "</h4><div class=\"field\"><label>नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" /></div><div class=\"two-fields\"><div class=\"field\"><label>जन्म</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" /></div><div class=\"field\"><label>स्थान</label><input id=\"f-poet-city\" value=\"" + esc(ept ? (ept.city || "") : "") + "\" /></div></div><div class=\"field\"><label>मुख्य विधा</label><input id=\"f-poet-genres\" value=\"" + esc(ept ? (ept.mainGenres || "") : "") + "\" /></div><div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div><div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div><div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempPoetPhoto\', \'poet-photo-prev\', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div></div></div><button class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editPoet(dec(\'" + arg(pt.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec(\'" + arg(pt.id) + "\'))\">हटाएँ</button></div></div>";
+    }).join("");
   } else if (state.adminTab === "admins") {
-    const ea = state.editingAdminId ? state.admins.find(x => x.id === state.editingAdminId) : null;
-    const curPhoto = state.tempAdminPhoto || (ea ? ea.photo : "");
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">${ea ? "✏️ एडमिन संपादित करें" : "➕ नया एडमिन जोड़ें"}</h4><div class="field"><label>नाम *</label><input id="f-adm-name" value="${esc(ea ? ea.name : "")}" /></div><div class="field"><label>पद *</label><input id="f-adm-desig" value="${esc(ea ? ea.designation : "")}" /></div><div class="field"><label>स्थान</label><input id="f-adm-city" value="${esc(ea ? ea.city || "" : "")}" /></div><div class="field"><label>दायित्व / परिचय</label><textarea id="f-adm-role" style="min-height:60px;">${esc(ea ? ea.role || "" : "")}</textarea></div><div class="field"><label>फ़ोटो</label><input type="file" accept="image/*" onchange="handleImageUpload(this, 'tempAdminPhoto', 'adm-photo-prev', 280)" /><div class="photo-preview-row"><div class="photo-preview-thumb" id="adm-photo-prev">${curPhoto ? `<img src="${curPhoto}">` : "👑"}</div></div></div><button class="action-btn primary" onclick="saveAdminMemberForm()">💾 एडमिन सहेजें</button></div>` + state.admins.map(a => `<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">${esc(a.name)}</div><div class="admin-item-sub">${esc(a.designation)}</div></div><div class="admin-item-btns"><button class="sm-btn" onclick="editAdminMember(dec('${arg(a.id)}'))">संपादित</button><button class="sm-btn del" onclick="deleteAdminMember(dec('${arg(a.id)}'))">हटाएँ</button></div></div>`).join("");
+    var ea = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
+    var curPhotoA = state.tempAdminPhoto || (ea ? ea.photo : "");
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ea ? "✏️ एडमिन संपादित करें" : "➕ नया एडमिन जोड़ें") + "</h4><div class=\"field\"><label>नाम *</label><input id=\"f-adm-name\" value=\"" + esc(ea ? ea.name : "") + "\" /></div><div class=\"field\"><label>पद *</label><input id=\"f-adm-desig\" value=\"" + esc(ea ? ea.designation : "") + "\" /></div><div class=\"field\"><label>स्थान</label><input id=\"f-adm-city\" value=\"" + esc(ea ? (ea.city || "") : "") + "\" /></div><div class=\"field\"><label>दायित्व / परिचय</label><textarea id=\"f-adm-role\" style=\"min-height:60px;\">" + esc(ea ? (ea.role || "") : "") + "</textarea></div><div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempAdminPhoto\', \'adm-photo-prev\', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"adm-photo-prev\">" + (curPhotoA ? ("<img src=\"" + curPhotoA + "\">") : "👑") + "</div></div></div><button class=\"action-btn primary\" onclick=\"saveAdminMemberForm()\">💾 एडमिन सहेजें</button></div>" + state.admins.map(function(a) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(a.name) + "</div><div class=\"admin-item-sub\">" + esc(a.designation) + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editAdminMember(dec(\'" + arg(a.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deleteAdminMember(dec(\'" + arg(a.id) + "\'))\">हटाएँ</button></div></div>";
+    }).join("");
   } else if (state.adminTab === "events") {
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">➕ नया कार्यक्रम</h4><div class="field"><label>नाम *</label><input id="f-evt-title" /></div><div class="two-fields"><div class="field"><label>तिथि</label><input id="f-evt-date" /></div><div class="field"><label>समय</label><input id="f-evt-time" /></div></div><div class="field"><label>विवरण</label><textarea id="f-evt-desc"></textarea></div><button class="action-btn primary" onclick="saveEventForm()">💾 कार्यक्रम सहेजें</button></div>` + state.events.map(e => `<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">${esc(e.title)}</div></div><button class="sm-btn del" onclick="deleteEvent(dec('${arg(e.id)}'))">हटाएँ</button></div>`).join("");
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">➕ नया कार्यक्रम</h4><div class=\"field\"><label>नाम *</label><input id=\"f-evt-title\" /></div><div class=\"two-fields\"><div class=\"field\"><label>तिथि</label><input id=\"f-evt-date\" /></div><div class=\"field\"><label>समय</label><input id=\"f-evt-time\" /></div></div><div class=\"field\"><label>विवरण</label><textarea id=\"f-evt-desc\"></textarea></div><button class=\"action-btn primary\" onclick=\"saveEventForm()\">💾 कार्यक्रम सहेजें</button></div>" + state.events.map(function(e) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(e.title) + "</div></div><button class=\"sm-btn del\" onclick=\"deleteEvent(dec(\'" + arg(e.id) + "\'))\">हटाएँ</button></div>";
+    }).join("");
   } else if (state.adminTab === "videos") {
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">➕ नया YouTube वीडियो</h4><div class="field"><label>शीर्षक *</label><input id="f-vid-title" /></div><div class="field"><label>YouTube लिंक *</label><input id="f-vid-url" /></div><button class="action-btn primary" onclick="saveVideoForm()">💾 वीडियो सहेजें</button></div>` + state.videos.map(v => `<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">${esc(v.title)}</div></div><button class="sm-btn del" onclick="deleteVideo(dec('${arg(v.id)}'))">हटाएँ</button></div>`).join("");
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">➕ नया YouTube वीडियो</h4><div class=\"field\"><label>शीर्षक *</label><input id=\"f-vid-title\" /></div><div class=\"field\"><label>YouTube लिंक *</label><input id=\"f-vid-url\" /></div><button class=\"action-btn primary\" onclick=\"saveVideoForm()\">💾 वीडियो सहेजें</button></div>" + state.videos.map(function(v) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(v.title) + "</div></div><button class=\"sm-btn del\" onclick=\"deleteVideo(dec(\'" + arg(v.id) + "\'))\">हटाएँ</button></div>";
+    }).join("");
   } else if (state.adminTab === "competition") {
-    const c = state.competition || DEFAULT_COMPETITION;
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">🏆 प्रतियोगिता अपडेट</h4><div class="field"><label>शीर्षक</label><input id="f-cmp-title" value="${esc(c.title)}" /></div><div class="two-fields"><div class="field"><label>🥇 प्रथम</label><input id="f-cmp-p1" value="${esc(c.prize1)}" /></div><div class="field"><label>🥈 द्वितीय</label><input id="f-cmp-p2" value="${esc(c.prize2)}" /></div></div><div class="field"><label>🥉 तृतीय</label><input id="f-cmp-p3" value="${esc(c.prize3)}" /></div><button class="action-btn primary" onclick="saveCompetitionForm()">💾 सहेजें</button></div>`;
+    var c = state.competition || DEFAULT_COMPETITION;
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">🏆 प्रतियोगिता अपडेट</h4><div class=\"field\"><label>शीर्षक</label><input id=\"f-cmp-title\" value=\"" + esc(c.title) + "\" /></div><div class=\"two-fields\"><div class=\"field\"><label>🥇 प्रथम</label><input id=\"f-cmp-p1\" value=\"" + esc(c.prize1) + "\" /></div><div class=\"field\"><label>🥈 द्वितीय</label><input id=\"f-cmp-p2\" value=\"" + esc(c.prize2) + "\" /></div></div><div class=\"field\"><label>🥉 तृतीय</label><input id=\"f-cmp-p3\" value=\"" + esc(c.prize3) + "\" /></div><button class=\"action-btn primary\" onclick=\"saveCompetitionForm()\">💾 सहेजें</button></div>";
   } else if (state.adminTab === "ebooks") {
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">➕ नई ई-बुक</h4><div class="field"><label>नाम *</label><input id="f-eb-title" /></div><div class="field"><label>लेखक *</label><input id="f-eb-author" /></div><div class="field"><label>लिंक</label><input id="f-eb-link" /></div><button class="action-btn primary" onclick="saveEbookForm()">💾 ई-बुक सहेजें</button></div>` + state.ebooks.map(b => `<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">${esc(b.title)}</div></div><button class="sm-btn del" onclick="deleteEbook(dec('${arg(b.id)}'))">हटाएँ</button></div>`).join("");
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">➕ नई ई-बुक</h4><div class=\"field\"><label>नाम *</label><input id=\"f-eb-title\" /></div><div class=\"field\"><label>लेखक *</label><input id=\"f-eb-author\" /></div><div class=\"field\"><label>लिंक</label><input id=\"f-eb-link\" /></div><button class=\"action-btn primary\" onclick=\"saveEbookForm()\">💾 ई-बुक सहेजें</button></div>" + state.ebooks.map(function(b) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(b.title) + "</div></div><button class=\"sm-btn del\" onclick=\"deleteEbook(dec(\'" + arg(b.id) + "\'))\">हटाएँ</button></div>";
+    }).join("");
   } else if (state.adminTab === "certificate") {
-    contentHtml = `
-      <div class="form-box">
-        <h4 class="section-title" style="margin-bottom:8px;">🏅 शाही साहित्यिक सम्मान-पत्र स्टूडियो</h4>
-        <div class="field"><label>सम्मान-पत्र शीर्षक</label><input id="cert-title-in" value="${esc(state.certTitle)}" oninput="state.certTitle=this.value; drawCertificateCanvas(false)" /></div>
-        <div class="field"><label>सम्मानित रचनाकार का नाम *</label><input id="cert-name-in" value="${esc(state.certName)}" placeholder="जैसे: सुश्री विनीता श्रीवास्तव" oninput="state.certName=this.value; drawCertificateCanvas(false)" /></div>
-        <div class="field"><label>सम्मान / उपाधि</label><input id="cert-award-in" value="${esc(state.certAward)}" oninput="state.certAward=this.value; drawCertificateCanvas(false)" /></div>
-        <div class="field"><label>प्रशस्ति वचन</label><textarea id="cert-reason-in" style="min-height:62px;" oninput="state.certReason=this.value; drawCertificateCanvas(false)">${esc(state.certReason)}</textarea></div>
-        <div class="two-fields">
-          <div class="field"><label>दिनांक</label><input id="cert-date-in" value="${esc(state.certDate)}" oninput="state.certDate=this.value; drawCertificateCanvas(false)" /></div>
-          <div class="field"><label>हस्ताक्षर / संयोजक</label><input id="cert-sign-in" value="${esc(state.certSign)}" oninput="state.certSign=this.value; drawCertificateCanvas(false)" /></div>
-        </div>
-        <img id="cert-preview-img" class="cert-preview-img" alt="सम्मान-पत्र" />
-        <div style="text-align:center;"><button class="action-btn gold" onclick="drawCertificateCanvas(true)">⬇️ HD सम्मान-पत्र (PNG) डाउनलोड करें</button></div>
-      </div>
-    `;
-    setTimeout(() => drawCertificateCanvas(false), 30);
+    contentHtml =
+      "<div class=\"form-box\">" +
+      "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">🏅 शाही साहित्यिक सम्मान-पत्र स्टूडियो</h4>" +
+      "<div class=\"field\"><label>सम्मान-पत्र शीर्षक</label><input id=\"cert-title-in\" value=\"" + esc(state.certTitle) + "\" oninput=\"state.certTitle=this.value; drawCertificateCanvas(false)\" /></div>" +
+      "<div class=\"field\"><label>सम्मानित रचनाकार का नाम *</label><input id=\"cert-name-in\" value=\"" + esc(state.certName) + "\" placeholder=\"जैसे: सुश्री विनीता श्रीवास्तव\" oninput=\"state.certName=this.value; drawCertificateCanvas(false)\" /></div>" +
+      "<div class=\"field\"><label>सम्मान / उपाधि</label><input id=\"cert-award-in\" value=\"" + esc(state.certAward) + "\" oninput=\"state.certAward=this.value; drawCertificateCanvas(false)\" /></div>" +
+      "<div class=\"field\"><label>प्रशस्ति वचन</label><textarea id=\"cert-reason-in\" style=\"min-height:62px;\" oninput=\"state.certReason=this.value; drawCertificateCanvas(false)\">" + esc(state.certReason) + "</textarea></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>दिनांक</label><input id=\"cert-date-in\" value=\"" + esc(state.certDate) + "\" oninput=\"state.certDate=this.value; drawCertificateCanvas(false)\" /></div><div class=\"field\"><label>हस्ताक्षर / संयोजक</label><input id=\"cert-sign-in\" value=\"" + esc(state.certSign) + "\" oninput=\"state.certSign=this.value; drawCertificateCanvas(false)\" /></div></div>" +
+      "<img id=\"cert-preview-img\" class=\"cert-preview-img\" alt=\"सम्मान-पत्र\" />" +
+      "<div style=\"text-align:center;\"><button class=\"action-btn gold\" onclick=\"drawCertificateCanvas(true)\">⬇️ HD सम्मान-पत्र (PNG) डाउनलोड करें</button></div>" +
+      "</div>";
+    setTimeout(function() { drawCertificateCanvas(false); }, 30);
   } else {
-    const s = state.settings; const curLogo = state.tempLogoData || s.logo || "";
-    contentHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:10px;">⚙️ लोगो, एडमिन ईमेल व पिन</h4><div class="field"><label>लोगो अपलोड करें</label><input type="file" accept="image/*" onchange="handleImageUpload(this, 'tempLogoData', 'adm-logo-prev', 320, true)" /><div class="photo-preview-row"><div class="photo-preview-thumb" style="border-radius:50%;" id="adm-logo-prev">${curLogo ? `<img src="${curLogo}">` : "🪔"}</div></div></div><div class="field"><label>ऐप का नाम</label><input id="f-set-name" value="${esc(s.appName)}" /></div><div class="field"><label>पंजीकृत एडमिन ईमेल</label><input id="f-set-adm-email" type="email" value="${esc(s.adminEmail || "")}" /></div><div class="field"><label>एडमिन पिन</label><input id="f-set-pin" value="${esc(s.adminPin)}" /></div><button class="action-btn primary" onclick="saveSettingsForm()">💾 सेटिंग्स सहेजें</button></div>`;
+    var s = state.settings; var curLogo = state.tempLogoData || s.logo || "";
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">⚙️ लोगो, एडमिन ईमेल व पिन</h4><div class=\"field\"><label>लोगो अपलोड करें</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempLogoData\', \'adm-logo-prev\', 320, true)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" style=\"border-radius:50%;\" id=\"adm-logo-prev\">" + (curLogo ? ("<img src=\"" + curLogo + "\">") : "🪔") + "</div></div></div><div class=\"field\"><label>ऐप का नाम</label><input id=\"f-set-name\" value=\"" + esc(s.appName) + "\" /></div><div class=\"field\"><label>पंजीकृत एडमिन ईमेल</label><input id=\"f-set-adm-email\" type=\"email\" value=\"" + esc(s.adminEmail || "") + "\" /></div><div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin) + "\" /></div><button class=\"action-btn primary\" onclick=\"saveSettingsForm()\">💾 सेटिंग्स सहेजें</button></div>";
   }
 
-  body.innerHTML = `<div class="admin-tabs"><button class="admin-tab-btn ${state.adminTab === "approvals" ? "active" : ""}" onclick="setAdminTab('approvals')">⏳ स्वीकृति (${state.pendingPoems.length + state.pendingPoets.length})</button><button class="admin-tab-btn ${state.adminTab === "poems" ? "active" : ""}" onclick="setAdminTab('poems')">📜 रचनाएँ</button><button class="admin-tab-btn ${state.adminTab === "poets" ? "active" : ""}" onclick="setAdminTab('poets')">✒️ कवि</button><button class="admin-tab-btn ${state.adminTab === "admins" ? "active" : ""}" onclick="setAdminTab('admins')">👑 एडमिन</button><button class="admin-tab-btn ${state.adminTab === "events" ? "active" : ""}" onclick="setAdminTab('events')">📅 कार्यक्रम</button><button class="admin-tab-btn ${state.adminTab === "videos" ? "active" : ""}" onclick="setAdminTab('videos')">🎬 वीडियो</button><button class="admin-tab-btn ${state.adminTab === "competition" ? "active" : ""}" onclick="setAdminTab('competition')">🏆 प्रतियोगिता</button><button class="admin-tab-btn ${state.adminTab === "ebooks" ? "active" : ""}" onclick="setAdminTab('ebooks')">📚 ई-बुक</button><button class="admin-tab-btn ${state.adminTab === "certificate" ? "active" : ""}" onclick="setAdminTab('certificate')">🏅 सम्मान-पत्र</button><button class="admin-tab-btn ${state.adminTab === "settings" ? "active" : ""}" onclick="setAdminTab('settings')">⚙️ सेटिंग्स</button></div>${contentHtml}`;
+  body.innerHTML =
+    "<div class=\"admin-tabs\">" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "approvals" ? "active" : "") + "\" onclick=\"setAdminTab(\'approvals\')\">⏳ स्वीकृति (" + (state.pendingPoems.length + state.pendingPoets.length) + ")</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "poems" ? "active" : "") + "\" onclick=\"setAdminTab(\'poems\')\">📜 रचनाएँ</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "poets" ? "active" : "") + "\" onclick=\"setAdminTab(\'poets\')\">✒️ कवि</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "admins" ? "active" : "") + "\" onclick=\"setAdminTab(\'admins\')\">👑 एडमिन</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "events" ? "active" : "") + "\" onclick=\"setAdminTab(\'events\')\">📅 कार्यक्रम</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "videos" ? "active" : "") + "\" onclick=\"setAdminTab(\'videos\')\">🎬 वीडियो</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "competition" ? "active" : "") + "\" onclick=\"setAdminTab(\'competition\')\">🏆 प्रतियोगिता</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "ebooks" ? "active" : "") + "\" onclick=\"setAdminTab(\'ebooks\')\">📚 ई-बुक</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "certificate" ? "active" : "") + "\" onclick=\"setAdminTab(\'certificate\')\">🏅 सम्मान-पत्र</button>" +
+    "<button class=\"admin-tab-btn " + (state.adminTab === "settings" ? "active" : "") + "\" onclick=\"setAdminTab(\'settings\')\">⚙️ सेटिंग्स</button>" +
+    "</div>" + contentHtml;
 }
 
-async function savePoemForm() {
-  const title = document.getElementById("f-poem-title")?.value.trim(); const poet = document.getElementById("f-poem-poet")?.value.trim();
-  const genre = document.getElementById("f-poem-genre")?.value.trim() || "कविता"; const content = document.getElementById("f-poem-content")?.value.trim();
+function savePoemForm() {
+  var tEl = document.getElementById("f-poem-title"); var pEl = document.getElementById("f-poem-poet");
+  var gEl = document.getElementById("f-poem-genre"); var cEl = document.getElementById("f-poem-content");
+  var title = tEl ? tEl.value.trim() : ""; var poet = pEl ? pEl.value.trim() : "";
+  var genre = (gEl ? gEl.value.trim() : "") || "कविता"; var content = cEl ? cEl.value.trim() : "";
   if (!title || !poet || !content) { showToast("शीर्षक, कवि और रचना भरें"); return; }
-  const id = state.editingPoemId || ("poem_" + Date.now()); const ex = state.poems.find(x => x.id === id);
-  const item = { id, title, poet, genre, content, createdAt: ex ? ex.createdAt : Date.now() };
-  if (ex) state.poems = state.poems.map(x => x.id === id ? item : x); else state.poems.unshift(item);
-  await cloudSaveDoc("poems", id, item); state.editingPoemId = null; renderAll(); renderAdminStudio(); showToast("रचना प्रकाशित हुई ✨");
+  var id = state.editingPoemId || ("poem_" + Date.now());
+  var ex = state.poems.find(function(x) { return x.id === id; });
+  var item = { id: id, title: title, poet: poet, genre: genre, content: content, createdAt: ex ? ex.createdAt : Date.now() };
+  if (ex) state.poems = state.poems.map(function(x) { return x.id === id ? item : x; }); else state.poems.unshift(item);
+  cloudSaveDoc("poems", id, item).then(function() { state.editingPoemId = null; renderAll(); renderAdminStudio(); showToast("रचना प्रकाशित हुई ✨"); });
 }
 function editPoem(id) { state.editingPoemId = id; renderAdminStudio(); }
-async function deletePoem(id) { if (!confirm("हटाएं?")) return; state.poems = state.poems.filter(x => x.id !== id); await cloudDeleteDoc("poems", id); renderAll(); renderAdminStudio(); }
+function deletePoem(id) { if (!confirm("हटाएं?")) return; state.poems = state.poems.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("poems", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
-async function savePoetForm() {
-  const name = document.getElementById("f-poet-name")?.value.trim(); if (!name) { showToast("कवि का नाम लिखें"); return; }
-  const id = state.editingPoetId || ("poet_" + Date.now()); const ex = state.poets.find(x => x.id === id);
-  const item = { id, name, ownerEmail: ex?.ownerEmail || "", birth: document.getElementById("f-poet-birth")?.value.trim() || "", city: document.getElementById("f-poet-city")?.value.trim() || "", mainGenres: document.getElementById("f-poet-genres")?.value.trim() || "", quote: document.getElementById("f-poet-quote")?.value.trim() || "", special: document.getElementById("f-poet-special")?.value.trim() || "", photo: state.tempPoetPhoto || ex?.photo || "", bio: "" };
-  if (ex) state.poets = state.poets.map(x => x.id === id ? item : x); else state.poets.push(item);
-  await cloudSaveDoc("poets", id, item); state.editingPoetId = null; state.tempPoetPhoto = ""; renderAll(); renderAdminStudio(); showToast("कवि परिचय सहेजा गया ✨");
+function savePoetForm() {
+  var nEl = document.getElementById("f-poet-name");
+  var name = nEl ? nEl.value.trim() : ""; if (!name) { showToast("कवि का नाम लिखें"); return; }
+  var id = state.editingPoetId || ("poet_" + Date.now());
+  var ex = state.poets.find(function(x) { return x.id === id; }) || {};
+  var item = {
+    id: id, name: name, ownerEmail: ex.ownerEmail || "",
+    birth: (document.getElementById("f-poet-birth") || { value: "" }).value.trim(),
+    city: (document.getElementById("f-poet-city") || { value: "" }).value.trim(),
+    mainGenres: (document.getElementById("f-poet-genres") || { value: "" }).value.trim(),
+    quote: (document.getElementById("f-poet-quote") || { value: "" }).value.trim(),
+    special: (document.getElementById("f-poet-special") || { value: "" }).value.trim(),
+    photo: state.tempPoetPhoto || ex.photo || "", bio: ""
+  };
+  var existed = state.poets.some(function(x) { return x.id === id; });
+  if (existed) state.poets = state.poets.map(function(x) { return x.id === id ? item : x; }); else state.poets.push(item);
+  cloudSaveDoc("poets", id, item).then(function() { state.editingPoetId = null; state.tempPoetPhoto = ""; renderAll(); renderAdminStudio(); showToast("कवि परिचय सहेजा गया ✨"); });
 }
 function editPoet(id) { state.editingPoetId = id; state.tempPoetPhoto = ""; renderAdminStudio(); }
-async function deletePoet(id) { if (!confirm("हटाएं?")) return; state.poets = state.poets.filter(x => x.id !== id); await cloudDeleteDoc("poets", id); renderAll(); renderAdminStudio(); }
+function deletePoet(id) { if (!confirm("हटाएं?")) return; state.poets = state.poets.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("poets", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
-async function saveAdminMemberForm() {
-  const name = document.getElementById("f-adm-name")?.value.trim(); const designation = document.getElementById("f-adm-desig")?.value.trim();
+function saveAdminMemberForm() {
+  var nEl = document.getElementById("f-adm-name"); var dEl = document.getElementById("f-adm-desig");
+  var name = nEl ? nEl.value.trim() : ""; var designation = dEl ? dEl.value.trim() : "";
   if (!name || !designation) { showToast("नाम और पद लिखें"); return; }
-  const id = state.editingAdminId || ("admin_" + Date.now()); const ex = state.admins.find(x => x.id === id);
-  const item = { id, name, designation, city: document.getElementById("f-adm-city")?.value.trim() || "", role: document.getElementById("f-adm-role")?.value.trim() || "", photo: state.tempAdminPhoto || ex?.photo || "", bio: "", order: ex?.order || (state.admins.length + 1) };
-  if (ex) state.admins = state.admins.map(x => x.id === id ? item : x); else state.admins.push(item);
-  await cloudSaveDoc("admins", id, item); state.editingAdminId = null; state.tempAdminPhoto = ""; renderAll(); renderAdminStudio(); showToast("एडमिन सदस्य सहेजा गया 👑");
+  var id = state.editingAdminId || ("admin_" + Date.now());
+  var ex = state.admins.find(function(x) { return x.id === id; }) || {};
+  var item = {
+    id: id, name: name, designation: designation,
+    city: (document.getElementById("f-adm-city") || { value: "" }).value.trim(),
+    role: (document.getElementById("f-adm-role") || { value: "" }).value.trim(),
+    photo: state.tempAdminPhoto || ex.photo || "", bio: "", order: ex.order || (state.admins.length + 1)
+  };
+  var existed = state.admins.some(function(x) { return x.id === id; });
+  if (existed) state.admins = state.admins.map(function(x) { return x.id === id ? item : x; }); else state.admins.push(item);
+  cloudSaveDoc("admins", id, item).then(function() { state.editingAdminId = null; state.tempAdminPhoto = ""; renderAll(); renderAdminStudio(); showToast("एडमिन सदस्य सहेजा गया 👑"); });
 }
 function editAdminMember(id) { state.editingAdminId = id; state.tempAdminPhoto = ""; renderAdminStudio(); }
-async function deleteAdminMember(id) { if (!confirm("हटाएं?")) return; state.admins = state.admins.filter(x => x.id !== id); await cloudDeleteDoc("admins", id); renderAll(); renderAdminStudio(); }
+function deleteAdminMember(id) { if (!confirm("हटाएं?")) return; state.admins = state.admins.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("admins", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
-async function saveEventForm() {
-  const title = document.getElementById("f-evt-title")?.value.trim(); if (!title) { showToast("नाम लिखें"); return; }
-  const id = "evt_" + Date.now();
-  const item = { id, title, date: document.getElementById("f-evt-date")?.value.trim() || "", time: document.getElementById("f-evt-time")?.value.trim() || "", status: "आगामी", description: document.getElementById("f-evt-desc")?.value.trim() || "", createdAt: Date.now() };
-  state.events.unshift(item); await cloudSaveDoc("events", id, item); renderAll(); renderAdminStudio(); showToast("कार्यक्रम सहेजा गया 📅");
+function saveEventForm() {
+  var title = (document.getElementById("f-evt-title") || { value: "" }).value.trim(); if (!title) { showToast("नाम लिखें"); return; }
+  var id = "evt_" + Date.now();
+  var item = { id: id, title: title, date: (document.getElementById("f-evt-date") || { value: "" }).value.trim(), time: (document.getElementById("f-evt-time") || { value: "" }).value.trim(), status: "आगामी", description: (document.getElementById("f-evt-desc") || { value: "" }).value.trim(), createdAt: Date.now() };
+  state.events.unshift(item); cloudSaveDoc("events", id, item).then(function() { renderAll(); renderAdminStudio(); showToast("कार्यक्रम सहेजा गया 📅"); });
 }
-async function deleteEvent(id) { state.events = state.events.filter(x => x.id !== id); await cloudDeleteDoc("events", id); renderAll(); renderAdminStudio(); }
+function deleteEvent(id) { state.events = state.events.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("events", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
-async function saveVideoForm() {
-  const title = document.getElementById("f-vid-title")?.value.trim(); const url = document.getElementById("f-vid-url")?.value.trim();
+function saveVideoForm() {
+  var title = (document.getElementById("f-vid-title") || { value: "" }).value.trim(); var url = (document.getElementById("f-vid-url") || { value: "" }).value.trim();
   if (!title || !url) { showToast("शीर्षक व लिंक भरें"); return; }
-  const id = "vid_" + Date.now(); const item = { id, title, url, category: "वीडियो", createdAt: Date.now() };
-  state.videos.unshift(item); await cloudSaveDoc("videos", id, item); renderAll(); renderAdminStudio(); showToast("वीडियो जुड़ गया 🎬");
+  var id = "vid_" + Date.now(); var item = { id: id, title: title, url: url, category: "वीडियो", createdAt: Date.now() };
+  state.videos.unshift(item); cloudSaveDoc("videos", id, item).then(function() { renderAll(); renderAdminStudio(); showToast("वीडियो जुड़ गया 🎬"); });
 }
-async function deleteVideo(id) { state.videos = state.videos.filter(x => x.id !== id); await cloudDeleteDoc("videos", id); renderAll(); renderAdminStudio(); }
+function deleteVideo(id) { state.videos = state.videos.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("videos", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
-async function saveCompetitionForm() {
-  state.competition = { ...state.competition, title: document.getElementById("f-cmp-title")?.value.trim() || state.competition.title, prize1: document.getElementById("f-cmp-p1")?.value.trim() || "", prize2: document.getElementById("f-cmp-p2")?.value.trim() || "", prize3: document.getElementById("f-cmp-p3")?.value.trim() || "" };
-  await cloudSaveDoc("competition", "competition", state.competition); renderAll(); showToast("प्रतियोगिता अपडेट हुई 🏆");
+function saveCompetitionForm() {
+  state.competition = Object.assign({}, state.competition, {
+    title: (document.getElementById("f-cmp-title") || { value: state.competition.title }).value.trim() || state.competition.title,
+    prize1: (document.getElementById("f-cmp-p1") || { value: "" }).value.trim(),
+    prize2: (document.getElementById("f-cmp-p2") || { value: "" }).value.trim(),
+    prize3: (document.getElementById("f-cmp-p3") || { value: "" }).value.trim()
+  });
+  cloudSaveDoc("competition", "competition", state.competition).then(function() { renderAll(); showToast("प्रतियोगिता अपडेट हुई 🏆"); });
 }
 
-async function saveEbookForm() {
-  const title = document.getElementById("f-eb-title")?.value.trim(); const author = document.getElementById("f-eb-author")?.value.trim();
+function saveEbookForm() {
+  var title = (document.getElementById("f-eb-title") || { value: "" }).value.trim(); var author = (document.getElementById("f-eb-author") || { value: "" }).value.trim();
   if (!title || !author) { showToast("नाम व लेखक भरें"); return; }
-  const id = "eb_" + Date.now(); const item = { id, title, author, link: document.getElementById("f-eb-link")?.value.trim() || "", createdAt: Date.now() };
-  state.ebooks.unshift(item); await cloudSaveDoc("ebooks", id, item); renderAll(); renderAdminStudio(); showToast("ई-बुक जुड़ गई 📚");
+  var id = "eb_" + Date.now(); var item = { id: id, title: title, author: author, link: (document.getElementById("f-eb-link") || { value: "" }).value.trim(), createdAt: Date.now() };
+  state.ebooks.unshift(item); cloudSaveDoc("ebooks", id, item).then(function() { renderAll(); renderAdminStudio(); showToast("ई-बुक जुड़ गई 📚"); });
 }
-async function deleteEbook(id) { state.ebooks = state.ebooks.filter(x => x.id !== id); await cloudDeleteDoc("ebooks", id); renderAll(); renderAdminStudio(); }
+function deleteEbook(id) { state.ebooks = state.ebooks.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("ebooks", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
-async function saveSettingsForm() {
-  state.settings.appName = document.getElementById("f-set-name")?.value.trim() || "काव्य चौपाल";
-  state.settings.adminEmail = (document.getElementById("f-set-adm-email")?.value || "").trim().toLowerCase();
-  state.settings.adminPin = document.getElementById("f-set-pin")?.value.trim() || "1234";
+function saveSettingsForm() {
+  state.settings.appName = (document.getElementById("f-set-name") || { value: "काव्य चौपाल" }).value.trim() || "काव्य चौपाल";
+  state.settings.adminEmail = ((document.getElementById("f-set-adm-email") || { value: "" }).value || "").trim().toLowerCase();
+  state.settings.adminPin = (document.getElementById("f-set-pin") || { value: "1234" }).value.trim() || "1234";
   if (state.tempLogoData) { state.settings.logo = state.tempLogoData; state.tempLogoData = ""; }
-  await cloudSaveDoc("settings", "settings", state.settings); renderAll(); renderAdminStudio(); showToast("सेटिंग्स सहेजी गईं ✨");
+  cloudSaveDoc("settings", "settings", state.settings).then(function() { renderAll(); renderAdminStudio(); showToast("सेटिंग्स सहेजी गईं ✨"); });
 }
 
 
-function getPoetByEmail(email) { const em = (email || "").toLowerCase().trim(); return em ? (state.poets.find(pt => (pt.ownerEmail || "").toLowerCase().trim() === em) || null) : null; }
-function getPendingPoetByEmail(email) { const em = (email || "").toLowerCase().trim(); return em ? (state.pendingPoets.find(pt => (pt.ownerEmail || "").toLowerCase().trim() === em) || null) : null; }
+function getPoetByEmail(email) { var em = (email || "").toLowerCase().trim(); return em ? (state.poets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null) : null; }
+function getPendingPoetByEmail(email) { var em = (email || "").toLowerCase().trim(); return em ? (state.pendingPoets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null) : null; }
 function openSubmitModal(tab) { if (!document.getElementById("submit-modal").classList.contains("open")) pushAppView("submit"); state.submitTab = tab || "poem"; state.submitSuccessMsg = ""; document.getElementById("submit-modal").classList.add("open"); renderSubmitModal(); }
 function setSubmitTab(tab) { state.submitTab = tab; renderSubmitModal(); }
 function setAuthMode(mode) { state.authMode = mode; renderSubmitModal(); }
 function isMobileOrWebView() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ""); }
 
-async function signInWithGoogle(context) {
+function signInWithGoogle(context) {
   if (!auth) { showToast("Firebase Auth उपलब्ध नहीं है"); return; }
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    if (isMobileOrWebView()) { await auth.signInWithRedirect(provider); return; }
-    const res = await auth.signInWithPopup(provider);
-    const em = ((res.user && res.user.email) || "").toLowerCase().trim();
+  var provider = new firebase.auth.GoogleAuthProvider();
+  if (isMobileOrWebView()) { auth.signInWithRedirect(provider); return; }
+  auth.signInWithPopup(provider).then(function(res) {
+    var em = ((res.user && res.user.email) || "").toLowerCase().trim();
     if (context === "admin" && state.settings.adminEmail && em === state.settings.adminEmail.toLowerCase().trim()) { state.adminUnlocked = true; renderAdminStudio(); }
     showToast("Google लॉगिन सफल ✓");
-  } catch (err) {
-    try { const provider = new firebase.auth.GoogleAuthProvider(); await auth.signInWithRedirect(provider); } catch (e2) { showToast("Google लॉगिन असफल"); }
-  }
+  }).catch(function() {
+    try { auth.signInWithRedirect(provider); } catch (e2) { showToast("Google लॉगिन असफल"); }
+  });
 }
 
-async function submitEmailAuthForm() {
+function submitEmailAuthForm() {
   if (!auth) { showToast("Auth उपलब्ध नहीं है"); return; }
-  const email = (document.getElementById("auth-email-in")?.value || "").trim().toLowerCase();
-  const pass = (document.getElementById("auth-pass-in")?.value || "").trim();
+  var email = ((document.getElementById("auth-email-in") || { value: "" }).value || "").trim().toLowerCase();
+  var pass = ((document.getElementById("auth-pass-in") || { value: "" }).value || "").trim();
   if (!email || pass.length < 6) { showToast("ईमेल और कम से कम 6 अक्षरों का पासवर्ड लिखें"); return; }
-  try {
-    if (state.authMode === "signup") await auth.createUserWithEmailAndPassword(email, pass);
-    else await auth.signInWithEmailAndPassword(email, pass);
-    showToast("लॉगिन सफल ✓");
-  } catch (err) { showToast("लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 60) : "")); }
+  var p = (state.authMode === "signup") ? auth.createUserWithEmailAndPassword(email, pass) : auth.signInWithEmailAndPassword(email, pass);
+  p.then(function() { showToast("लॉगिन सफल ✓"); }).catch(function(err) { showToast("लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 60) : "")); });
 }
 
-async function signInAdminEmailPass() {
+function signInAdminEmailPass() {
   if (!auth) { showToast("Auth उपलब्ध नहीं है"); return; }
-  const email = (document.getElementById("adm-login-email")?.value || "").trim().toLowerCase();
-  const pass = (document.getElementById("adm-login-pass")?.value || "").trim();
+  var email = ((document.getElementById("adm-login-email") || { value: "" }).value || "").trim().toLowerCase();
+  var pass = ((document.getElementById("adm-login-pass") || { value: "" }).value || "").trim();
   if (!email || !pass) { showToast("ईमेल और पासवर्ड लिखें"); return; }
-  try {
-    const res = await auth.signInWithEmailAndPassword(email, pass);
-    const signedIn = ((res.user && res.user.email) || "").toLowerCase().trim();
+  auth.signInWithEmailAndPassword(email, pass).then(function(res) {
+    var signedIn = ((res.user && res.user.email) || "").toLowerCase().trim();
     if (state.settings.adminEmail && signedIn !== state.settings.adminEmail.toLowerCase().trim()) { showToast("यह ईमेल पंजीकृत एडमिन ईमेल नहीं है"); return; }
     state.adminUnlocked = true; renderAdminStudio(); showToast("एडमिन लॉगिन सफल 👑");
-  } catch (err) { showToast("एडमिन लॉगिन असफल"); }
+  }).catch(function() { showToast("एडमिन लॉगिन असफल"); });
 }
 
-async function signOutAccount() {
-  try { if (auth) await auth.signOut(); } catch (e) {}
+function signOutAccount() {
+  if (auth) { auth.signOut().catch(function() {}); }
   state.currentUser = null; state.adminUnlocked = false; renderAll();
-  if (document.getElementById("submit-modal")?.classList.contains("open")) renderSubmitModal();
-  if (document.getElementById("admin-modal")?.classList.contains("open")) renderAdminStudio();
+  var sm = document.getElementById("submit-modal"); if (sm && sm.classList.contains("open")) renderSubmitModal();
+  var am = document.getElementById("admin-modal"); if (am && am.classList.contains("open")) renderAdminStudio();
 }
 
 function renderSubmitModal() {
-  const body = document.getElementById("submit-body"); if (!body) return;
-  if (state.submitSuccessMsg) { body.innerHTML = `<div class="submit-success-box"><div style="font-size:44px;">🙏✨</div><h3 class="font-royal" style="color:var(--primary);">प्रविष्टि प्राप्त हुई!</h3><p class="font-literary">${esc(state.submitSuccessMsg)}</p><button class="action-btn primary" onclick="closeModal('submit-modal')">बंद करें</button></div>`; return; }
+  var body = document.getElementById("submit-body"); if (!body) return;
+  if (state.submitSuccessMsg) { body.innerHTML = "<div class=\"submit-success-box\"><div style=\"font-size:44px;\">🙏✨</div><h3 class=\"font-royal\" style=\"color:var(--primary);\">प्रविष्टि प्राप्त हुई!</h3><p class=\"font-literary\">" + esc(state.submitSuccessMsg) + "</p><button class=\"action-btn primary\" onclick=\"closeModal(\'submit-modal\')\">बंद करें</button></div>"; return; }
   if (!state.currentUser || !state.currentUser.email) {
-    const isSignup = state.authMode === "signup";
-    body.innerHTML = `<div class="auth-gate-box"><div style="text-align:center; margin-bottom:10px;"><div style="font-size:36px;">🔐</div><h4 class="font-royal" style="font-size:21px; color:var(--primary); margin:4px 0;">रचनाकार खाता लॉगिन अनिवार्य</h4><p style="font-size:12.5px; color:var(--text-muted); margin:0;">आपकी प्रोफ़ाइल और रचनाएँ आपके ईमेल खाते से जुड़ेंगी।</p></div><button class="google-auth-btn" onclick="signInWithGoogle('poet')"><span>🌐</span><span>Google से जारी रखें</span></button><div class="auth-divider">— या ईमेल व पासवर्ड —</div><div class="admin-tabs" style="justify-content:center; margin-bottom:10px;"><button class="admin-tab-btn ${!isSignup ? "active" : ""}" onclick="setAuthMode('login')">लॉगिन करें</button><button class="admin-tab-btn ${isSignup ? "active" : ""}" onclick="setAuthMode('signup')">नया खाता बनाएँ</button></div><div class="field"><label>ईमेल *</label><input id="auth-email-in" type="email" /></div><div class="field"><label>पासवर्ड (6+ अक्षर) *</label><input id="auth-pass-in" type="password" onkeydown="if(event.key==='Enter') submitEmailAuthForm()" /></div><button class="action-btn primary" style="width:100%;" onclick="submitEmailAuthForm()">${isSignup ? "खाता बनाकर आगे बढ़ें" : "लॉगिन करके आगे बढ़ें"}</button></div>`;
+    var isSignup = state.authMode === "signup";
+    body.innerHTML =
+      "<div class=\"auth-gate-box\">" +
+      "<div style=\"text-align:center; margin-bottom:10px;\"><div style=\"font-size:36px;\">🔐</div><h4 class=\"font-royal\" style=\"font-size:21px; color:var(--primary); margin:4px 0;\">रचनाकार खाता लॉगिन अनिवार्य</h4><p style=\"font-size:12.5px; color:var(--text-muted); margin:0;\">आपकी प्रोफ़ाइल और रचनाएँ आपके ईमेल खाते से जुड़ेंगी।</p></div>" +
+      "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle(\'poet\')\"><span>🌐</span><span>Google से जारी रखें</span></button>" +
+      "<div class=\"auth-divider\">— या ईमेल व पासवर्ड —</div>" +
+      "<div class=\"admin-tabs\" style=\"justify-content:center; margin-bottom:10px;\"><button class=\"admin-tab-btn " + (!isSignup ? "active" : "") + "\" onclick=\"setAuthMode(\'login\')\">लॉगिन करें</button><button class=\"admin-tab-btn " + (isSignup ? "active" : "") + "\" onclick=\"setAuthMode(\'signup\')\">नया खाता बनाएँ</button></div>" +
+      "<div class=\"field\"><label>ईमेल *</label><input id=\"auth-email-in\" type=\"email\" /></div>" +
+      "<div class=\"field\"><label>पासवर्ड (6+ अक्षर) *</label><input id=\"auth-pass-in\" type=\"password\" onkeydown=\"if(event.key===\'Enter\') submitEmailAuthForm()\" /></div>" +
+      "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitEmailAuthForm()\">" + (isSignup ? "खाता बनाकर आगे बढ़ें" : "लॉगिन करके आगे बढ़ें") + "</button>" +
+      "</div>";
     return;
   }
-  const userEmail = state.currentUser.email; const activePoetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail); const genres = getAllGenres();
-  const hdrHtml = `<div class="account-chip-bar"><div class="account-user-info"><span>✅</span><div><div class="account-email-txt">${esc(userEmail)}</div><div style="font-size:11px; color:var(--text-muted);">${activePoetObj ? `तय प्रोफ़ाइल: <strong>${esc(activePoetObj.name)}</strong>` : "प्रोफ़ाइल अभी नहीं बनी"}</div></div></div><button class="sm-btn del" onclick="signOutAccount()">लॉगआउट</button></div>`;
-  let formHtml = "";
+  var userEmail = state.currentUser.email;
+  var activePoetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail);
+  var genres = getAllGenres();
+  var hdrHtml = "<div class=\"account-chip-bar\"><div class=\"account-user-info\"><span>✅</span><div><div class=\"account-email-txt\">" + esc(userEmail) + "</div><div style=\"font-size:11px; color:var(--text-muted);\">" + (activePoetObj ? ("तय प्रोफ़ाइल: <strong>" + esc(activePoetObj.name) + "</strong>") : "प्रोफ़ाइल अभी नहीं बनी") + "</div></div></div><button class=\"sm-btn del\" onclick=\"signOutAccount()\">लॉगआउट</button></div>";
+  var formHtml = "";
   if (state.submitTab === "poem") {
-    if (!activePoetObj) formHtml = `<div class="my-profile-card" style="text-align:center;"><p style="margin:0 0 10px;">पहले अपनी कवि प्रोफ़ाइल बनाएँ।</p><button class="action-btn primary" onclick="setSubmitTab('poet')">✒️ कवि प्रोफ़ाइल बनाएँ →</button></div>`;
-    else formHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:8px;">📜 नई रचना भेजें (${esc(activePoetObj.name)})</h4><div class="field"><label>शीर्षक *</label><input id="sub-poem-title" /></div><div class="field"><label>विधा *</label><input id="sub-poem-genre" list="sub-g-dl" value="गीत" /><datalist id="sub-g-dl">${genres.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div><div class="field"><label>संपूर्ण रचना *</label><textarea id="sub-poem-content" style="min-height:130px;"></textarea></div><button class="action-btn primary" style="width:100%;" onclick="submitPublicPoem()">📤 स्वीकृति हेतु भेजें</button></div>`;
+    if (!activePoetObj) formHtml = "<div class=\"my-profile-card\" style=\"text-align:center;\"><p style=\"margin:0 0 10px;\">पहले अपनी कवि प्रोफ़ाइल बनाएँ।</p><button class=\"action-btn primary\" onclick=\"setSubmitTab(\'poet\')\">✒️ कवि प्रोफ़ाइल बनाएँ →</button></div>";
+    else formHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:8px;\">📜 नई रचना भेजें (" + esc(activePoetObj.name) + ")</h4><div class=\"field\"><label>शीर्षक *</label><input id=\"sub-poem-title\" /></div><div class=\"field\"><label>विधा *</label><input id=\"sub-poem-genre\" list=\"sub-g-dl\" value=\"गीत\" /><datalist id=\"sub-g-dl\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:130px;\"></textarea></div><button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoem()\">📤 स्वीकृति हेतु भेजें</button></div>";
   } else {
-    formHtml = `<div class="form-box"><h4 class="section-title" style="margin-bottom:8px;">✒️ ${activePoetObj ? "प्रोफ़ाइल अपडेट करें" : "कवि प्रोफ़ाइल बनाएँ"}</h4><div class="field"><label>नाम एवं उपनाम *</label><input id="sub-poet-name" value="${esc(activePoetObj ? activePoetObj.name : "")}" /></div><div class="field"><label>शहर / स्थान *</label><input id="sub-poet-city" value="${esc(activePoetObj ? activePoetObj.city : "")}" /></div><div class="field"><label>मुख्य विधा</label><input id="sub-poet-genres" value="${esc(activePoetObj ? activePoetObj.mainGenres : "")}" /></div><div class="field"><label>काव्य-मुद्रा</label><textarea id="sub-poet-quote" style="min-height:60px;">${esc(activePoetObj ? activePoetObj.quote : "")}</textarea></div><button class="action-btn primary" style="width:100%;" onclick="submitPublicPoet()">📤 स्वीकृति हेतु भेजें</button></div>`;
+    formHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:8px;\">✒️ " + (activePoetObj ? "प्रोफ़ाइल अपडेट करें" : "कवि प्रोफ़ाइल बनाएँ") + "</h4><div class=\"field\"><label>नाम एवं उपनाम *</label><input id=\"sub-poet-name\" value=\"" + esc(activePoetObj ? activePoetObj.name : "") + "\" /></div><div class=\"field\"><label>शहर / स्थान *</label><input id=\"sub-poet-city\" value=\"" + esc(activePoetObj ? activePoetObj.city : "") + "\" /></div><div class=\"field\"><label>मुख्य विधा</label><input id=\"sub-poet-genres\" value=\"" + esc(activePoetObj ? (activePoetObj.mainGenres || "") : "") + "\" /></div><div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"sub-poet-quote\" style=\"min-height:60px;\">" + esc(activePoetObj ? (activePoetObj.quote || "") : "") + "</textarea></div><button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">📤 स्वीकृति हेतु भेजें</button></div>";
   }
-  body.innerHTML = `${hdrHtml}<div class="admin-tabs" style="justify-content:center;"><button class="admin-tab-btn ${state.submitTab === "poem" ? "active" : ""}" onclick="setSubmitTab('poem')">📜 रचना भेजें</button><button class="admin-tab-btn ${state.submitTab === "poet" ? "active" : ""}" onclick="setSubmitTab('poet')">✒️ ${activePoetObj ? "प्रोफ़ाइल अपडेट" : "प्रोफ़ाइल बनाएँ"}</button></div>${formHtml}`;
+  body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poem\')\">📜 रचना भेजें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poet\')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल अपडेट" : "प्रोफ़ाइल बनाएँ") + "</button></div>" + formHtml;
 }
 
-async function submitPublicPoem() {
-  const userEmail = state.currentUser?.email; const poetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail);
+function submitPublicPoem() {
+  var userEmail = state.currentUser && state.currentUser.email;
+  var poetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail);
   if (!userEmail || !poetObj) { showToast("पहले लॉगिन व प्रोफ़ाइल पूर्ण करें"); return; }
-  const title = document.getElementById("sub-poem-title")?.value.trim(); const genre = document.getElementById("sub-poem-genre")?.value.trim() || "कविता"; const content = document.getElementById("sub-poem-content")?.value.trim();
+  var title = (document.getElementById("sub-poem-title") || { value: "" }).value.trim();
+  var genre = ((document.getElementById("sub-poem-genre") || { value: "" }).value || "").trim() || "कविता";
+  var content = (document.getElementById("sub-poem-content") || { value: "" }).value.trim();
   if (!title || !content) { showToast("शीर्षक और रचना भरें"); return; }
-  const id = "pend_poem_" + Date.now(); const item = { id, title, poet: poetObj.name, genre, content, ownerEmail: userEmail, submittedAt: Date.now() };
-  state.pendingPoems.unshift(item); await cloudSaveDoc("pending_poems", id, item);
-  state.submitSuccessMsg = `आपकी रचना “${title}” एडमिन स्वीकृति हेतु भेज दी गई है।`; renderAll(); renderSubmitModal();
+  var id = "pend_poem_" + Date.now();
+  var item = { id: id, title: title, poet: poetObj.name, genre: genre, content: content, ownerEmail: userEmail, submittedAt: Date.now() };
+  state.pendingPoems.unshift(item);
+  cloudSaveDoc("pending_poems", id, item).then(function() {
+    state.submitSuccessMsg = "आपकी रचना “" + title + "” एडमिन स्वीकृति हेतु भेज दी गई है।";
+    renderAll(); renderSubmitModal();
+  });
 }
 
-async function submitPublicPoet() {
-  const userEmail = state.currentUser?.email; if (!userEmail) { showToast("पहले लॉगिन करें"); return; }
-  const name = document.getElementById("sub-poet-name")?.value.trim(); const city = document.getElementById("sub-poet-city")?.value.trim();
+function submitPublicPoet() {
+  var userEmail = state.currentUser && state.currentUser.email;
+  if (!userEmail) { showToast("पहले लॉगिन करें"); return; }
+  var name = (document.getElementById("sub-poet-name") || { value: "" }).value.trim();
+  var city = (document.getElementById("sub-poet-city") || { value: "" }).value.trim();
   if (!name || !city) { showToast("नाम और स्थान भरें"); return; }
-  const existingPend = getPendingPoetByEmail(userEmail); const id = existingPend ? existingPend.id : ("pend_poet_" + Date.now());
-  const item = { id, ownerEmail: userEmail, name, city, mainGenres: document.getElementById("sub-poet-genres")?.value.trim() || "", quote: document.getElementById("sub-poet-quote")?.value.trim() || "", submittedAt: Date.now() };
-  const idx = state.pendingPoets.findIndex(x => x.id === id); if (idx >= 0) state.pendingPoets[idx] = item; else state.pendingPoets.unshift(item);
-  await cloudSaveDoc("pending_poets", id, item); state.submitSuccessMsg = `${name} जी, आपकी प्रोफ़ाइल आपके खाते (${userEmail}) से जुड़ गई है।`; renderAll(); renderSubmitModal();
+  var existingPend = getPendingPoetByEmail(userEmail);
+  var id = existingPend ? existingPend.id : ("pend_poet_" + Date.now());
+  var item = {
+    id: id, ownerEmail: userEmail, name: name, city: city,
+    mainGenres: (document.getElementById("sub-poet-genres") || { value: "" }).value.trim(),
+    quote: (document.getElementById("sub-poet-quote") || { value: "" }).value.trim(),
+    submittedAt: Date.now()
+  };
+  var idx = state.pendingPoets.findIndex(function(x) { return x.id === id; });
+  if (idx >= 0) state.pendingPoets[idx] = item; else state.pendingPoets.unshift(item);
+  cloudSaveDoc("pending_poets", id, item).then(function() {
+    state.submitSuccessMsg = name + " जी, आपकी प्रोफ़ाइल आपके खाते (" + userEmail + ") से जुड़ गई है।";
+    renderAll(); renderSubmitModal();
+  });
 }
 
-async function approvePendingPoem(id) {
-  const p = state.pendingPoems.find(x => x.id === id); if (!p) return;
-  const newId = "poem_" + Date.now(); const pub = { id: newId, title: p.title, poet: p.poet, genre: p.genre || "कविता", content: p.content, createdAt: Date.now() };
-  state.poems.unshift(pub); await cloudSaveDoc("poems", newId, pub);
-  state.pendingPoems = state.pendingPoems.filter(x => x.id !== id); await cloudDeleteDoc("pending_poems", id); renderAll(); renderAdminStudio(); showToast("रचना प्रकाशित हुई ✅");
+function approvePendingPoem(id) {
+  var p = state.pendingPoems.find(function(x) { return x.id === id; }); if (!p) return;
+  var newId = "poem_" + Date.now(); var pub = { id: newId, title: p.title, poet: p.poet, genre: p.genre || "कविता", content: p.content, createdAt: Date.now() };
+  state.poems.unshift(pub); state.pendingPoems = state.pendingPoems.filter(function(x) { return x.id !== id; });
+  Promise.all([cloudSaveDoc("poems", newId, pub), cloudDeleteDoc("pending_poems", id)]).then(function() { renderAll(); renderAdminStudio(); showToast("रचना प्रकाशित हुई ✅"); });
 }
-async function rejectPendingPoem(id) { state.pendingPoems = state.pendingPoems.filter(x => x.id !== id); await cloudDeleteDoc("pending_poems", id); renderAll(); renderAdminStudio(); showToast("अस्वीकृत"); }
-
-async function approvePendingPoet(id) {
-  const pt = state.pendingPoets.find(x => x.id === id); if (!pt) return;
-  const existing = state.poets.find(x => x.name.trim() === pt.name.trim()); const tid = existing ? existing.id : ("poet_" + Date.now());
-  const pub = { id: tid, name: pt.name, ownerEmail: (pt.ownerEmail || "").toLowerCase().trim(), city: pt.city || "", mainGenres: pt.mainGenres || "", quote: pt.quote || "", photo: "", bio: "" };
-  if (existing) state.poets = state.poets.map(x => x.id === tid ? pub : x); else state.poets.push(pub);
-  await cloudSaveDoc("poets", tid, pub); state.pendingPoets = state.pendingPoets.filter(x => x.id !== id); await cloudDeleteDoc("pending_poets", id); renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅");
+function rejectPendingPoem(id) {
+  state.pendingPoems = state.pendingPoems.filter(function(x) { return x.id !== id; });
+  cloudDeleteDoc("pending_poems", id).then(function() { renderAll(); renderAdminStudio(); showToast("अस्वीकृत"); });
 }
-async function rejectPendingPoet(id) { state.pendingPoets = state.pendingPoets.filter(x => x.id !== id); await cloudDeleteDoc("pending_poets", id); renderAll(); renderAdminStudio(); showToast("अस्वीकृत"); }
 
-const HINDI_RIDDLES = [
+function approvePendingPoet(id) {
+  var pt = state.pendingPoets.find(function(x) { return x.id === id; }); if (!pt) return;
+  var existing = state.poets.find(function(x) { return x.name.trim() === pt.name.trim(); });
+  var tid = existing ? existing.id : ("poet_" + Date.now());
+  var pub = { id: tid, name: pt.name, ownerEmail: (pt.ownerEmail || "").toLowerCase().trim(), city: pt.city || "", mainGenres: pt.mainGenres || "", quote: pt.quote || "", photo: "", bio: "" };
+  if (existing) state.poets = state.poets.map(function(x) { return x.id === tid ? pub : x; }); else state.poets.push(pub);
+  state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
+  Promise.all([cloudSaveDoc("poets", tid, pub), cloudDeleteDoc("pending_poets", id)]).then(function() { renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅"); });
+}
+function rejectPendingPoet(id) {
+  state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
+  cloudDeleteDoc("pending_poets", id).then(function() { renderAll(); renderAdminStudio(); showToast("अस्वीकृत"); });
+}
+
+var HINDI_RIDDLES = [
   { q: "“रहिमन पानी राखिए, बिन पानी सब सून। पानी गए न ऊबरै, _____ मानुस चून॥”", opts: ["मोती", "हीरा", "सोना", "काया"], ans: 0, note: "रहीम दास जी का प्रसिद्ध दोहा: 'मोती, मानुस, चून'।" },
   { q: "‘दोहा’ छंद के विषम चरणों में कितनी मात्राएँ होती हैं?", opts: ["11 मात्राएँ", "13 मात्राएँ", "16 मात्राएँ", "12 मात्राएँ"], ans: 1, note: "दोहा के विषम चरणों में 13 और सम चरणों में 11 मात्राएँ होती हैं।" }
 ];
 function renderDailyRiddle() {
-  const wrap = document.getElementById("daily-riddle-wrap"); if (!wrap) return;
-  const r = HINDI_RIDDLES[state.riddleIdx % HINDI_RIDDLES.length];
-  wrap.innerHTML = `<div class="riddle-card"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;"><span class="genre-tag">🧩 आज की काव्य-पहेली</span><button class="sm-btn" onclick="nextDailyRiddle()">अगली →</button></div><div class="font-literary" style="font-size:14.5px; font-weight:600;">${esc(r.q)}</div><div class="riddle-opts">${r.opts.map((opt, idx) => `<button class="riddle-opt-btn ${state.riddleAnswered !== null ? (idx === r.ans ? "correct" : (idx === state.riddleAnswered ? "wrong" : "")) : ""}" onclick="answerDailyRiddle(${idx})">${["क","ख","ग","घ"][idx]}. ${esc(opt)}</button>`).join("")}</div>${state.riddleAnswered !== null ? `<div style="margin-top:8px; font-size:12.5px; color:var(--primary); font-weight:600;">💡 ${esc(r.note)}</div>` : ""}</div>`;
+  var wrap = document.getElementById("daily-riddle-wrap"); if (!wrap) return;
+  var r = HINDI_RIDDLES[state.riddleIdx % HINDI_RIDDLES.length];
+  var labels = ["क", "ख", "ग", "घ"];
+  wrap.innerHTML = "<div class=\"riddle-card\"><div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\"><span class=\"genre-tag\">🧩 आज की काव्य-पहेली</span><button class=\"sm-btn\" onclick=\"nextDailyRiddle()\">अगली →</button></div><div class=\"font-literary\" style=\"font-size:14.5px; font-weight:600;\">" + esc(r.q) + "</div><div class=\"riddle-opts\">" + r.opts.map(function(opt, idx) {
+    var cls = state.riddleAnswered !== null ? (idx === r.ans ? "correct" : (idx === state.riddleAnswered ? "wrong" : "")) : "";
+    return "<button class=\"riddle-opt-btn " + cls + "\" onclick=\"answerDailyRiddle(" + idx + ")\">" + labels[idx] + ". " + esc(opt) + "</button>";
+  }).join("") + "</div>" + (state.riddleAnswered !== null ? ("<div style=\"margin-top:8px; font-size:12.5px; color:var(--primary); font-weight:600;\">💡 " + esc(r.note) + "</div>") : "") + "</div>";
 }
 function answerDailyRiddle(idx) { state.riddleAnswered = idx; renderDailyRiddle(); }
 function nextDailyRiddle() { state.riddleIdx = (state.riddleIdx + 1) % HINDI_RIDDLES.length; state.riddleAnswered = null; renderDailyRiddle(); }
 
 function analyzeHindiLine(line) {
-  const LONG = new Set(["आ","ई","ऊ","ए","ऐ","ओ","औ","अं","अः","ा","ी","ू","े","ै","ो","ौ"]);
-  const chars = Array.from(line); const tokens = []; let total = 0;
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i]; const code = ch.charCodeAt(0);
+  var LONG = new Set(["आ","ई","ऊ","ए","ऐ","ओ","औ","अं","अः","ा","ी","ू","े","ै","ो","ौ"]);
+  var chars = Array.from(line); var tokens = []; var total = 0;
+  for (var i = 0; i < chars.length; i++) {
+    var ch = chars[i]; var code = ch.charCodeAt(0);
     if (code >= 0x0904 && code <= 0x0939) {
-      let txt = ch; let wt = LONG.has(ch) ? 2 : 1;
-      while (i + 1 < chars.length && "ाीुूेैोौंःँ़्".includes(chars[i + 1])) { i++; if (LONG.has(chars[i]) || chars[i] === "ं" || chars[i] === "ः") wt = 2; txt += chars[i]; }
+      var txt = ch; var wt = LONG.has(ch) ? 2 : 1;
+      while (i + 1 < chars.length && "ाीुूेैोौंःँ़्".indexOf(chars[i + 1]) !== -1) {
+        i++;
+        if (LONG.has(chars[i]) || chars[i] === "ं" || chars[i] === "ः") wt = 2;
+        txt += chars[i];
+      }
       total += wt; tokens.push({ text: txt, weight: wt });
     }
   }
-  return { tokens, total };
+  return { tokens: tokens, total: total };
 }
 function renderMatraPane() {
-  const box = document.getElementById("manch-matra"); if (!box) return;
-  const lines = (state.matraInput || "").split("\n").map(l => l.trim()).filter(Boolean);
-  box.innerHTML = `<div class="form-box"><h3 class="section-title" style="margin-bottom:8px;">⚖️ हिंदी छंद एवं मात्रा गणक</h3><textarea style="width:100%; min-height:90px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);" oninput="state.matraInput=this.value; renderMatraPane()">${esc(state.matraInput)}</textarea></div>` + lines.map((l, idx) => { const an = analyzeHindiLine(l); return `<div class="matra-line-box"><span class="mini-badge">पंक्ति ${idx + 1} • कुल ${an.total} मात्राएँ</span><div class="syllable-wrap">${an.tokens.map(t => `<div class="syl-chip"><span class="syl-wt ${t.weight === 2 ? "guru" : ""}">${t.weight === 2 ? "२" : "१"}</span><span class="syl-ch">${esc(t.text)}</span></div>`).join("")}</div></div>`; }).join("");
+  var box = document.getElementById("manch-matra"); if (!box) return;
+  var linesArr = (state.matraInput || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
+  box.innerHTML = "<div class=\"form-box\"><h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ हिंदी छंद एवं मात्रा गणक</h3><textarea style=\"width:100%; min-height:90px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" oninput=\"state.matraInput=this.value; renderMatraPane()\">" + esc(state.matraInput) + "</textarea></div>" + linesArr.map(function(l, idx) {
+    var an = analyzeHindiLine(l);
+    return "<div class=\"matra-line-box\"><span class=\"mini-badge\">पंक्ति " + (idx + 1) + " • कुल " + an.total + " मात्राएँ</span><div class=\"syllable-wrap\">" + an.tokens.map(function(t) {
+      return "<div class=\"syl-chip\"><span class=\"syl-wt " + (t.weight === 2 ? "guru" : "") + "\">" + (t.weight === 2 ? "२" : "१") + "</span><span class=\"syl-ch\">" + esc(t.text) + "</span></div>";
+    }).join("") + "</div></div>";
+  }).join("");
 }
 
-const DEVANAGARI_LETTERS = ["अ","आ","इ","ई","उ","ऊ","ए","ऐ","ओ","औ","क","ख","ग","घ","च","छ","ज","झ","ट","ठ","ड","ढ","त","थ","द","ध","न","प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह"];
-function getFirstHindiLetter(str) { const cleaned = String(str || "").replace(/^[\s“"'‘’(\[—\-✦❖*0-9०-९.।॥,]+/, ""); return cleaned ? cleaned.charAt(0) : ""; }\nfunction renderAntakshariPane() {\n  const box = document.getElementById("manch-antakshari"); if (!box) return;\n  const sel = state.antakshariLetter || "क";\n  const matched = state.poems.filter(p => getFirstHindiLetter(p.content) === sel || getFirstHindiLetter(p.title) === sel);\n  box.innerHTML = `<div class="section-head" style="margin-top:0;"><h2 class="section-title">🔤 काव्य-अंताक्षरी</h2><span class="section-hint">अक्षर चुनें</span></div><div class="akshara-grid">${DEVANAGARI_LETTERS.map(ch => `<button class="ak-btn ${sel === ch ? "active" : "has-poems"}" onclick="state.antakshariLetter='${ch}'; renderAntakshariPane()">${ch}</button>`).join("")}</div><h3 class="section-title">✦ ‘${esc(sel)}’ अक्षर से रचनाएँ (${matched.length})</h3>${matched.length ? `<div class="cards-grid two-col">${matched.map(poemCardHTML).join("")}</div>` : `<div class="empty-box">‘${esc(sel)}’ से कोई रचना नहीं मिली।</div>`}`;\n}\n\nfunction drawCertificateCanvas(triggerDownload) {\n  const canvas = document.getElementById("cert-canvas"); if (!canvas) return;\n  const ctx = canvas.getContext("2d"); const W = 1400, H = 1000;\n\n  const title = (state.certTitle || "चौपाल गौरव सम्मान-पत्र").trim();\n  const recipient = (state.certName || "सम्मानित रचनाकार").trim();\n  const award = (state.certAward || "विशिष्ट काव्य सम्मान").trim();\n  const reason = (state.certReason || "").trim();\n  const dateStr = (state.certDate || "").trim();\n  const signStr = (state.certSign || "राहुल द्विवेदी 'स्मित'").trim();\n\n  const loadLogo = (src) => new Promise((resolve) => {\n    if (!src) return resolve(null);\n    const img = new Image();\n    img.crossOrigin = "anonymous";\n    img.onload = () => resolve(img);\n    img.onerror = () => resolve(null);\n    img.src = src;\n  });\n\n  loadLogo(state.settings.logo || "").then((logoImg) => {\n    const bgGrad = ctx.createRadialGradient(W / 2, H / 2, 120, W / 2, H / 2, 920);\n    bgGrad.addColorStop(0, "#FFFDF7");\n    bgGrad.addColorStop(0.65, "#FBF0D8");\n    bgGrad.addColorStop(1, "#EED19B");\n    ctx.fillStyle = bgGrad;\n    ctx.fillRect(0, 0, W, H);\n\n    ctx.save();\n    ctx.strokeStyle = "rgba(198, 146, 44, 0.14)";\n    ctx.lineWidth = 1.5;\n    for (let x = 120; x < W - 100; x += 90) {\n      ctx.beginPath(); ctx.moveTo(x, 85); ctx.lineTo(x, H - 85); ctx.stroke();\n    }\n    for (let y = 120; y < H - 100; y += 90) {\n      ctx.beginPath(); ctx.moveTo(85, y); ctx.lineTo(W - 85, y); ctx.stroke();\n    }\n    ctx.restore();\n\n    ctx.strokeStyle = "#6B111B"; ctx.lineWidth = 14; ctx.strokeRect(32, 32, W - 64, H - 64);\n    ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 5; ctx.strokeRect(54, 54, W - 108, H - 108);\n    ctx.strokeStyle = "#8C5A12"; ctx.lineWidth = 1.8; ctx.strokeRect(68, 68, W - 136, H - 136);\n\n    [[54, 54], [W - 54, 54], [54, H - 54], [W - 54, H - 54]].forEach(([cx, cy]) => {\n      ctx.save();\n      ctx.fillStyle = "#6B111B";\n      ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.fill();\n      ctx.strokeStyle = "#F7DC8B"; ctx.lineWidth = 3.5; ctx.stroke();\n      ctx.fillStyle = "#F7DC8B"; ctx.font = "700 18px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";\n      ctx.fillText("✦", cx, cy + 1);\n      ctx.restore();\n    });\n\n    ctx.textAlign = "center";\n    ctx.textBaseline = "alphabetic";\n    let yCur = 148;\n\n    if (logoImg) {\n      const sz = 104;\n      ctx.save();\n      ctx.beginPath(); ctx.arc(W / 2, 128, sz / 2, 0, Math.PI * 2); ctx.closePath(); ctx.clip();\n      ctx.drawImage(logoImg, W / 2 - sz / 2, 128 - sz / 2, sz, sz);\n      ctx.restore();\n      ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 4;\n      ctx.beginPath(); ctx.arc(W / 2, 128, sz / 2 + 2, 0, Math.PI * 2); ctx.stroke();\n      yCur = 228;\n    }\n\n    ctx.fillStyle = "#6B111B"; ctx.font = "700 44px 'Yatra One', serif";\n    ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, yCur);\n    ctx.fillStyle = "#8C5A12"; ctx.font = "600 21px 'Noto Sans Devanagari', sans-serif";\n    ctx.fillText("हिंदी साहित्य, छंद एवं सृजन का गरिमामय डिजिटल मंच", W / 2, yCur + 32);\n\n    const divY = yCur + 56;\n    ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 2.5;\n    ctx.beginPath(); ctx.moveTo(W / 2 - 260, divY); ctx.lineTo(W / 2 - 24, divY); ctx.moveTo(W / 2 + 24, divY); ctx.lineTo(W / 2 + 260, divY); ctx.stroke();\n    ctx.fillStyle = "#6B111B"; ctx.font = "700 22px serif"; ctx.fillText("❖", W / 2, divY + 7);\n\n    ctx.fillStyle = "#5B1118"; ctx.font = "700 52px 'Yatra One', serif";\n    ctx.fillText(title, W / 2, divY + 66);\n\n    ctx.fillStyle = "#4A2C1D"; ctx.font = "600 25px 'Noto Serif Devanagari', serif";\n    ctx.fillText("यह सारस्वत सम्मान-पत्र सादर समर्पित किया जाता है", W / 2, divY + 114);\n\n    const nameY = divY + 188;\n    ctx.fillStyle = "rgba(198, 146, 44, 0.14)";\n    ctx.fillRect(W / 2 - 420, nameY - 52, 840, 76);\n    ctx.fillStyle = "#6B111B"; ctx.font = "700 60px 'Yatra One', serif";\n    ctx.fillText(recipient, W / 2, nameY + 4);\n\n    ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 3;\n    ctx.beginPath(); ctx.moveTo(W / 2 - 260, nameY + 24); ctx.lineTo(W / 2 + 260, nameY + 24); ctx.stroke();\n\n    ctx.fillStyle = "#8C5A12"; ctx.font = "700 28px 'Noto Sans Devanagari', sans-serif";\n    ctx.fillText(award, W / 2, nameY + 68);\n\n    ctx.fillStyle = "#26140D"; ctx.font = "500 25px 'Noto Serif Devanagari', serif";\n    const words = reason.split(/\s+/);\n    const lines = []; let cur = "";\n    words.forEach(w => {\n      const test = cur ? cur + " " + w : w;\n      if (ctx.measureText(test).width > W - 280) { if (cur) lines.push(cur); cur = w; }\n      else { cur = test; }\n    });\n    if (cur) lines.push(cur);\n    lines.slice(0, 3).forEach((ln, idx) => {\n      ctx.fillText(ln, W / 2, nameY + 118 + idx * 38);\n    });\n\n    const footY = H - 115;\n    ctx.textAlign = "left";\n    ctx.fillStyle = "#4A2C1D"; ctx.font = "700 23px 'Noto Sans Devanagari', sans-serif";\n    ctx.fillText(`दिनांक: ${dateStr}`, 115, footY);\n\n    ctx.save();\n    ctx.beginPath(); ctx.arc(W / 2, footY - 12, 48, 0, Math.PI * 2);\n    ctx.fillStyle = "#6B111B"; ctx.fill();\n    ctx.lineWidth = 4; ctx.strokeStyle = "#F7DC8B"; ctx.stroke();\n    ctx.fillStyle = "#F7DC8B"; ctx.textAlign = "center";\n    ctx.font = "700 18px 'Yatra One', serif"; ctx.fillText("काव्य चौपाल", W / 2, footY - 15);\n    ctx.font = "600 13px 'Noto Sans Devanagari', sans-serif"; ctx.fillText("साहित्य मुहर", W / 2, footY + 5);\n    ctx.restore();\n\n    ctx.textAlign = "right";\n    ctx.fillStyle = "#6B111B"; ctx.font = "700 23px 'Noto Sans Devanagari', sans-serif";\n    ctx.fillText(signStr, W - 115, footY);\n\n    const url = canvas.toDataURL("image/png");\n    const img = document.getElementById("cert-preview-img");\n    if (img) img.src = url;\n    if (triggerDownload) {\n      const a = document.createElement("a");\n      a.download = `kavya-chaupal-samman-${Date.now()}.png`; a.href = url; a.click();\n      showToast("शाही सम्मान-पत्र (HD PNG) डाउनलोड हुआ 🏅");\n    }\n  });\n}\n\nfunction injectPWAManifest() {\n  try {\n    const manifest = { name: "काव्य चौपाल", short_name: "काव्य चौपाल", start_url: ".", display: "standalone", background_color: "#3E0B14", theme_color: "#5B1118" };\n    const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });\n    const link = document.createElement("link"); link.rel = "manifest"; link.href = URL.createObjectURL(blob); document.head.appendChild(link);\n  } catch (e) {}\n}\n\nlet navDepth = 0, ignoreNextPop = false;\nfunction pushAppView(tag) { try { navDepth += 1; window.history.pushState({ kcView: tag, depth: navDepth }, "", "#" + tag + "-" + navDepth); } catch (e) {} }\nfunction syncBackAfterUiClose() { if (navDepth > 0) { navDepth -= 1; ignoreNextPop = true; try { window.history.back(); } catch (e) { ignoreNextPop = false; } } }\nfunction handleSystemBackStep() {\n  if (ignoreNextPop) { ignoreNextPop = false; return; }\n  const splash = document.getElementById("splash-screen"); if (splash && !splash.classList.contains("hide")) { dismissSplash(true); return; }\n  for (const id of ["bhav-modal", "admin-modal", "submit-modal", "video-modal", "reader-modal"]) {\n    const m = document.getElementById(id); if (m && m.classList.contains("open")) { closeModal(id, true); return; }\n  }\n  if (state.activeTab === "poets" && state.activePoetName) { closePoetDetail(true); return; }\n  if (state.activeTab === "admins" && state.activeAdminId) { closeAdminDetail(true); return; }\n  if (state.activeTab !== "poems") { switchTab("poems", true); return; }\n}\nfunction initSmartBackNavigation() { window.addEventListener("popstate", handleSystemBackStep); }\n\napplyTheme(localStorage.getItem(THEME_KEY) || "light");\ninitSplashParticles();\nstartSplashTimer();\ninjectPWAManifest();\nrenderAll();\ninitFirebaseSync();\ninitSmartBackNavigation();
+var DEVANAGARI_LETTERS = ["अ","आ","इ","ई","उ","ऊ","ए","ऐ","ओ","औ","क","ख","ग","घ","च","छ","ज","झ","ट","ठ","ड","ढ","त","थ","द","ध","न","प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह"];
+function getFirstHindiLetter(str) { var cleaned = String(str || "").replace(/^[\s“"'‘’(\[—\-✦❖*0-9०-९.।॥,]+/, ""); return cleaned ? cleaned.charAt(0) : ""; }\nfunction renderAntakshariPane() {\n  var box = document.getElementById("manch-antakshari"); if (!box) return;\n  var sel = state.antakshariLetter || "क";\n  var matched = state.poems.filter(function(p) { return getFirstHindiLetter(p.content) === sel || getFirstHindiLetter(p.title) === sel; });\n  box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">🔤 काव्य-अंताक्षरी</h2><span class=\"section-hint\">अक्षर चुनें</span></div><div class=\"akshara-grid\">" + DEVANAGARI_LETTERS.map(function(ch) {
+    return "<button class=\"ak-btn " + (sel === ch ? "active" : "has-poems") + "\" onclick=\"state.antakshariLetter=\'" + ch + "\'; renderAntakshariPane()\">" + ch + "</button>";
+  }).join("") + "</div><h3 class=\"section-title\">✦ ‘" + esc(sel) + "’ अक्षर से रचनाएँ (" + matched.length + ")</h3>" + (matched.length ? ("<div class=\"cards-grid two-col\">" + matched.map(poemCardHTML).join("") + "</div>") : ("<div class=\"empty-box\">‘" + esc(sel) + "’ से कोई रचना नहीं मिली।</div>"));
+}
+
+function drawCertificateCanvas(triggerDownload) {
+  var canvas = document.getElementById("cert-canvas"); if (!canvas) return;
+  var ctx = canvas.getContext("2d"); var W = 1400, H = 1000;
+
+  var title = (state.certTitle || "चौपाल गौरव सम्मान-पत्र").trim();
+  var recipient = (state.certName || "सम्मानित रचनाकार").trim();
+  var award = (state.certAward || "विशिष्ट काव्य सम्मान").trim();
+  var reason = (state.certReason || "").trim();
+  var dateStr = (state.certDate || "").trim();
+  var signStr = (state.certSign || "राहुल द्विवेदी 'स्मित'").trim();
+
+  var loadLogo = function(src) {
+    return new Promise(function(resolve) {
+      if (!src) return resolve(null);
+      var img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = function() { resolve(img); };
+      img.onerror = function() { resolve(null); };
+      img.src = src;
+    });
+  };
+
+  loadLogo(state.settings.logo || "").then(function(logoImg) {
+    var bgGrad = ctx.createRadialGradient(W / 2, H / 2, 120, W / 2, H / 2, 920);
+    bgGrad.addColorStop(0, "#FFFDF7");
+    bgGrad.addColorStop(0.65, "#FBF0D8");
+    bgGrad.addColorStop(1, "#EED19B");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(198, 146, 44, 0.14)";
+    ctx.lineWidth = 1.5;
+    for (var x = 120; x < W - 100; x += 90) {
+      ctx.beginPath(); ctx.moveTo(x, 85); ctx.lineTo(x, H - 85); ctx.stroke();
+    }
+    for (var y = 120; y < H - 100; y += 90) {
+      ctx.beginPath(); ctx.moveTo(85, y); ctx.lineTo(W - 85, y); ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = "#6B111B"; ctx.lineWidth = 14; ctx.strokeRect(32, 32, W - 64, H - 64);
+    ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 5; ctx.strokeRect(54, 54, W - 108, H - 108);
+    ctx.strokeStyle = "#8C5A12"; ctx.lineWidth = 1.8; ctx.strokeRect(68, 68, W - 136, H - 136);
+
+    [[54, 54], [W - 54, 54], [54, H - 54], [W - 54, H - 54]].forEach(function(pt) {
+      var cx = pt[0], cy = pt[1];
+      ctx.save();
+      ctx.fillStyle = "#6B111B";
+      ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#F7DC8B"; ctx.lineWidth = 3.5; ctx.stroke();
+      ctx.fillStyle = "#F7DC8B"; ctx.font = "700 18px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("✦", cx, cy + 1);
+      ctx.restore();
+    });
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    var yCur = 148;
+
+    if (logoImg) {
+      var sz = 104;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(W / 2, 128, sz / 2, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      ctx.drawImage(logoImg, W / 2 - sz / 2, 128 - sz / 2, sz, sz);
+      ctx.restore();
+      ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(W / 2, 128, sz / 2 + 2, 0, Math.PI * 2); ctx.stroke();
+      yCur = 228;
+    }
+
+    ctx.fillStyle = "#6B111B"; ctx.font = "700 44px 'Yatra One', serif";
+    ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, yCur);
+    ctx.fillStyle = "#8C5A12"; ctx.font = "600 21px 'Noto Sans Devanagari', sans-serif";
+    ctx.fillText("हिंदी साहित्य, छंद एवं सृजन का गरिमामय डिजिटल मंच", W / 2, yCur + 32);
+
+    var divY = yCur + 56;
+    ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(W / 2 - 260, divY); ctx.lineTo(W / 2 - 24, divY); ctx.moveTo(W / 2 + 24, divY); ctx.lineTo(W / 2 + 260, divY); ctx.stroke();
+    ctx.fillStyle = "#6B111B"; ctx.font = "700 22px serif"; ctx.fillText("❖", W / 2, divY + 7);
+
+    ctx.fillStyle = "#5B1118"; ctx.font = "700 52px 'Yatra One', serif";
+    ctx.fillText(title, W / 2, divY + 66);
+
+    ctx.fillStyle = "#4A2C1D"; ctx.font = "600 25px 'Noto Serif Devanagari', serif";
+    ctx.fillText("यह सारस्वत सम्मान-पत्र सादर समर्पित किया जाता है", W / 2, divY + 114);
+
+    var nameY = divY + 188;
+    ctx.fillStyle = "rgba(198, 146, 44, 0.14)";
+    ctx.fillRect(W / 2 - 420, nameY - 52, 840, 76);
+    ctx.fillStyle = "#6B111B"; ctx.font = "700 60px 'Yatra One', serif";
+    ctx.fillText(recipient, W / 2, nameY + 4);
+
+    ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(W / 2 - 260, nameY + 24); ctx.lineTo(W / 2 + 260, nameY + 24); ctx.stroke();
+
+    ctx.fillStyle = "#8C5A12"; ctx.font = "700 28px 'Noto Sans Devanagari', sans-serif";
+    ctx.fillText(award, W / 2, nameY + 68);
+
+    ctx.fillStyle = "#26140D"; ctx.font = "500 25px 'Noto Serif Devanagari', serif";
+    var words = reason.split(/\s+/);
+    var linesOut = []; var cur = "";
+    words.forEach(function(w) {
+      var test = cur ? (cur + " " + w) : w;
+      if (ctx.measureText(test).width > W - 280) { if (cur) linesOut.push(cur); cur = w; }
+      else { cur = test; }
+    });
+    if (cur) linesOut.push(cur);
+    linesOut.slice(0, 3).forEach(function(ln, idx) {
+      ctx.fillText(ln, W / 2, nameY + 118 + idx * 38);
+    });
+
+    var footY = H - 115;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#4A2C1D"; ctx.font = "700 23px 'Noto Sans Devanagari', sans-serif";
+    ctx.fillText("दिनांक: " + dateStr, 115, footY);
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(W / 2, footY - 12, 48, 0, Math.PI * 2);
+    ctx.fillStyle = "#6B111B"; ctx.fill();
+    ctx.lineWidth = 4; ctx.strokeStyle = "#F7DC8B"; ctx.stroke();
+    ctx.fillStyle = "#F7DC8B"; ctx.textAlign = "center";
+    ctx.font = "700 18px 'Yatra One', serif"; ctx.fillText("काव्य चौपाल", W / 2, footY - 15);
+    ctx.font = "600 13px 'Noto Sans Devanagari', sans-serif"; ctx.fillText("साहित्य मुहर", W / 2, footY + 5);
+    ctx.restore();
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#6B111B"; ctx.font = "700 23px 'Noto Sans Devanagari', sans-serif";
+    ctx.fillText(signStr, W - 115, footY);
+
+    var url = canvas.toDataURL("image/png");
+    var img = document.getElementById("cert-preview-img");
+    if (img) img.src = url;
+    if (triggerDownload) {
+      var a = document.createElement("a");
+      a.download = "kavya-chaupal-samman-" + Date.now() + ".png"; a.href = url; a.click();
+      showToast("शाही सम्मान-पत्र (HD PNG) डाउनलोड हुआ 🏅");
+    }
+  });
+}
+
+function injectPWAManifest() {
+  try {
+    var manifest = { name: "काव्य चौपाल", short_name: "काव्य चौपाल", start_url: ".", display: "standalone", background_color: "#3E0B14", theme_color: "#5B1118" };
+    var blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    var link = document.createElement("link"); link.rel = "manifest"; link.href = URL.createObjectURL(blob); document.head.appendChild(link);
+  } catch (e) {}
+}
+
+var navDepth = 0, ignoreNextPop = false;
+function pushAppView(tag) { try { navDepth += 1; window.history.pushState({ kcView: tag, depth: navDepth }, "", "#" + tag + "-" + navDepth); } catch (e) {} }
+function syncBackAfterUiClose() { if (navDepth > 0) { navDepth -= 1; ignoreNextPop = true; try { window.history.back(); } catch (e) { ignoreNextPop = false; } } }
+function handleSystemBackStep() {
+  if (ignoreNextPop) { ignoreNextPop = false; return; }
+  var splash = document.getElementById("splash-screen"); if (splash && !splash.classList.contains("hide")) { dismissSplash(true); return; }
+  var modalIds = ["bhav-modal", "admin-modal", "submit-modal", "video-modal", "reader-modal"];
+  for (var i = 0; i < modalIds.length; i++) {
+    var m = document.getElementById(modalIds[i]); if (m && m.classList.contains("open")) { closeModal(modalIds[i], true); return; }
+  }
+  if (state.activeTab === "poets" && state.activePoetName) { closePoetDetail(true); return; }
+  if (state.activeTab === "admins" && state.activeAdminId) { closeAdminDetail(true); return; }
+  if (state.activeTab !== "poems") { switchTab("poems", true); return; }
+}
+function initSmartBackNavigation() { window.addEventListener("popstate", handleSystemBackStep); }
+
+applyTheme(localStorage.getItem(THEME_KEY) || "light");
+initSplashParticles();
+startSplashTimer();
+injectPWAManifest();
+renderAll();
+initFirebaseSync();
+initSmartBackNavigation();
+
   </script>
 </body>
 </html>
