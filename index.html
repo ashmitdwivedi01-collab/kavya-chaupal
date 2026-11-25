@@ -840,6 +840,110 @@
       margin-bottom: 14px;
     }
 
+    /* ================= SELF-SUBMISSION CTA & APPROVAL QUEUE ================= */
+    .submit-cta-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 15px;
+      margin-bottom: 15px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(198, 146, 44, 0.18) 0%, rgba(123, 22, 32, 0.1) 100%);
+      border: 1.5px solid var(--gold);
+      box-shadow: var(--shadow);
+      flex-wrap: wrap;
+    }
+    .submit-cta-text { flex: 1; min-width: 185px; }
+    .submit-cta-title { font-family: 'Yatra One', serif; font-size: 17px; color: var(--primary); margin: 0 0 2px; }
+    .submit-cta-sub { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+    .pending-card {
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--gold);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .pending-poem-preview {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-line;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 11px 12px;
+      margin: 10px 0 12px;
+      max-height: 240px;
+      overflow-y: auto;
+      color: var(--text);
+    }
+    .pending-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 4px 0 8px;
+    }
+    .pending-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .btn-approve {
+      background: linear-gradient(135deg, #15803D 0%, #166534 100%);
+      color: #fff;
+      border: 1px solid #22C55E;
+      padding: 8px 13px;
+      border-radius: 11px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-edit-sub {
+      background: var(--gold-soft);
+      color: var(--primary);
+      border: 1px solid var(--gold);
+      padding: 8px 12px;
+      border-radius: 11px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-reject {
+      background: rgba(217, 38, 78, 0.12);
+      color: #D9264E;
+      border: 1px solid rgba(217, 38, 78, 0.35);
+      padding: 8px 12px;
+      border-radius: 11px;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pending-pill-count {
+      display: inline-block;
+      background: #E11D48;
+      color: #fff;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 99px;
+      margin-left: 4px;
+    }
+    .submit-success-box {
+      text-align: center;
+      padding: 28px 16px;
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--gold);
+      border-radius: 18px;
+    }
+
     /* ================= ABOUT & SOCIAL CARDS ================= */
     .about-banner {
       background: radial-gradient(circle at 50% 10%, rgba(246, 218, 134, 0.28), transparent 60%), linear-gradient(150deg, #5F1018 0%, #31070C 68%, #1C0814 100%);
@@ -1029,7 +1133,7 @@
           ♥<span class="hdr-badge" id="hdr-fav-badge">0</span>
         </button>
         <button class="icon-btn" id="theme-toggle-btn" title="थीम बदलें" onclick="toggleTheme()">🌙</button>
-        <button class="icon-btn crown" title="एडमिन स्टूडियो" onclick="openAdminStudio()">👑</button>
+        <button class="icon-btn crown" title="एडमिन स्टूडियो" onclick="openAdminStudio()">👑<span class="hdr-badge" id="hdr-pending-badge">0</span></button>
       </div>
     </div>
   </header>
@@ -1059,6 +1163,15 @@
           <div class="quick-ic">📚</div>
           <div class="quick-lbl">ई-बुक<br/>लाइब्रेरी</div>
         </div>
+      </div>
+
+      <!-- Poet Self-Submission Callout -->
+      <div class="submit-cta-bar">
+        <div class="submit-cta-text">
+          <div class="submit-cta-title">✍️ क्या आप रचनाकार हैं?</div>
+          <div class="submit-cta-sub">अपनी कविता या कवि प्रोफ़ाइल सीधे भेजें — एडमिन स्वीकृति के बाद प्रकाशित होगी।</div>
+        </div>
+        <button class="action-btn primary" style="padding:9px 14px; font-size:13px;" onclick="openSubmitModal('poem')">रचना / परिचय भेजें →</button>
       </div>
 
       <div class="search-box">
@@ -1097,6 +1210,13 @@
         <div class="search-box">
           <span class="search-icon">🔍</span>
           <input id="poet-search" type="text" placeholder="कवि का नाम या शहर खोजें..." oninput="renderPoetsDirectory()" />
+        </div>
+        <div class="submit-cta-bar" style="margin-bottom:12px;">
+          <div class="submit-cta-text">
+            <div class="submit-cta-title">✒️ अपनी कवि प्रोफ़ाइल जुड़वाएँ</div>
+            <div class="submit-cta-sub">संक्षिप्त बिंदुवार परिचय व फ़ोटो भेजें — एडमिन स्वीकृति के बाद यहाँ दिखेगा।</div>
+          </div>
+          <button class="action-btn gold" style="padding:8px 13px; font-size:12.5px;" onclick="openSubmitModal('poet')">प्रोफ़ाइल भेजें →</button>
         </div>
         <div class="section-head">
           <h2 class="section-title">✒️ काव्य चौपाल के रचनाकार</h2>
@@ -1226,6 +1346,17 @@
         <button class="close-btn" onclick="closeVideoModal()">✕</button>
       </div>
       <div class="modal-body" id="video-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ================= PUBLIC SUBMIT MODAL (रचना / परिचय भेजें) ================= -->
+  <div class="modal-overlay" id="submit-modal" onclick="closeModalOnBg(event, 'submit-modal')">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h3 class="modal-title">✍️ काव्य चौपाल — रचना / परिचय भेजें</h3>
+        <button class="close-btn" onclick="closeModal('submit-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="submit-body"></div>
     </div>
   </div>
 
@@ -1465,7 +1596,14 @@
       tempAdminPhoto: "",
       tempEventPoster: "",
       tempEbookCover: "",
-      tempLogoData: ""
+      tempLogoData: "",
+      pendingPoems: [],
+      pendingPoets: [],
+      submitTab: "poem",
+      submitSuccessMsg: "",
+      tempSubmitPhoto: "",
+      editingPendingPoemId: null,
+      editingPendingPoetId: null
     };
 
     try {
@@ -1479,6 +1617,8 @@
         if (Array.isArray(cached.videos) && cached.videos.length) state.videos = cached.videos;
         if (cached.competition) state.competition = { ...DEFAULT_COMPETITION, ...cached.competition };
         if (Array.isArray(cached.ebooks) && cached.ebooks.length) state.ebooks = cached.ebooks;
+        if (Array.isArray(cached.pendingPoems)) state.pendingPoems = cached.pendingPoems;
+        if (Array.isArray(cached.pendingPoets)) state.pendingPoets = cached.pendingPoets;
       }
     } catch (e) {}
 
@@ -1492,7 +1632,9 @@
           events: state.events,
           videos: state.videos,
           competition: state.competition,
-          ebooks: state.ebooks
+          ebooks: state.ebooks,
+          pendingPoems: state.pendingPoems,
+          pendingPoets: state.pendingPoets
         }));
       } catch (e) {}
     }
@@ -1630,6 +1772,32 @@
           state.ebooks = list;
           saveLocalCache();
           renderAll();
+        }
+      });
+
+      // Pending Poems (Approval Queue)
+      rootRef.doc("pending_poems").collection("items").onSnapshot((snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        list.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
+        state.pendingPoems = list;
+        saveLocalCache();
+        renderAll();
+        if (state.adminUnlocked && state.adminTab === "approvals" && !state.editingPendingPoemId && !state.editingPendingPoetId) {
+          renderAdminStudio();
+        }
+      });
+
+      // Pending Poets (Approval Queue)
+      rootRef.doc("pending_poets").collection("items").onSnapshot((snap) => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        list.sort((a, b) => (b.submittedAt || 0) - (a.submittedAt || 0));
+        state.pendingPoets = list;
+        saveLocalCache();
+        renderAll();
+        if (state.adminUnlocked && state.adminTab === "approvals" && !state.editingPendingPoemId && !state.editingPendingPoetId) {
+          renderAdminStudio();
         }
       });
     }
@@ -1860,6 +2028,13 @@
       if (favBadge) {
         favBadge.textContent = state.favorites.length;
         favBadge.classList.toggle("show", state.favorites.length > 0);
+      }
+
+      const pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0);
+      const pendBadge = document.getElementById("hdr-pending-badge");
+      if (pendBadge) {
+        pendBadge.textContent = pendTotal;
+        pendBadge.classList.toggle("show", pendTotal > 0);
       }
 
       renderBrandLogo();
@@ -2730,8 +2905,10 @@
       const expected = String(state.settings.adminPin || "1234");
       if (val === expected) {
         state.adminUnlocked = true;
+        const pendTotal = state.pendingPoems.length + state.pendingPoets.length;
+        if (pendTotal > 0) state.adminTab = "approvals";
         renderAdminStudio();
-        showToast("एडमिन स्टूडियो खुल गया 👑");
+        showToast(pendTotal > 0 ? `एडमिन स्टूडियो खुला • ${pendTotal} प्रविष्टियाँ स्वीकृति हेतु लंबित हैं` : "एडमिन स्टूडियो खुल गया 👑");
       } else {
         showToast("ग़लत पिन! पुनः प्रयास करें");
       }
@@ -2750,6 +2927,8 @@
       state.tempEventPoster = "";
       state.tempEbookCover = "";
       state.tempLogoData = "";
+      state.editingPendingPoemId = null;
+      state.editingPendingPoetId = null;
       renderAdminStudio();
     }
 
@@ -2801,6 +2980,122 @@
           : "🟡 <strong>क्लाउड से जुड़ रहा है / लोकल मोड</strong>");
 
       let contentHtml = "";
+
+      /* --- 0: APPROVALS QUEUE (स्वीकृति कक्ष) --- */
+      if (state.adminTab === "approvals") {
+        const epPoem = state.editingPendingPoemId ? state.pendingPoems.find(x => x.id === state.editingPendingPoemId) : null;
+        const epPoet = state.editingPendingPoetId ? state.pendingPoets.find(x => x.id === state.editingPendingPoetId) : null;
+        const genres = getAllGenres();
+        const poets = getAllPoetObjects();
+
+        let editBoxHtml = "";
+        if (epPoem) {
+          editBoxHtml = `
+            <div class="form-box" style="border-color:var(--gold);">
+              <h4 class="section-title" style="margin-bottom:10px;">✏️ लंबित रचना में सुधार कर प्रकाशित करें</h4>
+              <div class="field"><label>रचना का शीर्षक *</label><input id="ap-poem-title" value="${esc(epPoem.title)}" /></div>
+              <div class="field"><label>कवि का नाम *</label><input id="ap-poem-poet" list="ap-poet-list" value="${esc(epPoem.poet)}" /><datalist id="ap-poet-list">${poets.map(pt => `<option value="${esc(pt.name)}">`).join("")}</datalist></div>
+              <div class="field"><label>विधा / श्रेणी *</label><input id="ap-poem-genre" list="ap-genre-list" value="${esc(epPoem.genre || "कविता")}" /><datalist id="ap-genre-list">${genres.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div>
+              <div class="field"><label>संपूर्ण रचना *</label><textarea id="ap-poem-content" style="min-height:140px;">${esc(epPoem.content)}</textarea></div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-approve" onclick="approveEditedPendingPoem(dec('${arg(epPoem.id)}'))">✅ सुधार कर प्रकाशित करें</button>
+                <button class="action-btn" onclick="state.editingPendingPoemId=null; renderAdminStudio()">रद्द करें</button>
+              </div>
+            </div>
+          `;
+        } else if (epPoet) {
+          editBoxHtml = `
+            <div class="form-box" style="border-color:var(--gold);">
+              <h4 class="section-title" style="margin-bottom:10px;">✏️ लंबित कवि परिचय में सुधार कर प्रकाशित करें</h4>
+              <div class="field"><label>नाम एवं उपनाम *</label><input id="ap-poet-name" value="${esc(epPoet.name)}" /></div>
+              <div class="two-fields">
+                <div class="field"><label>जन्म</label><input id="ap-poet-birth" value="${esc(epPoet.birth || "")}" /></div>
+                <div class="field"><label>स्थान</label><input id="ap-poet-city" value="${esc(epPoet.city || "")}" /></div>
+              </div>
+              <div class="two-fields">
+                <div class="field"><label>शिक्षा</label><input id="ap-poet-edu" value="${esc(epPoet.education || "")}" /></div>
+                <div class="field"><label>सम्प्रति</label><input id="ap-poet-occ" value="${esc(epPoet.occupation || "")}" /></div>
+              </div>
+              <div class="field"><label>मुख्य विधा</label><input id="ap-poet-genres" value="${esc(epPoet.mainGenres || "")}" /></div>
+              <div class="field"><label>काव्य-मुद्रा (प्रिय 2 पंक्तियाँ)</label><textarea id="ap-poet-quote" style="min-height:60px;">${esc(epPoet.quote || "")}</textarea></div>
+              <div class="field"><label>प्रकाशित कृतियाँ</label><input id="ap-poet-pub" value="${esc(epPoet.publications || "")}" /></div>
+              <div class="field"><label>प्रमुख सम्मान</label><input id="ap-poet-awards" value="${esc(epPoet.awards || "")}" /></div>
+              <div class="field"><label>विशेष</label><textarea id="ap-poet-special" style="min-height:64px;">${esc(epPoet.special || "")}</textarea></div>
+              <div class="field"><label>सोशल लिंक</label><input id="ap-poet-social" value="${esc(epPoet.socialLink || "")}" /></div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-approve" onclick="approveEditedPendingPoet(dec('${arg(epPoet.id)}'))">✅ सुधार कर प्रकाशित करें</button>
+                <button class="action-btn" onclick="state.editingPendingPoetId=null; renderAdminStudio()">रद्द करें</button>
+              </div>
+            </div>
+          `;
+        }
+
+        const pendingPoemsHtml = state.pendingPoems.length
+          ? state.pendingPoems.map(p => `
+              <div class="pending-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                  <div>
+                    <span class="genre-tag">${esc(p.genre || "कविता")}</span>
+                    <div class="font-royal" style="font-size:19px; color:var(--primary); margin-top:5px;">${esc(p.title)}</div>
+                  </div>
+                  <span style="font-size:11px; color:var(--text-muted);">${p.submittedAt ? new Date(p.submittedAt).toLocaleDateString("hi-IN") : ""}</span>
+                </div>
+                <div class="pending-meta">
+                  <span>✒️ <strong>${esc(p.poet)}</strong></span>
+                  ${p.contact ? `<span>📞 संपर्क (गोपनीय): <strong>${esc(p.contact)}</strong></span>` : ""}
+                </div>
+                <div class="pending-poem-preview">${esc(p.content)}</div>
+                <div class="pending-actions">
+                  <button class="btn-approve" onclick="approvePendingPoem(dec('${arg(p.id)}'))">✅ स्वीकृत व प्रकाशित करें</button>
+                  <button class="btn-edit-sub" onclick="startEditPendingPoem(dec('${arg(p.id)}'))">✏️ सुधार करें</button>
+                  <button class="btn-reject" onclick="rejectPendingPoem(dec('${arg(p.id)}'))">❌ अस्वीकार</button>
+                </div>
+              </div>
+            `).join("")
+          : `<div class="empty-box" style="padding:18px; margin-bottom:14px;">कोई लंबित कविता नहीं है।</div>`;
+
+        const pendingPoetsHtml = state.pendingPoets.length
+          ? state.pendingPoets.map(pt => {
+              const alreadyExists = state.poets.some(x => x.name.trim() === (pt.name || "").trim());
+              return `
+                <div class="pending-card">
+                  <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                    <div class="photo-preview-thumb">${pt.photo ? `<img src="${pt.photo}">` : "✒️"}</div>
+                    <div style="min-width:0; flex:1;">
+                      <div class="font-royal" style="font-size:19px; color:var(--primary);">${esc(pt.name)}</div>
+                      <div style="font-size:12px; color:var(--text-muted);">📍 ${esc(pt.city || "—")} ${pt.contact ? `• 📞 ${esc(pt.contact)}` : ""}</div>
+                      ${alreadyExists ? `<div style="font-size:11.5px; color:#B45309; font-weight:700; margin-top:2px;">ℹ️ इस नाम के कवि पहले से मौजूद हैं (स्वीकृत करने पर प्रोफ़ाइल अपडेट होगी)</div>` : ""}
+                    </div>
+                  </div>
+                  <div style="font-size:13px; line-height:1.65; background:var(--bg); padding:10px 12px; border-radius:11px; border:1px dashed var(--border);">
+                    ${pt.birth ? `<div><strong>जन्म:</strong> ${esc(pt.birth)}</div>` : ""}
+                    ${pt.education ? `<div><strong>शिक्षा:</strong> ${esc(pt.education)}</div>` : ""}
+                    ${pt.occupation ? `<div><strong>सम्प्रति:</strong> ${esc(pt.occupation)}</div>` : ""}
+                    ${pt.mainGenres ? `<div><strong>मुख्य विधा:</strong> ${esc(pt.mainGenres)}</div>` : ""}
+                    ${pt.quote ? `<div><strong>काव्य-मुद्रा:</strong> “${esc(pt.quote)}”</div>` : ""}
+                    ${pt.publications ? `<div><strong>प्रकाशित कृतियाँ:</strong> ${esc(pt.publications)}</div>` : ""}
+                    ${pt.awards ? `<div><strong>प्रमुख सम्मान:</strong> ${esc(pt.awards)}</div>` : ""}
+                    ${pt.special ? `<div><strong>विशेष:</strong> ${esc(pt.special)}</div>` : ""}
+                    ${pt.socialLink ? `<div><strong>सोशल लिंक:</strong> ${esc(pt.socialLink)}</div>` : ""}
+                  </div>
+                  <div class="pending-actions">
+                    <button class="btn-approve" onclick="approvePendingPoet(dec('${arg(pt.id)}'))">✅ स्वीकृत व प्रकाशित करें</button>
+                    <button class="btn-edit-sub" onclick="startEditPendingPoet(dec('${arg(pt.id)}'))">✏️ सुधार करें</button>
+                    <button class="btn-reject" onclick="rejectPendingPoet(dec('${arg(pt.id)}'))">❌ अस्वीकार</button>
+                  </div>
+                </div>
+              `;
+            }).join("")
+          : `<div class="empty-box" style="padding:18px;">कोई लंबित कवि परिचय नहीं है।</div>`;
+
+        contentHtml = `
+          ${editBoxHtml}
+          <h4 class="section-title" style="margin:6px 0 10px;">📜 लंबित रचनाएँ (${state.pendingPoems.length})</h4>
+          ${pendingPoemsHtml}
+          <h4 class="section-title" style="margin:16px 0 10px;">✒️ लंबित कवि परिचय (${state.pendingPoets.length})</h4>
+          ${pendingPoetsHtml}
+        `;
+      }
 
       /* --- 1: POEMS --- */
       if (state.adminTab === "poems") {
@@ -3129,6 +3424,7 @@
       body.innerHTML = `
         <div class="cloud-banner">${statusMsg}</div>
         <div class="admin-tabs">
+          <button class="admin-tab-btn ${state.adminTab === "approvals" ? "active" : ""}" onclick="setAdminTab('approvals')">⏳ स्वीकृति${(state.pendingPoems.length + state.pendingPoets.length) > 0 ? `<span class="pending-pill-count">${state.pendingPoems.length + state.pendingPoets.length}</span>` : ""}</button>
           <button class="admin-tab-btn ${state.adminTab === "poems" ? "active" : ""}" onclick="setAdminTab('poems')">📜 रचनाएँ</button>
           <button class="admin-tab-btn ${state.adminTab === "events" ? "active" : ""}" onclick="setAdminTab('events')">📅 कार्यक्रम</button>
           <button class="admin-tab-btn ${state.adminTab === "videos" ? "active" : ""}" onclick="setAdminTab('videos')">🎬 वीडियो</button>
@@ -3387,6 +3683,297 @@
       a.click();
       URL.revokeObjectURL(url);
       showToast("पूर्ण डेटा बैकअप डाउनलोड हुआ");
+    }
+
+    /* ============================================================
+       8B. PUBLIC POET & POEM SUBMISSION + ADMIN APPROVAL LOGIC
+       ============================================================ */
+    function openSubmitModal(tab) {
+      state.submitTab = tab || "poem";
+      state.submitSuccessMsg = "";
+      state.tempSubmitPhoto = "";
+      document.getElementById("submit-modal").classList.add("open");
+      renderSubmitModal();
+    }
+
+    function setSubmitTab(tab) {
+      state.submitTab = tab;
+      state.submitSuccessMsg = "";
+      state.tempSubmitPhoto = "";
+      renderSubmitModal();
+    }
+
+    function renderSubmitModal() {
+      const body = document.getElementById("submit-body");
+      if (!body) return;
+
+      if (state.submitSuccessMsg) {
+        body.innerHTML = `
+          <div class="submit-success-box">
+            <div style="font-size:48px; margin-bottom:10px;">🙏✨</div>
+            <h3 class="font-royal" style="font-size:24px; color:var(--primary); margin:0 0 8px;">प्रविष्टि प्राप्त हुई!</h3>
+            <p class="font-literary" style="font-size:15px; line-height:1.75; color:var(--text); margin:0 0 18px;">${esc(state.submitSuccessMsg)}</p>
+            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+              <button class="action-btn primary" onclick="state.submitSuccessMsg=''; renderSubmitModal()">एक और प्रविष्टि भेजें</button>
+              <button class="action-btn" onclick="closeModal('submit-modal')">बंद करें</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const genres = getAllGenres();
+      const poets = getAllPoetObjects();
+
+      let formHtml = "";
+      if (state.submitTab === "poem") {
+        formHtml = `
+          <div class="form-box">
+            <h4 class="section-title" style="margin-bottom:6px;">📜 अपनी स्वरचित कविता भेजें</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 14px;">आपकी रचना सीधे एडमिन स्वीकृति कक्ष में जाएगी। स्वीकृति के पश्चात् यह 'काव्य चौपाल' ऐप पर प्रकाशित होगी।</p>
+            <div class="field"><label>रचना का शीर्षक *</label><input id="sub-poem-title" placeholder="जैसे: दीप बन कर जल चलो" /></div>
+            <div class="field"><label>कवि / कवयित्री का नाम *</label><input id="sub-poem-poet" list="sub-poet-dl" placeholder="अपना पूरा नाम लिखें" /><datalist id="sub-poet-dl">${poets.map(pt => `<option value="${esc(pt.name)}">`).join("")}</datalist></div>
+            <div class="field"><label>विधा / श्रेणी *</label><input id="sub-poem-genre" list="sub-genre-dl" value="गीत" placeholder="गीत, दोहा, ग़ज़ल, कविता, छंद..." /><datalist id="sub-genre-dl">${genres.map(g => `<option value="${esc(g)}">`).join("")}</datalist></div>
+            <div class="field"><label>संपूर्ण रचना *</label><textarea id="sub-poem-content" style="min-height:140px;" placeholder="यहाँ अपनी पूरी कविता लिखें या पेस्ट करें..."></textarea></div>
+            <div class="field"><label>आपका शहर / WhatsApp नंबर (वैकल्पिक — केवल एडमिन हेतु, गोपनीय रहेगा)</label><input id="sub-poem-contact" placeholder="जैसे: लखनऊ / 98XXXXXXXX" /></div>
+            <button id="btn-submit-poem" class="action-btn primary" style="width:100%;" onclick="submitPublicPoem()">📤 स्वीकृति हेतु कविता भेजें</button>
+          </div>
+        `;
+      } else {
+        formHtml = `
+          <div class="form-box">
+            <h4 class="section-title" style="margin-bottom:6px;">✒️ अपनी कवि प्रोफ़ाइल भेजें</h4>
+            <p style="font-size:12.5px; color:var(--text-muted); margin:0 0 14px;">कृपया प्रत्येक बिंदु में संक्षिप्त (1-2 पंक्तियों में) जानकारी भरें। एडमिन स्वीकृति के बाद आपकी प्रोफ़ाइल लाइव हो जाएगी।</p>
+            <div class="field"><label>नाम एवं उपनाम *</label><input id="sub-poet-name" placeholder="जैसे: राहुल द्विवेदी 'स्मित'" /></div>
+            <div class="two-fields">
+              <div class="field"><label>जन्म (तिथि / स्थान)</label><input id="sub-poet-birth" placeholder="जैसे: 11 जनवरी 1987" /></div>
+              <div class="field"><label>वर्तमान स्थान (शहर, राज्य) *</label><input id="sub-poet-city" placeholder="जैसे: लखनऊ, उ.प्र." /></div>
+            </div>
+            <div class="two-fields">
+              <div class="field"><label>शिक्षा (वैकल्पिक)</label><input id="sub-poet-edu" placeholder="जैसे: एम.ए. हिन्दी" /></div>
+              <div class="field"><label>सम्प्रति (वर्तमान कार्य/पद)</label><input id="sub-poet-occ" placeholder="जैसे: शिक्षक / स्वतंत्र लेखन" /></div>
+            </div>
+            <div class="field"><label>मुख्य विधा (कॉमा लगाकर)</label><input id="sub-poet-genres" placeholder="जैसे: गीत, दोहा, ग़ज़ल, छंद" /></div>
+            <div class="field"><label>काव्य-मुद्रा (आपकी प्रिय 2 पंक्तियाँ)</label><textarea id="sub-poet-quote" style="min-height:62px;" placeholder="आपकी कोई 2 पसंदीदा काव्य पंक्तियाँ..."></textarea></div>
+            <div class="field"><label>प्रकाशित कृतियाँ (यदि हों)</label><input id="sub-poet-pub" placeholder="पुस्तकों या साझा संकलनों के नाम" /></div>
+            <div class="field"><label>प्रमुख सम्मान (यदि हों)</label><input id="sub-poet-awards" placeholder="प्रमुख साहित्यिक सम्मान" /></div>
+            <div class="field"><label>विशेष (संक्षिप्त साहित्यिक योगदान)</label><textarea id="sub-poet-special" style="min-height:64px;" placeholder="1-2 पंक्तियों में विशेष परिचय..."></textarea></div>
+            <div class="field"><label>सोशल मीडिया लिंक (वैकल्पिक)</label><input id="sub-poet-social" placeholder="Facebook / Instagram / YouTube लिंक" /></div>
+            <div class="field">
+              <label>अपनी स्पष्ट फ़ोटो अपलोड करें (वैकल्पिक)</label>
+              <input type="file" accept="image/*" onchange="handleImageUpload(this, 'tempSubmitPhoto', 'sub-poet-photo-prev', 280)" />
+              <div class="photo-preview-row"><div class="photo-preview-thumb" id="sub-poet-photo-prev">✒️</div><span style="font-size:12px; color:var(--text-muted);">फ़ोन गैलरी से अपनी फ़ोटो चुनें।</span></div>
+            </div>
+            <div class="field"><label>WhatsApp / संपर्क नंबर (केवल एडमिन सत्यापन हेतु, ऐप पर नहीं दिखेगा)</label><input id="sub-poet-contact" placeholder="आपका संपर्क नंबर" /></div>
+            <button id="btn-submit-poet" class="action-btn primary" style="width:100%;" onclick="submitPublicPoet()">📤 स्वीकृति हेतु प्रोफ़ाइल भेजें</button>
+          </div>
+        `;
+      }
+
+      body.innerHTML = `
+        <div class="admin-tabs" style="justify-content:center;">
+          <button class="admin-tab-btn ${state.submitTab === "poem" ? "active" : ""}" onclick="setSubmitTab('poem')">📜 कविता भेजें</button>
+          <button class="admin-tab-btn ${state.submitTab === "poet" ? "active" : ""}" onclick="setSubmitTab('poet')">✒️ कवि परिचय भेजें</button>
+        </div>
+        ${formHtml}
+      `;
+    }
+
+    async function submitPublicPoem() {
+      const title = document.getElementById("sub-poem-title").value.trim();
+      const poet = document.getElementById("sub-poem-poet").value.trim();
+      const genre = document.getElementById("sub-poem-genre").value.trim() || "कविता";
+      const content = document.getElementById("sub-poem-content").value.trim();
+      const contact = document.getElementById("sub-poem-contact").value.trim();
+
+      if (!title || !poet || !content) {
+        showToast("कृपया शीर्षक, कवि का नाम और संपूर्ण रचना भरें");
+        return;
+      }
+      const btn = document.getElementById("btn-submit-poem");
+      if (btn) { btn.disabled = true; btn.textContent = "भेजा जा रहा है..."; }
+
+      const id = "pend_poem_" + Date.now();
+      const item = { id, title, poet, genre, content, contact, submittedAt: Date.now() };
+      state.pendingPoems.unshift(item);
+      await cloudSaveDoc("pending_poems", id, item);
+      state.submitSuccessMsg = `आपकी रचना “${title}” सफलतापूर्वक प्राप्त हो गई है। एडमिन स्वीकृति के पश्चात् यह काव्य चौपाल पर प्रकाशित होगी।`;
+      renderAll();
+      renderSubmitModal();
+    }
+
+    async function submitPublicPoet() {
+      const name = document.getElementById("sub-poet-name").value.trim();
+      const city = document.getElementById("sub-poet-city").value.trim();
+      if (!name || !city) {
+        showToast("कृपया अपना नाम और वर्तमान स्थान लिखें");
+        return;
+      }
+      const btn = document.getElementById("btn-submit-poet");
+      if (btn) { btn.disabled = true; btn.textContent = "भेजा जा रहा है..."; }
+
+      const id = "pend_poet_" + Date.now();
+      const item = {
+        id,
+        name,
+        birth: document.getElementById("sub-poet-birth").value.trim(),
+        city,
+        education: document.getElementById("sub-poet-edu").value.trim(),
+        occupation: document.getElementById("sub-poet-occ").value.trim(),
+        mainGenres: document.getElementById("sub-poet-genres").value.trim(),
+        quote: document.getElementById("sub-poet-quote").value.trim(),
+        publications: document.getElementById("sub-poet-pub").value.trim(),
+        awards: document.getElementById("sub-poet-awards").value.trim(),
+        special: document.getElementById("sub-poet-special").value.trim(),
+        socialLink: document.getElementById("sub-poet-social").value.trim(),
+        contact: document.getElementById("sub-poet-contact").value.trim(),
+        photo: state.tempSubmitPhoto || "",
+        bio: "",
+        submittedAt: Date.now()
+      };
+      state.pendingPoets.unshift(item);
+      await cloudSaveDoc("pending_poets", id, item);
+      state.tempSubmitPhoto = "";
+      state.submitSuccessMsg = `${name} जी, आपका कवि परिचय सफलतापूर्वक प्राप्त हो गया है। एडमिन स्वीकृति के पश्चात् आपकी प्रोफ़ाइल काव्य चौपाल पर दिखने लगेगी।`;
+      renderAll();
+      renderSubmitModal();
+    }
+
+    /* ---------- ADMIN APPROVAL ACTIONS ---------- */
+    async function publishPoemFromPending(pendingId, poemObj) {
+      const newId = "poem_" + Date.now();
+      const published = {
+        id: newId,
+        title: poemObj.title,
+        poet: poemObj.poet,
+        genre: poemObj.genre || "कविता",
+        content: poemObj.content,
+        createdAt: Date.now()
+      };
+      state.poems.unshift(published);
+      if (!state.settings.genres.includes(published.genre)) {
+        state.settings.genres.push(published.genre);
+        await cloudSaveDoc("settings", "settings", state.settings);
+      }
+      if (!state.poets.some(p => p.name.trim() === published.poet.trim())) {
+        const np = { id: "poet_" + Date.now(), name: published.poet, city: "काव्य चौपाल परिवार", photo: "", bio: "काव्य चौपाल मंच के सम्मानित रचनाकार।" };
+        state.poets.push(np);
+        await cloudSaveDoc("poets", np.id, np);
+      }
+      await cloudSaveDoc("poems", newId, published);
+      state.pendingPoems = state.pendingPoems.filter(x => x.id !== pendingId);
+      await cloudDeleteDoc("pending_poems", pendingId);
+      state.editingPendingPoemId = null;
+      renderAll();
+      renderAdminStudio();
+      showToast("रचना स्वीकृत व लाइव प्रकाशित हुई ✅");
+    }
+
+    async function approvePendingPoem(id) {
+      const p = state.pendingPoems.find(x => x.id === id);
+      if (!p) return;
+      await publishPoemFromPending(id, p);
+    }
+
+    function startEditPendingPoem(id) {
+      state.editingPendingPoemId = id;
+      state.editingPendingPoetId = null;
+      renderAdminStudio();
+      document.getElementById("admin-body").scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function approveEditedPendingPoem(id) {
+      const title = document.getElementById("ap-poem-title").value.trim();
+      const poet = document.getElementById("ap-poem-poet").value.trim();
+      const genre = document.getElementById("ap-poem-genre").value.trim() || "कविता";
+      const content = document.getElementById("ap-poem-content").value.trim();
+      if (!title || !poet || !content) { showToast("कृपया शीर्षक, कवि और रचना भरें"); return; }
+      await publishPoemFromPending(id, { title, poet, genre, content });
+    }
+
+    async function rejectPendingPoem(id) {
+      if (!confirm("क्या आप इस लंबित रचना को अस्वीकार कर हटाना चाहते हैं?")) return;
+      state.pendingPoems = state.pendingPoems.filter(x => x.id !== id);
+      await cloudDeleteDoc("pending_poems", id);
+      if (state.editingPendingPoemId === id) state.editingPendingPoemId = null;
+      renderAll();
+      renderAdminStudio();
+      showToast("लंबित रचना अस्वीकार कर हटाई गई");
+    }
+
+    async function publishPoetFromPending(pendingId, ptObj) {
+      const existing = state.poets.find(x => x.name.trim() === ptObj.name.trim());
+      const targetId = existing ? existing.id : ("poet_" + Date.now());
+      const published = {
+        id: targetId,
+        name: ptObj.name,
+        birth: ptObj.birth || (existing ? existing.birth || "" : ""),
+        city: ptObj.city || (existing ? existing.city || "" : ""),
+        education: ptObj.education || (existing ? existing.education || "" : ""),
+        occupation: ptObj.occupation || (existing ? existing.occupation || "" : ""),
+        mainGenres: ptObj.mainGenres || (existing ? existing.mainGenres || "" : ""),
+        quote: ptObj.quote || (existing ? existing.quote || "" : ""),
+        publications: ptObj.publications || (existing ? existing.publications || "" : ""),
+        awards: ptObj.awards || (existing ? existing.awards || "" : ""),
+        special: ptObj.special || (existing ? existing.special || "" : ""),
+        socialLink: ptObj.socialLink || (existing ? existing.socialLink || "" : ""),
+        bio: ptObj.bio || (existing ? existing.bio || "" : ""),
+        photo: ptObj.photo || (existing ? existing.photo || "" : "")
+      };
+      if (existing) state.poets = state.poets.map(x => x.id === targetId ? published : x);
+      else state.poets.push(published);
+
+      await cloudSaveDoc("poets", targetId, published);
+      state.pendingPoets = state.pendingPoets.filter(x => x.id !== pendingId);
+      await cloudDeleteDoc("pending_poets", pendingId);
+      state.editingPendingPoetId = null;
+      renderAll();
+      renderAdminStudio();
+      showToast("कवि प्रोफ़ाइल स्वीकृत व लाइव प्रकाशित हुई ✅");
+    }
+
+    async function approvePendingPoet(id) {
+      const pt = state.pendingPoets.find(x => x.id === id);
+      if (!pt) return;
+      await publishPoetFromPending(id, pt);
+    }
+
+    function startEditPendingPoet(id) {
+      state.editingPendingPoetId = id;
+      state.editingPendingPoemId = null;
+      renderAdminStudio();
+      document.getElementById("admin-body").scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function approveEditedPendingPoet(id) {
+      const orig = state.pendingPoets.find(x => x.id === id) || {};
+      const name = document.getElementById("ap-poet-name").value.trim();
+      if (!name) { showToast("कृपया कवि का नाम लिखें"); return; }
+      await publishPoetFromPending(id, {
+        name,
+        birth: document.getElementById("ap-poet-birth").value.trim(),
+        city: document.getElementById("ap-poet-city").value.trim(),
+        education: document.getElementById("ap-poet-edu").value.trim(),
+        occupation: document.getElementById("ap-poet-occ").value.trim(),
+        mainGenres: document.getElementById("ap-poet-genres").value.trim(),
+        quote: document.getElementById("ap-poet-quote").value.trim(),
+        publications: document.getElementById("ap-poet-pub").value.trim(),
+        awards: document.getElementById("ap-poet-awards").value.trim(),
+        special: document.getElementById("ap-poet-special").value.trim(),
+        socialLink: document.getElementById("ap-poet-social").value.trim(),
+        photo: orig.photo || "",
+        bio: orig.bio || ""
+      });
+    }
+
+    async function rejectPendingPoet(id) {
+      if (!confirm("क्या आप इस लंबित कवि परिचय को अस्वीकार कर हटाना चाहते हैं?")) return;
+      state.pendingPoets = state.pendingPoets.filter(x => x.id !== id);
+      await cloudDeleteDoc("pending_poets", id);
+      if (state.editingPendingPoetId === id) state.editingPendingPoetId = null;
+      renderAll();
+      renderAdminStudio();
+      showToast("लंबित कवि परिचय अस्वीकार कर हटाया गया");
     }
 
     /* ============================================================
