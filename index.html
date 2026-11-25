@@ -3997,12 +3997,118 @@
       document.head.appendChild(link);
     }
 
+    /* ============================================================
+       9B. SMART ANDROID / PWA BACK-BUTTON NAVIGATION MANAGER
+       ============================================================ */
+    let backGuardActive = false;
+    let backExitTimer = null;
+
+    function armBackGuard() {
+      if (backGuardActive) return;
+      try {
+        window.history.pushState({ kcGuard: true, ts: Date.now() }, "", window.location.href);
+        backGuardActive = true;
+      } catch (e) {}
+    }
+
+    function initSmartBackNavigation() {
+      try {
+        window.history.replaceState({ kcRoot: true }, "", window.location.href);
+        armBackGuard();
+      } catch (e) {}
+
+      // Re-arm on first user interaction (ensures Android Chrome always honors Back trap)
+      const gestureArm = () => {
+        if (!backGuardActive) {
+          clearTimeout(backExitTimer);
+          armBackGuard();
+        }
+      };
+      document.addEventListener("pointerdown", gestureArm, { passive: true });
+      document.addEventListener("click", gestureArm, { passive: true });
+
+      window.addEventListener("popstate", () => {
+        backGuardActive = false;
+        clearTimeout(backExitTimer);
+
+        // 1. If splash screen is still visible, dismiss it
+        const splash = document.getElementById("splash-screen");
+        if (splash && !splash.classList.contains("hide")) {
+          dismissSplash();
+          armBackGuard();
+          return;
+        }
+
+        // 2. Close topmost open modal in priority order
+        const adminModal = document.getElementById("admin-modal");
+        if (adminModal && adminModal.classList.contains("open")) {
+          closeModal("admin-modal");
+          armBackGuard();
+          return;
+        }
+        const submitModal = document.getElementById("submit-modal");
+        if (submitModal && submitModal.classList.contains("open")) {
+          closeModal("submit-modal");
+          armBackGuard();
+          return;
+        }
+        const videoModal = document.getElementById("video-modal");
+        if (videoModal && videoModal.classList.contains("open")) {
+          closeVideoModal();
+          armBackGuard();
+          return;
+        }
+        const readerModal = document.getElementById("reader-modal");
+        if (readerModal && readerModal.classList.contains("open")) {
+          closeModal("reader-modal");
+          armBackGuard();
+          return;
+        }
+
+        // 3. Close Poet Detail view -> return to Poets list
+        if (state.activeTab === "poets" && state.activePoetName) {
+          closePoetDetail();
+          armBackGuard();
+          return;
+        }
+
+        // 4. Close Admin Detail view -> return to Admins list
+        if (state.activeTab === "admins" && state.activeAdminId) {
+          closeAdminDetail();
+          armBackGuard();
+          return;
+        }
+
+        // 5. If on any other tab -> go back to Home ('poems')
+        if (state.activeTab !== "poems") {
+          switchTab("poems");
+          armBackGuard();
+          return;
+        }
+
+        // 6. If on Home ('poems') with active filters/search -> clear filters first
+        if (state.selectedGenre !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch) {
+          resetPoemFilters();
+          showToast("सभी रचनाएँ दिखाई जा रही हैं");
+          armBackGuard();
+          return;
+        }
+
+        // 7. At clean Home screen: Double-Back to Exit (2.5 seconds window)
+        showToast("बाहर निकलने के लिए एक बार फिर बैक दबाएँ");
+        backExitTimer = setTimeout(() => {
+          armBackGuard();
+        }, 2500);
+      });
+    }
+
     applyTheme(localStorage.getItem(THEME_KEY) || "light");
     initSplashParticles();
     startSplashTimer();
     injectPWAManifest();
     renderAll();
     initFirebaseSync();
+    initSmartBackNavigation();
   </script>
 </body>
 </html>
