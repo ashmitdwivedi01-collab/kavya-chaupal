@@ -1274,7 +1274,7 @@
     <section id="tab-about" class="tab-view">
       <div class="about-banner">
         <div class="about-logo-circle" id="about-logo-wrap"></div>
-        <div style="font-size:12px; letter-spacing:2px; color:#F3D47E; margin-bottom:4px;">साहित्यिक परिवार एवं मंच</div>
+        <div style="font-size:12px; letter-spacing:2px; color:#F3D47E; margin-bottom:4px;">साहित्यिक परिवार एवं मंच • संस्करण 7.0</div>
         <h2 class="font-royal" style="font-size:34px; margin:0; color:#F7DC8B;" id="about-title">काव्य चौपाल</h2>
         <p class="font-literary" style="margin:8px 0 16px; color:#FFF4DC; font-size:15px;" id="about-tagline">शब्द जहाँ संवाद बनें, और भाव जहाँ उत्सव…</p>
         <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
@@ -1331,7 +1331,10 @@
   <div class="modal-overlay" id="reader-modal" onclick="closeModalOnBg(event, 'reader-modal')">
     <div class="modal-sheet">
       <div class="modal-head">
-        <h3 class="modal-title" id="reader-head-genre">काव्य पाठ</h3>
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('reader-modal')">← वापस</button>
+          <h3 class="modal-title" id="reader-head-genre" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">काव्य पाठ</h3>
+        </div>
         <button class="close-btn" onclick="closeModal('reader-modal')">✕</button>
       </div>
       <div class="modal-body" id="reader-body"></div>
@@ -1342,7 +1345,10 @@
   <div class="modal-overlay" id="video-modal" onclick="closeModalOnBg(event, 'video-modal')">
     <div class="modal-sheet">
       <div class="modal-head">
-        <h3 class="modal-title" id="video-modal-title">🎬 काव्य चौपाल प्रसारण</h3>
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeVideoModal()">← वापस</button>
+          <h3 class="modal-title" id="video-modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🎬 काव्य चौपाल प्रसारण</h3>
+        </div>
         <button class="close-btn" onclick="closeVideoModal()">✕</button>
       </div>
       <div class="modal-body" id="video-modal-body"></div>
@@ -1353,7 +1359,10 @@
   <div class="modal-overlay" id="submit-modal" onclick="closeModalOnBg(event, 'submit-modal')">
     <div class="modal-sheet">
       <div class="modal-head">
-        <h3 class="modal-title">✍️ काव्य चौपाल — रचना / परिचय भेजें</h3>
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('submit-modal')">← वापस</button>
+          <h3 class="modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">✍️ रचना / परिचय भेजें</h3>
+        </div>
         <button class="close-btn" onclick="closeModal('submit-modal')">✕</button>
       </div>
       <div class="modal-body" id="submit-body"></div>
@@ -1364,7 +1373,10 @@
   <div class="modal-overlay" id="admin-modal" onclick="closeModalOnBg(event, 'admin-modal')">
     <div class="modal-sheet">
       <div class="modal-head">
-        <h3 class="modal-title">👑 काव्य चौपाल — एडमिन स्टूडियो</h3>
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('admin-modal')">← वापस</button>
+          <h3 class="modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">👑 एडमिन स्टूडियो</h3>
+        </div>
         <button class="close-btn" onclick="closeModal('admin-modal')">✕</button>
       </div>
       <div class="modal-body" id="admin-body"></div>
@@ -1924,7 +1936,7 @@
       clearTimeout(splashTimer);
       const el = document.getElementById("splash-screen");
       if (el) el.classList.add("hide");
-      if (!fromAuto) pushNavState("home");
+      if (!fromAuto) pushAppView("home");
     }
     function replaySplash() {
       const el = document.getElementById("splash-screen");
@@ -1985,7 +1997,7 @@
        6. NAVIGATION & RENDERING
        ============================================================ */
     function switchTab(tabName, fromPop) {
-      if (!fromPop && state.activeTab !== tabName) pushNavState("tab-" + tabName);
+      if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);
       state.activeTab = tabName;
       document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
       const target = document.getElementById("tab-" + tabName);
@@ -2124,13 +2136,20 @@
       el.innerHTML = html;
     }
 
-    function selectGenre(g) { state.selectedGenre = g; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid(); }
-    function selectPoetFilter(name) { state.selectedPoetFilter = name; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid(); }
-    function resetPoemFilters() {
+    function selectGenre(g) {
+      if (g !== "सभी" && state.selectedGenre !== g) pushAppView("genre");
+      state.selectedGenre = g; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid();
+    }
+    function selectPoetFilter(name) {
+      if (name !== "सभी" && state.selectedPoetFilter !== name) pushAppView("pfilter");
+      state.selectedPoetFilter = name; renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid();
+    }
+    function resetPoemFilters(fromPop) {
       state.selectedGenre = "सभी"; state.selectedPoetFilter = "सभी"; state.poemSearch = "";
       document.getElementById("poem-search").value = "";
       document.getElementById("poem-search-clear").classList.remove("show");
       renderVidhaStrip(); renderPoetFilterStrip(); renderPoemsGrid();
+      if (!fromPop) syncBackAfterUiClose();
     }
     function onPoemSearch() {
       const val = document.getElementById("poem-search").value;
@@ -2216,8 +2235,8 @@
     }
 
     function openPoetProfile(poetName) {
-      closeModal("reader-modal");
-      pushNavState("poet");
+      closeModal("reader-modal", true);
+      pushAppView("poet");
       state.activeTab = "poets";
       state.activePoetName = poetName;
       state.poetProfileGenre = "सम्पूर्ण";
@@ -2229,10 +2248,11 @@
       renderPoetDetail(poetName);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    function closePoetDetail() {
+    function closePoetDetail(fromPop) {
       state.activePoetName = null;
       document.getElementById("poet-detail-view").style.display = "none";
       document.getElementById("poets-list-view").style.display = "block";
+      if (!fromPop) syncBackAfterUiClose();
     }
     function setPoetProfileGenre(g) { state.poetProfileGenre = g; renderPoetDetail(state.activePoetName); }
     function setPoetAllViewMode(mode) { state.poetAllViewMode = mode; renderPoetDetail(state.activePoetName); }
@@ -2506,7 +2526,7 @@
           <button class="action-btn" onclick="shareVideoWhatsApp(dec('${arg(v.id)}'))">📲 WhatsApp शेयर</button>
         </div>
       `;
-      if (!document.getElementById("video-modal").classList.contains("open")) pushNavState("video");
+      if (!document.getElementById("video-modal").classList.contains("open")) pushAppView("video");
       document.getElementById("video-modal").classList.add("open");
     }
 
@@ -2517,9 +2537,9 @@
       window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, "_blank");
     }
 
-    function closeVideoModal() {
+    function closeVideoModal(fromPop) {
       document.getElementById("video-modal-body").innerHTML = "";
-      closeModal("video-modal");
+      closeModal("video-modal", fromPop);
     }
 
     function renderCompetitionPane() {
@@ -2675,17 +2695,18 @@
     }
 
     function openAdminDetail(adminId) {
-      pushNavState("admin");
+      pushAppView("admin");
       state.activeAdminId = adminId;
       document.getElementById("admins-list-view").style.display = "none";
       document.getElementById("admin-detail-view").style.display = "block";
       renderAdminDetail(adminId);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    function closeAdminDetail() {
+    function closeAdminDetail(fromPop) {
       state.activeAdminId = null;
       document.getElementById("admin-detail-view").style.display = "none";
       document.getElementById("admins-list-view").style.display = "block";
+      if (!fromPop) syncBackAfterUiClose();
     }
     function renderAdminDetail(adminId) {
       const container = document.getElementById("admin-detail-view");
@@ -2747,7 +2768,7 @@
        ============================================================ */
     function openReader(poemId) {
       const p = state.poems.find(x => x.id === poemId);
-      if (p && !document.getElementById("reader-modal").classList.contains("open")) pushNavState("reader");
+      if (p && !document.getElementById("reader-modal").classList.contains("open")) pushAppView("reader");
       if (!p) return;
       state.currentReaderPoemId = poemId;
       const liked = state.favorites.includes(p.id);
@@ -2904,11 +2925,16 @@
        8. ADMIN STUDIO (ALL SECTIONS + REAL LOGO UPLOAD)
        ============================================================ */
     function openAdminStudio() {
-      if (!document.getElementById("admin-modal").classList.contains("open")) pushNavState("studio");
+      if (!document.getElementById("admin-modal").classList.contains("open")) pushAppView("studio");
       document.getElementById("admin-modal").classList.add("open");
       renderAdminStudio();
     }
-    function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+    function closeModal(id, fromPop) {
+      const el = document.getElementById(id);
+      const wasOpen = el && el.classList.contains("open");
+      if (el) el.classList.remove("open");
+      if (wasOpen && !fromPop) syncBackAfterUiClose();
+    }
     function closeModalOnBg(e, id) { if (e.target.id === id) { if (id === "video-modal") closeVideoModal(); else closeModal(id); } }
 
     function unlockAdmin() {
@@ -3700,7 +3726,7 @@
        8B. PUBLIC POET & POEM SUBMISSION + ADMIN APPROVAL LOGIC
        ============================================================ */
     function openSubmitModal(tab) {
-      if (!document.getElementById("submit-modal").classList.contains("open")) pushNavState("submit");
+      if (!document.getElementById("submit-modal").classList.contains("open")) pushAppView("submit");
       state.submitTab = tab || "poem";
       state.submitSuccessMsg = "";
       state.tempSubmitPhoto = "";
@@ -4010,87 +4036,121 @@
     }
 
     /* ============================================================
-       9B. REAL USER-GESTURE BACK-BUTTON MANAGER (ANDROID CHROME SAFE)
+       9B. SYNCHRONIZED NAVIGATION API & POPSTATE BACK MANAGER (v7.0)
        ============================================================ */
-    let navSeq = 0;
+    let navDepth = 0;
+    let ignoreNextPop = false;
+    let lastBackHandledAt = 0;
 
-    function pushNavState(tag) {
+    function pushAppView(tag) {
       try {
-        navSeq += 1;
-        window.history.pushState({ kcNav: tag, n: navSeq }, "", "#" + tag + "-" + navSeq);
+        navDepth += 1;
+        window.history.pushState({ kcView: tag, depth: navDepth }, "", "#" + tag + "-" + navDepth);
       } catch (e) {}
     }
 
+    function syncBackAfterUiClose() {
+      if (navDepth > 0) {
+        navDepth -= 1;
+        ignoreNextPop = true;
+        try {
+          window.history.back();
+        } catch (e) {
+          ignoreNextPop = false;
+        }
+      }
+    }
+
+    function handleSystemBackStep() {
+      const now = Date.now();
+      if (now - lastBackHandledAt < 180) return;
+      lastBackHandledAt = now;
+
+      if (ignoreNextPop) {
+        ignoreNextPop = false;
+        return;
+      }
+
+      if (navDepth > 0) navDepth -= 1;
+
+      // 1. Dismiss splash if visible
+      const splash = document.getElementById("splash-screen");
+      if (splash && !splash.classList.contains("hide")) {
+        dismissSplash(true);
+        return;
+      }
+
+      // 2. Close topmost open modal
+      const adminModal = document.getElementById("admin-modal");
+      if (adminModal && adminModal.classList.contains("open")) {
+        closeModal("admin-modal", true);
+        return;
+      }
+      const submitModal = document.getElementById("submit-modal");
+      if (submitModal && submitModal.classList.contains("open")) {
+        closeModal("submit-modal", true);
+        return;
+      }
+      const videoModal = document.getElementById("video-modal");
+      if (videoModal && videoModal.classList.contains("open")) {
+        closeVideoModal(true);
+        return;
+      }
+      const readerModal = document.getElementById("reader-modal");
+      if (readerModal && readerModal.classList.contains("open")) {
+        closeModal("reader-modal", true);
+        return;
+      }
+
+      // 3. Close Poet Detail -> Poets list
+      if (state.activeTab === "poets" && state.activePoetName) {
+        closePoetDetail(true);
+        return;
+      }
+
+      // 4. Close Admin Detail -> Admins list
+      if (state.activeTab === "admins" && state.activeAdminId) {
+        closeAdminDetail(true);
+        return;
+      }
+
+      // 5. Return to Home tab from any other tab
+      if (state.activeTab !== "poems") {
+        switchTab("poems", true);
+        return;
+      }
+
+      // 6. Clear active filters on Home screen
+      if (state.selectedGenre !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch) {
+        resetPoemFilters(true);
+        showToast("सभी रचनाएँ दिखाई जा रही हैं");
+        return;
+      }
+    }
+
     function initSmartBackNavigation() {
-      // Clear any stale hash on fresh load
       try {
         if (window.location.hash) {
-          window.history.replaceState({ kcRoot: true, n: 0 }, "", window.location.pathname + window.location.search);
-        } else {
-          window.history.replaceState({ kcRoot: true, n: 0 }, "", window.location.href);
+          window.history.replaceState({ kcRoot: true, depth: 0 }, "", window.location.pathname + window.location.search);
         }
       } catch (e) {}
 
-      // Ensure first user tap anywhere creates a genuine Chrome-accepted history entry
-      const firstTapArm = () => {
-        if (navSeq === 0) pushNavState("home");
-      };
-      document.addEventListener("click", firstTapArm, { capture: true, passive: true });
+      // Modern Chrome / Android Predictive Back Navigation API
+      if (window.navigation && typeof window.navigation.addEventListener === "function") {
+        window.navigation.addEventListener("navigate", (event) => {
+          if (event.navigationType === "traverse" && event.canIntercept) {
+            event.intercept({
+              handler() {
+                handleSystemBackStep();
+              }
+            });
+          }
+        });
+      }
 
+      // Standard popstate fallback for all browsers & WebViews
       window.addEventListener("popstate", () => {
-        // 1. Dismiss splash if visible
-        const splash = document.getElementById("splash-screen");
-        if (splash && !splash.classList.contains("hide")) {
-          dismissSplash(true);
-          return;
-        }
-
-        // 2. Close topmost open modal
-        const adminModal = document.getElementById("admin-modal");
-        if (adminModal && adminModal.classList.contains("open")) {
-          closeModal("admin-modal");
-          return;
-        }
-        const submitModal = document.getElementById("submit-modal");
-        if (submitModal && submitModal.classList.contains("open")) {
-          closeModal("submit-modal");
-          return;
-        }
-        const videoModal = document.getElementById("video-modal");
-        if (videoModal && videoModal.classList.contains("open")) {
-          closeVideoModal();
-          return;
-        }
-        const readerModal = document.getElementById("reader-modal");
-        if (readerModal && readerModal.classList.contains("open")) {
-          closeModal("reader-modal");
-          return;
-        }
-
-        // 3. Close Poet Detail -> Poets list
-        if (state.activeTab === "poets" && state.activePoetName) {
-          closePoetDetail();
-          return;
-        }
-
-        // 4. Close Admin Detail -> Admins list
-        if (state.activeTab === "admins" && state.activeAdminId) {
-          closeAdminDetail();
-          return;
-        }
-
-        // 5. Return to Home tab from any other tab
-        if (state.activeTab !== "poems") {
-          switchTab("poems", true);
-          return;
-        }
-
-        // 6. Clear active filters on Home screen
-        if (state.selectedGenre !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch) {
-          resetPoemFilters();
-          showToast("सभी रचनाएँ दिखाई जा रही हैं");
-          return;
-        }
+        handleSystemBackStep();
       });
     }
 
