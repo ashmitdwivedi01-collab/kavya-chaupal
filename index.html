@@ -1491,13 +1491,14 @@
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
     }
 
-    /* ================= CHHAND DETECTOR & SHIKSHA ================= */
-    .chhand-detect-banner {
-      background: linear-gradient(135deg, rgba(123, 22, 32, 0.08) 0%, rgba(198, 146, 44, 0.16) 100%);
+    /* ================= EXPERT CHHAND IDENTIFIER & SHIKSHA GUIDE ================= */
+    .chhand-detect-card {
+      background: linear-gradient(140deg, rgba(123, 22, 32, 0.08), rgba(198, 146, 44, 0.14));
       border: 1.5px solid var(--gold);
-      border-radius: 15px;
-      padding: 13px 14px;
+      border-radius: 16px;
+      padding: 14px 15px;
       margin-bottom: 12px;
+      box-shadow: var(--shadow);
     }
     .chhand-badge-main {
       display: inline-flex;
@@ -1505,36 +1506,42 @@
       gap: 6px;
       padding: 4px 12px;
       border-radius: 999px;
-      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
+      background: linear-gradient(135deg, #7B1620, #4E0D14);
       color: #F7DC8B;
-      font-weight: 700;
-      font-size: 13px;
+      font-family: 'Yatra One', serif;
+      font-size: 15px;
       margin-bottom: 6px;
     }
     [data-theme="night"] .chhand-badge-main {
-      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
+      background: linear-gradient(135deg, #E8C068, #B88424);
       color: #160D06;
     }
-    .shiksha-card {
+    .chhand-guide-card {
       background: var(--bg-elevated);
       border: 1.5px solid var(--border);
       border-radius: 16px;
       padding: 15px;
-      margin-top: 14px;
+      margin-bottom: 12px;
       box-shadow: var(--shadow);
     }
-    .shiksha-box-row {
+    .chhand-example-box {
       background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      border-left: 3.5px solid var(--gold);
+      border-radius: 10px;
       padding: 10px 12px;
       margin-top: 8px;
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 14px;
+      line-height: 1.75;
+      white-space: pre-line;
     }
-    .shiksha-lbl {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 3px;
+    .matra-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
     }
 
     /* ================= ABOUT & SOCIAL CARDS ================= */
@@ -5019,206 +5026,268 @@ var HINDI_RIDDLES = [
   { q: "‘दोहा’ छंद के विषम चरणों में कितनी मात्राएँ होती हैं?", opts: ["11 मात्राएँ", "13 मात्राएँ", "16 मात्राएँ", "12 मात्राएँ"], ans: 1, note: "दोहा के विषम चरणों में 13 और सम चरणों में 11 मात्राएँ होती हैं।" }
 ];
 function renderDailyRiddle() {
-  var wrap = documentvar CHHAND_SHIKSHA_LIST = [
+  var wrap = document.getElementById("daily-riddle-wrap"); if (!wrap) return;
+  var r = HINDI_RIDDLES[state.riddleIdx % HINDI_RIDDLES.length];
+  var labels = ["क", "ख", "ग", "घ"];
+  wrap.innerHTML = "<div class=\"riddle-card\"><div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\"><span class=\"genre-tag\">🧩 आज की काव्य-पहेली</span><button class=\"sm-btn\" onclick=\"nextDailyRiddle()\">अगली →</button></div><div class=\"font-literary\" style=\"font-size:14.5px; font-weight:600;\">" + esc(r.q) + "</div><div class=\"riddle-opts\">" + r.opts.map(function(opt, idx) {
+    var cls = state.riddleAnswered !== null ? (idx === r.ans ? "correct" : (idx === state.riddleAnswered ? "wrong" : "")) : "";
+    return "<button class=\"riddle-opt-btn " + cls + "\" onclick=\"answerDailyRiddle(" + idx + ")\">" + labels[idx] + ". " + esc(opt) + "</button>";
+  }).join("") + "</div>" + (state.riddleAnswered !== null ? ("<div style=\"margin-top:8px; font-size:12.5px; color:var(--primary); font-weight:600;\">💡 " + esc(r.note) + "</div>") : "") + "</div>";
+}
+function answerDailyRiddle(idx) { state.riddleAnswered = idx; renderDailyRiddle(); }
+function nextDailyRiddle() { state.riddleIdx = (state.riddleIdx + 1) % HINDI_RIDDLES.length; state.riddleAnswered = null; renderDailyRiddle(); }
+
+var CHHAND_SHIKSHA_LIST = [
   {
-    id: "doha",
     name: "दोहा (Doha)",
-    definition: "दोहा एक लोकप्रिय अर्द्धसम मात्रिक छंद है। इसमें चार चरण होते हैं—पहला व तीसरा चरण ‘विषम’ और दूसरा व चौथा चरण ‘सम’ कहलाते हैं।",
-    rule: "• विषम चरण (1 व 3) में 13-13 मात्राएँ और सम चरण (2 व 4) में 11-11 मात्राएँ होती हैं।\n• प्रायः सम चरणों के अंत में लघु-गुरु (१ २) की लय सुंदर मानी जाती है।",
-    example: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास (13)।\nएक अकेला दीप भी, कर देता उजियास (11)।।"
+    type: "अर्द्धसम मात्रिक छंद",
+    formula: "विषम चरण (1, 3): 13-13 मात्राएँ • सम चरण (2, 4): 11-11 मात्राएँ (कुल 24 मात्राएँ प्रति पंक्ति/दल)",
+    defText: "दोहा अर्द्धसम मात्रिक छंद है। इसके पहले और तीसरे चरण में 13-13 मात्राएँ तथा दूसरे और चौथे चरण में 11-11 मात्राएँ होती हैं। सम चरणों के अंत में प्रायः गुरु-लघु (२ १) या लघु-गुरु की लय आती है।",
+    rules: "अंतिम चरण में 'लघु-गुरु' (२ १ से बचकर १ २ या २ १ जैसा भाव-संतुलन) का ध्यान रखें; विराम/यति चरण के अंत में होती है।",
+    sample: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास। (13 + 11 = 24)\nएक अकेला दीप भी, कर देता उजियास।। (13 + 11 = 24)"
   },
   {
-    id: "soratha",
     name: "सोरठा (Soratha)",
-    definition: "सोरठा को दोहा का उलटा रूप माना जाता है। यह भी चार चरणों वाला अर्द्धसम मात्रिक छंद है।",
-    rule: "• विषम चरण (1 व 3) में 11-11 मात्राएँ और सम चरण (2 व 4) में 13-13 मात्राएँ होती हैं।\n• प्रायः विषम चरणों के अंत में तुक मिलती है।",
-    example: "जो सुमिरत सिधि होइ, गन नायक करिबर बदन (11)।\nकरहु अनुग्रह सोइ, बुद्धि रासि सुभ गुन सदन (13)।।"
+    type: "अर्द्धसम मात्रिक छंद",
+    formula: "विषम चरण (1, 3): 11-11 मात्राएँ • सम चरण (2, 4): 13-13 मात्राएँ (दोहा का उलटा रूप)",
+    defText: "सोरठा दोहा का ठीक विपरीत अर्द्धसम मात्रिक छंद है। इसके विषम चरणों (1 व 3) में 11-11 और सम चरणों (2 व 4) में 13-13 मात्राएँ होती हैं; प्रायः विषम चरणों के अंत में तुक मिलती है।",
+    rules: "11 मात्रा वाले चरण को लयबद्ध रखें और 13 मात्रा वाले चरण में स्वाभाविक यति दें।",
+    sample: "जो सुमिरत सिधि होइ, गन नायक करिबर बदन। (11 + 13 = 24)\nकरहु अनुग्रह सोइ, बुद्धि रासि सुभ गुन सदन।। (11 + 13 = 24)"
   },
   {
-    id: "chaupai",
     name: "चौपाई (Chaupai)",
-    definition: "चौपाई एक सम मात्रिक छंद है। इसके चारों चरणों में मात्राओं की संख्या समान रहती है।",
-    rule: "• प्रत्येक चरण में 16 मात्राएँ होती हैं।\n• चरण के अंत में प्रायः जगण (१ २ १) या तगण (२ २ १) के प्रयोग से बचने और अंत में दो गुरु (२ २) न रखने की परंपरा रही है।",
-    example: "बंदउँ गुरु पद पदुम परागा। सुरुचि सुबास सरस अनुरागा।। (प्रत्येक चरण: 16 मात्राएँ)"
+    type: "सम मात्रिक छंद",
+    formula: "प्रत्येक चरण में 16 मात्राएँ • चरण के अंत में दो गुरु (२ २) से बचना (प्रायः जगण/तगण या लय-संतुलन)",
+    defText: "चौपाई चार चरणों वाला सम मात्रिक छंद है, जिसके प्रत्येक चरण में 16 मात्राएँ होती हैं। रामचरितमानस की प्रसिद्ध चौपाइयाँ इसी छंद में रची गई हैं।",
+    rules: "प्रत्येक चरण की मात्राएँ 16 गिनें; चरण के अंत में प्रायः दो गुरु (SS) आने से लय भारी हो जाती है।",
+    sample: "बंदउँ गुरु पद पदुम परागा। (16)\nसुरुचि सुबास सरस अनुरागा।। (16)"
   },
   {
-    id: "rola",
     name: "रोला (Rola)",
-    definition: "रोला एक सम मात्रिक छंद है, जिसमें प्रत्येक चरण में 24 मात्राएँ होती हैं।",
-    rule: "• प्रत्येक चरण में कुल 24 मात्राएँ होती हैं।\n• 11वीं और 13वीं मात्रा पर यति (विराम) होती है।",
-    example: "नीलाम्बर परिधान, हरित पट पर सुन्दर है।\nसूर्य-चन्द्र युग मुकुट, मेखला रत्नाकर है।।"
+    type: "सम मात्रिक छंद",
+    formula: "प्रत्येक चरण में 24 मात्राएँ (11 और 13 मात्राओं पर यति)",
+    defText: "रोला सम मात्रिक छंद है जिसकी प्रत्येक पंक्ति में 24 मात्राएँ होती हैं और 11वीं व 13वीं मात्रा पर विराम (यति) आता है।",
+    rules: "11 + 13 के विभाजन को लय से साधें और सम चरणों में तुकांतता रखें।",
+    sample: "नीलांबर परिधान, हरित पट पर सुंदर है। (11 + 13 = 24)\nसूर्य-चंद्र युग मुकुट, मेखला रत्नाकर है।। (11 + 13 = 24)"
   },
   {
-    id: "geetika",
-    name: "गीतिका (Geetika)",
-    definition: "गीतिका सम मात्रिक छंद है, जिसकी गेयता और प्रवाह काव्य पाठ में अत्यंत मधुर लगता है।",
-    rule: "• प्रत्येक चरण में 26 मात्राएँ होती हैं।\n• 14वीं और 12वीं मात्रा पर यति होती है।",
-    example: "हे प्रभो! आनंददाता, ज्ञान हमको दीजिए।\nशीघ्र सारे दुर्गुणों को, दूर हमसे कीजिए।।"
+    name: "गीतिका व हरिगीतिका",
+    type: "सम मात्रिक छंद",
+    formula: "गीतिका: 26 मात्राएँ (14 + 12 पर यति) • हरिगीतिका: 28 मात्राएँ (16 + 12 पर यति)",
+    defText: "गीतिका में 26 मात्राएँ (14 और 12 पर यति) तथा हरिगीतिका में 28 मात्राएँ (16 और 12 पर यति) होती हैं। हरिगीतिका के अंत में प्रायः लघु-गुरु (१ २) का विधान रहता है।",
+    rules: "यति के स्थान (14+12 या 16+12) पर भाव-विराम स्पष्ट रखें।",
+    sample: "अनधिकार चेष्टा यह मेरी, पर मतवाली है। (16 + 12 = 28 — हरिगीतिका)"
   },
   {
-    id: "harigeetika",
-    name: "हरिगीतिका (Harigeetika)",
-    definition: "हरिगीतिका एक प्रसिद्ध सम मात्रिक छंद है, जो अपनी सुमधुर लय और संतुलित गति के लिए जाना जाता है।",
-    rule: "• प्रत्येक चरण में 28 मात्राएँ होती हैं।\n• 16वीं और 12वीं मात्रा पर यति होती है।",
-    example: "अन्याय का प्रतिकार करना, धर्म का आलोक है।\nसत्कर्म की पावन शिखा से, जग सदा आलोक है।।"
-  },
-  {
-    id: "kundaliya",
     name: "कुण्डलिया (Kundaliya)",
-    definition: "कुण्डलिया एक विषम मात्रिक संयुक्त छंद है, जो ‘दोहा’ और ‘रोला’ के मेल से बनता है।",
-    rule: "• इसमें कुल 6 पंक्तियाँ होती हैं—पहली 2 पंक्तियाँ दोहा और बाद की 4 पंक्तियाँ रोला की होती हैं।\n• दोहा का चौथा चरण ही रोला का पहला चरण बनता है, और जिस शब्द से कुण्डलिया शुरू होती है उसी शब्द से समाप्त होती है।",
-    example: "साईं बैर न कीजिए, गुरु पंडित कवि यार।\nबेटा बनिता पौरिया, यज्ञ करावनहार।।\nयज्ञ करावनहार, राजमंत्री जो होई।\nविप्र पड़ोसी वैद्य, आप कोपिए सोई।।"
-  },
-  {
-    id: "laghu_guru",
-    name: "लघु (१) व गुरु (२) नियम",
-    definition: "मात्रा गणना के लिए प्रत्येक वर्ण या मात्रा-युक्त अक्षर का लघु (1 मात्रा) या गुरु (2 मात्रा) मान तय किया जाता है।",
-    rule: "• लघु (१): अ, इ, उ, ऋ तथा इन स्वरों की मात्रा वाले वर्ण (जैसे: क, कि, कु, कृ)।\n• गुरु (२): आ, ई, ऊ, ए, ऐ, ओ, औ तथा इनकी मात्रा वाले वर्ण (जैसे: का, की, कू, के, कै, को, कौ)।\n• अनुस्वार (ं) व विसर्ग (ः) युक्त वर्ण गुरु (२) होते हैं; संयुक्ताक्षर (्) से पूर्व का वर्ण प्रायः गुरु (२) गिना जाता है।",
-    example: "उदाहरण: ‘दीप’ में दी (२) + प (१) = 3 मात्राएँ; ‘सत्य’ में स (२, संयुक्त ‘त्य’ से पूर्व) + त्य (१) = 3 मात्राएँ।"
+    type: "विषम संयुक्त मात्रिक छंद",
+    formula: "6 चरण (1 दोहा + 4 रोला के चरण) • कुल मात्राएँ/संरचना: दोहे का अंतिम चरण रोले का पहला चरण बनता है",
+    defText: "कुण्डलिया छंद दोहा और रोला के संयोग से बनता है। इसमें 6 पंक्तियाँ होती हैं; दोहे का चौथा चरण रोले का पहला चरण बनता है और जिस शब्द से रचना शुरू होती है, उसी शब्द से समाप्त होती है।",
+    rules: "प्रारंभिक शब्द का अंतिम शब्द से मिलान और दोहा-रोला की संधि का विशेष ध्यान रखें।",
+    sample: "साईं बैर न कीजिए, गुरु पीर औं मीत।\nपंडित कबिरा भूपती, राखिए तीन्यूं मीत।।"
   }
 ];
 
-var selectedShikshaId = "doha";
-
 function analyzeHindiLine(line) {
-  var LONG = new Set(["आ","ई","ऊ","ए","ऐ","ओ","औ","ा","ी","ू","े","ै","ो","ौ"]);
-  var VOWEL_OR_CONJ = /[\u0904-\u0939]/;
-  var MATRAS = new Set(["ा","ी","ु","ू","े","ै","ो","ौ","ं","ः","ँ","़","्"]);
-  var rawChars = Array.from(String(line || ""));
+  var LONG_VOWELS = new Set(["आ", "ई", "ऊ", "ए", "ऐ", "ओ", "औ", "अं", "अः", "ा", "ी", "ू", "े", "ै", "ो", "ौ"]);
+  var MATRAS_ALL = "ाीुूेैोौंःँ़्";
+  var chars = Array.from(line || "");
   var tokens = [];
 
-  for (var i = 0; i < rawChars.length; i++) {
-    var ch = rawChars[i];
-    if (VOWEL_OR_CONJ.test(ch)) {
+  for (var i = 0; i < chars.length; i++) {
+    var ch = chars[i];
+    var code = ch.charCodeAt(0);
+    // Devanagari vowels & consonants (excluding virama/matra standalone)
+    if (code >= 0x0904 && code <= 0x0939) {
       var txt = ch;
-      var wt = LONG.has(ch) ? 2 : 1;
+      var wt = LONG_VOWELS.has(ch) ? 2 : 1;
       var hasHalant = false;
-      while (i + 1 < rawChars.length && MATRAS.has(rawChars[i + 1])) {
+      while (i + 1 < chars.length && MATRAS_ALL.indexOf(chars[i + 1]) !== -1) {
         i++;
-        var mCh = rawChars[i];
+        var mCh = chars[i];
         txt += mCh;
-        if (LONG.has(mCh) || mCh === "ं" || mCh === "ः") {
-          wt = 2;
-        }
         if (mCh === "्") {
           hasHalant = true;
+        } else if (LONG_VOWELS.has(mCh) || mCh === "ं" || mCh === "ः") {
+          wt = 2;
         }
       }
-      tokens.push({ text: txt, weight: wt, hasHalant: hasHalant });
+      // Chandrabindu (ँ) keeps laghu/guru according to base vowel; anusvara (ं) or visarga (ः) makes it guru (2)
+      if (hasHalant && tokens.length > 0) {
+        // Halant consonant merges weight into preceding syllable in classical prosody
+        tokens[tokens.length - 1].text += txt;
+        tokens[tokens.length - 1].weight = 2;
+      } else {
+        tokens.push({ text: txt, weight: wt });
+      }
     }
   }
 
+  // Sanyuktakshar rule: if a syllable is followed by a conjunct (virama + consonant), preceding syllable becomes guru (2)
   for (var j = 0; j < tokens.length - 1; j++) {
-    if (tokens[j + 1].hasHalant && tokens[j].weight === 1) {
+    var nxt = tokens[j + 1].text || "";
+    if (nxt.indexOf("्") !== -1) {
       tokens[j].weight = 2;
     }
   }
 
-  var total = 0;
-  tokens.forEach(function(t) { total += t.weight; });
+  var total = tokens.reduce(function(acc, t) { return acc + t.weight; }, 0);
   return { tokens: tokens, total: total };
+}
+
+function splitCharanMatras(line) {
+  var parts = String(line || "").split(/[,।॥;]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+  if (parts.length >= 2) {
+    return parts.map(function(p) { return analyzeHindiLine(p).total; });
+  }
+  return [analyzeHindiLine(line).total];
 }
 
 function detectChhandFromLines(linesArr) {
   if (!linesArr || !linesArr.length) {
-    return { label: "रचना प्रतीक्षित", detail: "मात्रा गणना व संभावित छंद जानने के लिए पंक्तियाँ लिखें।" };
+    return { name: "रचना लिखें", confidence: "", reason: "छंद पहचानने के लिए कम से कम एक पंक्ति लिखें।", tip: "" };
   }
-  var counts = linesArr.map(function(l) { return analyzeHindiLine(l).total; });
+  var lineStats = linesArr.map(function(ln) {
+    var an = analyzeHindiLine(ln);
+    var charans = splitCharanMatras(ln);
+    return { total: an.total, charans: charans };
+  });
 
-  if (counts.length >= 2 && counts[0] === 13 && counts[1] === 11) {
-    if (counts.length >= 4 && counts[2] === 13 && counts[3] === 11) {
-      return { label: "दोहा छंद (अर्द्धसम मात्रिक)", detail: "विषम चरण (13-13) व सम चरण (11-11) की मात्रा-संरचना दोहा छंद से मेल खाती है।" };
-    }
-    return { label: "संभावित दोहा (अर्द्धाली)", detail: "पहली पंक्ति में 13 और दूसरी पंक्ति में 11 मात्राएँ हैं—यह दोहा की संरचना के अनुरूप है।" };
-  }
-
-  if (counts.length >= 2 && counts[0] === 11 && counts[1] === 13) {
-    if (counts.length >= 4 && counts[2] === 11 && counts[3] === 13) {
-      return { label: "सोरठा छंद (अर्द्धसम मात्रिक)", detail: "विषम चरण (11-11) व सम चरण (13-13) की संरचना सोरठा छंद से मेल खाती है।" };
-    }
-    return { label: "संभावित सोरठा (अर्द्धाली)", detail: "पहली पंक्ति में 11 और दूसरी पंक्ति में 13 मात्राएँ हैं—यह सोरठा की संरचना के अनुरूप है।" };
-  }
-
-  if (counts.every(function(c) { return c === 16; })) {
-    return { label: "चौपाई छंद (सम मात्रिक)", detail: "प्रत्येक चरण में 16 मात्राएँ हैं—यह चौपाई छंद के मात्रा नियम के अनुरूप है।" };
-  }
-
-  if (counts.every(function(c) { return c === 24; })) {
-    return { label: "रोला छंद (सम मात्रिक)", detail: "प्रत्येक चरण में 24 मात्राएँ हैं—यह रोला छंद के मात्रा नियम के अनुरूप है।" };
+  // Check Doha pattern: 13 + 11 = 24
+  var dohaMatches = lineStats.filter(function(st) {
+    return st.charans.length === 2 && st.charans[0] === 13 && st.charans[1] === 11;
+  }).length;
+  if (dohaMatches > 0) {
+    return {
+      name: "दोहा छंद (संभावित)",
+      confidence: "उच्च मेल (13 + 11 मात्रा)",
+      reason: "विषम चरण में 13 और सम चरण में 11 मात्राएँ (कुल 24) पाई गईं।",
+      tip: "यदि 4 पंक्तियाँ हैं और सम चरणों के अंत में 'लघु-गुरु' लय है, तो यह शुद्ध दोहा है।"
+    };
   }
 
-  if (counts.every(function(c) { return c === 26; })) {
-    return { label: "गीतिका छंद (सम मात्रिक)", detail: "प्रत्येक चरण में 26 मात्राएँ हैं—यह गीतिका छंद के मात्रा नियम के अनुरूप है।" };
+  // Check Soratha pattern: 11 + 13 = 24
+  var sorathaMatches = lineStats.filter(function(st) {
+    return st.charans.length === 2 && st.charans[0] === 11 && st.charans[1] === 13;
+  }).length;
+  if (sorathaMatches > 0) {
+    return {
+      name: "सोरठा छंद (संभावित)",
+      confidence: "उच्च मेल (11 + 13 मात्रा)",
+      reason: "विषम चरण में 11 और सम चरण में 13 मात्राएँ (कुल 24) पाई गईं।",
+      tip: "सोरठा दोहा का उलटा रूप है—विषम चरण में तुक मिलना इसे और निखारता है।"
+    };
   }
 
-  if (counts.every(function(c) { return c === 28; })) {
-    return { label: "हरिगीतिका छंद (सम मात्रिक)", detail: "प्रत्येक चरण में 28 मात्राएँ हैं—यह हरिगीतिका छंद के मात्रा नियम के अनुरूप है।" };
+  // Check Chaupai pattern: 16 matras
+  var chaupaiMatches = lineStats.filter(function(st) {
+    return st.total === 16 || st.charans.some(function(c) { return c === 16; });
+  }).length;
+  if (chaupaiMatches >= 2 || (linesArr.length === 1 && lineStats[0].total === 16)) {
+    return {
+      name: "चौपाई छंद (संभावित)",
+      confidence: "16 मात्रा प्रति चरण",
+      reason: "चरण में 16 मात्राओं की सम मात्रिक संरचना मिली है।",
+      tip: "चौपाई के चरण के अंत में दो गुरु (२ २) आने से बचें।"
+    };
   }
 
-  if (linesArr.length >= 6 && counts[0] === 13 && counts[1] === 11) {
-    return { label: "संभावित कुण्डलिया छंद", detail: "प्रारंभिक दोहा संरचना (13+11) और 6 पंक्तियों के विन्यास के आधार पर कुण्डलिया की ओर संकेत।" };
+  // Check Rola (24 matras with 11+13)
+  var rolaMatches = lineStats.filter(function(st) {
+    return st.total === 24;
+  }).length;
+  if (rolaMatches > 0) {
+    return {
+      name: "रोला छंद (संभावित)",
+      confidence: "24 मात्रा (11 + 13 यति)",
+      reason: "पंक्ति में कुल 24 मात्राएँ पाई गईं।",
+      tip: "रोला में 11वीं व 13वीं मात्रा पर यति (विराम) स्वाभाविक होना चाहिए।"
+    };
   }
 
-  var summaryCounts = counts.map(function(c, i) { return "पंक्ति " + (i + 1) + ": " + c + " मात्रा"; }).join(" • ");
+  // Check Harigitika (28) / Gitika (26)
+  if (lineStats.some(function(st) { return st.total === 28; })) {
+    return {
+      name: "हरिगीतिका छंद (संभावित)",
+      confidence: "28 मात्रा (16 + 12)",
+      reason: "पंक्ति में कुल 28 मात्राएँ पाई गईं।",
+      tip: "16 और 12 मात्राओं पर यति तथा अंत में लघु-गुरु (१ २) देखें।"
+    };
+  }
+  if (lineStats.some(function(st) { return st.total === 26; })) {
+    return {
+      name: "गीतिका छंद (संभावित)",
+      confidence: "26 मात्रा (14 + 12)",
+      reason: "पंक्ति में कुल 26 मात्राएँ पाई गईं।",
+      tip: "14 और 12 मात्राओं पर यति का पालन करें।"
+    };
+  }
+
+  var avg = Math.round(lineStats.reduce(function(a, b) { return a + b.total; }, 0) / lineStats.length);
   return {
-    label: "मुक्त / लयात्मक / गीत-ग़ज़ल संरचना",
-    detail: summaryCounts + " — यह किसी एक शास्त्रीय सम-छंद के निश्चित मात्रा-नियम (16/24/26/28) से भिन्न है; नवोदित कवि नीचे ‘छंद पाठशाला’ से नियमों का मिलान कर सकते हैं।"
+    name: "मुक्त / गीत या विशिष्ट मात्रिक छंद",
+    confidence: "औसत " + avg + " मात्रा / पंक्ति",
+    reason: "दी गई मात्राएँ पारंपरिक 13+11, 11+13, 16, 26 या 28 के मानक साँचे से भिन्न हैं।",
+    tip: "नीचे ‘छंद पाठशाला’ में दोहा, सोरठा, चौपाई, रोला व हरिगीतिका के नियम व उदाहरण देखें।"
   };
 }
 
 function renderMatraPane() {
-  var box = document.getElementById("manch-matra"); if (!box) return;
+  var box = document.getElementById("manch-matra");
+  if (!box) return;
   var linesArr = (state.matraInput || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
   var det = detectChhandFromLines(linesArr);
-  var activeShiksha = CHHAND_SHIKSHA_LIST.find(function(s) { return s.id === selectedShikshaId; }) || CHHAND_SHIKSHA_LIST[0];
+
+  var linesHtml = linesArr.map(function(l, idx) {
+    var an = analyzeHindiLine(l);
+    var charans = splitCharanMatras(l);
+    var cStr = charans.length > 1 ? (" (" + charans.join(" + ") + ")") : "";
+    return "<div class=\"matra-line-box\">" +
+      "<div class=\"matra-meta-row\">" +
+        "<span class=\"mini-badge\">पंक्ति " + (idx + 1) + " • कुल " + an.total + " मात्राएँ" + esc(cStr) + "</span>" +
+        "<span style=\"font-size:11.5px; color:var(--text-muted);\">लघु = १ • गुरु = २</span>" +
+      "</div>" +
+      "<div class=\"syllable-wrap\">" + an.tokens.map(function(t) {
+        return "<div class=\"syl-chip\"><span class=\"syl-wt " + (t.weight === 2 ? "guru" : "") + "\">" + (t.weight === 2 ? "२" : "१") + "</span><span class=\"syl-ch\">" + esc(t.text) + "</span></div>";
+      }).join("") + "</div>" +
+    "</div>";
+  }).join("");
+
+  var guideHtml =
+    "<div class=\"section-head\" style=\"margin-top:18px;\">" +
+      "<h3 class=\"section-title\">📘 नवोदित रचनाकारों के लिए छंद पाठशाला</h3>" +
+      "<span class=\"section-hint\">सरल नियम व उदाहरण</span>" +
+    "</div>" +
+    "<div class=\"chhand-guide-card\" style=\"background:var(--gold-soft);\">" +
+      "<div style=\"font-weight:700; color:var(--primary); margin-bottom:4px;\">💡 लघु (१) और गुरु (२) पहचानने के सरल सूत्र:</div>" +
+      "<div style=\"font-size:13px; line-height:1.65; color:var(--text);\">• <strong>लघु (१):</strong> अ, इ, उ तथा इनकी मात्राएँ (ि, ु) लघु होती हैं।<br/>• <strong>गुरु (२):</strong> आ, ई, ऊ, ए, ऐ, ओ, औ (ा, ी, ू, े, ै, ो, ौ), अनुस्वार (ं), विसर्ग (ः) तथा संयुक्ताक्षर (्) से पूर्व का लघु वर्ण गुरु (२) गिना जाता है।</div>" +
+    "</div>" +
+    CHHAND_SHIKSHA_LIST.map(function(ch) {
+      return "<div class=\"chhand-guide-card\">" +
+        "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
+          "<div class=\"font-royal\" style=\"font-size:18px; color:var(--primary);\">✦ " + esc(ch.name) + "</div>" +
+          "<span class=\"mini-badge\">" + esc(ch.type) + "</span>" +
+        "</div>" +
+        "<div style=\"font-size:12.5px; font-weight:700; color:var(--gold); margin:5px 0;\">📐 सूत्र: " + esc(ch.formula) + "</div>" +
+        "<p class=\"font-literary\" style=\"margin:4px 0 6px; font-size:13.5px; line-height:1.7;\">" + esc(ch.defText) + "</p>" +
+        "<div style=\"font-size:12.5px; color:var(--text-muted);\"><strong>नवनीत सुझाव:</strong> " + esc(ch.rules) + "</div>" +
+        "<div class=\"chhand-example-box\"><strong>उदाहरण:</strong>\n" + esc(ch.sample) + "</div>" +
+      "</div>";
+    }).join("");
 
   box.innerHTML =
     "<div class=\"form-box\">" +
-      "<h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ हिंदी छंद पहचान एवं मात्रा गणक</h3>" +
-      "<textarea style=\"width:100%; min-height:92px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" oninput=\"state.matraInput=this.value; renderMatraPane()\">" + esc(state.matraInput) + "</textarea>" +
-      "<div class=\"chhand-detect-banner\" style=\"margin-top:10px; margin-bottom:0;\">" +
-        "<div class=\"chhand-badge-main\">❖ छंद पहचान: " + esc(det.label) + "</div>" +
-        "<div style=\"font-size:13px; line-height:1.55; color:var(--text);\">" + esc(det.detail) + "</div>" +
-      "</div>" +
+      "<h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ छंद एवं मात्रा गणक (स्वतः छंद पहचान)</h3>" +
+      "<textarea style=\"width:100%; min-height:96px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" placeholder=\"यहाँ दोहा, सोरठा, चौपाई या अन्य छंद की पंक्तियाँ लिखें...\" oninput=\"state.matraInput=this.value; renderMatraPane()\">" + esc(state.matraInput) + "</textarea>" +
     "</div>" +
-    linesArr.map(function(l, idx) {
-      var an = analyzeHindiLine(l);
-      return "<div class=\"matra-line-box\"><span class=\"mini-badge\">पंक्ति " + (idx + 1) + " • कुल " + an.total + " मात्राएँ</span><div class=\"syllable-wrap\">" + an.tokens.map(function(t) {
-        return "<div class=\"syl-chip\"><span class=\"syl-wt " + (t.weight === 2 ? "guru" : "") + "\">" + (t.weight === 2 ? "२" : "१") + "</span><span class=\"syl-ch\">" + esc(t.text) + "</span></div>";
-      }).join("") + "</div></div>";
-    }).join("") +
-    "<div class=\"shiksha-card\">" +
-      "<h3 class=\"section-title\" style=\"margin-bottom:8px;\">📘 छंद पाठशाला (नवोदित रचनाकारों हेतु सरल मार्गदर्शन)</h3>" +
-      "<div style=\"font-size:12.5px; color:var(--text-muted); margin-bottom:10px;\">किसी भी छंद या नियम को चुनकर सरल शब्दों में परिभाषा, मात्रा-सूत्र और उदाहरण समझें:</div>" +
-      "<div class=\"h-scroll\" style=\"padding-bottom:8px;\">" +
-        CHHAND_SHIKSHA_LIST.map(function(item) {
-          var isAct = item.id === activeShiksha.id;
-          return "<button class=\"pill-chip " + (isAct ? "active" : "") + "\" onclick=\"selectedShikshaId=\x27" + item.id + "\x27; renderMatraPane()\">" + esc(item.name) + "</button>";
-        }).join("") +
-      "</div>" +
-      "<div class=\"shiksha-box-row\"><div class=\"shiksha-lbl\">📖 परिभाषा</div><div class=\"font-literary\" style=\"font-size:14px; line-height:1.65;\">" + esc(activeShiksha.definition) + "</div></div>" +
-      "<div class=\"shiksha-box-row\"><div class=\"shiksha-lbl\">📐 मात्रा व छंद नियम</div><div class=\"font-literary\" style=\"font-size:13.8px; line-height:1.7; white-space:pre-line;\">" + esc(activeShiksha.rule) + "</div></div>" +
-      "<div class=\"shiksha-box-row\"><div class=\"shiksha-lbl\">✍️ स्पष्ट उदाहरण</div><div class=\"font-literary\" style=\"font-size:14px; line-height:1.7; white-space:pre-line; color:var(--primary); font-weight:600;\">" + esc(activeShiksha.example) + "</div></div>" +
-    "</div>";
-}
-
- "ं" || chars[i] === "ः") wt = 2;
-        txt += chars[i];
-      }
-      total += wt; tokens.push({ text: txt, weight: wt });
-    }
-  }
-  return { tokens: tokens, total: total };
-}
-function renderMatraPane() {
-  var box = document.getElementById("manch-matra"); if (!box) return;
-  var linesArr = (state.matraInput || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
-  box.innerHTML = "<div class=\"form-box\"><h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ हिंदी छंद एवं मात्रा गणक</h3><textarea style=\"width:100%; min-height:90px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" oninput=\"state.matraInput=this.value; renderMatraPane()\">" + esc(state.matraInput) + "</textarea></div>" + linesArr.map(function(l, idx) {
-    var an = analyzeHindiLine(l);
-    return "<div class=\"matra-line-box\"><span class=\"mini-badge\">पंक्ति " + (idx + 1) + " • कुल " + an.total + " मात्राएँ</span><div class=\"syllable-wrap\">" + an.tokens.map(function(t) {
-      return "<div class=\"syl-chip\"><span class=\"syl-wt " + (t.weight === 2 ? "guru" : "") + "\">" + (t.weight === 2 ? "२" : "१") + "</span><span class=\"syl-ch\">" + esc(t.text) + "</span></div>";
-    }).join("") + "</div></div>";
-  }).join("");
+    "<div class=\"chhand-detect-card\">" +
+      "<div class=\"chhand-badge-main\">🎭 " + esc(det.name) + "</div>" +
+      (det.confidence ? (" <span class=\"mini-badge\">" + esc(det.confidence) + "</span>") : "") +
+      "<div style=\"font-size:13px; margin-top:6px; line-height:1.55; color:var(--text);\">" + esc(det.reason) + "</div>" +
+      (det.tip ? ("<div style=\"font-size:12.5px; margin-top:4px; color:var(--primary); font-weight:600;\">✨ " + esc(det.tip) + "</div>") : "") +
+    "</div>" +
+    linesHtml +
+    guideHtml;
 }
 
 var DEVANAGARI_LETTERS = ["अ","आ","इ","ई","उ","ऊ","ए","ऐ","ओ","औ","क","ख","ग","घ","च","छ","ज","झ","ट","ठ","ड","ढ","त","थ","द","ध","न","प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह"];
