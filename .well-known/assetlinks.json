@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.ashmitdwivedi01_collab.twa",
+      "sha256_cert_fingerprints": [
+        "EA:40:E0:09:3B:24:33:8E:90:EC:D4:F8:7B:5D:D7:78:3C:34:C9:52:E3:4D:ED:F3:9D:D9:BE:72:9D:C7:B0:F6"
+      ]
+    }
+  }
+]
