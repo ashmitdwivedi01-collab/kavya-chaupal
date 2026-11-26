@@ -2205,7 +2205,9 @@ var state = {
   tempAdminPhoto: "",
   tempLogoData: "",
   tempEbookPdfData: "",
+  tempEbookPdfBlob: null,
   tempEbookPdfName: "",
+  tempEbookPdfSizeKb: 0,
   pendingPoems: [],
   pendingPoets: [],
   submitTab: "poem",
@@ -3206,11 +3208,11 @@ function renderEbooksPane() {
       cats.map(function(c) { return "<option value=\"" + esc(c) + "\" " + (state.ebookCategoryFilter === c ? "selected" : "") + ">" + (c === "सभी" ? "📚 सभी श्रेणियाँ (ड्रॉप-डाउन)" : ("📖 श्रेणी: " + esc(c))) + "</option>"; }).join("") +
     "</select></div>" +
     "<div class=\"cards-grid\">" + (filtered.length ? filtered.map(function(b) {
-      var hasPdf = !!(b.pdfData || (b.link && /\.pdf(\?|$)/i.test(b.link)));
-      var btnHtml = b.pdfData
+      var hasPdf = !!(b.hasLocalPdf || b.pdfData || (b.link && /\.pdf(\?|$)/i.test(b.link)));
+      var btnHtml = (b.hasLocalPdf || b.pdfData)
         ? ("<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-top:8px;\">" +
-            "<button class=\"action-btn primary\" style=\"padding:7px 12px; font-size:12.5px;\" onclick=\"openPdfReader(dec(\'" + arg(b.id) + "\'))\">📖 इन-ऐप PDF पढ़ें</button>" +
-            "<a class=\"action-btn gold\" style=\"padding:7px 12px; font-size:12.5px;\" href=\"" + b.pdfData + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF डाउनलोड</a>" +
+            "<button class=\"action-btn primary\" style=\"padding:7px 12px; font-size:12.5px;\" onclick=\"openPdfReader(dec(\'" + arg(b.id) + "\'))\">📖 इन-ऐप PDF पढ़ें" + (b.pdfSizeKb ? (" (" + b.pdfSizeKb + " KB)") : "") + "</button>" +
+            (b.pdfData ? ("<a class=\"action-btn gold\" style=\"padding:7px 12px; font-size:12.5px;\" href=\"" + b.pdfData + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF डाउनलोड</a>") : "") +
            "</div>")
         : (b.link ? ("<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-top:8px;\">" +
             (hasPdf ? ("<button class=\"action-btn primary\" style=\"padding:7px 12px; font-size:12.5px;\" onclick=\"openPdfReader(dec(\'" + arg(b.id) + "\'))\">📖 PDF पढ़ें</button>") : "") +
@@ -3234,14 +3236,21 @@ function renderEbooksPane() {
 function openPdfReader(id) {
   var b = state.ebooks.find(function(x) { return x.id === id; });
   if (!b) return;
-  var src = b.pdfData || b.link;
-  if (!src) return;
   document.getElementById("pdf-modal-title").textContent = "📖 " + b.title;
-  document.getElementById("pdf-modal-body").innerHTML =
-    "<iframe src=\"" + src + "\" style=\"width:100%; flex:1; min-height:68vh; border:1.5px solid var(--gold); border-radius:12px; background:#fff;\"></iframe>" +
-    "<div style=\"text-align:center; margin-top:10px;\"><a class=\"action-btn gold\" href=\"" + src + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF फ़ाइल डाउनलोड करें</a></div>";
+  document.getElementById("pdf-modal-body").innerHTML = "<div class=\"empty-box\">📖 PDF पुस्तक लोड हो रही है...</div>";
   if (!document.getElementById("pdf-modal").classList.contains("open")) pushAppView("pdf");
   document.getElementById("pdf-modal").classList.add("open");
+
+  loadPdfFromIndexedDb(id).then(function(localUrl) {
+    var src = localUrl || b.pdfData || b.link;
+    if (!src) {
+      document.getElementById("pdf-modal-body").innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इसी डिवाइस में अपलोड की गई थी। कृपया इसे इसी डिवाइस से खोलें या वेब/ड्राइव लिंक जोड़ें।</div>";
+      return;
+    }
+    document.getElementById("pdf-modal-body").innerHTML =
+      "<iframe src=\"" + src + "\" style=\"width:100%; flex:1; min-height:68vh; border:1.5px solid var(--gold); border-radius:12px; background:#fff;\"></iframe>" +
+      "<div style=\"text-align:center; margin-top:10px;\"><a class=\"action-btn gold\" href=\"" + src + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF फ़ाइल डाउनलोड करें</a></div>";
+  });
 }
 
 function toggleFavorite(id) {
@@ -3588,6 +3597,62 @@ function handleImageUpload(input, targetKey, previewId, maxDim, keepPng) {
   reader.readAsDataURL(file);
 }
 
+var MAX_PDF_BYTES = 100 * 1024 * 1024; // 100 MB (1,02,400 KB)
+var pdfDbPromise = null;
+
+function openPdfIndexedDb() {
+  if (pdfDbPromise) return pdfDbPromise;
+  pdfDbPromise = new Promise(function(resolve) {
+    if (!window.indexedDB) return resolve(null);
+    var req = window.indexedDB.open("kavya_chaupal_pdf_store_v1", 1);
+    req.onupgradeneeded = function(e) {
+      var d = e.target.result;
+      if (!d.objectStoreNames.contains("pdfs")) {
+        d.createObjectStore("pdfs", { keyPath: "id" });
+      }
+    };
+    req.onsuccess = function(e) { resolve(e.target.result); };
+    req.onerror = function() { resolve(null); };
+  });
+  return pdfDbPromise;
+}
+
+function savePdfToIndexedDb(id, blobOrData, fileName) {
+  return openPdfIndexedDb().then(function(idb) {
+    if (!idb) return false;
+    return new Promise(function(resolve) {
+      try {
+        var tx = idb.transaction("pdfs", "readwrite");
+        tx.objectStore("pdfs").put({ id: id, blob: blobOrData, name: fileName || "pustak.pdf", savedAt: Date.now() });
+        tx.oncomplete = function() { resolve(true); };
+        tx.onerror = function() { resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  });
+}
+
+function loadPdfFromIndexedDb(id) {
+  return openPdfIndexedDb().then(function(idb) {
+    if (!idb) return null;
+    return new Promise(function(resolve) {
+      try {
+        var tx = idb.transaction("pdfs", "readonly");
+        var req = tx.objectStore("pdfs").get(id);
+        req.onsuccess = function() {
+          var rec = req.result;
+          if (!rec || !rec.blob) return resolve(null);
+          if (rec.blob instanceof Blob) {
+            resolve(URL.createObjectURL(rec.blob));
+          } else {
+            resolve(rec.blob);
+          }
+        };
+        req.onerror = function() { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  });
+}
+
 function handlePdfUpload(input) {
   var file = input.files && input.files[0];
   if (!file) return;
@@ -3595,19 +3660,23 @@ function handlePdfUpload(input) {
     showToast("कृपया केवल PDF फ़ाइल चुनें");
     return;
   }
-  if (file.size > 900 * 1024) {
-    showToast("बड़ी PDF फ़ाइल है—बेहतर गति के लिए 900KB तक की PDF या Google Drive PDF लिंक दें");
+  if (file.size > MAX_PDF_BYTES) {
+    showToast("अधिकतम साइज 100 MB (1,02,400 KB) तक अनुमन्य है");
     return;
   }
-  var reader = new FileReader();
-  reader.onload = function(ev) {
-    state.tempEbookPdfData = ev.target.result;
-    state.tempEbookPdfName = file.name;
-    var lbl = document.getElementById("pdf-file-status");
-    if (lbl) lbl.textContent = "✅ चुना गया: " + file.name;
-    showToast("PDF फ़ाइल जुड़ने के लिए तैयार है 📖");
-  };
-  reader.readAsDataURL(file);
+  state.tempEbookPdfBlob = file;
+  state.tempEbookPdfName = file.name;
+  state.tempEbookPdfSizeKb = Math.round(file.size / 1024);
+  if (file.size <= 750 * 1024) {
+    var reader = new FileReader();
+    reader.onload = function(ev) { state.tempEbookPdfData = ev.target.result; };
+    reader.readAsDataURL(file);
+  } else {
+    state.tempEbookPdfData = "";
+  }
+  var lbl = document.getElementById("pdf-file-status");
+  if (lbl) lbl.textContent = "✅ चुना गया: " + file.name + " (" + state.tempEbookPdfSizeKb + " KB)";
+  showToast("PDF फ़ाइल (" + state.tempEbookPdfSizeKb + " KB) तैयार है 📖");
 }
 
 function renderAdminStudio() {
@@ -3746,7 +3815,7 @@ function renderAdminStudio() {
           "<div class=\"field\"><label>श्रेणी (ड्रॉप-डाउन)</label><select id=\"f-eb-cat\">" + EBOOK_CATEGORY_OPTIONS.map(function(cat) { return "<option value=\"" + esc(cat) + "\">" + esc(cat) + "</option>"; }).join("") + "</select></div>" +
         "</div>" +
         "<div class=\"field\"><label>संक्षिप्त परिचय</label><textarea id=\"f-eb-desc\" style=\"min-height:60px;\" placeholder=\"पुस्तक के विषय में दो पंक्तियाँ...\"></textarea></div>" +
-        "<div class=\"field\"><label>📄 PDF फ़ाइल अपलोड करें (सीधे फोन/कंप्यूटर से)</label><input type=\"file\" accept=\"application/pdf,.pdf\" onchange=\"handlePdfUpload(this)\" /><div id=\"pdf-file-status\" style=\"font-size:12px; color:var(--primary); margin-top:4px; font-weight:600;\">" + (state.tempEbookPdfName ? ("✅ चुना गया: " + esc(state.tempEbookPdfName)) : "या नीचे Google Drive / वेब PDF लिंक दें") + "</div></div>" +
+        "<div class=\"field\"><label>📄 PDF फ़ाइल अपलोड करें (सीधे फोन/कंप्यूटर से)</label><input type=\"file\" accept=\"application/pdf,.pdf\" onchange=\"handlePdfUpload(this)\" /><div id=\"pdf-file-status\" style=\"font-size:12px; color:var(--primary); margin-top:4px; font-weight:600;\">" + (state.tempEbookPdfName ? ("✅ चुना गया: " + esc(state.tempEbookPdfName)) : "अधिकतम साइज: 100 MB (1,02,400 KB) तक — या नीचे Google Drive / वेब PDF लिंक दें") + "</div></div>" +
         "<div class=\"field\"><label>बाहरी PDF / ड्राइव लिंक (वैकल्पिक)</label><input id=\"f-eb-link\" placeholder=\"https://...\" /></div>" +
         "<button class=\"action-btn primary\" onclick=\"saveEbookForm()\">💾 लाइब्रेरी में जोड़ें</button>" +
       "</div>" + state.ebooks.map(function(b) {
@@ -3926,9 +3995,11 @@ function saveEbookForm() {
   var category = (document.getElementById("f-eb-cat") || { value: "साझा काव्य संकलन" }).value;
   var description = (document.getElementById("f-eb-desc") || { value: "" }).value.trim();
   var link = (document.getElementById("f-eb-link") || { value: "" }).value.trim();
+  var hasLocalPdf = !!(state.tempEbookPdfBlob || state.tempEbookPdfData);
   if (!title || !author) { showToast("पुस्तक का नाम और लेखक भरें"); return; }
-  if (!state.tempEbookPdfData && !link) { showToast("कृपया PDF फ़ाइल चुनें या PDF लिंक दें"); return; }
+  if (!hasLocalPdf && !link) { showToast("कृपया PDF फ़ाइल चुनें या PDF लिंक दें"); return; }
   var id = "eb_" + Date.now();
+  var sizeKb = state.tempEbookPdfSizeKb || 0;
   var item = {
     id: id,
     title: title,
@@ -3936,18 +4007,35 @@ function saveEbookForm() {
     category: category,
     description: description,
     link: link,
+    hasLocalPdf: hasLocalPdf,
+    pdfSizeKb: sizeKb,
     pdfData: state.tempEbookPdfData || "",
     createdAt: Date.now()
   };
-  state.ebooks.unshift(item);
-  cloudSaveDoc("ebooks", id, item).then(function() {
-    state.tempEbookPdfData = "";
-    state.tempEbookPdfName = "";
-    pushNotification("पुस्तक लाइब्रेरी में नई पुस्तक जुड़ी 📚", "“" + title + "” — " + author, "info", id, "");
-    renderAll();
-    renderAdminStudio();
-    showToast("PDF पुस्तक लाइब्रेरी में जुड़ गई 📚");
-  });
+  var finishSave = function() {
+    state.ebooks.unshift(item);
+    var cloudItem = Object.assign({}, item);
+    if (!cloudItem.pdfData || cloudItem.pdfData.length > 750000) {
+      cloudItem.pdfData = "";
+    }
+    cloudSaveDoc("ebooks", id, cloudItem).then(function() {
+      state.tempEbookPdfData = "";
+      state.tempEbookPdfBlob = null;
+      state.tempEbookPdfName = "";
+      state.tempEbookPdfSizeKb = 0;
+      pushNotification("पुस्तक लाइब्रेरी में नई पुस्तक जुड़ी 📚", "“" + title + "” — " + author, "info", id, "");
+      renderAll();
+      renderAdminStudio();
+      showToast("PDF पुस्तक लाइब्रेरी में जुड़ गई 📚");
+    });
+  };
+  if (state.tempEbookPdfBlob) {
+    savePdfToIndexedDb(id, state.tempEbookPdfBlob, state.tempEbookPdfName).then(finishSave);
+  } else if (state.tempEbookPdfData) {
+    savePdfToIndexedDb(id, state.tempEbookPdfData, state.tempEbookPdfName).then(finishSave);
+  } else {
+    finishSave();
+  }
 }
 function deleteEbook(id) { state.ebooks = state.ebooks.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("ebooks", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
