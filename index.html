@@ -2499,8 +2499,8 @@ function initFirebaseSync() {
         displayName: user.displayName || "",
         photoURL: user.photoURL || ""
       } : null;
-      if (state.currentUser && state.settings.adminEmail && state.currentUser.email === state.settings.adminEmail.toLowerCase().trim()) {
-        state.adminUnlocked = true;
+      if (state.currentUser && state.currentUser.email) {
+        syncLinkedProfilesForCurrentUser(state.currentUser);
       }
       renderAll();
       var sm = document.getElementById("submit-modal");
@@ -2819,15 +2819,103 @@ function getAllPoetObjects() {
   return Array.from(map.values());
 }
 
-function getPoetByEmail(email) {
+function getPoetByEmail(email, fallbackName) {
   var em = (email || "").toLowerCase().trim();
   if (!em) return null;
-  return state.poets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null;
+  var byEmail = state.poets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; });
+  if (byEmail) return byEmail;
+  if (fallbackName && fallbackName.trim()) {
+    var fn = fallbackName.trim();
+    return state.poets.find(function(pt) { return !pt.ownerEmail && (pt.name || "").trim() === fn; }) || null;
+  }
+  return null;
 }
 function getPendingPoetByEmail(email) {
   var em = (email || "").toLowerCase().trim();
   if (!em) return null;
   return state.pendingPoets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null;
+}
+function getAdminByEmail(email, fallbackName) {
+  var em = (email || "").toLowerCase().trim();
+  if (!em) return null;
+  var byEmail = state.admins.find(function(a) { return (a.ownerEmail || "").toLowerCase().trim() === em; });
+  if (byEmail) return byEmail;
+  if (fallbackName && fallbackName.trim()) {
+    var fn = fallbackName.trim();
+    return state.admins.find(function(a) { return !a.ownerEmail && (a.name || "").trim() === fn; }) || null;
+  }
+  return null;
+}
+function syncLinkedProfilesForCurrentUser(userObj) {
+  if (!userObj || !userObj.email) return;
+  var em = userObj.email.toLowerCase().trim();
+  var matchedPoet = getPoetByEmail(em, userObj.displayName);
+  if (matchedPoet && !matchedPoet.ownerEmail) {
+    matchedPoet.ownerEmail = em;
+    cloudSaveDoc("poets", matchedPoet.id, matchedPoet);
+  }
+  var matchedAdmin = getAdminByEmail(em, (matchedPoet && matchedPoet.name) || userObj.displayName);
+  if (matchedAdmin && !matchedAdmin.ownerEmail) {
+    matchedAdmin.ownerEmail = em;
+    cloudSaveDoc("admins", matchedAdmin.id, matchedAdmin);
+  }
+  if ((state.settings.adminEmail && em === state.settings.adminEmail.toLowerCase().trim()) || matchedAdmin) {
+    state.adminUnlocked = true;
+  }
+}
+function startPromotePoetToAdmin(poetId) {
+  state.promotingPoetId = poetId;
+  state.adminTab = "poets";
+  renderAdminStudio();
+}
+function cancelPromotePoetToAdmin() {
+  state.promotingPoetId = null;
+  renderAdminStudio();
+}
+function savePromotedPoetAsAdmin(poetId) {
+  var pt = state.poets.find(function(x) { return x.id === poetId; });
+  if (!pt) { showToast("कवि प्रोफ़ाइल नहीं मिली"); return; }
+  var desig = ((document.getElementById("f-promo-desig") || { value: "" }).value || "").trim();
+  var roleTxt = ((document.getElementById("f-promo-role") || { value: "" }).value || "").trim();
+  var ordVal = parseInt(((document.getElementById("f-promo-order") || { value: "" }).value || ""), 10);
+  if (!desig) { showToast("कृपया एडमिन पद लिखें"); return; }
+
+  var existingAdm = state.admins.find(function(a) {
+    return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim() || (pt.ownerEmail && (a.ownerEmail || "").toLowerCase().trim() === pt.ownerEmail.toLowerCase().trim());
+  });
+  var admId = existingAdm ? existingAdm.id : ("admin_" + Date.now());
+  var bioSummary = [
+    pt.occupation ? ("भूमिका: " + pt.occupation) : "",
+    pt.mainGenres ? ("मुख्य विधा: " + pt.mainGenres) : "",
+    pt.special || pt.bio || ""
+  ].filter(Boolean).join(" • ");
+
+  var admRecord = {
+    id: admId,
+    name: pt.name,
+    designation: desig,
+    city: pt.city || "",
+    role: roleTxt || pt.occupation || "एडमिन एवं साहित्य संयोजन",
+    photo: pt.photo || (existingAdm && existingAdm.photo) || "",
+    bio: bioSummary || (existingAdm && existingAdm.bio) || "",
+    ownerEmail: pt.ownerEmail || (existingAdm && existingAdm.ownerEmail) || "",
+    linkedPoetId: pt.id,
+    order: !isNaN(ordVal) ? ordVal : ((existingAdm && existingAdm.order) || (state.admins.length + 1))
+  };
+
+  if (existingAdm) {
+    state.admins = state.admins.map(function(a) { return a.id === admId ? admRecord : a; });
+  } else {
+    state.admins.push(admRecord);
+  }
+  state.admins.sort(function(a, b) { return (a.order || 99) - (b.order || 99); });
+  state.promotingPoetId = null;
+
+  cloudSaveDoc("admins", admId, admRecord).then(function() {
+    renderAll();
+    renderAdminStudio();
+    showToast(pt.name + " जी को बिना दोहराव एडमिन प्रोफ़ाइल में शामिल कर लिया गया 👑");
+  });
 }
 
 function renderTopAccountBar() {
@@ -4341,7 +4429,23 @@ function renderAdminStudio() {
       "<div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div>" +
       "<div class=\"field\"><label>कवि चित्र (Photo)</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempPoetPhoto\', \'poet-photo-prev\', 320)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div><span style=\"font-size:12px; color:var(--text-muted);\">प्रोफ़ाइल के लिए स्पष्ट कवि चित्र चुनें</span></div></div>" +
       "<button class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + (pt.mobile ? (" • 🔒 मो.: " + esc(pt.mobile)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editPoet(dec(\'" + arg(pt.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec(\'" + arg(pt.id) + "\'))\">हटाएँ</button></div></div>";
+      var linkedAdm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
+      var promoFormHtml = (state.promotingPoetId === pt.id) ? (
+        "<div class=\"form-box\" style=\"margin-top:6px; margin-bottom:10px; border-color:var(--gold);\">" +
+          "<h5 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">👑 ‘" + esc(pt.name) + "’ को एडमिन में शामिल करें (कवि प्रोफ़ाइल सुरक्षित)</h5>" +
+          "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:8px;\">कवि की पूर्व प्रोफ़ाइल, चित्र व विवरण स्वतः संबद्ध रहेंगे—केवल एडमिन पद व दायित्व भरें:</div>" +
+          "<div class=\"two-fields\">" +
+            "<div class=\"field\"><label>एडमिन पद *</label><input id=\"f-promo-desig\" value=\"" + esc(linkedAdm ? linkedAdm.designation : "") + "\" placeholder=\"जैसे: सह-संयोजक / संचालक\" /></div>" +
+            "<div class=\"field\"><label>प्रदर्शन क्रम</label><input id=\"f-promo-order\" type=\"number\" value=\"" + esc(linkedAdm && linkedAdm.order ? linkedAdm.order : (state.admins.length + 1)) + "\" /></div>" +
+          "</div>" +
+          "<div class=\"field\"><label>एडमिन दायित्व / भूमिका</label><input id=\"f-promo-role\" value=\"" + esc(linkedAdm ? linkedAdm.role : (pt.occupation || "")) + "\" placeholder=\"जैसे: गोष्ठी संचालन व रचना संयोजन\" /></div>" +
+          "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+            "<button type=\"button\" class=\"btn-approve\" onclick=\"savePromotedPoetAsAdmin(dec(\'" + arg(pt.id) + "\'))\">✅ एडमिन में शामिल करें</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"cancelPromotePoetToAdmin()\">रद्द करें</button>" +
+          "</div>" +
+        "</div>"
+      ) : "";
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + (linkedAdm ? (" <span class=\"mini-badge\">👑 " + esc(linkedAdm.designation) + "</span>") : "") + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + (pt.ownerEmail ? (" • ✉️ " + esc(pt.ownerEmail)) : "") + (pt.mobile ? (" • 🔒 मो.: " + esc(pt.mobile)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"startPromotePoetToAdmin(dec(\'" + arg(pt.id) + "\'))\">" + (linkedAdm ? "👑 एडमिन पद बदलें" : "👑 एडमिन में शामिल करें") + "</button><button class=\"sm-btn\" onclick=\"editPoet(dec(\'" + arg(pt.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec(\'" + arg(pt.id) + "\'))\">हटाएँ</button></div></div>" + promoFormHtml;
     }).join("");
   } else if (state.adminTab === "admins") {
     var ea = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
