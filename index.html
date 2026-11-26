@@ -2411,7 +2411,7 @@ var state = {
   riddleIdx: new Date().getDate() % 2,
   riddleAnswered: null,
   antakshariLetter: "क",
-  matraInput: "तिमिर घना है पथ कठिन, फिर भी रख विश्वास।\nएक अकेला दीप भी, कर देता उजियास।.",
+  matraInput: "रहिमन पानी राखिए, बिन पानी सब सून।\nपानी गए न ऊबरै, मोती मानुस चून।।",
   bhavTheme: "parchment",
   bhavCustomText: "",
   bhavPoemId: null,
@@ -5067,71 +5067,143 @@ var VARNIK_CHHAND_DATA = [
 ];
 
 function analyzeHindiLine(line) {
-  var LONG_VOWELS = new Set(["आ", "ई", "ऊ", "ए", "ऐ", "ओ", "औ", "अं", "अः", "ा", "ी", "ू", "े", "ै", "ो", "ौ"]);
-  var MATRAS_ALL = "ाीुूेैोौंःँ़्";
+  var GURU_MATRAS = new Set(["आ", "ई", "ऊ", "ए", "ऐ", "ओ", "औ", "अं", "अः", "ा", "ी", "ू", "े", "ै", "ो", "ौ"]);
+  var ALL_SIGNS = new Set(["ा", "ि", "ी", "ु", "ू", "ृ", "ॄ", "े", "ै", "ो", "ौ", "ं", "ः", "ँ", "़", "्"]);
   var chars = Array.from(line || "");
   var tokens = [];
+
   for (var i = 0; i < chars.length; i++) {
     var ch = chars[i];
     var code = ch.charCodeAt(0);
+    // Devanagari vowel or consonant (U+0904 to U+0939)
     if (code >= 0x0904 && code <= 0x0939) {
       var txt = ch;
-      var wt = LONG_VOWELS.has(ch) ? 2 : 1;
       var hasHalant = false;
-      while (i + 1 < chars.length && MATRAS_ALL.indexOf(chars[i + 1]) !== -1) {
+      var hasGuruSign = GURU_MATRAS.has(ch);
+
+      while (i + 1 < chars.length && ALL_SIGNS.has(chars[i + 1])) {
         i++;
-        var mCh = chars[i];
-        txt += mCh;
-        if (mCh === "्") { hasHalant = true; } else if (LONG_VOWELS.has(mCh) || mCh === "ं" || mCh === "ः") { wt = 2; }
+        var sCh = chars[i];
+        txt += sCh;
+        if (sCh === "्") {
+          hasHalant = true;
+        } else if (GURU_MATRAS.has(sCh) || sCh === "ं" || sCh === "ः") {
+          hasGuruSign = true;
+        }
       }
+
       if (hasHalant && tokens.length > 0) {
+        // Halant consonant attaches to preceding akshara; if preceding akshara is laghu (1), it becomes guru (2)
         tokens[tokens.length - 1].text += txt;
-        tokens[tokens.length - 1].weight = 2;
+        if (tokens[tokens.length - 1].weight === 1) {
+          tokens[tokens.length - 1].weight = 2;
+        }
       } else {
-        tokens.push({ text: txt, weight: wt });
+        tokens.push({
+          text: txt,
+          weight: hasGuruSign ? 2 : 1
+        });
       }
     }
   }
+
+  // If a syllable is immediately followed by a conjunct (token containing halant), make current laghu guru (2)
   for (var j = 0; j < tokens.length - 1; j++) {
-    var nxt = tokens[j + 1].text || "";
-    if (nxt.indexOf("्") !== -1) { tokens[j].weight = 2; }
+    var nxtTxt = tokens[j + 1].text || "";
+    if (nxtTxt.indexOf("्") !== -1 && tokens[j].weight === 1) {
+      tokens[j].weight = 2;
+    }
   }
-  var total = tokens.reduce(function(acc, t) { return acc + t.weight; }, 0);
+
+  var total = tokens.reduce(function(sum, t) { return sum + t.weight; }, 0);
   return { tokens: tokens, total: total };
 }
 
 function splitCharanMatras(line) {
   var parts = String(line || "").split(/[,।॥;]+/).map(function(s) { return s.trim(); }).filter(Boolean);
-  if (parts.length >= 2) { return parts.map(function(p) { return analyzeHindiLine(p).total; }); }
+  if (parts.length >= 2) {
+    return parts.map(function(p) { return analyzeHindiLine(p).total; });
+  }
   return [analyzeHindiLine(line).total];
 }
 
 function detectChhandFromLines(linesArr) {
   if (!linesArr || !linesArr.length) {
-    return { statusLabel: "प्रतीक्षा", name: "पंक्ति लिखें", reason: "मात्रा गणना व छंद-संरचना जाँचने के लिए कम से कम एक पंक्ति लिखें।", caution: "केवल मात्राओं की संख्या से किसी छंद की 100% पुष्टि नहीं होती—यति व चरण-क्रम भी देखा जाता है।" };
+    return {
+      statusLabel: "प्रतीक्षा",
+      name: "पंक्ति लिखें",
+      reason: "मात्रा गणना व छंद-संरचना जाँचने के लिए कम से कम एक पंक्ति लिखें।",
+      caution: "छंद-शास्त्र में केवल मात्राओं का योग ही नहीं, चरण-क्रम, यति और लय भी महत्वपूर्ण होते हैं।"
+    };
   }
-  var lineStats = linesArr.map(function(ln) { return { total: analyzeHindiLine(ln).total, charans: splitCharanMatras(ln) }; });
+
+  var lineStats = linesArr.map(function(ln) {
+    return { total: analyzeHindiLine(ln).total, charans: splitCharanMatras(ln) };
+  });
+
   var isDohaDal = function(st) { return st.charans.length === 2 && st.charans[0] === 13 && st.charans[1] === 11; };
   var isSorathaDal = function(st) { return st.charans.length === 2 && st.charans[0] === 11 && st.charans[1] === 13; };
+
   if (lineStats.every(isDohaDal)) {
-    return { statusLabel: linesArr.length >= 2 ? "संरचना मेल (दोहा)" : "आंशिक मेल", name: "दोहा (13 + 11)", reason: "सभी पंक्तियों में 13 + 11 (कुल 24) मात्राओं का अर्द्धसम क्रम मिला है।", caution: "पूर्ण छंद की पुष्टि के लिए सम चरणों के अंत में गुरु-लघु/लघु-गुरु की लय स्वयं परखें।" };
+    return {
+      statusLabel: linesArr.length >= 2 ? "दोहा मात्रा-क्रम (13 + 11)" : "एक दल (13 + 11)",
+      name: "दोहा (अर्द्धसम मात्रिक)",
+      reason: "विषम चरण में 13 और सम चरण में 11 मात्राएँ (कुल 24) प्राप्त हुई हैं।",
+      caution: "अंतिम चरण के अंत में लय व तुक का मिलान स्वयं भी अवश्य जाँचें।"
+    };
   }
+
   if (lineStats.every(isSorathaDal)) {
-    return { statusLabel: linesArr.length >= 2 ? "संरचना मेल (सोरठा)" : "आंशिक मेल", name: "सोरठा (11 + 13)", reason: "सभी पंक्तियों में 11 + 13 (कुल 24) मात्राओं का क्रम मिला है।", caution: "सोरठा में विषम चरणों की तुक व लय का मिलान अवश्य देखें।" };
+    return {
+      statusLabel: linesArr.length >= 2 ? "सोरठा मात्रा-क्रम (11 + 13)" : "एक दल (11 + 13)",
+      name: "सोरठा (अर्द्धसम मात्रिक)",
+      reason: "विषम चरण में 11 और सम चरण में 13 मात्राएँ (कुल 24) प्राप्त हुई हैं।",
+      caution: "सोरठा में विषम चरणों की तुक व लय का मिलान अवश्य देखें।"
+    };
   }
+
   if (lineStats.every(function(st) { return st.total === 16; })) {
-    return { statusLabel: linesArr.length >= 2 ? "16 मात्रा क्रम" : "16 मात्रा (एक चरण)", name: "चौपाई (16 मात्रा)", reason: "प्रत्येक चरण में 16 मात्राएँ पाई गईं।", caution: "केवल 16 मात्रा होना पर्याप्त नहीं—चरण के अंत में दो गुरु (२ २) से बचाव और समतुक भी देखें।" };
+    return {
+      statusLabel: "16 मात्रा प्रति चरण",
+      name: "चौपाई (सम मात्रिक)",
+      reason: "प्रत्येक चरण में 16 मात्राएँ प्राप्त हुई हैं।",
+      caution: "चौपाई में चरण के अंत में दो गुरु (२ २) से बचाव और तुकांतता भी देखी जाती है।"
+    };
   }
+
   if (lineStats.every(function(st) { return st.total === 24; })) {
-    return { statusLabel: "24 मात्रा संरचना", name: "रोला / सम 24 मात्रिक संरचना", reason: "प्रत्येक पंक्ति में कुल 24 मात्राएँ पाई गईं।", caution: "यदि अल्पविराम से 13+11 स्पष्ट है तो दोहा-दल, और यदि 11+13 पर यति है तो रोला संरचना देखें।" };
+    return {
+      statusLabel: "24 मात्रा संरचना",
+      name: "24 मात्रा मात्रिक संरचना (दोहा/रोला)",
+      reason: "प्रत्येक पंक्ति में कुल 24 मात्राएँ प्राप्त हुई हैं।",
+      caution: "यदि अल्पविराम से 13+11 स्पष्ट है तो दोहा-दल, और 11+13 पर यति हो तो रोला संरचना देखें।"
+    };
   }
-  if (lineStats.every(function(st) { return st.total === 28; })) {
-    return { statusLabel: "28 मात्रा संरचना", name: "हरिगीतिका / उल्लाला (28 मात्रा)", reason: "प्रत्येक पंक्ति में कुल 28 मात्राएँ पाई गईं।", caution: "यति (16+12 या 15+13) और चरण-अंत की लय के आधार पर सही छंद की पुष्टि करें।" };
-  }
+
   if (lineStats.every(function(st) { return st.total === 26; })) {
-    return { statusLabel: "26 मात्रा संरचना", name: "गीतिका (26 मात्रा)", reason: "प्रत्येक पंक्ति में कुल 26 मात्राएँ पाई गईं।", caution: "14 और 12 मात्राओं पर यति का मिलान अवश्य करें।" };
+    return {
+      statusLabel: "26 मात्रा संरचना",
+      name: "गीतिका (सम मात्रिक)",
+      reason: "प्रत्येक चरण में 26 मात्राएँ प्राप्त हुई हैं।",
+      caution: "गीतिका में 14 और 12 मात्राओं पर यति देखी जाती है।"
+    };
   }
-  return { statusLabel: "अनिश्चित / स्वतंत्र मात्रा", name: "किसी एक मानक छंद का निश्चित मेल नहीं", reason: "दी गई पंक्तियों की मात्राएँ किसी एक तय छंद (16, 13+11, 11+13, 24, 26 या 28) के नियम से पूर्णतः मेल नहीं खातीं।", caution: "भ्रामक निष्कर्ष से बचने के लिए गणक ने इसे किसी एक छंद के रूप में पक्का नहीं माना है। नीचे ‘मात्रिक’ व ‘वर्णिक’ छंदों के नियम देखें।" };
+
+  if (lineStats.every(function(st) { return st.total === 28; })) {
+    return {
+      statusLabel: "28 मात्रा संरचना",
+      name: "हरिगीतिका / उल्लाला (28 मात्रा)",
+      reason: "प्रत्येक पंक्ति में कुल 28 मात्राएँ प्राप्त हुई हैं।",
+      caution: "यति (16+12 या 15+13) के अनुसार सही छंद का मिलान करें।"
+    };
+  }
+
+  return {
+    statusLabel: "मात्रा मिलान अपूर्ण",
+    name: "किसी एक मानक छंद का निश्चित मेल नहीं",
+    reason: "दी गई पंक्तियों की मात्राएँ किसी एक तय छंद (16, 13+11, 11+13, 24, 26 या 28) से मेल नहीं खातीं।",
+    caution: "संभावित त्रुटि से बचने के लिए गणक ने इसे पक्का नहीं माना है; नीचे ‘मात्रिक’ व ‘वर्णिक’ छंदों के नियम देखें।"
+  };
 }
 
 function toggleDropTap(id) { openDropTapIds[id] = !openDropTapIds[id]; renderMatraPane(); }
