@@ -3302,20 +3302,33 @@ function renderEbooksPane() {
 
 var currentPdfDoc = null;
 var currentPdfPage = 1;
-var currentPdfScale = 1.15;
+var currentPdfScale = 1.0;
 var currentPdfSharpMode = true;
 var pdfTouchStartX = 0;
+var pdfRenderSeq = 0;
 
 function togglePdfSharpMode() {
   currentPdfSharpMode = !currentPdfSharpMode;
   var btn = document.getElementById("pdf-sharp-btn");
-  if (btn) btn.textContent = currentPdfSharpMode ? "✨ HD स्पष्ट" : "📄 सामान्य";
+  if (btn) btn.textContent = currentPdfSharpMode ? "✨ UltraHD" : "📄 सामान्य";
   if (currentPdfDoc) renderSingleBookPage(currentPdfPage, null);
+}
+
+function applyZoomVisuals() {
+  var zLbl = document.getElementById("pdf-zoom-lbl");
+  if (zLbl) zLbl.textContent = Math.round(currentPdfScale * 100) + "%";
+  var card = document.getElementById("active-book-card");
+  if (card) {
+    card.style.transformOrigin = "top center";
+    card.style.transform = currentPdfScale === 1.0 ? "" : ("scale(" + currentPdfScale + ")");
+    card.style.marginBottom = currentPdfScale > 1.0 ? Math.round((currentPdfScale - 1) * 320 + 24) + "px" : "12px";
+  }
 }
 
 function renderSingleBookPage(pageNum, direction) {
   var stage = document.getElementById("pdf-pages-container");
   if (!stage || !currentPdfDoc) return;
+  var seq = ++pdfRenderSeq;
   var totalPages = currentPdfDoc.numPages;
   currentPdfPage = Math.max(1, Math.min(totalPages, pageNum));
 
@@ -3327,19 +3340,19 @@ function renderSingleBookPage(pageNum, direction) {
   if (prevBtn) prevBtn.disabled = currentPdfPage <= 1;
   if (nextBtn) nextBtn.disabled = currentPdfPage >= totalPages;
 
-  var containerWidth = Math.max(280, (stage.clientWidth || 360) - 16);
+  var containerWidth = Math.max(280, (stage.clientWidth || 360) - 18);
   currentPdfDoc.getPage(currentPdfPage).then(function(page) {
+    if (seq !== pdfRenderSeq) return;
     var unscaled = page.getViewport({ scale: 1 });
-    var displayScale = (containerWidth / unscaled.width) * currentPdfScale;
-    var displayViewport = page.getViewport({ scale: displayScale });
+    var baseScale = containerWidth / unscaled.width;
 
-    // High-DPI super-sampling for razor-sharp Devanagari & book text visibility
-    var dpr = Math.min(window.devicePixelRatio || 2, 3);
-    var qualityBoost = currentPdfSharpMode ? Math.max(2.0, dpr * 1.25) : Math.max(1.25, dpr);
-    var renderViewport = page.getViewport({ scale: displayScale * qualityBoost });
+    // Ultra HD super-sampling (>= 2.5x up to 3.5x) so zooming in stays razor-sharp
+    var uhdMultiplier = currentPdfSharpMode ? Math.max(2.6, Math.min(3.5, (window.devicePixelRatio || 2) * 1.4)) : 1.5;
+    var renderViewport = page.getViewport({ scale: baseScale * uhdMultiplier });
 
     stage.innerHTML = "";
     var card = document.createElement("div");
+    card.id = "active-book-card";
     card.className = "book-flip-card" + (currentPdfSharpMode ? " sharp-contrast" : "") + (direction === "next" ? " flip-next" : (direction === "prev" ? " flip-prev" : ""));
     card.addEventListener("touchstart", function(ev) {
       if (ev.touches && ev.touches[0]) pdfTouchStartX = ev.touches[0].clientX;
@@ -3353,13 +3366,14 @@ function renderSingleBookPage(pageNum, direction) {
 
     var topBar = document.createElement("div");
     topBar.style.cssText = "display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:700; color:#6B111B; padding:2px 6px 6px;";
-    topBar.innerHTML = "<span>📖 बाएँ से दाएँ पन्ना पलटें</span><span>पृष्ठ " + currentPdfPage + " / " + totalPages + "</span>";
+    topBar.innerHTML = "<span>📖 बाएँ से दाएँ पन्ना पलटें • UltraHD</span><span>पृष्ठ " + currentPdfPage + " / " + totalPages + "</span>";
 
     var canvas = document.createElement("canvas");
     canvas.width = Math.round(renderViewport.width);
     canvas.height = Math.round(renderViewport.height);
-    canvas.style.cssText = "width:100%; max-width:" + Math.round(displayViewport.width) + "px; height:auto; display:block; margin:0 auto; border-radius:8px; cursor:pointer; background:#fff;";
+    canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:8px; cursor:pointer; background:#fff;";
     canvas.addEventListener("click", function(ev) {
+      if (currentPdfScale > 1.05) return;
       var rect = canvas.getBoundingClientRect();
       var clickX = ev.clientX - rect.left;
       if (clickX > rect.width * 0.45 && currentPdfPage < totalPages) turnBookPage(1);
@@ -3369,6 +3383,7 @@ function renderSingleBookPage(pageNum, direction) {
     card.appendChild(topBar);
     card.appendChild(canvas);
     stage.appendChild(card);
+    applyZoomVisuals();
 
     var ctx = canvas.getContext("2d", { alpha: false });
     ctx.fillStyle = "#FFFFFF";
@@ -3377,6 +3392,7 @@ function renderSingleBookPage(pageNum, direction) {
     ctx.imageSmoothingQuality = "high";
 
     page.render({ canvasContext: ctx, viewport: renderViewport, intent: "display" }).promise.then(function() {
+      if (seq !== pdfRenderSeq) return;
       requestAnimationFrame(function() {
         card.classList.remove("flip-next");
         card.classList.remove("flip-prev");
@@ -3389,6 +3405,7 @@ function turnBookPage(delta) {
   if (!currentPdfDoc) return;
   var nextP = currentPdfPage + delta;
   if (nextP < 1 || nextP > currentPdfDoc.numPages) return;
+  currentPdfScale = 1.0;
   var dir = delta > 0 ? "next" : "prev";
   renderSingleBookPage(nextP, dir);
 }
@@ -3397,15 +3414,15 @@ function jumpBookPage(val) {
   if (!currentPdfDoc) return;
   var num = parseInt(val, 10);
   if (!isNaN(num) && num >= 1 && num <= currentPdfDoc.numPages) {
+    currentPdfScale = 1.0;
     renderSingleBookPage(num, num > currentPdfPage ? "next" : "prev");
   }
 }
 
 function zoomPdfReader(delta) {
-  currentPdfScale = Math.max(0.85, Math.min(1.8, Number((currentPdfScale + delta).toFixed(2))));
-  var zLbl = document.getElementById("pdf-zoom-lbl");
-  if (zLbl) zLbl.textContent = Math.round(currentPdfScale * 100) + "%";
-  if (currentPdfDoc) renderSingleBookPage(currentPdfPage, null);
+  currentPdfScale = Math.max(0.75, Math.min(2.0, Number((currentPdfScale + delta).toFixed(2))));
+  applyZoomVisuals();
+  showToast("ज़ूम: " + Math.round(currentPdfScale * 100) + "%");
 }
 
 function openPdfReader(id) {
@@ -3413,7 +3430,7 @@ function openPdfReader(id) {
   if (!b) return;
   currentPdfDoc = null;
   currentPdfPage = 1;
-  currentPdfScale = 1.15;
+  currentPdfScale = 1.0;
   document.getElementById("pdf-modal-title").textContent = "📖 " + b.title;
   document.getElementById("pdf-modal-body").innerHTML =
     "<div class=\"book-nav-bar\">" +
@@ -3425,7 +3442,7 @@ function openPdfReader(id) {
       "<div style=\"display:flex; gap:6px; align-items:center; flex-wrap:wrap;\">" +
         "<button id=\"pdf-sharp-btn\" class=\"sm-btn\" onclick=\"togglePdfSharpMode()\">✨ HD स्पष्ट</button>" +
         "<button class=\"sm-btn\" onclick=\"zoomPdfReader(-0.15)\">🔍-</button>" +
-        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:42px; text-align:center;\">115%</span>" +
+        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:42px; text-align:center;\">100%</span>" +
         "<button class=\"sm-btn\" onclick=\"zoomPdfReader(0.15)\">🔍+</button>" +
         "<div id=\"pdf-dl-slot\"></div>" +
       "</div>" +
