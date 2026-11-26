@@ -322,42 +322,73 @@
     /* ================= GRAND ROYAL SPOTLIGHT (आज का विशेष भाव कॉर्नर) ================= */
     .spotlight-card {
       position: relative;
-      border-radius: 26px;
-      padding: 22px 20px 18px;
-      margin-bottom: 16px;
-      color: #FFF8EA;
+      border-radius: 28px;
+      padding: 22px 18px 18px;
+      margin-bottom: 18px;
+      color: #FFF9EC;
       background:
-        radial-gradient(circle at 88% 12%, rgba(247, 220, 139, 0.34), transparent 44%),
-        radial-gradient(circle at 12% 90%, rgba(217, 119, 6, 0.28), transparent 48%),
-        linear-gradient(145deg, #6E101B 0%, #440911 54%, #210610 100%);
-      border: 2px solid rgba(247, 220, 139, 0.72);
-      box-shadow: 0 20px 46px rgba(68, 9, 17, 0.28), inset 0 0 32px rgba(247, 220, 139, 0.14);
+        radial-gradient(circle at 50% 0%, rgba(252, 226, 154, 0.32), transparent 52%),
+        radial-gradient(circle at 12% 92%, rgba(234, 88, 12, 0.25), transparent 46%),
+        radial-gradient(circle at 90% 85%, rgba(212, 160, 56, 0.22), transparent 48%),
+        linear-gradient(155deg, #740E1A 0%, #460810 52%, #1D050E 100%);
+      border: 2px solid #F3D47E;
+      box-shadow: 0 22px 52px rgba(58, 7, 14, 0.34), 0 0 28px rgba(212, 160, 56, 0.22), inset 0 0 36px rgba(247, 220, 139, 0.16);
       overflow: hidden;
     }
     [data-theme="night"] .spotlight-card {
       background:
-        radial-gradient(circle at 88% 12%, rgba(232, 192, 104, 0.28), transparent 46%),
-        radial-gradient(circle at 12% 90%, rgba(59, 130, 246, 0.18), transparent 48%),
-        linear-gradient(145deg, #212A52 0%, #121730 58%, #0A0E1F 100%);
+        radial-gradient(circle at 50% 0%, rgba(252, 226, 154, 0.24), transparent 55%),
+        radial-gradient(circle at 88% 88%, rgba(232, 192, 104, 0.18), transparent 48%),
+        linear-gradient(155deg, #222B56 0%, #11162E 56%, #080B1A 100%);
+      border-color: #E8C068;
     }
     .spotlight-card::before {
       content: "";
       position: absolute;
       inset: 7px;
-      border-radius: 20px;
-      border: 1px dashed rgba(247, 220, 139, 0.38);
+      border-radius: 22px;
+      border: 1.5px solid rgba(247, 220, 139, 0.45);
       pointer-events: none;
     }
-    .spotlight-watermark {
+    .spotlight-card::after {
+      content: "✦  ❖  ✦";
       position: absolute;
-      right: -18px;
-      bottom: -24px;
-      font-size: 130px;
-      opacity: 0.08;
+      top: 9px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 6px;
       color: #F7DC8B;
+      opacity: 0.75;
       pointer-events: none;
-      line-height: 1;
-      font-family: 'Yatra One', serif;
+    }
+    .spotlight-crown-crest {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 4px 0 10px;
+    }
+    .spotlight-crest-line {
+      height: 1.5px;
+      flex: 1;
+      max-width: 90px;
+      background: linear-gradient(90deg, transparent, #F7DC8B, transparent);
+    }
+    .spotlight-diya-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(247, 220, 139, 0.28), rgba(180, 120, 24, 0.2));
+      border: 1px solid rgba(247, 220, 139, 0.72);
+      color: #FCE6A4;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
     }
     .spotlight-top-row {
       position: relative;
@@ -367,22 +398,21 @@
       justify-content: space-between;
       gap: 8px;
       flex-wrap: wrap;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .spotlight-badge {
       display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
       padding: 5px 13px; border-radius: 999px;
-      background: linear-gradient(135deg, rgba(247, 220, 139, 0.26), rgba(198, 146, 44, 0.18));
-      border: 1px solid rgba(247, 220, 139, 0.65); color: #FCE49C;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 248, 234, 0.12);
+      border: 1px solid rgba(247, 220, 139, 0.58); color: #FCE49C;
     }
     .spotlight-nav-btns { display: inline-flex; align-items: center; gap: 6px; }
     .spot-mini-btn {
       background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(247, 220, 139, 0.45);
+      border: 1px solid rgba(247, 220, 139, 0.52);
       color: #FCE49C;
       border-radius: 99px;
-      padding: 4px 10px;
+      padding: 4px 11px;
       font-family: inherit;
       font-size: 11.5px;
       font-weight: 700;
@@ -404,32 +434,46 @@
     }
     .spotlight-bhav-thumb {
       width: 100%;
-      max-height: 220px;
-      border-radius: 16px;
-      border: 2px solid rgba(247, 220, 139, 0.72);
+      max-height: 210px;
+      border-radius: 18px;
+      border: 2px solid #F7DC8B;
       object-fit: cover;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42);
       cursor: pointer;
     }
     @media (min-width: 580px) {
-      .spotlight-bhav-thumb { width: 165px; height: 165px; flex-shrink: 0; }
+      .spotlight-bhav-thumb { width: 156px; height: 156px; flex-shrink: 0; }
     }
     .spotlight-quote-box {
       position: relative;
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.06);
-      border-left: 3.5px solid #F7DC8B;
+      padding: 15px 16px;
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(255, 249, 232, 0.11), rgba(247, 220, 139, 0.04));
+      border: 1px solid rgba(247, 220, 139, 0.42);
+      box-shadow: inset 0 0 18px rgba(247, 220, 139, 0.08);
       cursor: pointer;
+    }
+    .spotlight-quote-box.flash-anim {
+      animation: bhavFlashPulse 0.65s ease;
+    }
+    @keyframes bhavFlashPulse {
+      0% { opacity: 0.25; transform: translateY(6px) scale(0.985); }
+      60% { opacity: 1; transform: translateY(-1px) scale(1.005); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     .spotlight-quote {
       font-family: 'Noto Serif Devanagari', serif;
       font-size: 17.5px;
-      line-height: 1.82;
+      line-height: 1.88;
       margin: 0;
       white-space: pre-line;
-      color: #FFFBF0;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      color: #FFFDF7;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+    .spotlight-line-chip {
+      display: block;
+      padding: 2px 0;
     }
     .spotlight-foot {
       position: relative;
@@ -439,9 +483,9 @@
       justify-content: space-between;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 13px;
-      padding-top: 11px;
-      border-top: 1px dashed rgba(247, 220, 139, 0.32);
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(247, 220, 139, 0.35);
       font-size: 13px;
       color: #F7DC8B;
     }
@@ -450,7 +494,7 @@
     /* ================= QUICK FEATURE TILES (HOME) ================= */
     .quick-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin-bottom: 16px;
     }
@@ -1609,6 +1653,14 @@
           <div class="quick-ic">🔤</div>
           <div class="quick-lbl">काव्य<br/>अंताक्षरी</div>
         </div>
+        <div class="quick-tile" onclick="openMyCorner()">
+          <div class="quick-ic">🏛️</div>
+          <div class="quick-lbl">मेरा<br/>कॉर्नर</div>
+        </div>
+        <div class="quick-tile" onclick="switchTab('admins')">
+          <div class="quick-ic">👑</div>
+          <div class="quick-lbl">एडमिन<br/>मण्डल</div>
+        </div>
       </div>
 
       <!-- Daily Literary Riddle / Doha-Purti -->
@@ -1797,14 +1849,28 @@
       <button class="nav-btn" data-tab="manch" onclick="switchTab('manch')">
         <span class="nav-ic">🎭</span><span>मंच</span>
       </button>
-      <button class="nav-btn" data-tab="corner" onclick="openMyCorner()">
-        <span class="nav-ic">🏛️</span><span>मेरा कॉर्नर</span>
+      <button class="nav-btn" data-tab="admins" onclick="switchTab('admins')">
+        <span class="nav-ic">👑</span><span>एडमिन</span>
       </button>
       <button class="nav-btn" data-tab="about" onclick="switchTab('about')">
-        <span class="nav-ic">👑</span><span>चौपाल</span>
+        <span class="nav-ic">🏛️</span><span>परिचय</span>
       </button>
     </div>
   </nav>
+
+  <!-- ================= ADMIN SUBMISSION PREVIEW MODAL ================= -->
+  <div class="modal-overlay" id="admin-preview-modal" onclick="closeModalOnBg(event, 'admin-preview-modal')">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('admin-preview-modal')">← वापस</button>
+          <h3 class="modal-title" id="admin-preview-title">👁️ प्रविष्टि का पूर्ण प्रिव्यू</h3>
+        </div>
+        <button class="close-btn" onclick="closeModal('admin-preview-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="admin-preview-body"></div>
+    </div>
+  </div>
 
   <!-- ================= POEM READER MODAL (WITH AUTO BHAV IMAGE & COMMENTS) ================= -->
   <div class="modal-overlay" id="reader-modal" onclick="closeModalOnBg(event, 'reader-modal')">
@@ -2709,34 +2775,73 @@ function renderAll() {
 }
 
 /* ================= GRAND ROYAL SPOTLIGHT (आज का विशेष भाव कॉर्नर) ================= */
+var spotlightFlashTimer = null;
+var spotlightLineMode = 4; // 2 or 4 crisp lines only
+
+function pickCuratedLines(content, desiredCount) {
+  var raw = String(content || "")
+    .split("\n")
+    .map(function(l) { return l.replace(/^[\s\|।॥]+|[\s\|]+$/g, "").trim(); })
+    .filter(function(l) { return l.length > 2 && l.indexOf("--") !== 0; });
+  if (!raw.length) return [];
+  var count = (desiredCount === 2 || raw.length < 4) ? Math.min(2, raw.length) : 4;
+  if (raw.length <= count) return raw;
+  // Pick first 2 lines and last 2 lines (or first 2) for high impact
+  if (count === 4) {
+    return raw.slice(0, 2).concat(raw.slice(raw.length - 2));
+  }
+  return raw.slice(0, 2);
+}
+
 function nextSpotlight(delta) {
   if (!state.poems.length) return;
   state.spotlightIdx = (state.spotlightIdx + delta + state.poems.length) % state.poems.length;
-  renderSpotlight();
+  renderSpotlight(true);
 }
 
-function renderSpotlight() {
+function toggleSpotlightLineCount() {
+  spotlightLineMode = (spotlightLineMode === 4) ? 2 : 4;
+  renderSpotlight(true);
+}
+
+function startSpotlightAutoFlash() {
+  clearInterval(spotlightFlashTimer);
+  spotlightFlashTimer = setInterval(function() {
+    var box = document.getElementById("spotlight-flash-box");
+    if (!box || !document.getElementById("tab-poems").classList.contains("active")) return;
+    box.classList.remove("flash-anim");
+    void box.offsetWidth;
+    box.classList.add("flash-anim");
+  }, 5500);
+}
+
+function renderSpotlight(shouldFlash) {
   var wrap = document.getElementById("spotlight-wrap");
   if (!wrap) return;
   if (!state.poems.length) { wrap.innerHTML = ""; return; }
   var feat = state.poems[state.spotlightIdx % state.poems.length] || state.poems[0];
-  var linesArr = (feat.content || "").split("\n").filter(function(l) { return l.trim(); }).slice(0, 3);
+  var linesArr = pickCuratedLines(feat.content, spotlightLineMode);
   var imgUrl = feat.bhavImage || "";
   wrap.innerHTML =
     "<div class=\"spotlight-card\">" +
-      "<div class=\"spotlight-watermark\">काव्य</div>" +
+      "<div class=\"spotlight-crown-crest\">" +
+        "<span class=\"spotlight-crest-line\"></span>" +
+        "<span class=\"spotlight-diya-pill\">🪔 आज का विशेष भाव कॉर्नर</span>" +
+        "<span class=\"spotlight-crest-line\"></span>" +
+      "</div>" +
       "<div class=\"spotlight-top-row\">" +
-        "<span class=\"spotlight-badge\">✦ आज का विशेष भाव कॉर्नर • " + esc(feat.genre || "काव्य") + (feat.mood ? (" • " + esc(feat.mood)) : "") + "</span>" +
+        "<span class=\"spotlight-badge\">✦ " + esc(feat.genre || "काव्य") + (feat.mood ? (" • " + esc(feat.mood)) : "") + " • " + linesArr.length + " पंक्तियाँ</span>" +
         "<div class=\"spotlight-nav-btns\">" +
-          "<button class=\"spot-mini-btn\" onclick=\"nextSpotlight(-1)\">◀ पिछला</button>" +
-          "<button class=\"spot-mini-btn\" onclick=\"nextSpotlight(1)\">अगला ▶</button>" +
+          "<button class=\"spot-mini-btn\" onclick=\"toggleSpotlightLineCount()\">" + (linesArr.length === 4 ? "2 पंक्ति" : "4 पंक्ति") + "</button>" +
+          "<button class=\"spot-mini-btn\" onclick=\"nextSpotlight(-1)\">◀</button>" +
+          "<button class=\"spot-mini-btn\" onclick=\"nextSpotlight(1)\">▶</button>" +
         "</div>" +
       "</div>" +
       "<div class=\"spotlight-body-grid " + (imgUrl ? "has-img" : "") + "\">" +
         (imgUrl ? ("<img class=\"spotlight-bhav-thumb\" src=\"" + imgUrl + "\" alt=\"भाव चित्र\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\" />") : "") +
         "<div style=\"flex:1; min-width:0;\">" +
-          "<div class=\"font-royal\" style=\"font-size:21px; color:#FCE49C; margin-bottom:7px;\">" + esc(feat.title) + "</div>" +
-          "<div class=\"spotlight-quote-box\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\">" +
+          "<div class=\"font-royal\" style=\"font-size:21px; color:#FCE49C; margin-bottom:8px;\">" + esc(feat.title) + "</div>" +
+          "<div id=\"spotlight-flash-box\" class=\"spotlight-quote-box " + (shouldFlash ? "flash-anim" : "") + "\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\">" +
             "<p class=\"spotlight-quote\">“" + esc(linesArr.join("\n")) + "”</p>" +
           "</div>" +
         "</div>" +
@@ -2746,10 +2851,11 @@ function renderSpotlight() {
         "<div class=\"spotlight-actions\">" +
           "<button class=\"spot-mini-btn\" onclick=\"openBhavStudio(dec(\'" + arg(feat.id) + "\'))\">🎨 भाव-कार्ड</button>" +
           "<button class=\"spot-mini-btn\" onclick=\"shareWhatsApp(dec(\'" + arg(feat.id) + "\'))\">📲 शेयर</button>" +
-          "<button class=\"spot-mini-btn\" style=\"background:#F7DC8B; color:#2B080D;\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\">संपूर्ण पढ़ें →</button>" +
+          "<button class=\"spot-mini-btn\" style=\"background:#F7DC8B; color:#2B080D; font-weight:800;\" onclick=\"openReader(dec(\'" + arg(feat.id) + "\'))\">संपूर्ण पढ़ें →</button>" +
         "</div>" +
       "</div>" +
     "</div>";
+  startSpotlightAutoFlash();
 }
 
 function renderHomeDropdowns() {
@@ -3235,6 +3341,9 @@ function handleNotifClick(id) {
     openReader(n.targetId);
   } else if (n.type === "reply") {
     openMyCorner("messages");
+  } else if (n.type === "approval") {
+    openAdminStudio();
+    if (state.adminUnlocked) setAdminTab("approvals");
   }
 }
 
@@ -3524,10 +3633,43 @@ function renderAdminStudio() {
   var contentHtml = "";
   if (state.adminTab === "approvals") {
     var poemsQ = state.pendingPoems.map(function(p) {
-      return "<div class=\"pending-card\"><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" + (p.mood ? (" <span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") + "<div class=\"font-royal\" style=\"font-size:19px; color:var(--primary); margin-top:4px;\">" + esc(p.title) + "</div><div class=\"pending-meta\"><span>✒️ <strong>" + esc(p.poet) + "</strong></span>" + (p.ownerEmail ? ("<span>✉️ " + esc(p.ownerEmail) + "</span>") : "") + "</div>" + (p.bhavImage ? ("<img src=\"" + p.bhavImage + "\" style=\"width:130px; border-radius:11px; border:1.5px solid var(--gold); margin-top:6px;\" />") : "") + "<div class=\"pending-poem-preview\">" + esc(p.content) + "</div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoem(dec(\'" + arg(p.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoem(dec(\'" + arg(p.id) + "\'))\">❌ अस्वीकार</button></div></div>";
+      return "<div class=\"pending-card\">" +
+        "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
+          "<div><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" + (p.mood ? (" <span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") + "</div>" +
+          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poem\', dec(\'" + arg(p.id) + "\'))\">👁️ पूर्ण प्रिव्यू देखें</button>" +
+        "</div>" +
+        "<div class=\"font-royal\" style=\"font-size:19px; color:var(--primary); margin-top:6px;\">" + esc(p.title) + "</div>" +
+        "<div class=\"pending-meta\"><span>✒️ <strong>" + esc(p.poet) + "</strong></span>" + (p.ownerEmail ? ("<span>✉️ " + esc(p.ownerEmail) + "</span>") : "") + "</div>" +
+        (p.bhavImage ? ("<img src=\"" + p.bhavImage + "\" style=\"width:130px; border-radius:11px; border:1.5px solid var(--gold); margin-top:6px; cursor:pointer;\" onclick=\"openAdminSubmissionPreview(\'poem\', dec(\'" + arg(p.id) + "\'))\" />") : "") +
+        "<div class=\"pending-poem-preview\">" + esc(p.content) + "</div>" +
+        "<div class=\"pending-actions\">" +
+          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poem\', dec(\'" + arg(p.id) + "\'))\">👁️ प्रिव्यू व संपादन</button>" +
+          "<button class=\"btn-approve\" onclick=\"approvePendingPoem(dec(\'" + arg(p.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button>" +
+          "<button class=\"btn-reject\" onclick=\"rejectPendingPoem(dec(\'" + arg(p.id) + "\'))\">❌ अस्वीकार</button>" +
+        "</div>" +
+      "</div>";
     }).join("") || "<div class=\"empty-box\">कोई लंबित रचना नहीं है।</div>";
+
     var poetsQ = state.pendingPoets.map(function(pt) {
-      return "<div class=\"pending-card\"><div style=\"display:flex; align-items:center; gap:10px;\">" + (pt.photo ? ("<img src=\"" + pt.photo + "\" style=\"width:52px; height:52px; border-radius:14px; object-fit:cover; border:1.5px solid var(--gold);\" />") : "") + "<div><div class=\"font-royal\" style=\"font-size:19px; color:var(--primary);\">" + esc(pt.name) + "</div><div class=\"pending-meta\"><span>📍 " + esc(pt.city || "") + "</span>" + (pt.occupation ? ("<span>💼 " + esc(pt.occupation) + "</span>") : "") + (pt.mobile ? ("<span>🔒 मो.: <strong>" + esc(pt.mobile) + "</strong></span>") : "") + (pt.ownerEmail ? ("<span>✉️ " + esc(pt.ownerEmail) + "</span>") : "") + "</div></div></div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoet(dec(\'" + arg(pt.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार</button></div></div>";
+      return "<div class=\"pending-card\">" +
+        "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;\">" +
+          "<div style=\"display:flex; align-items:center; gap:10px;\">" +
+            (pt.photo ? ("<img src=\"" + pt.photo + "\" style=\"width:56px; height:56px; border-radius:14px; object-fit:cover; border:1.5px solid var(--gold);\" />") : "<div class=\"avatar-md\" style=\"width:52px; height:52px; font-size:18px;\">" + esc(initials(pt.name)) + "</div>") +
+            "<div>" +
+              "<div class=\"font-royal\" style=\"font-size:19px; color:var(--primary);\">" + esc(pt.name) + "</div>" +
+              "<div class=\"pending-meta\"><span>📍 " + esc(pt.city || "") + "</span>" + (pt.occupation ? ("<span>💼 " + esc(pt.occupation) + "</span>") : "") + (pt.mainGenres ? ("<span>❖ " + esc(pt.mainGenres) + "</span>") : "") + (pt.mobile ? ("<span>🔒 मो.: <strong>" + esc(pt.mobile) + "</strong></span>") : "") + (pt.ownerEmail ? ("<span>✉️ " + esc(pt.ownerEmail) + "</span>") : "") + "</div>" +
+            "</div>" +
+          "</div>" +
+          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poet\', dec(\'" + arg(pt.id) + "\'))\">👁️ पूर्ण प्रिव्यू देखें</button>" +
+        "</div>" +
+        (pt.quote ? ("<div class=\"pending-poem-preview\" style=\"margin-top:8px;\">“" + esc(pt.quote) + "”</div>") : "") +
+        (pt.special ? ("<div style=\"font-size:13px; color:var(--text-muted); margin-top:6px;\">" + esc(pt.special) + "</div>") : "") +
+        "<div class=\"pending-actions\">" +
+          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poet\', dec(\'" + arg(pt.id) + "\'))\">👁️ प्रिव्यू व संपादन</button>" +
+          "<button class=\"btn-approve\" onclick=\"approvePendingPoet(dec(\'" + arg(pt.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button>" +
+          "<button class=\"btn-reject\" onclick=\"rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार</button>" +
+        "</div>" +
+      "</div>";
     }).join("") || "<div class=\"empty-box\">कोई लंबित कवि परिचय नहीं है।</div>";
     contentHtml = "<h4 class=\"section-title\">📜 लंबित रचनाएँ (" + state.pendingPoems.length + ")</h4>" + poemsQ + "<h4 class=\"section-title\" style=\"margin-top:14px;\">✒️ लंबित कवि परिचय (" + state.pendingPoets.length + ")</h4>" + poetsQ;
   } else if (state.adminTab === "messages") {
@@ -4013,15 +4155,16 @@ function submitPublicPoem() {
     createdAt: Date.now()
   };
 
-  // Publish immediately with auto-generated Bhav Image so it appears right away on screen
-  state.poems.unshift(item);
-  state.lastPublishedPoemId = id;
-  cloudSaveDoc("poems", id, item).then(function() {
-    pushNotification("नई रचना प्रकाशित: “" + title + "”", poetObj.name + " • " + genre + " (" + mood + ")", "poem", id, "");
-    state.submitSuccessMsg = "आपकी रचना “" + title + "” प्रकाशित हो गई है और आपके भाव के अनुसार स्वतः कलात्मक भाव-चित्र भी जुड़ गया है।";
+  var pendId = "pend_poem_" + Date.now();
+  var pendItem = Object.assign({}, item, { id: pendId, submittedAt: Date.now() });
+  state.pendingPoems.unshift(pendItem);
+  state.lastPublishedPoemId = "";
+  cloudSaveDoc("pending_poems", pendId, pendItem).then(function() {
+    pushNotification("नई रचना स्वीकृति हेतु प्राप्त: “" + title + "”", poetObj.name + " • " + genre + " (" + mood + ")", "approval", pendId, "");
+    state.submitSuccessMsg = "आपकी रचना “" + title + "” और स्वतः निर्मित भाव-चित्र एडमिन मण्डल के पास प्रिव्यू एवं स्वीकृति हेतु भेज दिए गए हैं।";
     renderAll();
     renderSubmitModal();
-    showToast("रचना व स्वतः भाव-चित्र प्रकाशित हुए ✨");
+    showToast("रचना स्वीकृति हेतु भेजी गई ⏳");
   });
 }
 
@@ -4051,14 +4194,135 @@ function submitPublicPoet() {
     photo: finalPhoto,
     bio: ""
   };
-  if (existingPub) state.poets = state.poets.map(function(x) { return x.id === id ? item : x; }); else state.poets.push(item);
+  var existingPend = getPendingPoetByEmail(userEmail);
+  var pendId = existingPend ? existingPend.id : ("pend_poet_" + Date.now());
+  var pendItem = Object.assign({}, item, { id: pendId, submittedAt: Date.now() });
+  var pIdx = state.pendingPoets.findIndex(function(x) { return x.id === pendId; });
+  if (pIdx >= 0) state.pendingPoets[pIdx] = pendItem; else state.pendingPoets.unshift(pendItem);
   state.lastPublishedPoemId = "";
-  cloudSaveDoc("poets", id, item).then(function() {
+  cloudSaveDoc("pending_poets", pendId, pendItem).then(function() {
     state.tempPublicPoetPhoto = "";
-    state.submitSuccessMsg = name + " जी, आपकी प्रोफ़ाइल व कवि चित्र सहेज लिए गए हैं और आपका निजी कॉर्नर तैयार है।";
+    pushNotification("नया कवि परिचय स्वीकृति हेतु प्राप्त: " + name, (item.occupation || "रचनाकार") + " • " + city, "approval", pendId, "");
+    state.submitSuccessMsg = name + " जी, आपकी प्रोफ़ाइल व कवि चित्र एडमिन मण्डल के पास प्रिव्यू एवं स्वीकृति हेतु भेज दिए गए हैं।";
     renderAll();
     renderSubmitModal();
-    showToast("प्रोफ़ाइल व कवि चित्र सहेजे गए ✨");
+    showToast("प्रोफ़ाइल स्वीकृति हेतु भेजी गई ⏳");
+  });
+}
+
+function openAdminSubmissionPreview(kind, id) {
+  var body = document.getElementById("admin-preview-body");
+  var titleEl = document.getElementById("admin-preview-title");
+  if (!body) return;
+  if (kind === "poem") {
+    var p = state.pendingPoems.find(function(x) { return x.id === id; });
+    if (!p) return;
+    if (titleEl) titleEl.textContent = "👁️ रचना का पूर्ण प्रिव्यू";
+    var genres = getAllGenres();
+    var autoImg = p.bhavImage || generateAutoBhavImage(p);
+    body.innerHTML =
+      "<div class=\"reader-paper\" style=\"margin-bottom:14px;\">" +
+        "<div style=\"display:flex; justify-content:center; gap:6px; flex-wrap:wrap;\">" +
+          "<span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" +
+          (p.mood ? ("<span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") +
+        "</div>" +
+        "<h2 class=\"reader-poem-title\">" + esc(p.title) + "</h2>" +
+        "<div style=\"font-weight:700; color:var(--primary); margin-bottom:10px;\">✒️ " + esc(p.poet) + (p.ownerEmail ? (" (" + esc(p.ownerEmail) + ")") : "") + "</div>" +
+        (autoImg ? ("<img class=\"reader-bhav-img\" src=\"" + autoImg + "\" alt=\"भाव चित्र प्रिव्यू\" />") : "") +
+        "<div class=\"reader-text\" style=\"font-size:17px;\">" + esc(p.content) + "</div>" +
+      "</div>" +
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">✏️ स्वीकृति से पूर्व सुधार (वैकल्पिक)</h4>" +
+        "<div class=\"field\"><label>शीर्षक</label><input id=\"prev-edit-ptitle\" value=\"" + esc(p.title) + "\" /></div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>विधा</label><select id=\"prev-edit-pgenre\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\" " + (p.genre === g ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
+          "<div class=\"field\"><label>भाव</label><select id=\"prev-edit-pmood\">" + MOOD_OPTIONS.map(function(m) { return "<option value=\"" + esc(m.id) + "\" " + (p.mood === m.id ? "selected" : "") + ">" + esc(m.label) + "</option>"; }).join("") + "</select></div>" +
+        "</div>" +
+        "<div class=\"field\"><label>रचना पाठ</label><textarea id=\"prev-edit-pcontent\" style=\"min-height:130px;\">" + esc(p.content) + "</textarea></div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+          "<button class=\"sm-btn\" onclick=\"savePreviewPendingPoem(dec(\'" + arg(p.id) + "\'))\">💾 प्रिव्यू अपडेट करें</button>" +
+          "<button class=\"btn-approve\" onclick=\"savePreviewPendingPoem(dec(\'" + arg(p.id) + "\'), true)\">✅ सहेजें व प्रकाशित करें</button>" +
+          "<button class=\"btn-reject\" onclick=\"closeModal(\'admin-preview-modal\'); rejectPendingPoem(dec(\'" + arg(p.id) + "\'))\">❌ अस्वीकार करें</button>" +
+        "</div>" +
+      "</div>";
+  } else {
+    var pt = state.pendingPoets.find(function(x) { return x.id === id; });
+    if (!pt) return;
+    if (titleEl) titleEl.textContent = "👁️ कवि परिचय का पूर्ण प्रिव्यू";
+    var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
+    body.innerHTML =
+      "<div class=\"profile-hero\">" +
+        "<div class=\"profile-top\">" +
+          "<div class=\"avatar-lg\">" + av + "</div>" +
+          "<div>" +
+            "<h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" +
+            (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") +
+            "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + "</div>" +
+            (pt.ownerEmail ? ("<div style=\"font-size:11.5px; color:rgba(255,248,234,0.8); margin-top:3px;\">✉️ " + esc(pt.ownerEmail) + "</div>") : "") +
+          "</div>" +
+        "</div>" +
+        (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") +
+      "</div>" +
+      renderStructuredBioCard(pt, "सदस्य का संपूर्ण विवरण प्रिव्यू", true) +
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">✏️ स्वीकृति से पूर्व सुधार (वैकल्पिक)</h4>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>नाम</label><input id=\"prev-edit-ptname\" value=\"" + esc(pt.name) + "\" /></div>" +
+          "<div class=\"field\"><label>स्थान</label><input id=\"prev-edit-ptcity\" value=\"" + esc(pt.city || "") + "\" /></div>" +
+        "</div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>भूमिका</label><input id=\"prev-edit-ptocc\" value=\"" + esc(pt.occupation || "") + "\" /></div>" +
+          "<div class=\"field\"><label>मुख्य विधा</label><input id=\"prev-edit-ptgen\" value=\"" + esc(pt.mainGenres || "") + "\" /></div>" +
+        "</div>" +
+        "<div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"prev-edit-ptspec\" style=\"min-height:68px;\">" + esc(pt.special || pt.bio || "") + "</textarea></div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+          "<button class=\"sm-btn\" onclick=\"savePreviewPendingPoet(dec(\'" + arg(pt.id) + "\'))\">💾 प्रिव्यू अपडेट करें</button>" +
+          "<button class=\"btn-approve\" onclick=\"savePreviewPendingPoet(dec(\'" + arg(pt.id) + "\'), true)\">✅ सहेजें व प्रकाशित करें</button>" +
+          "<button class=\"btn-reject\" onclick=\"closeModal(\'admin-preview-modal\'); rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार करें</button>" +
+        "</div>" +
+      "</div>";
+  }
+  if (!document.getElementById("admin-preview-modal").classList.contains("open")) pushAppView("admprev");
+  document.getElementById("admin-preview-modal").classList.add("open");
+}
+
+function savePreviewPendingPoem(id, andApprove) {
+  var p = state.pendingPoems.find(function(x) { return x.id === id; });
+  if (!p) return;
+  p.title = ((document.getElementById("prev-edit-ptitle") || { value: p.title }).value || "").trim() || p.title;
+  p.genre = ((document.getElementById("prev-edit-pgenre") || { value: p.genre }).value || "").trim() || p.genre;
+  p.mood = ((document.getElementById("prev-edit-pmood") || { value: p.mood }).value || "").trim() || p.mood;
+  p.content = ((document.getElementById("prev-edit-pcontent") || { value: p.content }).value || "").trim() || p.content;
+  p.bhavImage = generateAutoBhavImage(p);
+  cloudSaveDoc("pending_poems", id, p).then(function() {
+    if (andApprove) {
+      closeModal("admin-preview-modal");
+      approvePendingPoem(id);
+    } else {
+      openAdminSubmissionPreview("poem", id);
+      renderAdminStudio();
+      showToast("प्रिव्यू अपडेट हुआ ✓");
+    }
+  });
+}
+
+function savePreviewPendingPoet(id, andApprove) {
+  var pt = state.pendingPoets.find(function(x) { return x.id === id; });
+  if (!pt) return;
+  pt.name = ((document.getElementById("prev-edit-ptname") || { value: pt.name }).value || "").trim() || pt.name;
+  pt.city = ((document.getElementById("prev-edit-ptcity") || { value: pt.city }).value || "").trim() || pt.city;
+  pt.occupation = ((document.getElementById("prev-edit-ptocc") || { value: pt.occupation }).value || "").trim();
+  pt.mainGenres = ((document.getElementById("prev-edit-ptgen") || { value: pt.mainGenres }).value || "").trim();
+  pt.special = ((document.getElementById("prev-edit-ptspec") || { value: pt.special }).value || "").trim();
+  cloudSaveDoc("pending_poets", id, pt).then(function() {
+    if (andApprove) {
+      closeModal("admin-preview-modal");
+      approvePendingPoet(id);
+    } else {
+      openAdminSubmissionPreview("poet", id);
+      renderAdminStudio();
+      showToast("प्रिव्यू अपडेट हुआ ✓");
+    }
   });
 }
 
@@ -4285,7 +4549,7 @@ function syncBackAfterUiClose() { if (navDepth > 0) { navDepth -= 1; ignoreNextP
 function handleSystemBackStep() {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
   var splash = document.getElementById("splash-screen"); if (splash && !splash.classList.contains("hide")) { dismissSplash(true); return; }
-  var modalIds = ["bhav-modal", "admin-modal", "submit-modal", "video-modal", "pdf-modal", "notif-modal", "reader-modal"];
+  var modalIds = ["admin-preview-modal", "bhav-modal", "admin-modal", "submit-modal", "video-modal", "pdf-modal", "notif-modal", "reader-modal"];
   for (var i = 0; i < modalIds.length; i++) {
     var m = document.getElementById(modalIds[i]); if (m && m.classList.contains("open")) { closeModal(modalIds[i], true); return; }
   }
