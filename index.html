@@ -1355,6 +1355,69 @@
       border-radius: 14px; border: 2px solid var(--gold); box-shadow: var(--shadow-strong);
     }
 
+    /* ================= BOOK PAGE-FLIP PDF VIEWER ================= */
+    .book-stage-wrap {
+      perspective: 1600px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 4px 14px;
+    }
+    .book-flip-card {
+      position: relative;
+      width: 100%;
+      max-width: 560px;
+      background: #FFFDF8;
+      border: 2px solid var(--gold);
+      border-radius: 6px 18px 18px 6px;
+      padding: 8px;
+      box-shadow:
+        -6px 0 14px rgba(74, 11, 18, 0.18),
+        0 16px 36px rgba(39, 23, 16, 0.24);
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+    }
+    .book-flip-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 14px;
+      border-radius: 6px 0 0 6px;
+      background: linear-gradient(90deg, rgba(74, 11, 18, 0.28), rgba(198, 146, 44, 0.16), transparent);
+      pointer-events: none;
+    }
+    .book-flip-card.flip-next {
+      transform: rotateY(-18deg) translateX(-14px);
+      opacity: 0.35;
+    }
+    .book-flip-card.flip-prev {
+      transform: rotateY(14deg) translateX(12px);
+      opacity: 0.45;
+    }
+    .book-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+    }
+    .book-page-indicator {
+      font-family: 'Yatra One', serif;
+      font-size: 14px;
+      color: var(--primary);
+      text-align: center;
+    }
+
     /* ================= ABOUT & SOCIAL CARDS ================= */
     .about-banner {
       background: radial-gradient(circle at 50% 10%, rgba(246, 218, 134, 0.28), transparent 60%), linear-gradient(150deg, #5F1018 0%, #31070C 68%, #1C0814 100%);
@@ -3235,82 +3298,117 @@ function renderEbooksPane() {
 }
 
 var currentPdfDoc = null;
-var currentPdfScale = 1.15;
+var currentPdfPage = 1;
+var currentPdfScale = 1.05;
+var pdfTouchStartX = 0;
 
-function renderPdfPagesToContainer(pdfDoc, scale) {
-  var pagesWrap = document.getElementById("pdf-pages-container");
-  if (!pagesWrap || !pdfDoc) return;
-  pagesWrap.innerHTML = "<div style=\"text-align:center; padding:14px; font-size:13px; color:var(--text-muted);\">पृष्ठ रेंडर हो रहे हैं (कुल पृष्ठ: " + pdfDoc.numPages + ")...</div>";
-  var maxPages = Math.min(pdfDoc.numPages, 60);
-  var containerWidth = Math.max(260, (pagesWrap.clientWidth || 340) - 16);
+function renderSingleBookPage(pageNum, direction) {
+  var stage = document.getElementById("pdf-pages-container");
+  if (!stage || !currentPdfDoc) return;
+  var totalPages = currentPdfDoc.numPages;
+  currentPdfPage = Math.max(1, Math.min(totalPages, pageNum));
 
-  var buildPage = function(pageNum) {
-    return pdfDoc.getPage(pageNum).then(function(page) {
-      var unscaled = page.getViewport({ scale: 1 });
-      var fitScale = (containerWidth / unscaled.width) * scale;
-      var viewport = page.getViewport({ scale: fitScale });
-      var card = document.createElement("div");
-      card.style.cssText = "background:#fff; border:1.5px solid var(--gold); border-radius:12px; padding:6px; margin-bottom:12px; box-shadow:0 6px 18px rgba(0,0,0,0.14);";
-      var lbl = document.createElement("div");
-      lbl.style.cssText = "font-size:11px; font-weight:700; color:#6B111B; text-align:right; margin-bottom:4px; padding:0 4px;";
-      lbl.textContent = "पृष्ठ " + pageNum + " / " + pdfDoc.numPages;
-      var canvas = document.createElement("canvas");
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:8px;";
-      card.appendChild(lbl);
-      card.appendChild(canvas);
-      var ctx = canvas.getContext("2d");
-      return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
-        return card;
+  var ind = document.getElementById("book-page-ind");
+  if (ind) ind.textContent = "पृष्ठ " + currentPdfPage + " / " + totalPages;
+
+  var prevBtn = document.getElementById("book-prev-btn");
+  var nextBtn = document.getElementById("book-next-btn");
+  if (prevBtn) prevBtn.disabled = currentPdfPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentPdfPage >= totalPages;
+
+  var containerWidth = Math.max(250, (stage.clientWidth || 340) - 24);
+  currentPdfDoc.getPage(currentPdfPage).then(function(page) {
+    var unscaled = page.getViewport({ scale: 1 });
+    var fitScale = (containerWidth / unscaled.width) * currentPdfScale;
+    var viewport = page.getViewport({ scale: fitScale });
+
+    stage.innerHTML = "";
+    var card = document.createElement("div");
+    card.className = "book-flip-card" + (direction === "next" ? " flip-next" : (direction === "prev" ? " flip-prev" : ""));
+    card.addEventListener("touchstart", function(ev) {
+      if (ev.touches && ev.touches[0]) pdfTouchStartX = ev.touches[0].clientX;
+    }, { passive: true });
+    card.addEventListener("touchend", function(ev) {
+      if (!ev.changedTouches || !ev.changedTouches[0]) return;
+      var diff = ev.changedTouches[0].clientX - pdfTouchStartX;
+      if (diff < -45 && currentPdfPage < totalPages) turnBookPage(1);
+      else if (diff > 45 && currentPdfPage > 1) turnBookPage(-1);
+    }, { passive: true });
+
+    var topBar = document.createElement("div");
+    topBar.style.cssText = "display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:700; color:#6B111B; padding:2px 6px 6px;";
+    topBar.innerHTML = "<span>📖 बाएँ से दाएँ पन्ना पलटें</span><span>पृष्ठ " + currentPdfPage + " / " + totalPages + "</span>";
+
+    var canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:8px; cursor:pointer;";
+    canvas.addEventListener("click", function(ev) {
+      var rect = canvas.getBoundingClientRect();
+      var clickX = ev.clientX - rect.left;
+      if (clickX > rect.width * 0.45 && currentPdfPage < totalPages) turnBookPage(1);
+      else if (clickX <= rect.width * 0.45 && currentPdfPage > 1) turnBookPage(-1);
+    });
+
+    card.appendChild(topBar);
+    card.appendChild(canvas);
+    stage.appendChild(card);
+
+    var ctx = canvas.getContext("2d");
+    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
+      requestAnimationFrame(function() {
+        card.classList.remove("flip-next");
+        card.classList.remove("flip-prev");
       });
     });
-  };
-
-  var chain = Promise.resolve();
-  var renderedCards = [];
-  for (var p = 1; p <= maxPages; p++) {
-    (function(num) {
-      chain = chain.then(function() {
-        return buildPage(num).then(function(c) { renderedCards.push(c); });
-      });
-    })(p);
-  }
-  chain.then(function() {
-    pagesWrap.innerHTML = "";
-    renderedCards.forEach(function(c) { pagesWrap.appendChild(c); });
-    if (pdfDoc.numPages > maxPages) {
-      var note = document.createElement("div");
-      note.className = "empty-box";
-      note.textContent = "पहले " + maxPages + " पृष्ठ दिखाए गए हैं। पूरी " + pdfDoc.numPages + " पृष्ठों की पुस्तक के लिए नीचे से PDF डाउनलोड करें।";
-      pagesWrap.appendChild(note);
-    }
   });
 }
 
+function turnBookPage(delta) {
+  if (!currentPdfDoc) return;
+  var nextP = currentPdfPage + delta;
+  if (nextP < 1 || nextP > currentPdfDoc.numPages) return;
+  var dir = delta > 0 ? "next" : "prev";
+  renderSingleBookPage(nextP, dir);
+}
+
+function jumpBookPage(val) {
+  if (!currentPdfDoc) return;
+  var num = parseInt(val, 10);
+  if (!isNaN(num) && num >= 1 && num <= currentPdfDoc.numPages) {
+    renderSingleBookPage(num, num > currentPdfPage ? "next" : "prev");
+  }
+}
+
 function zoomPdfReader(delta) {
-  currentPdfScale = Math.max(0.8, Math.min(2.0, Number((currentPdfScale + delta).toFixed(2))));
+  currentPdfScale = Math.max(0.85, Math.min(1.8, Number((currentPdfScale + delta).toFixed(2))));
   var zLbl = document.getElementById("pdf-zoom-lbl");
   if (zLbl) zLbl.textContent = Math.round(currentPdfScale * 100) + "%";
-  if (currentPdfDoc) renderPdfPagesToContainer(currentPdfDoc, currentPdfScale);
+  if (currentPdfDoc) renderSingleBookPage(currentPdfPage, null);
 }
 
 function openPdfReader(id) {
   var b = state.ebooks.find(function(x) { return x.id === id; });
   if (!b) return;
   currentPdfDoc = null;
-  currentPdfScale = 1.1;
+  currentPdfPage = 1;
+  currentPdfScale = 1.05;
   document.getElementById("pdf-modal-title").textContent = "📖 " + b.title;
   document.getElementById("pdf-modal-body").innerHTML =
-    "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
+    "<div class=\"book-nav-bar\">" +
+      "<div style=\"display:flex; gap:6px; align-items:center;\">" +
+        "<button id=\"book-prev-btn\" class=\"sm-btn\" onclick=\"turnBookPage(-1)\" disabled>◀ पिछला पन्ना</button>" +
+        "<span id=\"book-page-ind\" class=\"book-page-indicator\">पृष्ठ 1 / …</span>" +
+        "<button id=\"book-next-btn\" class=\"sm-btn\" onclick=\"turnBookPage(1)\" disabled>अगला पन्ना ▶</button>" +
+      "</div>" +
       "<div style=\"display:flex; gap:6px; align-items:center;\">" +
         "<button class=\"sm-btn\" onclick=\"zoomPdfReader(-0.15)\">🔍-</button>" +
-        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:42px; text-align:center;\">110%</span>" +
+        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:40px; text-align:center;\">105%</span>" +
         "<button class=\"sm-btn\" onclick=\"zoomPdfReader(0.15)\">🔍+</button>" +
+        "<div id=\"pdf-dl-slot\"></div>" +
       "</div>" +
-      "<div id=\"pdf-dl-slot\"></div>" +
     "</div>" +
-    "<div id=\"pdf-pages-container\" style=\"flex:1; overflow-y:auto; padding-right:2px;\"><div class=\"empty-box\">📖 PDF पुस्तक लोड हो रही है...</div></div>";
+    "<div id=\"pdf-pages-container\" class=\"book-stage-wrap\"><div class=\"empty-box\">📖 पुस्तक के पन्ने तैयार हो रहे हैं...</div></div>";
 
   if (!document.getElementById("pdf-modal").classList.contains("open")) pushAppView("pdf");
   document.getElementById("pdf-modal").classList.add("open");
@@ -3322,14 +3420,12 @@ function openPdfReader(id) {
 
     var setupDownloadLink = function(urlStr) {
       if (!dlSlot || !urlStr) return;
-      dlSlot.innerHTML = "<a class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" href=\"" + urlStr + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF डाउनलोड</a>";
+      dlSlot.innerHTML = "<a class=\"action-btn gold\" style=\"padding:5px 10px; font-size:11.5px;\" href=\"" + urlStr + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF</a>";
     };
 
     var loadWithPdfJs = function(sourceArg) {
       if (!window.pdfjsLib) {
-        if (typeof sourceArg === "string") {
-          pagesWrap.innerHTML = "<iframe src=\"" + sourceArg + "\" style=\"width:100%; min-height:66vh; border:1.5px solid var(--gold); border-radius:12px; background:#fff;\"></iframe>";
-        }
+        pagesWrap.innerHTML = "<div class=\"empty-box\">PDF रेंडरर लोड नहीं हो सका।</div>";
         return;
       }
       if (window.pdfjsLib.GlobalWorkerOptions) {
@@ -3338,17 +3434,9 @@ function openPdfReader(id) {
       var loadingTask = window.pdfjsLib.getDocument(sourceArg);
       loadingTask.promise.then(function(pdfDoc) {
         currentPdfDoc = pdfDoc;
-        renderPdfPagesToContainer(pdfDoc, currentPdfScale);
+        renderSingleBookPage(1, null);
       }).catch(function() {
-        if (typeof sourceArg === "string") {
-          pagesWrap.innerHTML =
-            "<div class=\"empty-box\">" +
-              "<p style=\"margin:0 0 12px;\">ब्राउज़र में सीधे PDF रेंडर करने में अवरोध आया। नीचे बटन से फ़ाइल खोलें या डाउनलोड करें।</p>" +
-              "<a class=\"action-btn primary\" href=\"" + sourceArg + "\" target=\"_blank\" rel=\"noopener noreferrer\">📖 PDF खोलें ↗</a>" +
-            "</div>";
-        } else {
-          pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इस डिवाइस में पढ़ी नहीं जा सकी। कृपया दूसरी PDF फ़ाइल चुनें या डाउनलोड करें।</div>";
-        }
+        pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल पढ़ी नहीं जा सकी। कृपया दूसरी PDF फ़ाइल चुनें या डाउनलोड करें।</div>";
       });
     };
 
