@@ -2219,6 +2219,29 @@ var ROLE_OPTIONS = [
   "कवि", "कवयित्री", "गीतकार", "ग़ज़लकार", "दोहाकार", "नवगीतकार", "छंदकार", "कहानीकार / लेखक", "साहित्य प्रेमी पाठक"
 ];
 
+var GEO_DATA = {
+  "भारत": {
+    "उत्तर प्रदेश": ["लखनऊ", "मनकापुर (गोण्डा)", "आज़मगढ़", "रायबरेली", "बिजनौर", "संभल", "प्रयागराज", "वाराणसी", "अयोध्या", "कानपुर", "गोरखपुर", "आगरा", "मथुरा", "मेरठ", "बरेली"],
+    "मध्य प्रदेश": ["भोपाल", "इंदौर", "ग्वालियर", "जबलपुर", "उज्जैन", "सागर"],
+    "राजस्थान": ["जयपुर", "जोधपुर", "उदयपुर", "कोटा", "अजमेर", "बीकानेर"],
+    "बिहार": ["पटना", "गया", "मुज़फ़्फ़रपुर", "भागलपुर", "दरभंगा"],
+    "दिल्ली": ["नई दिल्ली", "मध्य दिल्ली", "दक्षिण दिल्ली", "उत्तर-पश्चिम दिल्ली"],
+    "उत्तराखंड": ["देहरादून", "हरिद्वार", "हल्द्वानी", "नैनीताल", "ऋषिकेश"],
+    "छत्तीसगढ़": ["रायपुर", "बिलासपुर", "दुर्ग", "भिलाई"],
+    "झारखंड": ["राँची", "जमशेदपुर", "धनबाद"],
+    "महाराष्ट्र": ["मुंबई", "पुणे", "नागपुर", "नासिक"],
+    "गुजरात": ["अहमदाबाद", "सूरत", "वडोदरा", "राजकोट"]
+  },
+  "नेपाल": {
+    "बागमती प्रदेश": ["काठमांडू", "ललितपुर", "भक्तपुर"],
+    "लुम्बिनी प्रदेश": ["बुटवल", "भैरहवा", "दांग"],
+    "मधेश प्रदेश": ["जनकपुर", "बीरगंज"]
+  },
+  "अन्य देश": {
+    "अन्य प्रदेश / क्षेत्र": ["अन्य शहर"]
+  }
+};
+
 var CITY_OPTIONS = [
   "लखनऊ, उत्तर प्रदेश", "मनकापुर, गोण्डा", "आज़मगढ़, उत्तर प्रदेश", "रायबरेली, उत्तर प्रदेश",
   "बिजनौर, उत्तर प्रदेश", "संभल, उत्तर प्रदेश", "प्रयागराज, उत्तर प्रदेश", "वाराणसी, उत्तर प्रदेश",
@@ -2819,6 +2842,140 @@ function getAllPoetObjects() {
   return Array.from(map.values());
 }
 
+function parseGeoFromCityStr(cityStr) {
+  var raw = String(cityStr || "").trim();
+  var countries = Object.keys(GEO_DATA);
+  for (var i = 0; i < countries.length; i++) {
+    var c = countries[i];
+    var states = Object.keys(GEO_DATA[c]);
+    for (var j = 0; j < states.length; j++) {
+      var st = states[j];
+      var cities = GEO_DATA[c][st];
+      for (var k = 0; k < cities.length; k++) {
+        var ct = cities[k];
+        if (raw.indexOf(ct) !== -1 || raw.indexOf(st) !== -1) {
+          return { country: c, state: st, city: ct };
+        }
+      }
+    }
+  }
+  return { country: "भारत", state: "उत्तर प्रदेश", city: raw || "लखनऊ" };
+}
+
+function getStatesForCountry(country) {
+  var cObj = GEO_DATA[country] || GEO_DATA["भारत"];
+  return Object.keys(cObj);
+}
+
+function getCitiesForCountryState(country, st) {
+  var cObj = GEO_DATA[country] || GEO_DATA["भारत"];
+  var list = cObj[st];
+  if (!list) {
+    var firstSt = Object.keys(cObj)[0];
+    list = cObj[firstSt] || [];
+  }
+  return list;
+}
+
+function onGeoCountryChange(countrySelId, stateSelId, citySelId) {
+  var cEl = document.getElementById(countrySelId);
+  var sEl = document.getElementById(stateSelId);
+  var ctEl = document.getElementById(citySelId);
+  if (!cEl || !sEl) return;
+  var states = getStatesForCountry(cEl.value);
+  sEl.innerHTML = states.map(function(st) { return "<option value=\"" + esc(st) + "\">" + esc(st) + "</option>"; }).join("");
+  onGeoStateChange(countrySelId, stateSelId, citySelId);
+}
+
+function onGeoStateChange(countrySelId, stateSelId, citySelId) {
+  var cEl = document.getElementById(countrySelId);
+  var sEl = document.getElementById(stateSelId);
+  var ctEl = document.getElementById(citySelId);
+  if (!cEl || !sEl || !ctEl) return;
+  var cities = getCitiesForCountryState(cEl.value, sEl.value);
+  ctEl.innerHTML = cities.map(function(ct) { return "<option value=\"" + esc(ct) + "\">" + esc(ct) + "</option>"; }).join("");
+}
+
+function renderGeoDropdowns(prefix, initialCityStr) {
+  var parsed = parseGeoFromCityStr(initialCityStr);
+  var cId = prefix + "-country", sId = prefix + "-state", ctId = prefix + "-city";
+  var countries = Object.keys(GEO_DATA);
+  var states = getStatesForCountry(parsed.country);
+  var activeState = states.indexOf(parsed.state) !== -1 ? parsed.state : states[0];
+  var cities = getCitiesForCountryState(parsed.country, activeState);
+  var hasExactCity = cities.indexOf(parsed.city) !== -1;
+  var cityOptionsHtml = cities.map(function(ct) {
+    return "<option value=\"" + esc(ct) + "\" " + (parsed.city === ct ? "selected" : "") + ">" + esc(ct) + "</option>";
+  }).join("");
+  if (!hasExactCity && parsed.city) {
+    cityOptionsHtml = "<option value=\"" + esc(parsed.city) + "\" selected>" + esc(parsed.city) + "</option>" + cityOptionsHtml;
+  }
+  return "<div class=\"field\"><label>देश (ड्रॉप-डाउन) *</label><select id=\"" + cId + "\" onchange=\"onGeoCountryChange('" + cId + "', '" + sId + "', '" + ctId + "')\">" +
+    countries.map(function(c) { return "<option value=\"" + esc(c) + "\" " + (parsed.country === c ? "selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
+  "</select></div>" +
+  "<div class=\"two-fields\">" +
+    "<div class=\"field\"><label>प्रदेश (स्वतः सिंक) *</label><select id=\"" + sId + "\" onchange=\"onGeoStateChange('" + cId + "', '" + sId + "', '" + ctId + "')\">" +
+      states.map(function(st) { return "<option value=\"" + esc(st) + "\" " + (activeState === st ? "selected" : "") + ">" + esc(st) + "</option>"; }).join("") +
+    "</select></div>" +
+    "<div class=\"field\"><label>शहर (स्वतः सिंक) *</label><select id=\"" + ctId + "\">" + cityOptionsHtml + "</select></div>" +
+  "</div>";
+}
+
+function collectGeoLocationString(prefix) {
+  var cVal = ((document.getElementById(prefix + "-country") || { value: "भारत" }).value || "").trim();
+  var sVal = ((document.getElementById(prefix + "-state") || { value: "" }).value || "").trim();
+  var ctVal = ((document.getElementById(prefix + "-city") || { value: "" }).value || "").trim();
+  var parts = [ctVal, sVal];
+  if (cVal && cVal !== "भारत") parts.push(cVal);
+  return parts.filter(Boolean).join(", ");
+}
+
+function renderMultiGenreSelector(containerId, existingStr) {
+  var selected = String(existingStr || "").split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
+  var allGenres = getAllGenres();
+  return "<div id=\"" + containerId + "\" style=\"display:flex; flex-wrap:wrap; gap:7px; padding:8px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg);\">" +
+    allGenres.map(function(g) {
+      var checked = selected.indexOf(g) !== -1;
+      return "<label style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:99px; border:1px solid var(--border); background:" + (checked ? "var(--gold-soft)" : "var(--bg-elevated)") + "; font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer; margin:0;\">" +
+        "<input type=\"checkbox\" value=\"" + esc(g) + "\" " + (checked ? "checked" : "") + " style=\"width:auto; margin:0;\" />" +
+        "<span>" + esc(g) + "</span>" +
+      "</label>";
+    }).join("") +
+  "</div>";
+}
+
+function collectMultiGenres(containerId) {
+  var box = document.getElementById(containerId);
+  if (!box) return "";
+  var checks = box.querySelectorAll("input[type=\"checkbox\"]:checked");
+  var vals = [];
+  for (var i = 0; i < checks.length; i++) {
+    if (checks[i].value) vals.push(checks[i].value.trim());
+  }
+  return vals.join(", ");
+}
+
+function linkExistingAdminProfileToEmail(poetId) {
+  if (!state.currentUser || !state.currentUser.email) { showToast("कृपया पहले ईमेल से लॉगिन करें"); return; }
+  if (!poetId) { showToast("कृपया सूची से अपनी पहले से बनी प्रोफ़ाइल चुनें"); return; }
+  var pt = state.poets.find(function(x) { return x.id === poetId; });
+  if (!pt) { showToast("प्रोफ़ाइल नहीं मिली"); return; }
+  var em = state.currentUser.email.toLowerCase().trim();
+  pt.ownerEmail = em;
+  var linkedAdm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
+  if (linkedAdm) {
+    linkedAdm.ownerEmail = em;
+    cloudSaveDoc("admins", linkedAdm.id, linkedAdm);
+  }
+  cloudSaveDoc("poets", pt.id, pt).then(function() {
+    syncLinkedProfilesForCurrentUser(state.currentUser);
+    renderAll();
+    var sm = document.getElementById("submit-modal");
+    if (sm && sm.classList.contains("open")) renderSubmitModal();
+    showToast("आपका ईमेल (" + em + ") ‘" + pt.name + "’ की मूल प्रोफ़ाइल से लिंक हो गया ✓");
+  });
+}
+
 function getPoetByEmail(email, fallbackName) {
   var em = (email || "").toLowerCase().trim();
   if (!em) return null;
@@ -2850,11 +3007,19 @@ function syncLinkedProfilesForCurrentUser(userObj) {
   if (!userObj || !userObj.email) return;
   var em = userObj.email.toLowerCase().trim();
   var matchedPoet = getPoetByEmail(em, userObj.displayName);
+  if (!matchedPoet && userObj.displayName) {
+    var dn = userObj.displayName.trim().toLowerCase();
+    matchedPoet = state.poets.find(function(pt) { return !pt.ownerEmail && (pt.name || "").trim().toLowerCase() === dn; }) || null;
+  }
   if (matchedPoet && !matchedPoet.ownerEmail) {
     matchedPoet.ownerEmail = em;
     cloudSaveDoc("poets", matchedPoet.id, matchedPoet);
   }
   var matchedAdmin = getAdminByEmail(em, (matchedPoet && matchedPoet.name) || userObj.displayName);
+  if (!matchedAdmin && userObj.displayName) {
+    var dn2 = userObj.displayName.trim().toLowerCase();
+    matchedAdmin = state.admins.find(function(a) { return !a.ownerEmail && (a.name || "").trim().toLowerCase() === dn2; }) || null;
+  }
   if (matchedAdmin && !matchedAdmin.ownerEmail) {
     matchedAdmin.ownerEmail = em;
     cloudSaveDoc("admins", matchedAdmin.id, matchedAdmin);
@@ -4420,9 +4585,10 @@ function renderAdminStudio() {
     var curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
     contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें") + "</h4>" +
       "<div class=\"field\"><label>नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" /></div>" +
-      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" /></div><div class=\"field\"><label>स्थान</label><input id=\"f-poet-city\" list=\"city-dl\" value=\"" + esc(ept ? (ept.city || "") : "") + "\" /><datalist id=\"city-dl\">" + CITY_OPTIONS.map(function(c) { return "<option value=\"" + esc(c) + "\">"; }).join("") + "</datalist></div></div>" +
-      "<div class=\"two-fields\"><div class=\"field\"><label>शिक्षा</label><input id=\"f-poet-edu\" value=\"" + esc(ept ? (ept.education || "") : "") + "\" /></div><div class=\"field\"><label>भूमिका / सम्प्रति</label><input id=\"f-poet-occ\" list=\"role-dl\" value=\"" + esc(ept ? (ept.occupation || "") : "") + "\" /><datalist id=\"role-dl\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\">"; }).join("") + "</datalist></div></div>" +
-      "<div class=\"two-fields\"><div class=\"field\"><label>मोबाइल (केवल एडमिन के लिए)</label><input id=\"f-poet-mobile\" value=\"" + esc(ept ? (ept.mobile || "") : "") + "\" /></div><div class=\"field\"><label>मुख्य विधा</label><input id=\"f-poet-genres\" value=\"" + esc(ept ? (ept.mainGenres || "") : "") + "\" /></div></div>" +
+      renderGeoDropdowns("f-poet", ept ? (ept.city || "") : "लखनऊ, उत्तर प्रदेश") +
+      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" /></div><div class=\"field\"><label>शिक्षा</label><input id=\"f-poet-edu\" value=\"" + esc(ept ? (ept.education || "") : "") + "\" /></div></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>भूमिका / सम्प्रति</label><input id=\"f-poet-occ\" list=\"role-dl\" value=\"" + esc(ept ? (ept.occupation || "") : "") + "\" /><datalist id=\"role-dl\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>मोबाइल (केवल एडमिन के लिए)</label><input id=\"f-poet-mobile\" value=\"" + esc(ept ? (ept.mobile || "") : "") + "\" /></div></div>" +
+      "<div class=\"field\"><label>मुख्य विधा (एक से अधिक विधाएँ चुनें)</label>" + renderMultiGenreSelector("f-poet-genres-box", ept ? (ept.mainGenres || "") : "") + "</div>" +
       "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"f-poet-pubs\" value=\"" + esc(ept ? (ept.publications || "") : "") + "\" /></div>" +
       "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"f-poet-awards\" value=\"" + esc(ept ? (ept.awards || "") : "") + "\" /></div>" +
       "<div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div>" +
@@ -4586,10 +4752,10 @@ function savePoetForm() {
     id: id, name: name, ownerEmail: ex.ownerEmail || "",
     mobile: (document.getElementById("f-poet-mobile") || { value: "" }).value.trim(),
     birth: (document.getElementById("f-poet-birth") || { value: "" }).value.trim(),
-    city: (document.getElementById("f-poet-city") || { value: "" }).value.trim(),
+    city: collectGeoLocationString("f-poet"),
     education: (document.getElementById("f-poet-edu") || { value: "" }).value.trim(),
     occupation: (document.getElementById("f-poet-occ") || { value: "" }).value.trim(),
-    mainGenres: (document.getElementById("f-poet-genres") || { value: "" }).value.trim(),
+    mainGenres: collectMultiGenres("f-poet-genres-box"),
     publications: (document.getElementById("f-poet-pubs") || { value: "" }).value.trim(),
     awards: (document.getElementById("f-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("f-poet-quote") || { value: "" }).value.trim(),
@@ -4986,36 +5152,49 @@ function renderSubmitModal() {
     var curPhoto = state.tempPublicPoetPhoto || (activePoetObj ? activePoetObj.photo : "");
     var curRole = (activePoetObj && activePoetObj.occupation) || "कवि";
     var curCity = (activePoetObj && activePoetObj.city) || "लखनऊ, उत्तर प्रदेश";
+    var curPhoto = state.tempPublicPoetPhoto || (activePoetObj ? activePoetObj.photo : "");
+    var curRole = (activePoetObj && activePoetObj.occupation) || "कवि";
+    var curCity = (activePoetObj && activePoetObj.city) || "लखनऊ, उत्तर प्रदेश";
+    var unlinkedPoets = state.poets.filter(function(pt) { return !pt.ownerEmail || pt.ownerEmail.toLowerCase().trim() === userEmail; });
+    var linkBoxHtml = (!pubPoet && unlinkedPoets.length) ? (
+      "<div class=\"my-profile-card\" style=\"margin-bottom:12px;\">" +
+        "<div style=\"font-size:13px; font-weight:700; color:var(--primary); margin-bottom:6px;\">🔗 पहले से बनी मूल प्रोफ़ाइल से ईमेल लिंक करें</div>" +
+        "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:8px;\">यदि एडमिन ने पहले ही आपका नाम/प्रोफ़ाइल जोड़ दिया है, तो यहाँ चुनकर अपने ईमेल (" + esc(userEmail) + ") से लिंक करें:</div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+          "<select id=\"link-existing-poet-sel\" style=\"flex:1; min-width:190px; padding:9px 11px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg-elevated); color:var(--text);\">" +
+            "<option value=\"\">-- अपनी पहले से बनी प्रोफ़ाइल चुनें --</option>" +
+            unlinkedPoets.map(function(pt) { return "<option value=\"" + esc(pt.id) + "\">" + esc(pt.name) + (pt.city ? (" (" + esc(pt.city) + ")") : "") + "</option>"; }).join("") +
+          "</select>" +
+          "<button type=\"button\" class=\"action-btn gold\" style=\"padding:9px 13px; font-size:12.5px;\" onclick=\"linkExistingAdminProfileToEmail((document.getElementById('link-existing-poet-sel')||{}).value)\">🔗 लिंक करें</button>" +
+        "</div>" +
+      "</div>"
+    ) : "";
     formHtml =
+      linkBoxHtml +
       "<div class=\"form-box\">" +
         "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">✒️ " + (activePoetObj ? "मेरी प्रोफ़ाइल व कवि चित्र संपादित करें" : "प्रोफ़ाइल बनाएँ (कवि चित्र सहित)") + "</h4>" +
         "<div class=\"field\"><label>🖼️ कवि चित्र (अपना फ़ोटो अपलोड करें)</label>" +
-          "<input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempPublicPoetPhoto\', \'pub-poet-photo-prev\', 320)\" />" +
+          "<input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempPublicPoetPhoto', 'pub-poet-photo-prev', 320)\" />" +
           "<div class=\"photo-preview-row\">" +
             "<div class=\"photo-preview-thumb\" id=\"pub-poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div>" +
             "<span style=\"font-size:12px; color:var(--text-muted);\">यह चित्र आपकी प्रोफ़ाइल, कवि सूची और आपके निजी कॉर्नर में दिखेगा।</span>" +
           "</div>" +
         "</div>" +
-        "<div class=\"field\"><label>नाम एवं उपनाम *</label><input id=\"sub-poet-name\" value=\"" + esc(activePoetObj ? activePoetObj.name : "") + "\" placeholder=\"जैसे: राहुल द्विवेदी \'स्मित\'\" /></div>" +
-        "<div class=\"two-fields\">" +
-          "<div class=\"field\"><label>भूमिका / परिचय श्रेणी (ड्रॉप-डाउन)</label><select id=\"sub-poet-occ\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\" " + (curRole === r ? "selected" : "") + ">" + esc(r) + "</option>"; }).join("") + "</select></div>" +
-          "<div class=\"field\"><label>शहर / स्थान (ड्रॉप-डाउन) *</label><select id=\"sub-poet-city\">" + CITY_OPTIONS.map(function(c) { return "<option value=\"" + esc(c) + "\" " + (curCity === c ? "selected" : "") + ">" + esc(c) + "</option>"; }).join("") + "</select></div>" +
-        "</div>" +
+        "<div class=\"field\"><label>नाम एवं उपनाम *</label><input id=\"sub-poet-name\" value=\"" + esc(activePoetObj ? activePoetObj.name : "") + "\" placeholder=\"जैसे: राहुल द्विवेदी 'स्मित'\" /></div>" +
+        "<div class=\"field\"><label>भूमिका / परिचय श्रेणी (ड्रॉप-डाउन)</label><select id=\"sub-poet-occ\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\" " + (curRole === r ? "selected" : "") + ">" + esc(r) + "</option>"; }).join("") + "</select></div>" +
+        renderGeoDropdowns("sub-poet", curCity) +
         "<div class=\"two-fields\">" +
           "<div class=\"field\"><label>जन्म तिथि / वर्ष</label><input id=\"sub-poet-birth\" value=\"" + esc(activePoetObj ? (activePoetObj.birth || "") : "") + "\" placeholder=\"जैसे: 11 जनवरी 1987\" /></div>" +
           "<div class=\"field\"><label>शिक्षा</label><input id=\"sub-poet-edu\" value=\"" + esc(activePoetObj ? (activePoetObj.education || "") : "") + "\" /></div>" +
         "</div>" +
-        "<div class=\"two-fields\">" +
-          "<div class=\"field\"><label>मोबाइल नम्बर 🔒 (गोपनीय)</label><input id=\"sub-poet-mobile\" type=\"tel\" value=\"" + esc(activePoetObj ? (activePoetObj.mobile || "") : "") + "\" placeholder=\"केवल एडमिन को दिखेगा\" /></div>" +
-          "<div class=\"field\"><label>मुख्य विधा (ड्रॉप-डाउन)</label><select id=\"sub-poet-genres\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\" " + ((activePoetObj && activePoetObj.mainGenres === g) ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
-        "</div>" +
+        "<div class=\"field\"><label>मोबाइल नम्बर 🔒 (गोपनीय)</label><input id=\"sub-poet-mobile\" type=\"tel\" value=\"" + esc(activePoetObj ? (activePoetObj.mobile || "") : "") + "\" placeholder=\"केवल एडमिन को दिखेगा\" /></div>" +
+        "<div class=\"field\"><label>मुख्य विधा (एक से अधिक विधाएँ चुनें)</label>" + renderMultiGenreSelector("sub-poet-genres-box", activePoetObj ? (activePoetObj.mainGenres || "") : "") + "</div>" +
         "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"sub-poet-pubs\" value=\"" + esc(activePoetObj ? (activePoetObj.publications || "") : "") + "\" /></div>" +
         "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"sub-poet-awards\" value=\"" + esc(activePoetObj ? (activePoetObj.awards || "") : "") + "\" /></div>" +
         "<div class=\"field\"><label>काव्य-मुद्रा / चुनिंदा पंक्तियाँ</label><textarea id=\"sub-poet-quote\" style=\"min-height:58px;\">" + esc(activePoetObj ? (activePoetObj.quote || "") : "") + "</textarea></div>" +
         "<div class=\"field\"><label>विशेष / संक्षिप्त परिचय</label><textarea id=\"sub-poet-special\" style=\"min-height:64px;\">" + esc(activePoetObj ? (activePoetObj.special || activePoetObj.bio || "") : "") + "</textarea></div>" +
         "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">💾 प्रोफ़ाइल व कवि चित्र सहेजें</button>" +
       "</div>";
-  }
   body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poem\')\">📜 रचना लिखें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poet\')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल व चित्र" : "प्रोफ़ाइल बनाएँ") + "</button></div>" + formHtml;
 }
 
@@ -5060,9 +5239,9 @@ function submitPublicPoet() {
   var userEmail = state.currentUser && state.currentUser.email;
   if (!userEmail) { showToast("पहले लॉगिन करें"); return; }
   var name = (document.getElementById("sub-poet-name") || { value: "" }).value.trim();
-  var city = (document.getElementById("sub-poet-city") || { value: "" }).value.trim();
+  var city = collectGeoLocationString("sub-poet");
   if (!name || !city) { showToast("नाम और स्थान भरें"); return; }
-  var existingPub = getPoetByEmail(userEmail);
+  var existingPub = getPoetByEmail(userEmail, name);
   var id = existingPub ? existingPub.id : ("poet_" + Date.now());
   var finalPhoto = state.tempPublicPoetPhoto || (existingPub && existingPub.photo) || "";
   var item = {
@@ -5074,7 +5253,7 @@ function submitPublicPoet() {
     birth: (document.getElementById("sub-poet-birth") || { value: "" }).value.trim(),
     education: (document.getElementById("sub-poet-edu") || { value: "" }).value.trim(),
     occupation: (document.getElementById("sub-poet-occ") || { value: "" }).value.trim(),
-    mainGenres: (document.getElementById("sub-poet-genres") || { value: "" }).value.trim(),
+    mainGenres: collectMultiGenres("sub-poet-genres-box"),
     publications: (document.getElementById("sub-poet-pubs") || { value: "" }).value.trim(),
     awards: (document.getElementById("sub-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("sub-poet-quote") || { value: "" }).value.trim(),
