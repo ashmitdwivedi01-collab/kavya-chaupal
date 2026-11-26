@@ -1,32 +1,25 @@
 {
   "name": "काव्य चौपाल",
   "short_name": "काव्य चौपाल",
-  "description": "हिंदी साहित्य, कविता, आगामी कार्यक्रम, लाइव वीडियो, प्रतियोगिता एवं ई-बुक लाइब्रेरी",
-  "start_url": "https://ashmitdwivedi01-collab.github.io/kavya-chaupal/",
-  "scope": "https://ashmitdwivedi01-collab.github.io/kavya-chaupal/",
+  "description": "काव्य चौपाल — साहित्यिक मंच, काव्य गोष्ठियाँ और रचना संसार",
+  "start_url": "/kavya-chaupal/",
+  "scope": "/kavya-chaupal/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#5b1118",
-  "theme_color": "#3e0b14",
-  "lang": "hi",
+  "background_color": "#FFF8EE",
+  "theme_color": "#5C1118",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "/kavya-chaupal/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/kavya-chaupal/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": [
-    "books",
-    "books & reference",
-    "education",
-    "entertainment"
   ]
 }
