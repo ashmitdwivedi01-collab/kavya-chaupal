@@ -1474,9 +1474,42 @@
 .top-account-title { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-account-sub { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .top-account-btns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.top-account-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+}
+@media (min-width: 540px) {
+  .top-account-box {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+.top-account-title {
+  white-space: normal !important;
+  line-height: 1.3;
+}
+.top-account-sub {
+  white-space: normal !important;
+  line-height: 1.35;
+}
+.top-account-btns {
+  width: 100%;
+  justify-content: flex-start;
+}
+@media (min-width: 540px) {
+  .top-account-btns {
+    width: auto;
+    justify-content: flex-end;
+  }
+}
 </style>
 </head>
 <body>
+
 
 
 
@@ -1827,6 +1860,7 @@
   <div id="dad-burst-layer"></div>
   <div id="toast"></div>
 
+  
   
   
   
@@ -3112,14 +3146,16 @@ function isMobileOrWebView() { return /Android|iPhone|iPad|iPod|Mobile/i.test(na
 
 function signInWithGoogle(context) {
   if (!auth || !window.firebase || !firebase.auth || !firebase.auth.GoogleAuthProvider) {
-    showToast("Firebase Google Auth उपलब्ध नहीं है — ईमेल/पासवर्ड या पिन का उपयोग करें");
+    showToast("Firebase Auth उपलब्ध नहीं है — ईमेल/पासवर्ड या पिन का उपयोग करें");
     return;
   }
   var provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
+  showToast("Google लॉगिन खोला जा रहा है...");
   if (isMobileOrWebView()) {
     auth.signInWithRedirect(provider).catch(function(err) {
-      showToast("Google रीडायरेक्ट त्रुटि: " + (err && err.message ? err.message.slice(0, 60) : ""));
+      var msg = (err && err.message) ? err.message : "रीडायरेक्ट विफल";
+      showToast("Google त्रुटि: " + msg.slice(0, 75));
     });
     return;
   }
@@ -3135,10 +3171,10 @@ function signInWithGoogle(context) {
     var code = (err && err.code) || "";
     if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
       auth.signInWithRedirect(provider).catch(function(e2) {
-        showToast("Google लॉगिन त्रुटि: " + (e2 && e2.message ? e2.message.slice(0, 60) : ""));
+        showToast("Google त्रुटि: " + (e2 && e2.message ? e2.message.slice(0, 75) : "असफल"));
       });
     } else {
-      showToast("Google लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 65) : "असफल"));
+      showToast("Google लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 75) : "असफल"));
     }
   });
 }
