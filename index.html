@@ -320,393 +320,7 @@
     .tab-view.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ================= AUTOMATIC DAILY BIRTHDAY ENGINE ================= */
-var HINDI_MONTH_MAP = {
-  "जनवरी": 1, "january": 1, "jan": 1,
-  "फ़रवरी": 2, "फरवरी": 2, "february": 2, "feb": 2,
-  "मार्च": 3, "march": 3, "mar": 3,
-  "अप्रैल": 4, "april": 4, "apr": 4,
-  "मई": 5, "may": 5,
-  "जून": 6, "june": 6, "jun": 6,
-  "जुलाई": 7, "july": 7, "jul": 7,
-  "अगस्त": 8, "august": 8, "aug": 8,
-  "सितंबर": 9, "सितम्बर": 9, "september": 9, "sep": 9, "sept": 9,
-  "अक्टूबर": 10, "अक्तूबर": 10, "october": 10, "oct": 10,
-  "नवंबर": 11, "नवम्बर": 11, "november": 11, "nov": 11,
-  "दिसंबर": 12, "दिसम्बर": 12, "december": 12, "dec": 12
-};
-
-var CLASSIC_LITERARY_BIRTHDAYS = [
-  { month: 1, day: 11, name: "राहुल द्विवेदी 'स्मित'", role: "संस्थापक — काव्य चौपाल", city: "लखनऊ, उत्तर प्रदेश", isClassic: false },
-  { month: 1, day: 30, name: "जयशंकर प्रसाद", role: "छायावाद के आधार स्तंभ", city: "वाराणसी", isClassic: true },
-  { month: 2, day: 21, name: "सूर्यकांत त्रिपाठी 'निराला'", role: "महाप्राण, छायावादी कवि", city: "महिषादल / प्रयागराज", isClassic: true },
-  { month: 3, day: 26, name: "महादेवी वर्मा", role: "आधुनिक मीरा, ज्ञानपीठ सम्मानित", city: "फ़र्रुख़ाबाद / प्रयागराज", isClassic: true },
-  { month: 5, day: 20, name: "सुमित्रानंदन पंत", role: "प्रकृति के सुकुमार कवि", city: "कौसानी", isClassic: true },
-  { month: 7, day: 31, name: "मुंशी प्रेमचंद", role: "उपन्यास सम्राट", city: "लमही, वाराणसी", isClassic: true },
-  { month: 8, day: 3, name: "मैथिलीशरण गुप्त", role: "राष्ट्रकवि", city: "चिरगाँव, झाँसी", isClassic: true },
-  { month: 9, day: 1, name: "दुष्यंत कुमार", role: "हिंदी ग़ज़ल के शिखर पुरुष", city: "बिजनौर / भोपाल", isClassic: true },
-  { month: 9, day: 23, name: "रामधारी सिंह 'दिनकर'", role: "ओज व राष्ट्रीय चेतना के कवि", city: "सिमरिया, बिहार", isClassic: true },
-  { month: 10, day: 12, name: "निदा फ़ाज़ली", role: "प्रख्यात शायर एवं गीतकार", city: "दिल्ली / मुंबई", isClassic: true },
-  { month: 11, day: 27, name: "हरिवंश राय 'बच्चन'", role: "हालावाद के प्रवर्तक", city: "प्रयागराज", isClassic: true },
-  { month: 12, day: 25, name: "अटल बिहारी वाजपेयी", role: "जननायक एवं ओजस्वी कवि", city: "ग्वालियर / नई दिल्ली", isClassic: true }
-];
-
-function parseHindiDayMonth(birthStr) {
-  var s = String(birthStr || "").trim().toLowerCase();
-  if (!s) return null;
-  // Convert Devanagari digits to ASCII
-  var devDigits = "०१२३४५६७८९";
-  s = s.replace(/[०-९]/g, function(ch) { return String(devDigits.indexOf(ch)); });
-
-  // Format: DD/MM or DD-MM or YYYY-MM-DD
-  var iso = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
-  if (iso) return { day: parseInt(iso[3], 10), month: parseInt(iso[2], 10) };
-
-  var dmy = s.match(/(\d{1,2})[-\/\.](\d{1,2})/);
-  if (dmy) return { day: parseInt(dmy[1], 10), month: parseInt(dmy[2], 10) };
-
-  // Format: "11 जनवरी 1987" or "26 नवम्बर"
-  var dayMatch = s.match(/(\d{1,2})/);
-  if (!dayMatch) return null;
-  var dayNum = parseInt(dayMatch[1], 10);
-  var monthNum = 0;
-  Object.keys(HINDI_MONTH_MAP).forEach(function(k) {
-    if (s.indexOf(k) !== -1) monthNum = HINDI_MONTH_MAP[k];
-  });
-  if (dayNum >= 1 && dayNum <= 31 && monthNum >= 1 && monthNum <= 12) {
-    return { day: dayNum, month: monthNum };
-  }
-  return null;
-}
-
-function getTodaysBirthdayCelebrants() {
-  var now = new Date();
-  var todayDay = now.getDate();
-  var todayMonth = now.getMonth() + 1;
-  var seenNames = new Set();
-  var results = [];
-
-  // 1. Check all registered Poets
-  state.poets.forEach(function(pt) {
-    var dm = parseHindiDayMonth(pt.birth);
-    if (dm && dm.day === todayDay && dm.month === todayMonth) {
-      seenNames.add(pt.name.trim());
-      results.push({
-        id: pt.id,
-        name: pt.name,
-        role: pt.occupation || "काव्य चौपाल रचनाकार",
-        city: pt.city || "",
-        photo: pt.photo || "",
-        ownerEmail: pt.ownerEmail || "",
-        isClassic: false
-      });
-    }
-  });
-
-  // 2. Check all Admin Members
-  state.admins.forEach(function(ad) {
-    if (seenNames.has(ad.name.trim())) return;
-    var dm = parseHindiDayMonth(ad.birth);
-    if (dm && dm.day === todayDay && dm.month === todayMonth) {
-      seenNames.add(ad.name.trim());
-      results.push({
-        id: ad.id,
-        name: ad.name,
-        role: ad.designation || "प्रबन्धकीय मण्डल",
-        city: ad.city || "",
-        photo: ad.photo || "",
-        ownerEmail: "",
-        isClassic: false
-      });
-    }
-  });
-
-  // 3. Check Classic Literary Calendar
-  CLASSIC_LITERARY_BIRTHDAYS.forEach(function(cl, idx) {
-    if (cl.day === todayDay && cl.month === todayMonth && !seenNames.has(cl.name.trim())) {
-      seenNames.add(cl.name.trim());
-      results.push({
-        id: "classic_bday_" + idx,
-        name: cl.name,
-        role: cl.role,
-        city: cl.city,
-        photo: "",
-        ownerEmail: "",
-        isClassic: cl.isClassic
-      });
-    }
-  });
-
-  return results;
-}
-
-function ensureAutoBirthdayNotifications(celebrants) {
-  if (!celebrants || !celebrants.length) return;
-  var todayKey = new Date().toISOString().slice(0, 10);
-  var storageKey = "kc_auto_bday_notif_" + todayKey;
-  if (localStorage.getItem(storageKey)) return;
-  localStorage.setItem(storageKey, "1");
-
-  celebrants.forEach(function(person) {
-    var title = person.isClassic
-      ? ("🪔 साहित्यिक जयंती नमन: " + person.name)
-      : ("🎂 जन्मोत्सव मंगलकामनाएँ: " + person.name);
-    var body = person.isClassic
-      ? ("आज हिंदी साहित्य के गौरव " + person.name + " जी की जयंती है। काव्य चौपाल परिवार की ओर से सादर नमन।")
-      : ("आज हमारे सम्मानित रचनाकार " + person.name + " जी का जन्मदिन है! आइए उन्हें शुभकामनाएँ व बधाई कार्ड भेंट करें।");
-    pushNotification(title, body, "birthday", person.name, "");
-  });
-}
-
-function renderBirthdayCorner() {
-  var wrap = document.getElementById("birthday-celebration-wrap");
-  if (!wrap) return;
-  var celebrants = getTodaysBirthdayCelebrants();
-  if (!celebrants.length) {
-    wrap.innerHTML = "";
-    return;
-  }
-  ensureAutoBirthdayNotifications(celebrants);
-
-  var todayLabel = new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long" });
-  wrap.innerHTML =
-    "<div class=\"bday-royal-card\">" +
-      "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
-        "<span class=\"spotlight-badge\">🎂 आज का साहित्यिक जन्मोत्सव • " + esc(todayLabel) + "</span>" +
-        "<span style=\"font-size:11.5px; color:#FCE49C;\">✨ स्वतः जन्मोत्सव पटल</span>" +
-      "</div>" +
-      celebrants.map(function(person) {
-        var wishesForPerson = state.bdayWishes.filter(function(w) { return w.targetName === person.name; });
-        var av = person.photo ? ("<img src=\"" + person.photo + "\" alt=\"" + esc(person.name) + "\">") : esc(initials(person.name));
-        return "<div class=\"bday-person-row\">" +
-          "<div class=\"bday-av\">" + av + "</div>" +
-          "<div style=\"flex:1; min-width:0;\">" +
-            "<div class=\"font-royal\" style=\"font-size:19px; color:#FCE49C; line-height:1.2;\">" + esc(person.name) + "</div>" +
-            "<div style=\"font-size:12px; color:rgba(255,249,236,0.88); margin-top:2px;\">" + esc(person.role) + (person.city ? (" • 📍 " + esc(person.city)) : "") + "</div>" +
-            "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;\">" +
-              "<button class=\"spot-mini-btn\" style=\"background:#F7DC8B; color:#2B080D; font-weight:800;\" onclick=\"openBirthdayCardModal(dec(\'" + arg(person.name) + "\'))\">🎨 बधाई कार्ड व शुभकामना (" + wishesForPerson.length + ")</button>" +
-              (!person.isClassic ? ("<button class=\"spot-mini-btn\" onclick=\"openPoetProfile(dec(\'" + arg(person.name) + "\'))\">✒️ रचनाएँ देखें</button>") : "") +
-            "</div>" +
-          "</div>" +
-        "</div>";
-      }).join("") +
-    "</div>";
-}
-
-function openBirthdayCardModal(personName) {
-  var celebrants = getTodaysBirthdayCelebrants();
-  var person = celebrants.find(function(c) { return c.name === personName; }) || { name: personName, role: "काव्य चौपाल साहित्यकार", city: "", photo: "", isClassic: false };
-  state.bdayCardPerson = person;
-  state.bdayCustomWish = person.isClassic
-    ? ("हिंदी साहित्य के शिखर पुरुष " + person.name + " जी की जयंती पर काव्य चौपाल परिवार की ओर से शत-शत नमन एवं सादर श्रद्धांजलि।")
-    : ("काव्य चौपाल परिवार की ओर से आदरणीय " + person.name + " जी को जन्मदिन की अनंत मंगलकामनाएँ। आपकी लेखनी सदैव साहित्य जगत को आलोकित करती रहे।");
-  if (!document.getElementById("bday-modal").classList.contains("open")) pushAppView("bday");
-  document.getElementById("bday-modal").classList.add("open");
-  renderBirthdayCardModal();
-}
-
-function renderBirthdayCardModal() {
-  var body = document.getElementById("bday-modal-body");
-  var person = state.bdayCardPerson;
-  if (!body || !person) return;
-  var wishes = state.bdayWishes.filter(function(w) { return w.targetName === person.name; });
-  var defaultSender = "";
-  if (state.currentUser && state.currentUser.email) {
-    var pr = getPoetByEmail(state.currentUser.email) || getPendingPoetByEmail(state.currentUser.email);
-    defaultSender = pr ? pr.name : (state.currentUser.displayName || state.currentUser.email.split("@")[0]);
-  }
-  body.innerHTML =
-    "<div class=\"form-box\">" +
-      "<div class=\"field\"><label>🎂 बधाई / जयंती संदेश (कार्ड पर दिखेगा)</label><textarea style=\"min-height:68px;\" oninput=\"state.bdayCustomWish=this.value; drawBirthdayCardCanvas(false)\">" + esc(state.bdayCustomWish) + "</textarea></div>" +
-      "<img id=\"bday-preview-img\" class=\"studio-preview-img\" alt=\"जन्मदिन बधाई कार्ड\" />" +
-      "<div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">" +
-        "<button class=\"action-btn gold\" onclick=\"drawBirthdayCardCanvas(true)\">⬇️ HD बधाई कार्ड डाउनलोड</button>" +
-        "<button class=\"action-btn primary\" onclick=\"shareBirthdayWhatsApp()\">📲 WhatsApp पर बधाई दें</button>" +
-      "</div>" +
-    "</div>" +
-    "<div class=\"form-box\">" +
-      "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">💐 अपनी शुभकामना दर्ज करें (" + wishes.length + ")</h4>" +
-      "<div class=\"field\" style=\"margin-bottom:8px;\"><input id=\"bday-sender-in\" value=\"" + esc(defaultSender) + "\" placeholder=\"आपका शुभ नाम *\" /></div>" +
-      "<div class=\"field\" style=\"margin-bottom:8px;\"><textarea id=\"bday-msg-in\" style=\"min-height:58px;\" placeholder=\"जन्मदिन की हार्दिक शुभकामनाएँ...\"></textarea></div>" +
-      "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"postBirthdayWish()\">🎂 शुभकामना भेजें</button>" +
-    "</div>" +
-    (wishes.length ? wishes.map(function(w) {
-      return "<div class=\"comment-item\"><div class=\"comment-head\"><span class=\"comment-author\">💐 " + esc(w.senderName) + "</span><span class=\"comment-time\">" + formatTimeHi(w.createdAt) + "</span></div><div class=\"comment-body\">" + esc(w.message) + "</div></div>";
-    }).join("") : "");
-  drawBirthdayCardCanvas(false);
-}
-
-function postBirthdayWish() {
-  var person = state.bdayCardPerson;
-  if (!person) return;
-  var sender = ((document.getElementById("bday-sender-in") || { value: "" }).value || "").trim();
-  var msg = ((document.getElementById("bday-msg-in") || { value: "" }).value || "").trim();
-  if (!sender || !msg) { showToast("कृपया अपना नाम और शुभकामना संदेश लिखें"); return; }
-  var id = "bwish_" + Date.now();
-  var item = {
-    id: id,
-    targetName: person.name,
-    senderName: sender,
-    message: msg,
-    createdAt: Date.now()
-  };
-  state.bdayWishes.unshift(item);
-  cloudSaveDoc("bday_wishes", id, item).then(function() {
-    burstCelebration("🎂");
-    pushNotification(
-      "🎂 " + person.name + " जी के लिए नई जन्मदिन शुभकामना",
-      sender + ": " + (msg.length > 60 ? (msg.slice(0, 58) + "…") : msg),
-      "birthday",
-      person.name,
-      person.ownerEmail || ""
-    );
-    renderAll();
-    renderBirthdayCardModal();
-    showToast("आपकी मंगलकामना भेज दी गई 🎂✨");
-  });
-}
-
-function shareBirthdayWhatsApp() {
-  var person = state.bdayCardPerson;
-  if (!person) return;
-  var txt = "🎂 *" + (person.isClassic ? "साहित्यिक जयंती नमन" : "जन्मोत्सव मंगलकामनाएँ") + "* 🪔
-
-*" + person.name + "*
-" + state.bdayCustomWish + "
-
-— *काव्य चौपाल परिवार*";
-  window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank");
-}
-
-function drawBirthdayCardCanvas(triggerDownload) {
-  var canvas = document.getElementById("bday-canvas");
-  var person = state.bdayCardPerson;
-  if (!canvas || !person) return;
-  var ctx = canvas.getContext("2d");
-  var W = 1080, H = 1080;
-
-  var loadImg = function(src) {
-    return new Promise(function(resolve) {
-      if (!src) return resolve(null);
-      var im = new Image();
-      im.crossOrigin = "anonymous";
-      im.onload = function() { resolve(im); };
-      im.onerror = function() { resolve(null); };
-      im.src = src;
-    });
-  };
-
-  Promise.all([loadImg(person.photo || ""), loadImg(state.settings.logo || "")]).then(function(imgs) {
-    var poetImg = imgs[0];
-    var logoImg = imgs[1];
-
-    var grad = ctx.createRadialGradient(W / 2, H * 0.35, 80, W / 2, H / 2, 780);
-    grad.addColorStop(0, "#7B1620");
-    grad.addColorStop(0.55, "#450912");
-    grad.addColorStop(1, "#1D050D");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Royal Gold Double Border
-    ctx.strokeStyle = "#F7DC8B";
-    ctx.lineWidth = 8;
-    ctx.strokeRect(34, 34, W - 68, H - 68);
-    ctx.strokeStyle = "rgba(247, 220, 139, 0.48)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(52, 52, W - 104, H - 104);
-
-    // Top Center Kavya Chaupal Header
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#F7DC8B";
-    ctx.font = "700 44px 'Yatra One', serif";
-    ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 122);
-
-    ctx.font = "700 32px 'Noto Sans Devanagari', sans-serif";
-    ctx.fillStyle = "#FDE68A";
-    ctx.fillText(person.isClassic ? "🪔 सादर जयंती नमन 🪔" : "🎂 जन्मोत्सव मंगलकामनाएँ 🎂", W / 2, 178);
-
-    // Circular Poet Photo / Monogram
-    var cx = W / 2, cy = 335, r = 112;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-    if (poetImg) {
-      ctx.drawImage(poetImg, cx - r, cy - r, r * 2, r * 2);
-    } else {
-      ctx.fillStyle = "#C6922C";
-      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-      ctx.fillStyle = "#2B080D";
-      ctx.font = "700 84px 'Yatra One', serif";
-      ctx.textBaseline = "middle";
-      ctx.fillText(initials(person.name), cx, cy + 4);
-    }
-    ctx.restore();
-
-    ctx.strokeStyle = "#F7DC8B";
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Poet Name & Role
-    ctx.textBaseline = "alphabetic";
-    ctx.fillStyle = "#FFFDF7";
-    ctx.font = "700 50px 'Yatra One', serif";
-    ctx.fillText(person.name, W / 2, 515);
-
-    ctx.fillStyle = "#F3D47E";
-    ctx.font = "600 25px 'Noto Sans Devanagari', sans-serif";
-    ctx.fillText((person.role || "") + (person.city ? (" • " + person.city) : ""), W / 2, 560);
-
-    // Wish Text Wrapped
-    ctx.fillStyle = "#FFF8EA";
-    ctx.font = "500 30px 'Noto Serif Devanagari', serif";
-    var words = String(state.bdayCustomWish || "").split(" ");
-    var lines = [];
-    var cur = "";
-    words.forEach(function(w) {
-      var test = cur ? (cur + " " + w) : w;
-      if (ctx.measureText(test).width > W - 200) {
-        if (cur) lines.push(cur);
-        cur = w;
-      } else {
-        cur = test;
-      }
-    });
-    if (cur) lines.push(cur);
-    lines.slice(0, 4).forEach(function(ln, idx) {
-      ctx.fillText(ln, W / 2, 635 + idx * 48);
-    });
-
-    // Bottom Seal
-    ctx.strokeStyle = "rgba(247, 220, 139, 0.5)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(W / 2 - 220, H - 145);
-    ctx.lineTo(W / 2 + 220, H - 145);
-    ctx.stroke();
-
-    ctx.fillStyle = "#F7DC8B";
-    ctx.font = "700 32px 'Yatra One', serif";
-    ctx.fillText("शुभेच्छु: काव्य चौपाल साहित्य परिवार", W / 2, H - 92);
-
-    var url = canvas.toDataURL("image/png");
-    var imgEl = document.getElementById("bday-preview-img");
-    if (imgEl) imgEl.src = url;
-    if (triggerDownload) {
-      var a = document.createElement("a");
-      a.download = "kavya-chaupal-janmdin-" + Date.now() + ".png";
-      a.href = url;
-      a.click();
-      showToast("जन्मदिन बधाई कार्ड डाउनलोड हुआ 🎂");
-    }
-  });
-}
-
-
-/* ================= GRAND ROYAL SPOTLIGHT (आज का विशेष भाव कॉर्नर) ================= */
+    /* ================= GRAND ROYAL SPOTLIGHT (आज का विशेष भाव कॉर्नर) ================= */
     .spotlight-card {
       position: relative;
       border-radius: 28px;
@@ -1745,34 +1359,29 @@ function drawBirthdayCardCanvas(triggerDownload) {
     .book-stage-wrap {
       perspective: 1600px;
       flex: 1;
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 4px 2px 18px;
-      background: #E8DFCE;
-    }
-    [data-theme="night"] .book-stage-wrap {
-      background: #090D1A;
+      padding: 6px 4px 14px;
     }
     .book-flip-card {
       position: relative;
       width: 100%;
-      max-width: 860px;
+      max-width: 780px;
       background: #FFFFFF;
-      border: 1.5px solid var(--gold);
-      border-radius: 4px 14px 14px 4px;
-      padding: 2px;
+      border: 2px solid var(--gold);
+      border-radius: 6px 18px 18px 6px;
+      padding: 6px;
       box-shadow:
-        -6px 0 16px rgba(74, 11, 18, 0.2),
-        0 14px 34px rgba(39, 23, 16, 0.25);
+        -6px 0 16px rgba(74, 11, 18, 0.18),
+        0 18px 40px rgba(39, 23, 16, 0.26);
       transform-origin: left center;
       transform-style: preserve-3d;
-      transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
     }
     .book-flip-card.sharp-contrast canvas {
-      filter: contrast(1.22) saturate(1.05);
+      filter: contrast(1.35) brightness(1.05);
     }
     .book-flip-card::before {
       content: "";
@@ -1812,55 +1421,65 @@ function drawBirthdayCardCanvas(triggerDownload) {
       text-align: center;
     }
 
-    /* ================= AUTOMATIC BIRTHDAY CELEBRATION CORNER ================= */
-    .bday-royal-card {
+    /* ================= AUTO SAHITYAKAR BIRTHDAY / JAYANTI SPOTLIGHT ================= */
+    .jayanti-card {
       position: relative;
       border-radius: 24px;
       padding: 18px 16px;
       margin-bottom: 16px;
       background:
-        radial-gradient(circle at 15% 15%, rgba(253, 224, 71, 0.28), transparent 45%),
-        radial-gradient(circle at 88% 85%, rgba(244, 63, 94, 0.25), transparent 48%),
-        linear-gradient(145deg, #581024 0%, #3A0816 55%, #1E0718 100%);
-      border: 2px solid #F7DC8B;
-      color: #FFF9EC;
-      box-shadow: 0 18px 42px rgba(88, 16, 36, 0.3), inset 0 0 26px rgba(247, 220, 139, 0.14);
+        radial-gradient(circle at 12% 15%, rgba(247, 220, 139, 0.25), transparent 48%),
+        radial-gradient(circle at 90% 85%, rgba(198, 146, 44, 0.22), transparent 50%),
+        linear-gradient(145deg, #FFFDF7 0%, #F7E8C8 100%);
+      border: 2px solid var(--gold);
+      box-shadow: var(--shadow-strong);
       overflow: hidden;
     }
-    .bday-royal-card::before {
-      content: "";
-      position: absolute;
-      inset: 6px;
-      border-radius: 18px;
-      border: 1px dashed rgba(247, 220, 139, 0.42);
-      pointer-events: none;
+    [data-theme="night"] .jayanti-card {
+      background:
+        radial-gradient(circle at 15% 15%, rgba(232, 192, 104, 0.2), transparent 50%),
+        linear-gradient(145deg, #1A2240 0%, #10152B 100%);
     }
-    .bday-person-row {
+    .jayanti-top {
       display: flex;
       align-items: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(247, 220, 139, 0.38);
-      border-radius: 16px;
-      padding: 11px 12px;
-      margin-top: 10px;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
     }
-    .bday-av {
+    .jayanti-person-row {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-bottom: 10px;
+    }
+    .jayanti-badge-crest {
       width: 56px;
       height: 56px;
-      border-radius: 50%;
-      border: 2px solid #F7DC8B;
-      background: linear-gradient(135deg, #F6DA86, #C6922C);
-      color: #36080E;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #7B1620, #3E080E);
+      color: #F7DC8B;
+      border: 2px solid var(--gold);
       display: grid;
       place-items: center;
       font-family: 'Yatra One', serif;
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 22px;
       flex-shrink: 0;
-      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(74, 11, 18, 0.25);
     }
-    .bday-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .jayanti-quote {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: var(--text);
+      background: var(--bg-elevated);
+      border-left: 3.5px solid var(--gold);
+      border-radius: 12px;
+      padding: 10px 13px;
+      margin: 8px 0 12px;
+      white-space: pre-line;
+    }
 
     /* ================= ABOUT & SOCIAL CARDS ================= */
     .about-banner {
@@ -1973,13 +1592,22 @@ function drawBirthdayCardCanvas(triggerDownload) {
       background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px; outline: none;
     }
     .field select {
-      appearance: none;
-      -webkit-appearance: none;
-      padding-right: 34px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23C6922C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 11px center;
+      min-height: 44px;
+      line-height: 1.4;
+      color: #271710 !important;
+      background-color: #FFFDF7 !important;
+      border: 1.5px solid #C6922C !important;
+      padding-right: 28px;
       cursor: pointer;
+    }
+    [data-theme="night"] .field select {
+      color: #F6EFE2 !important;
+      background-color: #141A30 !important;
+      border-color: #E8C068 !important;
+    }
+    .field select option {
+      color: #271710;
+      background: #FFFDF7;
     }
     .field textarea { min-height: 96px; resize: vertical; line-height: 1.65; }
     .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--gold); }
@@ -2133,8 +1761,8 @@ function drawBirthdayCardCanvas(triggerDownload) {
 
     <!-- TAB 1: POEMS (रचनाएँ) -->
     <section id="tab-poems" class="tab-view active">
-      <div id="birthday-celebration-wrap"></div>
       <div id="spotlight-wrap"></div>
+      <div id="jayanti-spotlight-wrap"></div>
 
       <!-- Quick Royal Gateway -->
       <div class="quick-grid">
@@ -2367,21 +1995,6 @@ function drawBirthdayCardCanvas(triggerDownload) {
     </div>
   </nav>
 
-  <!-- ================= BIRTHDAY GREETING CARD MODAL ================= -->
-  <div class="modal-overlay" id="bday-modal" onclick="closeModalOnBg(event, 'bday-modal')">
-    <div class="modal-sheet">
-      <div class="modal-head">
-        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
-          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('bday-modal')">← वापस</button>
-          <h3 class="modal-title">🎂 शाही जन्मोत्सव बधाई कार्ड</h3>
-        </div>
-        <button class="close-btn" onclick="closeModal('bday-modal')">✕</button>
-      </div>
-      <div class="modal-body" id="bday-modal-body"></div>
-    </div>
-  </div>
-  <canvas id="bday-canvas" width="1080" height="1080" style="display:none;"></canvas>
-
   <!-- ================= ADMIN SUBMISSION PREVIEW MODAL ================= -->
   <div class="modal-overlay" id="admin-preview-modal" onclick="closeModalOnBg(event, 'admin-preview-modal')">
     <div class="modal-sheet">
@@ -2411,8 +2024,8 @@ function drawBirthdayCardCanvas(triggerDownload) {
   </div>
 
   <!-- ================= PDF READER MODAL ================= -->
-  <div class="modal-overlay" id="pdf-modal" onclick="closeModalOnBg(event, 'pdf-modal')" style="padding:0;">
-    <div class="modal-sheet" style="max-width:100vw; width:100%; height:100vh; max-height:100vh; border-radius:0;">
+  <div class="modal-overlay" id="pdf-modal" onclick="closeModalOnBg(event, 'pdf-modal')">
+    <div class="modal-sheet" style="max-width:920px; width:98%; height:94vh;">
       <div class="modal-head">
         <div style="display:flex; align-items:center; gap:9px; min-width:0;">
           <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('pdf-modal')">← वापस</button>
@@ -2745,9 +2358,6 @@ var state = {
   bhavTheme: "parchment",
   bhavCustomText: "",
   bhavPoemId: null,
-  bdayWishes: [],
-  bdayCardPerson: null,
-  bdayCustomWish: "काव्य चौपाल परिवार की ओर से आपको जन्मदिन की अनंत मंगलकामनाएँ। आपकी लेखनी सदैव हिंदी साहित्य को आलोकित करती रहे।",
   certTitle: "चौपाल गौरव सम्मान-पत्र",
   certName: "",
   certAward: "प्रथम स्थान विजेता • स्वरचित काव्यपाठ प्रतियोगिता",
@@ -2773,7 +2383,6 @@ if (cached) {
   if (Array.isArray(cached.comments)) state.comments = cached.comments;
   if (Array.isArray(cached.messages)) state.messages = cached.messages;
   if (Array.isArray(cached.notifications) && cached.notifications.length) state.notifications = cached.notifications;
-  if (Array.isArray(cached.bdayWishes)) state.bdayWishes = cached.bdayWishes;
 }
 
 function saveLocalCache() {
@@ -2791,8 +2400,7 @@ function saveLocalCache() {
       pendingPoets: state.pendingPoets,
       comments: state.comments,
       messages: state.messages,
-      notifications: state.notifications,
-      bdayWishes: state.bdayWishes
+      notifications: state.notifications
     }));
   } catch (e) {}
 }
@@ -2896,7 +2504,6 @@ function initFirebaseSync() {
   syncCollection("comments", "comments", "createdAt");
   syncCollection("messages", "messages", "createdAt");
   syncCollection("notifications", "notifications", "createdAt");
-  syncCollection("bday_wishes", "bdayWishes", "createdAt");
 
   rootRef.doc("competition").onSnapshot(function(docSnap) {
     if (docSnap.exists) {
@@ -3290,8 +2897,9 @@ function renderAll() {
 
   renderTopAccountBar();
   renderBrandLogo();
-  renderBirthdayCorner();
+  syncDailyBirthdayAutoNotification();
   renderSpotlight();
+  renderJayantiSpotlight();
   renderDailyRiddle();
   renderHomeDropdowns();
   renderVidhaStrip();
@@ -3346,6 +2954,148 @@ function startSpotlightAutoFlash() {
     void box.offsetWidth;
     box.classList.add("flash-anim");
   }, 5500);
+}
+
+/* ================= AUTO DAILY SAHITYAKAR JAYANTI / BIRTHDAY SYSTEM ================= */
+var SAHITYAKAR_BIRTHDAYS = [
+  { mmdd: "01-11", name: "राहुल द्विवेदी 'स्मित'", year: "1987", role: "कवि, गीतकार एवं संस्थापक — काव्य चौपाल", quote: "शब्दों के दीप जलाकर हर मन को जोड़ना ही काव्य चौपाल की साधना है।" },
+  { mmdd: "01-12", name: "सूर्यकांत त्रिपाठी 'निराला' (जयंती स्मरण)", year: "1896/1899", role: "छायावाद के शलाका पुरुष", quote: "वर दे वीणावादिनि वर दे।
+प्रिय स्वतंत्र रव अमृत मंत्र नव भारत में भर दे।" },
+  { mmdd: "01-29", name: "हरिशंकर परसाई", year: "1924", role: "हिंदी के कालजयी व्यंग्यकार", quote: "व्यंग्य वह आईना है जो समाज की विसंगतियों को मुस्कुराहट के साथ दिखाता है।" },
+  { mmdd: "02-03", name: "जयशंकर प्रसाद", year: "1889", role: "छायावाद के आधार स्तंभ कवि व नाटककार", quote: "ले चल मुझे भुलावा देकर, मेरे नाविक धीरे-धीरे।" },
+  { mmdd: "02-18", name: "दुष्यंत कुमार", year: "1933", role: "हिंदी ग़ज़ल के सशक्त हस्ताक्षर", quote: "हो गई है पीर पर्वत-सी पिघलनी चाहिए,
+इस हिमालय से कोई गंगा निकलनी चाहिए।" },
+  { mmdd: "03-26", name: "महादेवी वर्मा", year: "1907", role: "आधुनिक मीरा एवं छायावाद की कवयित्री", quote: "मैं नीर भरी दुख की बदली।" },
+  { mmdd: "04-14", name: "भगवतीचरण वर्मा", year: "1903", role: "प्रसिद्ध उपन्यासकार व कवि", quote: "हम दीवानों की क्या हस्ती, हैं आज यहाँ कल वहाँ चले।" },
+  { mmdd: "05-12", name: "भवानीप्रसाद मिश्र", year: "1913", role: "दूसरा सप्तक के संवेदनशील कवि", quote: "आज दिशाएँ भी हैं, पर मैं हूँ कि दिशाहीन हूँ।" },
+  { mmdd: "07-31", name: "मुंशी प्रेमचंद", year: "1880", role: "कथा सम्राट", quote: "साहित्य समाज का दर्पण नहीं, बल्कि उसके आगे चलने वाली मशाल है।" },
+  { mmdd: "08-08", name: "गोपाल दास 'नीरज'", year: "1925", role: "गीतकार एवं कवि", quote: "कारवाँ गुज़र गया, गुबार देखते रहे।" },
+  { mmdd: "09-23", name: "रामधारी सिंह 'दिनकर'", year: "1908", role: "राष्ट्रकवि", quote: "अधिकार खोकर बैठे रहना, यह महा दुष्कर्म है।" },
+  { mmdd: "10-10", name: "हरिवंशराय बच्चन", year: "1907", role: "हालावाद के प्रणेता कवि", quote: "असफलता एक चुनौती है, स्वीकार करो,
+क्या कमी रह गई, देखो और सुधार करो।" },
+  { mmdd: "11-26", name: "काव्य चौपाल साहित्य परिवार (विशेष स्मरण दिवस)", year: "मंच उत्सव", role: "आज के साहित्यकार एवं रचनाकारों का सारस्वत नमन", quote: "हर दिन किसी न किसी कलमकार के जन्म का उत्सव है—शब्दों से रचा गया संसार अमर है।" },
+  { mmdd: "12-25", name: "अटल बिहारी वाजपेयी", year: "1924", role: "कवि, वक्ता एवं राजनेता", quote: "हार नहीं मानूँगा, रार नहीं ठानूँगा।" }
+];
+
+function getTodayMmDd() {
+  var now = new Date();
+  var m = String(now.getMonth() + 1).padStart(2, "0");
+  var d = String(now.getDate()).padStart(2, "0");
+  return m + "-" + d;
+}
+
+function getTodaysSahityakarList() {
+  var today = getTodayMmDd();
+  var matches = SAHITYAKAR_BIRTHDAYS.filter(function(item) { return item.mmdd === today; });
+  // Also check any poet whose birth field mentions today's day and month name
+  var monthsHi = ["जनवरी","फ़रवरी","मार्च","अप्रैल","मई","जून","जुलाई","अगस्त","सितंबर","अक्टूबर","नवंबर","दिसंबर"];
+  var now = new Date();
+  var dayNum = String(now.getDate());
+  var mName = monthsHi[now.getMonth()];
+  state.poets.forEach(function(pt) {
+    var bStr = String(pt.birth || "");
+    if (bStr.indexOf(dayNum) !== -1 && bStr.indexOf(mName) !== -1) {
+      if (!matches.some(function(x) { return x.name === pt.name; })) {
+        matches.push({
+          mmdd: today,
+          name: pt.name,
+          year: bStr,
+          role: pt.occupation || "काव्य चौपाल रचनाकार",
+          quote: pt.quote || pt.special || "जन्मदिवस पर काव्य चौपाल परिवार की ओर से हार्दिक शुभकामनाएँ एवं सारस्वत नमन!"
+        });
+      }
+    }
+  });
+  return matches;
+}
+
+function syncDailyBirthdayAutoNotification() {
+  var list = getTodaysSahityakarList();
+  var today = getTodayMmDd();
+  var autoId = "notif_bday_" + today;
+  if (state.notifications.some(function(n) { return n.id === autoId; })) return;
+  if (!list.length) return;
+  var names = list.map(function(x) { return x.name; }).join(", ");
+  var item = {
+    id: autoId,
+    title: "🎂 आज साहित्यकार जन्मदिवस विशेष (" + names + ")",
+    body: "आज " + names + " का जन्मदिवस है। काव्य चौपाल परिवार की ओर से हार्दिक बधाई एवं सारस्वत नमन।",
+    type: "birthday",
+    targetId: "",
+    createdAt: Date.now()
+  };
+  state.notifications.unshift(item);
+  saveLocalCache();
+}
+
+function createBirthdayTributeCard(person) {
+  var canvas = document.getElementById("bhav-canvas");
+  if (!canvas) return "";
+  var ctx = canvas.getContext("2d");
+  var W = 1080, H = 1080;
+  var g = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, 760);
+  g.addColorStop(0, "#7B1620");
+  g.addColorStop(1, "#23050B");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = "#F7DC8B";
+  ctx.lineWidth = 8;
+  ctx.strokeRect(36, 36, W - 72, H - 72);
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#F7DC8B";
+  ctx.font = "700 44px 'Yatra One', serif";
+  ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 130);
+  ctx.font = "700 34px 'Noto Sans Devanagari', sans-serif";
+  ctx.fillStyle = "#FFF8EA";
+  ctx.fillText("🎂 जन्मदिवस की हार्दिक शुभकामनाएँ व नमन", W / 2, 225);
+  ctx.fillStyle = "#FCE29A";
+  ctx.font = "700 54px 'Yatra One', serif";
+  ctx.fillText(person.name, W / 2, 345);
+  ctx.fillStyle = "#F3D47E";
+  ctx.font = "600 28px 'Noto Sans Devanagari', sans-serif";
+  ctx.fillText(person.role || "साहित्यकार", W / 2, 405);
+  ctx.fillStyle = "#FFFDF7";
+  ctx.font = "600 35px 'Noto Serif Devanagari', serif";
+  var qLines = String(person.quote || "").split("\n").filter(Boolean).slice(0, 4);
+  qLines.forEach(function(ln, idx) {
+    ctx.fillText(ln, W / 2, 540 + idx * 62);
+  });
+  ctx.fillStyle = "#F7DC8B";
+  ctx.font = "700 32px 'Yatra One', serif";
+  ctx.fillText("— स्नेह एवं सम्मान सहित: काव्य चौपाल परिवार", W / 2, H - 110);
+  var url = canvas.toDataURL("image/png");
+  var a = document.createElement("a");
+  a.download = "jayanti-shubhkamna-" + Date.now() + ".png";
+  a.href = url;
+  a.click();
+  showToast("जन्मदिवस शुभकामना चित्र डाउनलोड हुआ 🎉");
+}
+
+function renderJayantiSpotlight() {
+  var wrap = document.getElementById("jayanti-spotlight-wrap");
+  if (!wrap) return;
+  var list = getTodaysSahityakarList();
+  if (!list.length) { wrap.innerHTML = ""; return; }
+  wrap.innerHTML = list.map(function(person, idx) {
+    return "<div class="jayanti-card">" +
+      "<div class="jayanti-top">" +
+        "<span class="genre-tag">🎂 आज साहित्यकार जन्मदिवस • स्वतः सूचना</span>" +
+        "<span style="font-size:11.5px; color:var(--text-muted); font-weight:600;">" + (person.year ? ("जन्म: " + esc(person.year)) : "विशेष स्मरण") + "</span>" +
+      "</div>" +
+      "<div class="jayanti-person-row">" +
+        "<div class="jayanti-badge-crest">" + esc(initials(person.name)) + "</div>" +
+        "<div style="min-width:0; flex:1;">" +
+          "<div class="font-royal" style="font-size:20px; color:var(--primary);">" + esc(person.name) + "</div>" +
+          "<div style="font-size:12.5px; color:var(--text-muted); font-weight:600;">" + esc(person.role) + "</div>" +
+        "</div>" +
+      "</div>" +
+      "<div class="jayanti-quote">“" + esc(person.quote) + "”</div>" +
+      "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">" +
+        "<span style="font-size:12px; color:var(--primary); font-weight:700;">✨ काव्य चौपाल परिवार की ओर से हार्दिक बधाई</span>" +
+        "<button class="action-btn gold" style="padding:7px 13px; font-size:12.5px;" onclick="createBirthdayTributeCard(getTodaysSahityakarList()[" + idx + "])">🎁 शुभकामना कार्ड डाउनलोड</button>" +
+      "</div>" +
+    "</div>";
+  }).join("");
 }
 
 function renderSpotlight(shouldFlash) {
@@ -3768,7 +3518,6 @@ var currentPdfDoc = null;
 var currentPdfPage = 1;
 var currentPdfScale = 1.0;
 var currentPdfSharpMode = true;
-var currentPdfUrlForNative = "";
 var pdfTouchStartX = 0;
 var pdfRenderSeq = 0;
 
@@ -3777,6 +3526,17 @@ function togglePdfSharpMode() {
   var btn = document.getElementById("pdf-sharp-btn");
   if (btn) btn.textContent = currentPdfSharpMode ? "✨ UltraHD" : "📄 सामान्य";
   if (currentPdfDoc) renderSingleBookPage(currentPdfPage, null);
+}
+
+function applyZoomVisuals() {
+  var zLbl = document.getElementById("pdf-zoom-lbl");
+  if (zLbl) zLbl.textContent = Math.round(currentPdfScale * 100) + "%";
+  var card = document.getElementById("active-book-card");
+  if (card) {
+    card.style.transformOrigin = "top center";
+    card.style.transform = currentPdfScale === 1.0 ? "" : ("scale(" + currentPdfScale + ")");
+    card.style.marginBottom = currentPdfScale > 1.0 ? Math.round((currentPdfScale - 1) * 320 + 24) + "px" : "12px";
+  }
 }
 
 function renderSingleBookPage(pageNum, direction) {
@@ -3788,39 +3548,30 @@ function renderSingleBookPage(pageNum, direction) {
 
   var ind = document.getElementById("book-page-ind");
   if (ind) ind.textContent = "पृष्ठ " + currentPdfPage + " / " + totalPages;
-  var zLbl = document.getElementById("pdf-zoom-lbl");
-  if (zLbl) zLbl.textContent = Math.round(currentPdfScale * 100) + "%";
 
   var prevBtn = document.getElementById("book-prev-btn");
   var nextBtn = document.getElementById("book-next-btn");
   if (prevBtn) prevBtn.disabled = currentPdfPage <= 1;
   if (nextBtn) nextBtn.disabled = currentPdfPage >= totalPages;
 
-  var baseContainerW = Math.max(300, (stage.clientWidth || window.innerWidth || 360) - 8);
-  var targetDisplayW = Math.round(baseContainerW * currentPdfScale);
-
+  var containerWidth = Math.max(280, (stage.clientWidth || 360) - 18);
   currentPdfDoc.getPage(currentPdfPage).then(function(page) {
     if (seq !== pdfRenderSeq) return;
     var unscaled = page.getViewport({ scale: 1 });
-    var displayScale = targetDisplayW / unscaled.width;
+    var baseScale = containerWidth / unscaled.width;
 
-    // True vector re-rasterization at Ultra-HD pixel density (up to 3.5x DPR)
-    var dpr = Math.max(2.0, Math.min(window.devicePixelRatio || 2.5, 3.5));
-    var uhdBoost = currentPdfSharpMode ? Math.max(2.8, dpr * 1.35) : dpr;
-    var renderViewport = page.getViewport({ scale: displayScale * uhdBoost });
+    // Ultra HD 3.2x super-sampling for crystal-clear reading on every screen
+    var uhdMultiplier = currentPdfSharpMode ? 3.2 : 1.75;
+    var renderViewport = page.getViewport({ scale: baseScale * uhdMultiplier });
 
     stage.innerHTML = "";
     var card = document.createElement("div");
     card.id = "active-book-card";
     card.className = "book-flip-card" + (currentPdfSharpMode ? " sharp-contrast" : "") + (direction === "next" ? " flip-next" : (direction === "prev" ? " flip-prev" : ""));
-    card.style.width = targetDisplayW + "px";
-    card.style.maxWidth = currentPdfScale > 1.0 ? "none" : "860px";
-
     card.addEventListener("touchstart", function(ev) {
-      if (ev.touches && ev.touches.length === 1) pdfTouchStartX = ev.touches[0].clientX;
+      if (ev.touches && ev.touches[0]) pdfTouchStartX = ev.touches[0].clientX;
     }, { passive: true });
     card.addEventListener("touchend", function(ev) {
-      if (currentPdfScale > 1.05) return; // Allow panning when zoomed in
       if (!ev.changedTouches || !ev.changedTouches[0]) return;
       var diff = ev.changedTouches[0].clientX - pdfTouchStartX;
       if (diff < -45 && currentPdfPage < totalPages) turnBookPage(1);
@@ -3828,13 +3579,13 @@ function renderSingleBookPage(pageNum, direction) {
     }, { passive: true });
 
     var topBar = document.createElement("div");
-    topBar.style.cssText = "display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:700; color:#6B111B; padding:3px 6px 5px; background:#FFFDF7; border-bottom:1px solid #EED9B0;";
-    topBar.innerHTML = "<span>📖 बाएँ से दाएँ पन्ना पलटें</span><span>पृष्ठ " + currentPdfPage + " / " + totalPages + " (" + Math.round(currentPdfScale * 100) + "%)</span>";
+    topBar.style.cssText = "display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:700; color:#6B111B; padding:2px 6px 6px;";
+    topBar.innerHTML = "<span>📖 बाएँ से दाएँ पन्ना पलटें • UltraHD</span><span>पृष्ठ " + currentPdfPage + " / " + totalPages + "</span>";
 
     var canvas = document.createElement("canvas");
     canvas.width = Math.round(renderViewport.width);
     canvas.height = Math.round(renderViewport.height);
-    canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:4px; cursor:pointer; background:#FFFFFF;";
+    canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:8px; cursor:pointer; background:#fff;";
     canvas.addEventListener("click", function(ev) {
       if (currentPdfScale > 1.05) return;
       var rect = canvas.getBoundingClientRect();
@@ -3846,6 +3597,7 @@ function renderSingleBookPage(pageNum, direction) {
     card.appendChild(topBar);
     card.appendChild(canvas);
     stage.appendChild(card);
+    applyZoomVisuals();
 
     var ctx = canvas.getContext("2d", { alpha: false });
     ctx.fillStyle = "#FFFFFF";
@@ -3867,14 +3619,23 @@ function turnBookPage(delta) {
   if (!currentPdfDoc) return;
   var nextP = currentPdfPage + delta;
   if (nextP < 1 || nextP > currentPdfDoc.numPages) return;
+  currentPdfScale = 1.0;
   var dir = delta > 0 ? "next" : "prev";
   renderSingleBookPage(nextP, dir);
 }
 
-function zoomPdfReader(delta) {
+function jumpBookPage(val) {
   if (!currentPdfDoc) return;
-  currentPdfScale = Math.max(0.75, Math.min(2.5, Number((currentPdfScale + delta).toFixed(2))));
-  renderSingleBookPage(currentPdfPage, null);
+  var num = parseInt(val, 10);
+  if (!isNaN(num) && num >= 1 && num <= currentPdfDoc.numPages) {
+    currentPdfScale = 1.0;
+    renderSingleBookPage(num, num > currentPdfPage ? "next" : "prev");
+  }
+}
+
+function zoomPdfReader(delta) {
+  currentPdfScale = Math.max(0.75, Math.min(2.0, Number((currentPdfScale + delta).toFixed(2))));
+  applyZoomVisuals();
   showToast("ज़ूम: " + Math.round(currentPdfScale * 100) + "%");
 }
 
@@ -3884,24 +3645,23 @@ function openPdfReader(id) {
   currentPdfDoc = null;
   currentPdfPage = 1;
   currentPdfScale = 1.0;
-  currentPdfUrlForNative = "";
   document.getElementById("pdf-modal-title").textContent = "📖 " + b.title;
   document.getElementById("pdf-modal-body").innerHTML =
-    "<div class=\"book-nav-bar\" style=\"margin-bottom:6px;\">" +
-      "<div style=\"display:flex; gap:5px; align-items:center;\">" +
-        "<button id=\"book-prev-btn\" class=\"sm-btn\" onclick=\"turnBookPage(-1)\" disabled>◀ पिछला</button>" +
+    "<div class=\"book-nav-bar\">" +
+      "<div style=\"display:flex; gap:6px; align-items:center;\">" +
+        "<button id=\"book-prev-btn\" class=\"sm-btn\" onclick=\"turnBookPage(-1)\" disabled>◀ पिछला पन्ना</button>" +
         "<span id=\"book-page-ind\" class=\"book-page-indicator\">पृष्ठ 1 / …</span>" +
-        "<button id=\"book-next-btn\" class=\"sm-btn\" onclick=\"turnBookPage(1)\" disabled>अगला ▶</button>" +
+        "<button id=\"book-next-btn\" class=\"sm-btn\" onclick=\"turnBookPage(1)\" disabled>अगला पन्ना ▶</button>" +
       "</div>" +
-      "<div style=\"display:flex; gap:5px; align-items:center; flex-wrap:wrap;\">" +
-        "<button id=\"pdf-sharp-btn\" class=\"sm-btn\" onclick=\"togglePdfSharpMode()\">✨ UltraHD</button>" +
-        "<button class=\"sm-btn\" onclick=\"zoomPdfReader(-0.2)\">🔍-</button>" +
-        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:40px; text-align:center;\">100%</span>" +
-        "<button class=\"sm-btn\" onclick=\"zoomPdfReader(0.2)\">🔍+</button>" +
+      "<div style=\"display:flex; gap:6px; align-items:center; flex-wrap:wrap;\">" +
+        "<button id=\"pdf-sharp-btn\" class=\"sm-btn\" onclick=\"togglePdfSharpMode()\">✨ HD स्पष्ट</button>" +
+        "<button class=\"sm-btn\" onclick=\"zoomPdfReader(-0.15)\">🔍-</button>" +
+        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:42px; text-align:center;\">100%</span>" +
+        "<button class=\"sm-btn\" onclick=\"zoomPdfReader(0.15)\">🔍+</button>" +
         "<div id=\"pdf-dl-slot\"></div>" +
       "</div>" +
     "</div>" +
-    "<div id=\"pdf-pages-container\" class=\"book-stage-wrap\"><div class=\"empty-box\">📖 Ultra-HD पुस्तक के पन्ने तैयार हो रहे हैं...</div></div>";
+    "<div id=\"pdf-pages-container\" class=\"book-stage-wrap\"><div class=\"empty-box\">📖 पुस्तक के पन्ने तैयार हो रहे हैं...</div></div>";
 
   if (!document.getElementById("pdf-modal").classList.contains("open")) pushAppView("pdf");
   document.getElementById("pdf-modal").classList.add("open");
@@ -3913,10 +3673,7 @@ function openPdfReader(id) {
 
     var setupDownloadLink = function(urlStr) {
       if (!dlSlot || !urlStr) return;
-      currentPdfUrlForNative = urlStr;
-      dlSlot.innerHTML =
-        "<a class=\"sm-btn\" href=\"" + urlStr + "\" target=\"_blank\" rel=\"noopener noreferrer\">↗ नेटिव</a> " +
-        "<a class=\"action-btn gold\" style=\"padding:5px 9px; font-size:11.5px;\" href=\"" + urlStr + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF</a>";
+      dlSlot.innerHTML = "<a class=\"action-btn gold\" style=\"padding:5px 10px; font-size:11.5px;\" href=\"" + urlStr + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF</a>";
     };
 
     var loadWithPdfJs = function(sourceArg) {
@@ -4061,8 +3818,8 @@ function handleNotifClick(id) {
   } else if (n.type === "approval") {
     openAdminStudio();
     if (state.adminUnlocked) setAdminTab("approvals");
-  } else if (n.type === "birthday" && n.targetId) {
-    openBirthdayCardModal(n.targetId);
+  } else if (n.type === "birthday") {
+    switchTab("poems");
   }
 }
 
@@ -5350,7 +5107,7 @@ function syncBackAfterUiClose() { if (navDepth > 0) { navDepth -= 1; ignoreNextP
 function handleSystemBackStep() {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
   var splash = document.getElementById("splash-screen"); if (splash && !splash.classList.contains("hide")) { dismissSplash(true); return; }
-  var modalIds = ["bday-modal", "admin-preview-modal", "bhav-modal", "admin-modal", "submit-modal", "video-modal", "pdf-modal", "notif-modal", "reader-modal"];
+  var modalIds = ["admin-preview-modal", "bhav-modal", "admin-modal", "submit-modal", "video-modal", "pdf-modal", "notif-modal", "reader-modal"];
   for (var i = 0; i < modalIds.length; i++) {
     var m = document.getElementById(modalIds[i]); if (m && m.classList.contains("open")) { closeModal(modalIds[i], true); return; }
   }
