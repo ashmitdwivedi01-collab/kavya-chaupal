@@ -2219,26 +2219,51 @@ var ROLE_OPTIONS = [
   "कवि", "कवयित्री", "गीतकार", "ग़ज़लकार", "दोहाकार", "नवगीतकार", "छंदकार", "कहानीकार / लेखक", "साहित्य प्रेमी पाठक"
 ];
 
-var GEO_DATA = {
+var LOCATION_TREE = {
   "भारत": {
-    "उत्तर प्रदेश": ["लखनऊ", "मनकापुर (गोण्डा)", "आज़मगढ़", "रायबरेली", "बिजनौर", "संभल", "प्रयागराज", "वाराणसी", "अयोध्या", "कानपुर", "गोरखपुर", "आगरा", "मथुरा", "मेरठ", "बरेली"],
-    "मध्य प्रदेश": ["भोपाल", "इंदौर", "ग्वालियर", "जबलपुर", "उज्जैन", "सागर"],
-    "राजस्थान": ["जयपुर", "जोधपुर", "उदयपुर", "कोटा", "अजमेर", "बीकानेर"],
-    "बिहार": ["पटना", "गया", "मुज़फ़्फ़रपुर", "भागलपुर", "दरभंगा"],
-    "दिल्ली": ["नई दिल्ली", "मध्य दिल्ली", "दक्षिण दिल्ली", "उत्तर-पश्चिम दिल्ली"],
-    "उत्तराखंड": ["देहरादून", "हरिद्वार", "हल्द्वानी", "नैनीताल", "ऋषिकेश"],
-    "छत्तीसगढ़": ["रायपुर", "बिलासपुर", "दुर्ग", "भिलाई"],
-    "झारखंड": ["राँची", "जमशेदपुर", "धनबाद"],
-    "महाराष्ट्र": ["मुंबई", "पुणे", "नागपुर", "नासिक"],
-    "गुजरात": ["अहमदाबाद", "सूरत", "वडोदरा", "राजकोट"]
+    "उत्तर प्रदेश": ["लखनऊ", "अयोध्या", "प्रयागराज", "वाराणसी", "कानपुर", "गोण्डा (मनकापुर)", "आज़मगढ़", "रायबरेली", "बिजनौर", "संभल", "गोरखपुर", "आगरा", "मथुरा", "मेरठ", "झाँसी", "बरेली", "अलीगढ़", "सीतापुर", "बाराबंकी", "सुल्तानपुर", "अन्य शहर"],
+    "नई दिल्ली (दिल्ली)": ["नई दिल्ली", "उत्तरी दिल्ली", "दक्षिणी दिल्ली", "पूर्वी दिल्ली", "पश्चिमी दिल्ली", "अन्य शहर"],
+    "मध्य प्रदेश": ["भोपाल", "इंदौर", "ग्वालियर", "जबलपुर", "उज्जैन", "सागर", "रीवा", "सतना", "अन्य शहर"],
+    "राजस्थान": ["जयपुर", "जोधपुर", "उदयपुर", "कोटा", "अजमेर", "बीकानेर", "अलवर", "भरतपुर", "अन्य शहर"],
+    "बिहार": ["पटना", "गया", "मुजफ्फरपुर", "भागलपुर", "दरभंगा", "पूर्णिया", "आरा", "अन्य शहर"],
+    "उत्तराखंड": ["देहरादून", "हरिद्वार", "नैनीताल", "हल्द्वानी", "ऋषिकेश", "अल्मोड़ा", "अन्य शहर"],
+    "हरियाणा": ["गुरुग्राम", "फरीदाबाद", "पंचकूला", "अंबाला", "करनाल", "रोहतक", "हिसार", "अन्य शहर"],
+    "महाराष्ट्र": ["मुंबई", "पुणे", "नागपुर", "नाशिक", "औरंगाबाद", "ठाणे", "अन्य शहर"],
+    "छत्तीसगढ़": ["रायपुर", "बिलासपुर", "दुर्ग", "भिलाई", "कोरबा", "अन्य शहर"],
+    "झारखंड": ["राँची", "जमशेदपुर", "धनबाद", "बोकारो", "हजारीबाग", "अन्य शहर"],
+    "पश्चिम बंगाल": ["कोलकाता", "हावड़ा", "सिलीगुड़ी", "दुर्गापुर", "आसनसोल", "अन्य शहर"],
+    "गुजरात": ["अहमदाबाद", "सूरत", "वडोदरा", "राजकोट", "गांधीनगर", "अन्य शहर"],
+    "पंजाब": ["चंडीगढ़", "लुधियाना", "अमृतसर", "जालंधर", "पटियाला", "अन्य शहर"],
+    "हिमाचल प्रदेश": ["शिमला", "धर्मशाला", "मंडी", "सोलन", "कुल्लू", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
   },
   "नेपाल": {
-    "बागमती प्रदेश": ["काठमांडू", "ललितपुर", "भक्तपुर"],
-    "लुम्बिनी प्रदेश": ["बुटवल", "भैरहवा", "दांग"],
-    "मधेश प्रदेश": ["जनकपुर", "बीरगंज"]
+    "बागमती": ["काठमांडू", "ललितपुर", "भक्तपुर", "अन्य शहर"],
+    "लुम्बिनी": ["बुटवल", "भैरहवा", "नेपालगंज", "अन्य शहर"],
+    "मधेश": ["जनकपुर", "बीरगंज", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "संयुक्त राज्य अमेरिका (USA)": {
+    "कैलिफ़ोर्निया": ["सैन फ्रांसिस्को", "लॉस एंजिल्स", "सैन होज़े", "अन्य शहर"],
+    "टेक्सास": ["ह्यूस्टन", "डलास", "ऑस्टिन", "अन्य शहर"],
+    "न्यूयॉर्क": ["न्यूयॉर्क सिटी", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "यूनाइटेड किंगडम (UK)": {
+    "इंग्लैंड": ["लंदन", "बर्मिंघम", "मैनचेस्टर", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "संयुक्त अरब अमीरात (UAE)": {
+    "दुबई": ["दुबई", "अन्य शहर"],
+    "अबू धाबी": ["अबू धाबी", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "मॉरीशस": {
+    "पोर्ट लुइस": ["पोर्ट लुइस", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
   },
   "अन्य देश": {
-    "अन्य प्रदेश / क्षेत्र": ["अन्य शहर"]
+    "अन्य प्रदेश": ["अन्य शहर"]
   }
 };
 
@@ -2248,6 +2273,180 @@ var CITY_OPTIONS = [
   "अयोध्या, उत्तर प्रदेश", "कानपुर, उत्तर प्रदेश", "गोरखपुर, उत्तर प्रदेश", "नई दिल्ली",
   "जयपुर, राजस्थान", "भोपाल, मध्य प्रदेश", "पटना, बिहार", "अन्य शहर"
 ];
+
+function parseLocationParts(rawStr, fallbackCountry, fallbackState, fallbackCity) {
+  var ctry = fallbackCountry || "भारत";
+  var st = fallbackState || "उत्तर प्रदेश";
+  var ct = fallbackCity || "लखनऊ";
+  var customCt = "";
+  var s = String(rawStr || "").trim();
+  if (!s) return { country: ctry, state: st, city: ct, customCity: "" };
+  var parts = s.split(",").map(function(x) { return x.trim(); }).filter(Boolean);
+  if (parts.length >= 3) {
+    ct = parts[0];
+    st = parts[1];
+    ctry = parts[2];
+  } else if (parts.length === 2) {
+    ct = parts[0];
+    st = parts[1];
+    ctry = "भारत";
+  } else {
+    ct = parts[0];
+  }
+  if (!LOCATION_TREE[ctry]) { ctry = "अन्य देश"; }
+  var statesMap = LOCATION_TREE[ctry] || {};
+  if (!statesMap[st]) {
+    var foundSt = Object.keys(statesMap).find(function(k) { return (statesMap[k] || []).indexOf(ct) !== -1; });
+    st = foundSt || Object.keys(statesMap)[0] || "अन्य प्रदेश";
+  }
+  var citiesArr = statesMap[st] || ["अन्य शहर"];
+  if (citiesArr.indexOf(ct) === -1) {
+    customCt = ct;
+    ct = "अन्य शहर";
+  }
+  return { country: ctry, state: st, city: ct, customCity: customCt };
+}
+
+function buildLocationCascadeHTML(prefix, labelTitle, rawVal, explicitObj) {
+  var parsed = (explicitObj && explicitObj.country)
+    ? { country: explicitObj.country || "भारत", state: explicitObj.state || "उत्तर प्रदेश", city: explicitObj.city || "लखनऊ", customCity: explicitObj.customCity || "" }
+    : parseLocationParts(rawVal, "भारत", "उत्तर प्रदेश", prefix.indexOf("birth") !== -1 ? "" : "लखनऊ");
+  if (!rawVal && (!explicitObj || !explicitObj.city) && prefix.indexOf("birth") !== -1) { parsed.city = ""; }
+  var countries = Object.keys(LOCATION_TREE);
+  var statesList = Object.keys(LOCATION_TREE[parsed.country] || LOCATION_TREE["भारत"]);
+  var activeState = statesList.indexOf(parsed.state) !== -1 ? parsed.state : statesList[0];
+  var citiesList = (LOCATION_TREE[parsed.country] && LOCATION_TREE[parsed.country][activeState]) || ["अन्य शहर"];
+  return "<div class=\"field\" style=\"background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:10px;\">" +
+    "<label style=\"margin-bottom:7px;\">" + esc(labelTitle) + "</label>" +
+    "<div style=\"display:grid; grid-template-columns:repeat(3, 1fr); gap:7px;\">" +
+      "<div><span style=\"font-size:11px; color:var(--text-muted); display:block; margin-bottom:3px;\">देश</span>" +
+        "<select id=\"" + prefix + "-country\" onchange=\"onLocationCountrySync('" + prefix + "')\">" +
+          countries.map(function(c) { return "<option value=\"" + esc(c) + "\" " + (parsed.country === c ? "selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
+        "</select></div>" +
+      "<div><span style=\"font-size:11px; color:var(--text-muted); display:block; margin-bottom:3px;\">प्रदेश / राज्य</span>" +
+        "<select id=\"" + prefix + "-state\" onchange=\"onLocationStateSync('" + prefix + "')\">" +
+          statesList.map(function(st) { return "<option value=\"" + esc(st) + "\" " + (activeState === st ? "selected" : "") + ">" + esc(st) + "</option>"; }).join("") +
+        "</select></div>" +
+      "<div><span style=\"font-size:11px; color:var(--text-muted); display:block; margin-bottom:3px;\">शहर / जनपद</span>" +
+        "<select id=\"" + prefix + "-city\" onchange=\"onLocationCitySync('" + prefix + "')\">" +
+          "<option value=\"\">— चुनें —</option>" +
+          citiesList.map(function(ct) { return "<option value=\"" + esc(ct) + "\" " + (parsed.city === ct ? "selected" : "") + ">" + esc(ct) + "</option>"; }).join("") +
+        "</select></div>" +
+    "</div>" +
+    "<input id=\"" + prefix + "-custom\" value=\"" + esc(parsed.customCity) + "\" placeholder=\"शहर का नाम लिखें (यदि 'अन्य शहर' चुना है)\" style=\"margin-top:7px; display:" + (parsed.city === "अन्य शहर" ? "block" : "none") + ";\" />" +
+  "</div>";
+}
+
+function onLocationCountrySync(prefix) {
+  var cEl = document.getElementById(prefix + "-country");
+  var sEl = document.getElementById(prefix + "-state");
+  var ctEl = document.getElementById(prefix + "-city");
+  if (!cEl || !sEl || !ctEl) return;
+  var ctry = cEl.value || "भारत";
+  var states = Object.keys(LOCATION_TREE[ctry] || { "अन्य प्रदेश": ["अन्य शहर"] });
+  sEl.innerHTML = states.map(function(st) { return "<option value=\"" + esc(st) + "\">" + esc(st) + "</option>"; }).join("");
+  onLocationStateSync(prefix);
+}
+
+function onLocationStateSync(prefix) {
+  var cEl = document.getElementById(prefix + "-country");
+  var sEl = document.getElementById(prefix + "-state");
+  var ctEl = document.getElementById(prefix + "-city");
+  if (!cEl || !sEl || !ctEl) return;
+  var ctry = cEl.value || "भारत";
+  var st = sEl.value || "";
+  var cities = (LOCATION_TREE[ctry] && LOCATION_TREE[ctry][st]) || ["अन्य शहर"];
+  ctEl.innerHTML = "<option value=\"\">— चुनें —</option>" +
+    cities.map(function(ct) { return "<option value=\"" + esc(ct) + "\">" + esc(ct) + "</option>"; }).join("");
+  onLocationCitySync(prefix);
+}
+
+function onLocationCitySync(prefix) {
+  var ctEl = document.getElementById(prefix + "-city");
+  var custEl = document.getElementById(prefix + "-custom");
+  if (!ctEl || !custEl) return;
+  custEl.style.display = (ctEl.value === "अन्य शहर") ? "block" : "none";
+}
+
+function readLocationCascadeValue(prefix) {
+  var cEl = document.getElementById(prefix + "-country");
+  var sEl = document.getElementById(prefix + "-state");
+  var ctEl = document.getElementById(prefix + "-city");
+  var custEl = document.getElementById(prefix + "-custom");
+  if (!cEl || !sEl || !ctEl) return { formatted: "", obj: null };
+  var ctry = (cEl.value || "").trim();
+  var st = (sEl.value || "").trim();
+  var ct = (ctEl.value || "").trim();
+  var cust = (custEl ? custEl.value : "").trim();
+  if (!ct) return { formatted: "", obj: { country: ctry, state: st, city: "", customCity: "" } };
+  var finalCity = (ct === "अन्य शहर" && cust) ? cust : ct;
+  var parts = [finalCity];
+  if (st && st !== "अन्य प्रदेश") parts.push(st);
+  if (ctry && ctry !== "भारत" && ctry !== "अन्य देश") parts.push(ctry);
+  return { formatted: parts.join(", "), obj: { country: ctry, state: st, city: ct, customCity: cust } };
+}
+
+function buildMultiGenreSelectorHTML(prefix, currentGenresStr) {
+  var allG = getAllGenres();
+  var selectedArr = String(currentGenresStr || "").split(/[,،、|]/).map(function(x) { return x.trim(); }).filter(Boolean);
+  var extraCustom = selectedArr.filter(function(g) { return allG.indexOf(g) === -1; }).join(", ");
+  return "<div class=\"field\">" +
+    "<label>मुख्य विधाएँ (एक से अधिक विधा चुन सकते हैं)</label>" +
+    "<div style=\"display:flex; flex-wrap:wrap; gap:7px; margin-top:4px;\">" +
+      allG.map(function(g) {
+        var checked = selectedArr.indexOf(g) !== -1;
+        return "<label style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; border:1.5px solid var(--gold); background:" + (checked ? "var(--gold-soft)" : "var(--bg)") + "; color:var(--text); font-size:12.5px; font-weight:600; cursor:pointer; margin:0;\">" +
+          "<input type=\"checkbox\" class=\"" + prefix + "-genre-cb\" value=\"" + esc(g) + "\" " + (checked ? "checked" : "") + " style=\"width:auto; margin:0;\" />" +
+          "<span>" + esc(g) + "</span>" +
+        "</label>";
+      }).join("") +
+    "</div>" +
+    "<input id=\"" + prefix + "-genre-extra\" value=\"" + esc(extraCustom) + "\" placeholder=\"अन्य विधा जोड़ें (अल्पविराम से अलग करें, जैसे: मुक्तछंद, हाइकु)\" style=\"margin-top:7px;\" />" +
+  "</div>";
+}
+
+function readMultiGenreSelectorValue(prefix) {
+  var list = [];
+  document.querySelectorAll("." + prefix + "-genre-cb:checked").forEach(function(cb) {
+    var v = (cb.value || "").trim();
+    if (v && list.indexOf(v) === -1) list.push(v);
+  });
+  var extraEl = document.getElementById(prefix + "-genre-extra");
+  if (extraEl && extraEl.value.trim()) {
+    extraEl.value.split(/[,،、|]/).map(function(x) { return x.trim(); }).filter(Boolean).forEach(function(v) {
+      if (list.indexOf(v) === -1) list.push(v);
+    });
+  }
+  return list.join(", ");
+}
+
+function linkUserToExistingPoetProfile(selectElId) {
+  if (!state.currentUser || !state.currentUser.email) { showToast("कृपया पहले लॉगिन करें"); return; }
+  var sel = document.getElementById(selectElId);
+  var poetId = sel ? sel.value : "";
+  if (!poetId) { showToast("कृपया सूची से अपनी मूल प्रोफ़ाइल चुनें"); return; }
+  var pt = state.poets.find(function(x) { return x.id === poetId; });
+  if (!pt) { showToast("प्रोफ़ाइल नहीं मिली"); return; }
+  var em = state.currentUser.email.toLowerCase().trim();
+  if (pt.ownerEmail && pt.ownerEmail.toLowerCase().trim() !== em) {
+    showToast("यह प्रोफ़ाइल पहले से किसी अन्य ईमेल से जुड़ी हुई है");
+    return;
+  }
+  pt.ownerEmail = em;
+  var adm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
+  if (adm) {
+    adm.ownerEmail = em;
+    adm.linkedPoetId = pt.id;
+    state.adminUnlocked = true;
+    cloudSaveDoc("admins", adm.id, adm);
+  }
+  cloudSaveDoc("poets", pt.id, pt).then(function() {
+    renderAll();
+    var sm = document.getElementById("submit-modal");
+    if (sm && sm.classList.contains("open")) renderSubmitModal();
+    showToast("आपकी मूल प्रोफ़ाइल (“" + pt.name + "”) सफलतापूर्वक जुड़ गई है ✓");
+  });
+}
 
 var MSG_SUBJECT_OPTIONS = [
   "रचना प्रकाशन संबंधी",
@@ -2842,140 +3041,6 @@ function getAllPoetObjects() {
   return Array.from(map.values());
 }
 
-function parseGeoFromCityStr(cityStr) {
-  var raw = String(cityStr || "").trim();
-  var countries = Object.keys(GEO_DATA);
-  for (var i = 0; i < countries.length; i++) {
-    var c = countries[i];
-    var states = Object.keys(GEO_DATA[c]);
-    for (var j = 0; j < states.length; j++) {
-      var st = states[j];
-      var cities = GEO_DATA[c][st];
-      for (var k = 0; k < cities.length; k++) {
-        var ct = cities[k];
-        if (raw.indexOf(ct) !== -1 || raw.indexOf(st) !== -1) {
-          return { country: c, state: st, city: ct };
-        }
-      }
-    }
-  }
-  return { country: "भारत", state: "उत्तर प्रदेश", city: raw || "लखनऊ" };
-}
-
-function getStatesForCountry(country) {
-  var cObj = GEO_DATA[country] || GEO_DATA["भारत"];
-  return Object.keys(cObj);
-}
-
-function getCitiesForCountryState(country, st) {
-  var cObj = GEO_DATA[country] || GEO_DATA["भारत"];
-  var list = cObj[st];
-  if (!list) {
-    var firstSt = Object.keys(cObj)[0];
-    list = cObj[firstSt] || [];
-  }
-  return list;
-}
-
-function onGeoCountryChange(countrySelId, stateSelId, citySelId) {
-  var cEl = document.getElementById(countrySelId);
-  var sEl = document.getElementById(stateSelId);
-  var ctEl = document.getElementById(citySelId);
-  if (!cEl || !sEl) return;
-  var states = getStatesForCountry(cEl.value);
-  sEl.innerHTML = states.map(function(st) { return "<option value=\"" + esc(st) + "\">" + esc(st) + "</option>"; }).join("");
-  onGeoStateChange(countrySelId, stateSelId, citySelId);
-}
-
-function onGeoStateChange(countrySelId, stateSelId, citySelId) {
-  var cEl = document.getElementById(countrySelId);
-  var sEl = document.getElementById(stateSelId);
-  var ctEl = document.getElementById(citySelId);
-  if (!cEl || !sEl || !ctEl) return;
-  var cities = getCitiesForCountryState(cEl.value, sEl.value);
-  ctEl.innerHTML = cities.map(function(ct) { return "<option value=\"" + esc(ct) + "\">" + esc(ct) + "</option>"; }).join("");
-}
-
-function renderGeoDropdowns(prefix, initialCityStr) {
-  var parsed = parseGeoFromCityStr(initialCityStr);
-  var cId = prefix + "-country", sId = prefix + "-state", ctId = prefix + "-city";
-  var countries = Object.keys(GEO_DATA);
-  var states = getStatesForCountry(parsed.country);
-  var activeState = states.indexOf(parsed.state) !== -1 ? parsed.state : states[0];
-  var cities = getCitiesForCountryState(parsed.country, activeState);
-  var hasExactCity = cities.indexOf(parsed.city) !== -1;
-  var cityOptionsHtml = cities.map(function(ct) {
-    return "<option value=\"" + esc(ct) + "\" " + (parsed.city === ct ? "selected" : "") + ">" + esc(ct) + "</option>";
-  }).join("");
-  if (!hasExactCity && parsed.city) {
-    cityOptionsHtml = "<option value=\"" + esc(parsed.city) + "\" selected>" + esc(parsed.city) + "</option>" + cityOptionsHtml;
-  }
-  return "<div class=\"field\"><label>देश (ड्रॉप-डाउन) *</label><select id=\"" + cId + "\" onchange=\"onGeoCountryChange('" + cId + "', '" + sId + "', '" + ctId + "')\">" +
-    countries.map(function(c) { return "<option value=\"" + esc(c) + "\" " + (parsed.country === c ? "selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
-  "</select></div>" +
-  "<div class=\"two-fields\">" +
-    "<div class=\"field\"><label>प्रदेश (स्वतः सिंक) *</label><select id=\"" + sId + "\" onchange=\"onGeoStateChange('" + cId + "', '" + sId + "', '" + ctId + "')\">" +
-      states.map(function(st) { return "<option value=\"" + esc(st) + "\" " + (activeState === st ? "selected" : "") + ">" + esc(st) + "</option>"; }).join("") +
-    "</select></div>" +
-    "<div class=\"field\"><label>शहर (स्वतः सिंक) *</label><select id=\"" + ctId + "\">" + cityOptionsHtml + "</select></div>" +
-  "</div>";
-}
-
-function collectGeoLocationString(prefix) {
-  var cVal = ((document.getElementById(prefix + "-country") || { value: "भारत" }).value || "").trim();
-  var sVal = ((document.getElementById(prefix + "-state") || { value: "" }).value || "").trim();
-  var ctVal = ((document.getElementById(prefix + "-city") || { value: "" }).value || "").trim();
-  var parts = [ctVal, sVal];
-  if (cVal && cVal !== "भारत") parts.push(cVal);
-  return parts.filter(Boolean).join(", ");
-}
-
-function renderMultiGenreSelector(containerId, existingStr) {
-  var selected = String(existingStr || "").split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
-  var allGenres = getAllGenres();
-  return "<div id=\"" + containerId + "\" style=\"display:flex; flex-wrap:wrap; gap:7px; padding:8px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg);\">" +
-    allGenres.map(function(g) {
-      var checked = selected.indexOf(g) !== -1;
-      return "<label style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:99px; border:1px solid var(--border); background:" + (checked ? "var(--gold-soft)" : "var(--bg-elevated)") + "; font-size:12.5px; font-weight:600; color:var(--text); cursor:pointer; margin:0;\">" +
-        "<input type=\"checkbox\" value=\"" + esc(g) + "\" " + (checked ? "checked" : "") + " style=\"width:auto; margin:0;\" />" +
-        "<span>" + esc(g) + "</span>" +
-      "</label>";
-    }).join("") +
-  "</div>";
-}
-
-function collectMultiGenres(containerId) {
-  var box = document.getElementById(containerId);
-  if (!box) return "";
-  var checks = box.querySelectorAll("input[type=\"checkbox\"]:checked");
-  var vals = [];
-  for (var i = 0; i < checks.length; i++) {
-    if (checks[i].value) vals.push(checks[i].value.trim());
-  }
-  return vals.join(", ");
-}
-
-function linkExistingAdminProfileToEmail(poetId) {
-  if (!state.currentUser || !state.currentUser.email) { showToast("कृपया पहले ईमेल से लॉगिन करें"); return; }
-  if (!poetId) { showToast("कृपया सूची से अपनी पहले से बनी प्रोफ़ाइल चुनें"); return; }
-  var pt = state.poets.find(function(x) { return x.id === poetId; });
-  if (!pt) { showToast("प्रोफ़ाइल नहीं मिली"); return; }
-  var em = state.currentUser.email.toLowerCase().trim();
-  pt.ownerEmail = em;
-  var linkedAdm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
-  if (linkedAdm) {
-    linkedAdm.ownerEmail = em;
-    cloudSaveDoc("admins", linkedAdm.id, linkedAdm);
-  }
-  cloudSaveDoc("poets", pt.id, pt).then(function() {
-    syncLinkedProfilesForCurrentUser(state.currentUser);
-    renderAll();
-    var sm = document.getElementById("submit-modal");
-    if (sm && sm.classList.contains("open")) renderSubmitModal();
-    showToast("आपका ईमेल (" + em + ") ‘" + pt.name + "’ की मूल प्रोफ़ाइल से लिंक हो गया ✓");
-  });
-}
-
 function getPoetByEmail(email, fallbackName) {
   var em = (email || "").toLowerCase().trim();
   if (!em) return null;
@@ -3007,19 +3072,11 @@ function syncLinkedProfilesForCurrentUser(userObj) {
   if (!userObj || !userObj.email) return;
   var em = userObj.email.toLowerCase().trim();
   var matchedPoet = getPoetByEmail(em, userObj.displayName);
-  if (!matchedPoet && userObj.displayName) {
-    var dn = userObj.displayName.trim().toLowerCase();
-    matchedPoet = state.poets.find(function(pt) { return !pt.ownerEmail && (pt.name || "").trim().toLowerCase() === dn; }) || null;
-  }
   if (matchedPoet && !matchedPoet.ownerEmail) {
     matchedPoet.ownerEmail = em;
     cloudSaveDoc("poets", matchedPoet.id, matchedPoet);
   }
   var matchedAdmin = getAdminByEmail(em, (matchedPoet && matchedPoet.name) || userObj.displayName);
-  if (!matchedAdmin && userObj.displayName) {
-    var dn2 = userObj.displayName.trim().toLowerCase();
-    matchedAdmin = state.admins.find(function(a) { return !a.ownerEmail && (a.name || "").trim().toLowerCase() === dn2; }) || null;
-  }
   if (matchedAdmin && !matchedAdmin.ownerEmail) {
     matchedAdmin.ownerEmail = em;
     cloudSaveDoc("admins", matchedAdmin.id, matchedAdmin);
@@ -3195,35 +3252,56 @@ function getTodaySahityakarBirthdays() {
   var m = now.getMonth() + 1;
   var d = now.getDate();
   var matches = [];
-
-  SAHITYAKAR_BIRTHDAYS.forEach(function(item) {
-    if (item.m === m && item.d === d) {
-      matches.push({
-        name: item.name,
-        sub: item.note + (item.era ? (" • " + item.era) : ""),
-        line: item.line,
-        isMember: false
-      });
-    }
-  });
-
   var hiMonths = ["जनवरी","फ़रवरी","मार्च","अप्रैल","मई","जून","जुलाई","अगस्त","सितंबर","अक्टूबर","नवंबर","दिसंबर"];
   var mName = hiMonths[now.getMonth()];
   var dayNum = String(d);
+  var matchesHindiDate = function(dateStr) {
+    var s = String(dateStr || "").trim();
+    if (!s || s.indexOf(mName) === -1) return false;
+    var re = new RegExp("(^|[^0-9०-९])0?" + dayNum + "([^0-9०-९]|$)");
+    return re.test(s);
+  };
   (state.poets || []).forEach(function(pt) {
-    var bStr = String(pt.birth || "");
-    if (bStr && bStr.indexOf(mName) !== -1 && (bStr.indexOf(dayNum) !== -1 || bStr.indexOf(dayNum.padStart(2, "0")) !== -1)) {
-      if (!matches.some(function(x) { return x.name === pt.name; })) {
+    if (pt.death && matchesHindiDate(pt.death)) {
+      matches.push({
+        name: pt.name,
+        sub: "पुण्यतिथि पर सादर नमन एवं भावपूर्ण श्रद्धांजलि 🕯️" + ((pt.birth || pt.death) ? (" (" + (pt.birth || "") + " – " + pt.death + ")") : ""),
+        line: pt.quote || "आपकी कालजयी रचनाएँ और साहित्यिक साधना सदैव हमारा पथ आलोकित करती रहेंगी। विनम्र श्रद्धांजलि।",
+        isMember: true,
+        isTributeDeath: true
+      });
+    }
+  });
+  SAHITYAKAR_BIRTHDAYS.forEach(function(item) {
+    if (item.m === m && item.d === d) {
+      if (!matches.some(function(x) { return x.name === item.name; })) {
         matches.push({
-          name: pt.name,
-          sub: "काव्य चौपाल परिवार • जन्मदिन की हार्दिक शुभकामनाएँ 🎂",
-          line: pt.quote || ("जन्मदिन के पावन अवसर पर आपकी लेखनी नित्य नए भावों व कीर्तिमानों से आलोकित रहे।"),
-          isMember: true
+          name: item.name,
+          sub: item.note + (item.era ? (" • " + item.era) : ""),
+          line: item.line,
+          isMember: false
         });
       }
     }
   });
-
+  (state.poets || []).forEach(function(pt) {
+    if (pt.birth && matchesHindiDate(pt.birth)) {
+      if (!matches.some(function(x) { return x.name === pt.name; })) {
+        var isLate = !!(pt.death && pt.death.trim());
+        matches.push({
+          name: pt.name,
+          sub: isLate
+            ? ("जन्म-जयंती पर सादर नमन एवं श्रद्धांजलि 🪔 (" + pt.birth + " – " + pt.death + ")")
+            : "काव्य चौपाल परिवार • जन्मदिन की हार्दिक शुभकामनाएँ 🎂",
+          line: pt.quote || (isLate
+            ? "आपकी अमर लेखनी और साहित्यिक योगदान को जन्म-जयंती पर शत-शत नमन।"
+            : "जन्मदिन के पावन अवसर पर आपकी लेखनी नित्य नए भावों व कीर्तिमानों से आलोकित रहे।"),
+          isMember: true,
+          isTributeDeath: isLate
+        });
+      }
+    }
+  });
   if (!matches.length) {
     var fallback = SAHITYAKAR_BIRTHDAYS[(m * 31 + d) % SAHITYAKAR_BIRTHDAYS.length];
     matches.push({
@@ -3242,41 +3320,42 @@ function generateBirthdayTributeCard(person) {
   if (!canvas || !person) return "";
   var ctx = canvas.getContext("2d");
   var W = 1080, H = 1080;
-
   var grad = ctx.createRadialGradient(W / 2, H * 0.3, 80, W / 2, H / 2, 780);
-  grad.addColorStop(0, "#7E121E");
-  grad.addColorStop(0.65, "#430810");
-  grad.addColorStop(1, "#1C050E");
+  if (person.isTributeDeath) {
+    grad.addColorStop(0, "#3B1F4A");
+    grad.addColorStop(0.65, "#21102B");
+    grad.addColorStop(1, "#0E0714");
+  } else {
+    grad.addColorStop(0, "#7E121E");
+    grad.addColorStop(0.65, "#430810");
+    grad.addColorStop(1, "#1C050E");
+  }
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
-
   ctx.strokeStyle = "#F7DC8B";
   ctx.lineWidth = 8;
   ctx.strokeRect(36, 36, W - 72, H - 72);
   ctx.strokeStyle = "rgba(247, 220, 139, 0.45)";
   ctx.lineWidth = 2;
   ctx.strokeRect(54, 54, W - 108, H - 108);
-
   ctx.textAlign = "center";
   ctx.fillStyle = "#F7DC8B";
   ctx.font = "700 44px 'Yatra One', serif";
   ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 132);
-
   ctx.font = "600 25px 'Noto Sans Devanagari', sans-serif";
   ctx.fillStyle = "#FCE49C";
-  ctx.fillText(person.isFeaturedTribute ? "❖ साहित्यकार विशेष स्मरण ❖" : "🎂 साहित्यकार जन्मदिन की हार्दिक शुभकामनाएँ 🎂", W / 2, 184);
-
+  var headerBanner = person.isTributeDeath
+    ? "🕯️ भावपूर्ण श्रद्धांजलि एवं सादर नमन 🕯️"
+    : (person.isFeaturedTribute ? "❖ साहित्यकार विशेष स्मरण ❖" : "🎂 साहित्यकार जन्मदिन की हार्दिक शुभकामनाएँ 🎂");
+  ctx.fillText(headerBanner, W / 2, 184);
   ctx.font = "60px serif";
-  ctx.fillText("🪔🌸🪔", W / 2, 268);
-
+  ctx.fillText(person.isTributeDeath ? "🕯️🪷🕯️" : "🪔🌸🪔", W / 2, 268);
   ctx.fillStyle = "#FFFDF7";
   ctx.font = "700 50px 'Yatra One', serif";
   ctx.fillText(person.name, W / 2, 355);
-
   ctx.fillStyle = "#F3D47E";
-  ctx.font = "600 24px 'Noto Sans Devanagari', sans-serif";
+  ctx.font = "600 23px 'Noto Sans Devanagari', sans-serif";
   ctx.fillText(person.sub || "", W / 2, 405);
-
   var lines = String(person.line || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean).slice(0, 4);
   ctx.fillStyle = "#FFF9EC";
   ctx.font = "600 35px 'Noto Serif Devanagari', serif";
@@ -3284,20 +3363,13 @@ function generateBirthdayTributeCard(person) {
     var clipped = ln.length > 44 ? (ln.slice(0, 43) + "…") : ln;
     ctx.fillText(clipped, W / 2, 515 + idx * 64);
   });
-
   ctx.strokeStyle = "#F7DC8B";
   ctx.lineWidth = 2.5;
   ctx.beginPath(); ctx.moveTo(W / 2 - 220, H - 155); ctx.lineTo(W / 2 + 220, H - 155); ctx.stroke();
-
   ctx.fillStyle = "#F7DC8B";
   ctx.font = "700 30px 'Noto Sans Devanagari', sans-serif";
-  ctx.fillText("सादर शुभकामनाएँ — काव्य चौपाल साहित्य परिवार", W / 2, H - 96);
-
-  try {
-    return canvas.toDataURL("image/jpeg", 0.82);
-  } catch (e) {
-    return "";
-  }
+  ctx.fillText(person.isTributeDeath ? "विनम्र श्रद्धांजलि — काव्य चौपाल साहित्य परिवार" : "सादर शुभकामनाएँ — काव्य चौपाल साहित्य परिवार", W / 2, H - 96);
+  try { return canvas.toDataURL("image/jpeg", 0.82); } catch (e) { return ""; }
 }
 
 function renderDailyJayantiCorner() {
@@ -3306,7 +3378,6 @@ function renderDailyJayantiCorner() {
   var list = getTodaySahityakarBirthdays();
   if (!list.length) { wrap.innerHTML = ""; return; }
   var cur = list[jayantiIndex % list.length] || list[0];
-
   var todayKey = new Date().toISOString().slice(0, 10);
   if (autoBirthdayNotifiedKey !== todayKey) {
     autoBirthdayNotifiedKey = todayKey;
@@ -3314,8 +3385,8 @@ function renderDailyJayantiCorner() {
     if (!hasTodayNotif) {
       state.notifications.unshift({
         id: "bday_notif_" + todayKey,
-        title: (cur.isFeaturedTribute ? "आज का साहित्यकार विशेष: " : "🎂 जन्मदिन विशेष: ") + cur.name,
-        body: cur.sub + " — स्वतः शुभकामना भाव-चित्र तैयार है।",
+        title: (cur.isTributeDeath ? "🕯️ श्रद्धांजलि स्मरण: " : (cur.isFeaturedTribute ? "आज का साहित्यकार विशेष: " : "🎂 जन्मदिन विशेष: ")) + cur.name,
+        body: cur.sub + " — स्वतः भाव-चित्र तैयार है।",
         type: "info",
         targetId: "",
         createdAt: Date.now()
@@ -3323,20 +3394,23 @@ function renderDailyJayantiCorner() {
       saveLocalCache();
     }
   }
-
+  var pillText = cur.isTributeDeath
+    ? "🕯️ पुण्यतिथि / श्रद्धांजलि स्मरण"
+    : (cur.isFeaturedTribute ? "🪔 साहित्यकार विशेष" : "🎂 आज का साहित्यकार जन्मदिन");
+  var btnLabel = cur.isTributeDeath ? "🕯️ श्रद्धांजलि चित्र देखें" : "🎨 शुभकामना भाव-चित्र देखें";
   wrap.innerHTML =
     "<div class=\"jayanti-card\">" +
       "<div class=\"jayanti-top\">" +
-        "<span class=\"jayanti-pill\">" + (cur.isFeaturedTribute ? "🪔 साहित्यकार विशेष" : "🎂 आज का साहित्यकार जन्मदिन") + "</span>" +
-        (list.length > 1 ? ("<button class=\"spot-mini-btn\" onclick=\"jayantiIndex=(jayantiIndex+1)%" + list.length + "; jayantiCardDataUrl=\'\'; renderDailyJayantiCorner()\">अगला ▶</button>") : "") +
+        "<span class=\"jayanti-pill\">" + pillText + "</span>" +
+        (list.length > 1 ? ("<button class=\"spot-mini-btn\" onclick=\"jayantiIndex=(jayantiIndex+1)%" + list.length + "; jayantiCardDataUrl=''; renderDailyJayantiCorner()\">अगला ▶</button>") : "") +
       "</div>" +
       "<h3 class=\"jayanti-name\">" + esc(cur.name) + "</h3>" +
       "<div class=\"jayanti-sub\">" + esc(cur.sub) + "</div>" +
       "<div class=\"jayanti-quote\">“" + esc(cur.line) + "”</div>" +
-      (jayantiCardDataUrl ? ("<img class=\"jayanti-preview-img\" src=\"" + jayantiCardDataUrl + "\" alt=\"शुभकामना भाव चित्र\" />") : "") +
+      (jayantiCardDataUrl ? ("<img class=\"jayanti-preview-img\" src=\"" + jayantiCardDataUrl + "\" alt=\"भाव चित्र\" />") : "") +
       "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
-        "<button class=\"action-btn gold\" style=\"padding:8px 13px; font-size:12.5px;\" onclick=\"showBirthdayCardPreview()\">🎨 शुभकामना भाव-चित्र देखें</button>" +
-        (jayantiCardDataUrl ? ("<a class=\"action-btn primary\" style=\"padding:8px 13px; font-size:12.5px;\" href=\"" + jayantiCardDataUrl + "\" download=\"sahityakar-shubhkamna-" + Date.now() + ".jpg\">⬇️ चित्र डाउनलोड</a>") : "") +
+        "<button class=\"action-btn gold\" style=\"padding:8px 13px; font-size:12.5px;\" onclick=\"showBirthdayCardPreview()\">" + btnLabel + "</button>" +
+        (jayantiCardDataUrl ? ("<a class=\"action-btn primary\" style=\"padding:8px 13px; font-size:12.5px;\" href=\"" + jayantiCardDataUrl + "\" download=\"sahityakar-card-" + Date.now() + ".jpg\">⬇️ चित्र डाउनलोड</a>") : "") +
       "</div>" +
     "</div>";
 }
@@ -3636,7 +3710,9 @@ function closePoetDetail(fromPop) { state.activePoetName = null; document.getEle
 function renderStructuredBioCard(person, titleText, allowPrivateMobile) {
   var items = [];
   if (person.birth && person.birth.trim()) items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });
-  if (person.city && person.city.trim()) items.push({ ic: "📍", lbl: "स्थान", val: esc(person.city), full: false });
+  if (person.death && person.death.trim()) items.push({ ic: "🕯️", lbl: "स्मृति / मृत्यु", val: esc(person.death), full: false });
+  if (person.birthPlace && person.birthPlace.trim()) items.push({ ic: "🏡", lbl: "जन्म स्थान", val: esc(person.birthPlace), full: false });
+  if (person.city && person.city.trim()) items.push({ ic: "📍", lbl: "वर्तमान स्थान", val: esc(person.city), full: false });
   if (person.education && person.education.trim()) items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });
   if (person.occupation && person.occupation.trim()) items.push({ ic: "💼", lbl: "भूमिका / सम्प्रति", val: esc(person.occupation), full: false });
   if (allowPrivateMobile && person.mobile && person.mobile.trim()) {
@@ -3644,7 +3720,7 @@ function renderStructuredBioCard(person, titleText, allowPrivateMobile) {
   }
   if (person.mainGenres && person.mainGenres.trim()) {
     var pills = person.mainGenres.split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
-    items.push({ ic: "✒️", lbl: "मुख्य विधा", val: "<div class=\"vidha-pills-row\">" + pills.map(function(g) { return "<span class=\"mini-badge\">❖ " + esc(g) + "</span>"; }).join("") + "</div>", full: true });
+    items.push({ ic: "✒️", lbl: "मुख्य विधाएँ", val: "<div class=\"vidha-pills-row\">" + pills.map(function(g) { return "<span class=\"mini-badge\">❖ " + esc(g) + "</span>"; }).join("") + "</div>", full: true });
   }
   if (person.publications && person.publications.trim()) items.push({ ic: "📚", lbl: "प्रकाशित कृतियाँ", val: esc(person.publications), full: true });
   if (person.awards && person.awards.trim()) items.push({ ic: "🏆", lbl: "प्रमुख सम्मान", val: esc(person.awards), full: true });
@@ -3709,9 +3785,14 @@ function renderMyCorner() {
     }).join("")) : "";
     subHtml = "<h3 class=\"section-title\">📜 मेरी प्रकाशित रचनाएँ (" + myPublishedPoems.length + ")</h3>" + pubCards + pendCards;
   } else if (state.cornerSubTab === "bio") {
+    var unlinkedInCorner = state.poets.filter(function(x) { return !x.ownerEmail; });
     subHtml = prof
-      ? renderStructuredBioCard(prof, "मेरा संपूर्ण साहित्यिक विवरण", true) + "<div style=\"text-align:center;\"><button class=\"action-btn primary\" onclick=\"openSubmitModal(\'poet\')\">✏️ प्रोफ़ाइल व कवि चित्र संपादित करें</button></div>"
-      : "<div class=\"empty-box\"><p>आपकी कवि प्रोफ़ाइल अभी नहीं बनी है।</p><button class=\"action-btn primary\" onclick=\"openSubmitModal(\'poet\')\">✒️ प्रोफ़ाइल व कवि चित्र जोड़ें</button></div>";
+      ? renderStructuredBioCard(prof, "मेरा संपूर्ण साहित्यिक विवरण", true) + "<div style=\"text-align:center;\"><button class=\"action-btn primary\" onclick=\"openSubmitModal('poet')\">✏️ प्रोफ़ाइल व कवि चित्र संपादित करें</button></div>"
+      : ("<div class=\"empty-box\"><p>आपकी कवि प्रोफ़ाइल अभी आपके ईमेल से लिंक नहीं है।</p>" +
+         (unlinkedInCorner.length
+           ? ("<div style=\"max-width:380px; margin:10px auto; text-align:left;\"><label style=\"font-size:12.5px; font-weight:700; color:var(--primary);\">🔗 यदि एडमिन ने आपकी प्रोफ़ाइल पहले बना दी है तो चुनकर लिंक करें:</label><div style=\"display:flex; gap:6px; margin-top:5px;\"><select id=\"corner-claim-poet-sel\" style=\"flex:1; padding:8px; border-radius:10px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text);\"><option value=\"\">— सूची से अपनी मूल प्रोफ़ाइल चुनें —</option>" + unlinkedInCorner.map(function(x) { return "<option value=\"" + esc(x.id) + "\">" + esc(x.name) + (x.city ? (" (" + esc(x.city) + ")") : "") + "</option>"; }).join("") + "</select><button class=\"btn-approve\" onclick=\"linkUserToExistingPoetProfile('corner-claim-poet-sel')\">लिंक करें</button></div></div>")
+           : "") +
+         "<button class=\"action-btn primary\" style=\"margin-top:8px;\" onclick=\"openSubmitModal('poet')\">✒️ नई प्रोफ़ाइल बनाएँ</button></div>");
   } else {
     subHtml =
       "<div class=\"form-box\">" +
@@ -4585,15 +4666,17 @@ function renderAdminStudio() {
     var curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
     contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें") + "</h4>" +
       "<div class=\"field\"><label>नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" /></div>" +
-      renderGeoDropdowns("f-poet", ept ? (ept.city || "") : "लखनऊ, उत्तर प्रदेश") +
-      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" /></div><div class=\"field\"><label>शिक्षा</label><input id=\"f-poet-edu\" value=\"" + esc(ept ? (ept.education || "") : "") + "\" /></div></div>" +
-      "<div class=\"two-fields\"><div class=\"field\"><label>भूमिका / सम्प्रति</label><input id=\"f-poet-occ\" list=\"role-dl\" value=\"" + esc(ept ? (ept.occupation || "") : "") + "\" /><datalist id=\"role-dl\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>मोबाइल (केवल एडमिन के लिए)</label><input id=\"f-poet-mobile\" value=\"" + esc(ept ? (ept.mobile || "") : "") + "\" /></div></div>" +
-      "<div class=\"field\"><label>मुख्य विधा (एक से अधिक विधाएँ चुनें)</label>" + renderMultiGenreSelector("f-poet-genres-box", ept ? (ept.mainGenres || "") : "") + "</div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म तिथि / वर्ष</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" placeholder=\"जैसे: 11 जनवरी 1987\" /></div><div class=\"field\"><label>मृत्यु तिथि (वैकल्पिक — दिवंगत हेतु)</label><input id=\"f-poet-death\" value=\"" + esc(ept ? (ept.death || "") : "") + "\" placeholder=\"जीवित हों तो खाली छोड़ें\" /></div></div>" +
+      buildLocationCascadeHTML("adm-birth", "🏡 जन्म स्थान (देश • प्रदेश • शहर)", ept ? (ept.birthPlace || "") : "", ept ? ept.birthPlaceObj : null) +
+      buildLocationCascadeHTML("adm-curr", "📍 वर्तमान स्थान (देश • प्रदेश • शहर)", ept ? (ept.city || "") : "", ept ? ept.cityObj : null) +
+      "<div class=\"two-fields\"><div class=\"field\"><label>शिक्षा</label><input id=\"f-poet-edu\" value=\"" + esc(ept ? (ept.education || "") : "") + "\" /></div><div class=\"field\"><label>भूमिका / सम्प्रति</label><input id=\"f-poet-occ\" list=\"role-dl\" value=\"" + esc(ept ? (ept.occupation || "") : "") + "\" /><datalist id=\"role-dl\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\">"; }).join("") + "</datalist></div></div>" +
+      "<div class=\"field\"><label>मोबाइल (केवल एडमिन के लिए)</label><input id=\"f-poet-mobile\" value=\"" + esc(ept ? (ept.mobile || "") : "") + "\" /></div>" +
+      buildMultiGenreSelectorHTML("adm-poet", ept ? (ept.mainGenres || "") : "") +
       "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"f-poet-pubs\" value=\"" + esc(ept ? (ept.publications || "") : "") + "\" /></div>" +
       "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"f-poet-awards\" value=\"" + esc(ept ? (ept.awards || "") : "") + "\" /></div>" +
       "<div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div>" +
       "<div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div>" +
-      "<div class=\"field\"><label>कवि चित्र (Photo)</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempPoetPhoto\', \'poet-photo-prev\', 320)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div><span style=\"font-size:12px; color:var(--text-muted);\">प्रोफ़ाइल के लिए स्पष्ट कवि चित्र चुनें</span></div></div>" +
+      "<div class=\"field\"><label>कवि चित्र (Photo)</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempPoetPhoto', 'poet-photo-prev', 320)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div><span style=\"font-size:12px; color:var(--text-muted);\">प्रोफ़ाइल के लिए स्पष्ट कवि चित्र चुनें</span></div></div>" +
       "<button class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
       var linkedAdm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
       var promoFormHtml = (state.promotingPoetId === pt.id) ? (
@@ -4606,12 +4689,12 @@ function renderAdminStudio() {
           "</div>" +
           "<div class=\"field\"><label>एडमिन दायित्व / भूमिका</label><input id=\"f-promo-role\" value=\"" + esc(linkedAdm ? linkedAdm.role : (pt.occupation || "")) + "\" placeholder=\"जैसे: गोष्ठी संचालन व रचना संयोजन\" /></div>" +
           "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
-            "<button type=\"button\" class=\"btn-approve\" onclick=\"savePromotedPoetAsAdmin(dec(\'" + arg(pt.id) + "\'))\">✅ एडमिन में शामिल करें</button>" +
+            "<button type=\"button\" class=\"btn-approve\" onclick=\"savePromotedPoetAsAdmin(dec('" + arg(pt.id) + "'))\">✅ एडमिन में शामिल करें</button>" +
             "<button type=\"button\" class=\"sm-btn\" onclick=\"cancelPromotePoetToAdmin()\">रद्द करें</button>" +
           "</div>" +
         "</div>"
       ) : "";
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + (linkedAdm ? (" <span class=\"mini-badge\">👑 " + esc(linkedAdm.designation) + "</span>") : "") + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + (pt.ownerEmail ? (" • ✉️ " + esc(pt.ownerEmail)) : "") + (pt.mobile ? (" • 🔒 मो.: " + esc(pt.mobile)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"startPromotePoetToAdmin(dec(\'" + arg(pt.id) + "\'))\">" + (linkedAdm ? "👑 एडमिन पद बदलें" : "👑 एडमिन में शामिल करें") + "</button><button class=\"sm-btn\" onclick=\"editPoet(dec(\'" + arg(pt.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec(\'" + arg(pt.id) + "\'))\">हटाएँ</button></div></div>" + promoFormHtml;
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + (linkedAdm ? (" <span class=\"mini-badge\">👑 " + esc(linkedAdm.designation) + "</span>") : "") + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + (pt.ownerEmail ? (" • ✉️ " + esc(pt.ownerEmail)) : "") + (pt.mobile ? (" • 🔒 मो.: " + esc(pt.mobile)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"startPromotePoetToAdmin(dec('" + arg(pt.id) + "'))\">" + (linkedAdm ? "👑 एडमिन पद बदलें" : "👑 एडमिन में शामिल करें") + "</button><button class=\"sm-btn\" onclick=\"editPoet(dec('" + arg(pt.id) + "'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec('" + arg(pt.id) + "'))\">हटाएँ</button></div></div>" + promoFormHtml;
     }).join("");
   } else if (state.adminTab === "admins") {
     var ea = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
@@ -4748,14 +4831,20 @@ function savePoetForm() {
   var name = nEl ? nEl.value.trim() : ""; if (!name) { showToast("कवि का नाम लिखें"); return; }
   var id = state.editingPoetId || ("poet_" + Date.now());
   var ex = state.poets.find(function(x) { return x.id === id; }) || {};
+  var birthLoc = readLocationCascadeValue("adm-birth");
+  var currLoc = readLocationCascadeValue("adm-curr");
   var item = {
     id: id, name: name, ownerEmail: ex.ownerEmail || "",
     mobile: (document.getElementById("f-poet-mobile") || { value: "" }).value.trim(),
     birth: (document.getElementById("f-poet-birth") || { value: "" }).value.trim(),
-    city: collectGeoLocationString("f-poet"),
+    death: (document.getElementById("f-poet-death") || { value: "" }).value.trim(),
+    birthPlace: birthLoc.formatted,
+    birthPlaceObj: birthLoc.obj,
+    city: currLoc.formatted || ex.city || "",
+    cityObj: currLoc.obj,
     education: (document.getElementById("f-poet-edu") || { value: "" }).value.trim(),
     occupation: (document.getElementById("f-poet-occ") || { value: "" }).value.trim(),
-    mainGenres: collectMultiGenres("f-poet-genres-box"),
+    mainGenres: readMultiGenreSelectorValue("adm-poet"),
     publications: (document.getElementById("f-poet-pubs") || { value: "" }).value.trim(),
     awards: (document.getElementById("f-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("f-poet-quote") || { value: "" }).value.trim(),
@@ -5151,28 +5240,24 @@ function renderSubmitModal() {
   } else {
     var curPhoto = state.tempPublicPoetPhoto || (activePoetObj ? activePoetObj.photo : "");
     var curRole = (activePoetObj && activePoetObj.occupation) || "कवि";
-    var curCity = (activePoetObj && activePoetObj.city) || "लखनऊ, उत्तर प्रदेश";
-    var curPhoto = state.tempPublicPoetPhoto || (activePoetObj ? activePoetObj.photo : "");
-    var curRole = (activePoetObj && activePoetObj.occupation) || "कवि";
-    var curCity = (activePoetObj && activePoetObj.city) || "लखनऊ, उत्तर प्रदेश";
-    var unlinkedPoets = state.poets.filter(function(pt) { return !pt.ownerEmail || pt.ownerEmail.toLowerCase().trim() === userEmail; });
-    var linkBoxHtml = (!pubPoet && unlinkedPoets.length) ? (
-      "<div class=\"my-profile-card\" style=\"margin-bottom:12px;\">" +
-        "<div style=\"font-size:13px; font-weight:700; color:var(--primary); margin-bottom:6px;\">🔗 पहले से बनी मूल प्रोफ़ाइल से ईमेल लिंक करें</div>" +
-        "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:8px;\">यदि एडमिन ने पहले ही आपका नाम/प्रोफ़ाइल जोड़ दिया है, तो यहाँ चुनकर अपने ईमेल (" + esc(userEmail) + ") से लिंक करें:</div>" +
-        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
-          "<select id=\"link-existing-poet-sel\" style=\"flex:1; min-width:190px; padding:9px 11px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg-elevated); color:var(--text);\">" +
-            "<option value=\"\">-- अपनी पहले से बनी प्रोफ़ाइल चुनें --</option>" +
-            unlinkedPoets.map(function(pt) { return "<option value=\"" + esc(pt.id) + "\">" + esc(pt.name) + (pt.city ? (" (" + esc(pt.city) + ")") : "") + "</option>"; }).join("") +
+    var unlinkedPoets = state.poets.filter(function(x) { return !x.ownerEmail; });
+    var claimBoxHtml = (!activePoetObj && unlinkedPoets.length) ? (
+      "<div class=\"my-profile-card\">" +
+        "<div style=\"font-weight:700; color:var(--primary); margin-bottom:4px;\">🔗 क्या एडमिन ने आपकी प्रोफ़ाइल पहले ही जोड़ दी है?</div>" +
+        "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:8px;\">यदि आपकी मूल प्रोफ़ाइल पहले से सूची में है, तो नीचे से अपना नाम चुनकर सीधे अपने ईमेल खाते से लिंक करें:</div>" +
+        "<div style=\"display:flex; gap:7px; flex-wrap:wrap;\">" +
+          "<select id=\"sub-claim-poet-sel\" style=\"flex:1; min-width:190px; padding:9px 10px; border-radius:10px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); font-weight:600;\">" +
+            "<option value=\"\">— सूची से अपनी मूल प्रोफ़ाइल चुनें —</option>" +
+            unlinkedPoets.map(function(x) { return "<option value=\"" + esc(x.id) + "\">" + esc(x.name) + (x.city ? (" • " + esc(x.city)) : "") + "</option>"; }).join("") +
           "</select>" +
-          "<button type=\"button\" class=\"action-btn gold\" style=\"padding:9px 13px; font-size:12.5px;\" onclick=\"linkExistingAdminProfileToEmail((document.getElementById('link-existing-poet-sel')||{}).value)\">🔗 लिंक करें</button>" +
+          "<button type=\"button\" class=\"btn-approve\" onclick=\"linkUserToExistingPoetProfile('sub-claim-poet-sel')\">✅ मेरी प्रोफ़ाइल लिंक करें</button>" +
         "</div>" +
       "</div>"
     ) : "";
     formHtml =
-      linkBoxHtml +
+      claimBoxHtml +
       "<div class=\"form-box\">" +
-        "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">✒️ " + (activePoetObj ? "मेरी प्रोफ़ाइल व कवि चित्र संपादित करें" : "प्रोफ़ाइल बनाएँ (कवि चित्र सहित)") + "</h4>" +
+        "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">✒️ " + (activePoetObj ? "मेरी प्रोफ़ाइल व कवि चित्र संपादित करें" : "नई प्रोफ़ाइल बनाएँ (कवि चित्र सहित)") + "</h4>" +
         "<div class=\"field\"><label>🖼️ कवि चित्र (अपना फ़ोटो अपलोड करें)</label>" +
           "<input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempPublicPoetPhoto', 'pub-poet-photo-prev', 320)\" />" +
           "<div class=\"photo-preview-row\">" +
@@ -5181,21 +5266,26 @@ function renderSubmitModal() {
           "</div>" +
         "</div>" +
         "<div class=\"field\"><label>नाम एवं उपनाम *</label><input id=\"sub-poet-name\" value=\"" + esc(activePoetObj ? activePoetObj.name : "") + "\" placeholder=\"जैसे: राहुल द्विवेदी 'स्मित'\" /></div>" +
-        "<div class=\"field\"><label>भूमिका / परिचय श्रेणी (ड्रॉप-डाउन)</label><select id=\"sub-poet-occ\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\" " + (curRole === r ? "selected" : "") + ">" + esc(r) + "</option>"; }).join("") + "</select></div>" +
-        renderGeoDropdowns("sub-poet", curCity) +
         "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>भूमिका / परिचय श्रेणी (ड्रॉप-डाउन)</label><select id=\"sub-poet-occ\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\" " + (curRole === r ? "selected" : "") + ">" + esc(r) + "</option>"; }).join("") + "</select></div>" +
           "<div class=\"field\"><label>जन्म तिथि / वर्ष</label><input id=\"sub-poet-birth\" value=\"" + esc(activePoetObj ? (activePoetObj.birth || "") : "") + "\" placeholder=\"जैसे: 11 जनवरी 1987\" /></div>" +
+        "</div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>मृत्यु तिथि (वैकल्पिक — दिवंगत हेतु)</label><input id=\"sub-poet-death\" value=\"" + esc(activePoetObj ? (activePoetObj.death || "") : "") + "\" placeholder=\"जीवित हों तो खाली छोड़ें\" /></div>" +
           "<div class=\"field\"><label>शिक्षा</label><input id=\"sub-poet-edu\" value=\"" + esc(activePoetObj ? (activePoetObj.education || "") : "") + "\" /></div>" +
         "</div>" +
-        "<div class=\"field\"><label>मोबाइल नम्बर 🔒 (गोपनीय)</label><input id=\"sub-poet-mobile\" type=\"tel\" value=\"" + esc(activePoetObj ? (activePoetObj.mobile || "") : "") + "\" placeholder=\"केवल एडमिन को दिखेगा\" /></div>" +
-        "<div class=\"field\"><label>मुख्य विधा (एक से अधिक विधाएँ चुनें)</label>" + renderMultiGenreSelector("sub-poet-genres-box", activePoetObj ? (activePoetObj.mainGenres || "") : "") + "</div>" +
+        buildLocationCascadeHTML("sub-birth", "🏡 जन्म स्थान (देश • प्रदेश • शहर)", activePoetObj ? (activePoetObj.birthPlace || "") : "", activePoetObj ? activePoetObj.birthPlaceObj : null) +
+        buildLocationCascadeHTML("sub-curr", "📍 वर्तमान स्थान (देश • प्रदेश • शहर) *", activePoetObj ? (activePoetObj.city || "") : "", activePoetObj ? activePoetObj.cityObj : null) +
+        "<div class=\"field\"><label>मोबाइल नम्बर 🔒 (गोपनीय — केवल एडमिन को दिखेगा)</label><input id=\"sub-poet-mobile\" type=\"tel\" value=\"" + esc(activePoetObj ? (activePoetObj.mobile || "") : "") + "\" placeholder=\"आपका मोबाइल नंबर\" /></div>" +
+        buildMultiGenreSelectorHTML("sub-poet", activePoetObj ? (activePoetObj.mainGenres || "") : "") +
         "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"sub-poet-pubs\" value=\"" + esc(activePoetObj ? (activePoetObj.publications || "") : "") + "\" /></div>" +
         "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"sub-poet-awards\" value=\"" + esc(activePoetObj ? (activePoetObj.awards || "") : "") + "\" /></div>" +
         "<div class=\"field\"><label>काव्य-मुद्रा / चुनिंदा पंक्तियाँ</label><textarea id=\"sub-poet-quote\" style=\"min-height:58px;\">" + esc(activePoetObj ? (activePoetObj.quote || "") : "") + "</textarea></div>" +
         "<div class=\"field\"><label>विशेष / संक्षिप्त परिचय</label><textarea id=\"sub-poet-special\" style=\"min-height:64px;\">" + esc(activePoetObj ? (activePoetObj.special || activePoetObj.bio || "") : "") + "</textarea></div>" +
         "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">💾 प्रोफ़ाइल व कवि चित्र सहेजें</button>" +
       "</div>";
-  body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poem\')\">📜 रचना लिखें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poet\')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल व चित्र" : "प्रोफ़ाइल बनाएँ") + "</button></div>" + formHtml;
+  }
+  body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab('poem')\">📜 रचना लिखें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab('poet')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल व चित्र" : "प्रोफ़ाइल बनाएँ / लिंक करें") + "</button></div>" + formHtml;
 }
 
 function submitPublicPoem() {
@@ -5239,21 +5329,27 @@ function submitPublicPoet() {
   var userEmail = state.currentUser && state.currentUser.email;
   if (!userEmail) { showToast("पहले लॉगिन करें"); return; }
   var name = (document.getElementById("sub-poet-name") || { value: "" }).value.trim();
-  var city = collectGeoLocationString("sub-poet");
-  if (!name || !city) { showToast("नाम और स्थान भरें"); return; }
-  var existingPub = getPoetByEmail(userEmail, name);
+  var birthLoc = readLocationCascadeValue("sub-birth");
+  var currLoc = readLocationCascadeValue("sub-curr");
+  var city = currLoc.formatted;
+  if (!name || !city) { showToast("कृपया नाम और वर्तमान स्थान (शहर) चुनें"); return; }
+  var existingPub = getPoetByEmail(userEmail);
   var id = existingPub ? existingPub.id : ("poet_" + Date.now());
   var finalPhoto = state.tempPublicPoetPhoto || (existingPub && existingPub.photo) || "";
   var item = {
     id: id,
     ownerEmail: userEmail,
     name: name,
+    birthPlace: birthLoc.formatted,
+    birthPlaceObj: birthLoc.obj,
     city: city,
+    cityObj: currLoc.obj,
     mobile: (document.getElementById("sub-poet-mobile") || { value: "" }).value.trim(),
     birth: (document.getElementById("sub-poet-birth") || { value: "" }).value.trim(),
+    death: (document.getElementById("sub-poet-death") || { value: "" }).value.trim(),
     education: (document.getElementById("sub-poet-edu") || { value: "" }).value.trim(),
     occupation: (document.getElementById("sub-poet-occ") || { value: "" }).value.trim(),
-    mainGenres: collectMultiGenres("sub-poet-genres-box"),
+    mainGenres: readMultiGenreSelectorValue("sub-poet"),
     publications: (document.getElementById("sub-poet-pubs") || { value: "" }).value.trim(),
     awards: (document.getElementById("sub-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("sub-poet-quote") || { value: "" }).value.trim(),
@@ -5416,10 +5512,14 @@ function approvePendingPoet(id) {
   var pub = {
     id: tid,
     name: pt.name,
-    ownerEmail: (pt.ownerEmail || "").toLowerCase().trim(),
+    ownerEmail: (pt.ownerEmail || (existing && existing.ownerEmail) || "").toLowerCase().trim(),
     mobile: pt.mobile || (existing && existing.mobile) || "",
     birth: pt.birth || (existing && existing.birth) || "",
+    death: pt.death || (existing && existing.death) || "",
+    birthPlace: pt.birthPlace || (existing && existing.birthPlace) || "",
+    birthPlaceObj: pt.birthPlaceObj || (existing && existing.birthPlaceObj) || null,
     city: pt.city || (existing && existing.city) || "",
+    cityObj: pt.cityObj || (existing && existing.cityObj) || null,
     education: pt.education || (existing && existing.education) || "",
     occupation: pt.occupation || (existing && existing.occupation) || "",
     mainGenres: pt.mainGenres || (existing && existing.mainGenres) || "",
