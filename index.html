@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;600;700&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet" />
-  <link id="favicon-link" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B1118'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='28' fill='%23F7DC8B'%3Eका%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -1523,6 +1524,7 @@
 
 
 
+
   <!-- ================= CINEMATIC OPENING SPLASH ================= -->
   <div id="splash-screen">
     <div class="splash-border"></div>
@@ -1863,6 +1865,7 @@
   <div id="dad-burst-layer"></div>
   <div id="toast"></div>
 
+  
   
   
   
@@ -3592,7 +3595,6 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(function() {});
   });
 }
-
   </script>
 </body>
 </html>
