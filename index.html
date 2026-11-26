@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Khand:wght@500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;600;700&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet" />
   <link id="favicon-link" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235B1118'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-size='28' fill='%23F7DC8B'%3Eका%3C/text%3E%3C/svg%3E" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -3233,23 +3234,146 @@ function renderEbooksPane() {
     }).join("") : "<div class=\"empty-box\">इस श्रेणी में अभी कोई पुस्तक उपलब्ध नहीं है।</div>") + "</div>";
 }
 
+var currentPdfDoc = null;
+var currentPdfScale = 1.15;
+
+function renderPdfPagesToContainer(pdfDoc, scale) {
+  var pagesWrap = document.getElementById("pdf-pages-container");
+  if (!pagesWrap || !pdfDoc) return;
+  pagesWrap.innerHTML = "<div style=\"text-align:center; padding:14px; font-size:13px; color:var(--text-muted);\">पृष्ठ रेंडर हो रहे हैं (कुल पृष्ठ: " + pdfDoc.numPages + ")...</div>";
+  var maxPages = Math.min(pdfDoc.numPages, 60);
+  var containerWidth = Math.max(260, (pagesWrap.clientWidth || 340) - 16);
+
+  var buildPage = function(pageNum) {
+    return pdfDoc.getPage(pageNum).then(function(page) {
+      var unscaled = page.getViewport({ scale: 1 });
+      var fitScale = (containerWidth / unscaled.width) * scale;
+      var viewport = page.getViewport({ scale: fitScale });
+      var card = document.createElement("div");
+      card.style.cssText = "background:#fff; border:1.5px solid var(--gold); border-radius:12px; padding:6px; margin-bottom:12px; box-shadow:0 6px 18px rgba(0,0,0,0.14);";
+      var lbl = document.createElement("div");
+      lbl.style.cssText = "font-size:11px; font-weight:700; color:#6B111B; text-align:right; margin-bottom:4px; padding:0 4px;";
+      lbl.textContent = "पृष्ठ " + pageNum + " / " + pdfDoc.numPages;
+      var canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:8px;";
+      card.appendChild(lbl);
+      card.appendChild(canvas);
+      var ctx = canvas.getContext("2d");
+      return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
+        return card;
+      });
+    });
+  };
+
+  var chain = Promise.resolve();
+  var renderedCards = [];
+  for (var p = 1; p <= maxPages; p++) {
+    (function(num) {
+      chain = chain.then(function() {
+        return buildPage(num).then(function(c) { renderedCards.push(c); });
+      });
+    })(p);
+  }
+  chain.then(function() {
+    pagesWrap.innerHTML = "";
+    renderedCards.forEach(function(c) { pagesWrap.appendChild(c); });
+    if (pdfDoc.numPages > maxPages) {
+      var note = document.createElement("div");
+      note.className = "empty-box";
+      note.textContent = "पहले " + maxPages + " पृष्ठ दिखाए गए हैं। पूरी " + pdfDoc.numPages + " पृष्ठों की पुस्तक के लिए नीचे से PDF डाउनलोड करें।";
+      pagesWrap.appendChild(note);
+    }
+  });
+}
+
+function zoomPdfReader(delta) {
+  currentPdfScale = Math.max(0.8, Math.min(2.0, Number((currentPdfScale + delta).toFixed(2))));
+  var zLbl = document.getElementById("pdf-zoom-lbl");
+  if (zLbl) zLbl.textContent = Math.round(currentPdfScale * 100) + "%";
+  if (currentPdfDoc) renderPdfPagesToContainer(currentPdfDoc, currentPdfScale);
+}
+
 function openPdfReader(id) {
   var b = state.ebooks.find(function(x) { return x.id === id; });
   if (!b) return;
+  currentPdfDoc = null;
+  currentPdfScale = 1.1;
   document.getElementById("pdf-modal-title").textContent = "📖 " + b.title;
-  document.getElementById("pdf-modal-body").innerHTML = "<div class=\"empty-box\">📖 PDF पुस्तक लोड हो रही है...</div>";
+  document.getElementById("pdf-modal-body").innerHTML =
+    "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
+      "<div style=\"display:flex; gap:6px; align-items:center;\">" +
+        "<button class=\"sm-btn\" onclick=\"zoomPdfReader(-0.15)\">🔍-</button>" +
+        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:42px; text-align:center;\">110%</span>" +
+        "<button class=\"sm-btn\" onclick=\"zoomPdfReader(0.15)\">🔍+</button>" +
+      "</div>" +
+      "<div id=\"pdf-dl-slot\"></div>" +
+    "</div>" +
+    "<div id=\"pdf-pages-container\" style=\"flex:1; overflow-y:auto; padding-right:2px;\"><div class=\"empty-box\">📖 PDF पुस्तक लोड हो रही है...</div></div>";
+
   if (!document.getElementById("pdf-modal").classList.contains("open")) pushAppView("pdf");
   document.getElementById("pdf-modal").classList.add("open");
 
-  loadPdfFromIndexedDb(id).then(function(localUrl) {
-    var src = localUrl || b.pdfData || b.link;
-    if (!src) {
-      document.getElementById("pdf-modal-body").innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इसी डिवाइस में अपलोड की गई थी। कृपया इसे इसी डिवाइस से खोलें या वेब/ड्राइव लिंक जोड़ें।</div>";
-      return;
+  loadPdfRecordFromIndexedDb(id).then(function(rawRecord) {
+    var dlSlot = document.getElementById("pdf-dl-slot");
+    var pagesWrap = document.getElementById("pdf-pages-container");
+    if (!pagesWrap) return;
+
+    var setupDownloadLink = function(urlStr) {
+      if (!dlSlot || !urlStr) return;
+      dlSlot.innerHTML = "<a class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" href=\"" + urlStr + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF डाउनलोड</a>";
+    };
+
+    var loadWithPdfJs = function(sourceArg) {
+      if (!window.pdfjsLib) {
+        if (typeof sourceArg === "string") {
+          pagesWrap.innerHTML = "<iframe src=\"" + sourceArg + "\" style=\"width:100%; min-height:66vh; border:1.5px solid var(--gold); border-radius:12px; background:#fff;\"></iframe>";
+        }
+        return;
+      }
+      if (window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+      var loadingTask = window.pdfjsLib.getDocument(sourceArg);
+      loadingTask.promise.then(function(pdfDoc) {
+        currentPdfDoc = pdfDoc;
+        renderPdfPagesToContainer(pdfDoc, currentPdfScale);
+      }).catch(function() {
+        if (typeof sourceArg === "string") {
+          pagesWrap.innerHTML =
+            "<div class=\"empty-box\">" +
+              "<p style=\"margin:0 0 12px;\">ब्राउज़र में सीधे PDF रेंडर करने में अवरोध आया। नीचे बटन से फ़ाइल खोलें या डाउनलोड करें।</p>" +
+              "<a class=\"action-btn primary\" href=\"" + sourceArg + "\" target=\"_blank\" rel=\"noopener noreferrer\">📖 PDF खोलें ↗</a>" +
+            "</div>";
+        } else {
+          pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इस डिवाइस में पढ़ी नहीं जा सकी। कृपया दूसरी PDF फ़ाइल चुनें या डाउनलोड करें।</div>";
+        }
+      });
+    };
+
+    if (rawRecord instanceof Blob) {
+      var bUrl = URL.createObjectURL(rawRecord);
+      setupDownloadLink(bUrl);
+      rawRecord.arrayBuffer().then(function(buf) {
+        loadWithPdfJs({ data: new Uint8Array(buf) });
+      });
+    } else if (typeof rawRecord === "string" && rawRecord.indexOf("data:application/pdf") === 0) {
+      setupDownloadLink(rawRecord);
+      var base64 = rawRecord.split(",")[1] || "";
+      var bin = atob(base64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      loadWithPdfJs({ data: bytes });
+    } else if (b.pdfData) {
+      setupDownloadLink(b.pdfData);
+      loadWithPdfJs(b.pdfData);
+    } else if (b.link) {
+      setupDownloadLink(b.link);
+      loadWithPdfJs(b.link);
+    } else {
+      pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इसी डिवाइस में अपलोड की गई थी। कृपया इसे इसी डिवाइस से खोलें या वेब/ड्राइव लिंक जोड़ें।</div>";
     }
-    document.getElementById("pdf-modal-body").innerHTML =
-      "<iframe src=\"" + src + "\" style=\"width:100%; flex:1; min-height:68vh; border:1.5px solid var(--gold); border-radius:12px; background:#fff;\"></iframe>" +
-      "<div style=\"text-align:center; margin-top:10px;\"><a class=\"action-btn gold\" href=\"" + src + "\" download=\"" + esc((b.title || "pustak") + ".pdf") + "\">⬇️ PDF फ़ाइल डाउनलोड करें</a></div>";
   });
 }
 
@@ -3631,7 +3755,7 @@ function savePdfToIndexedDb(id, blobOrData, fileName) {
   });
 }
 
-function loadPdfFromIndexedDb(id) {
+function loadPdfRecordFromIndexedDb(id) {
   return openPdfIndexedDb().then(function(idb) {
     if (!idb) return null;
     return new Promise(function(resolve) {
@@ -3640,16 +3764,19 @@ function loadPdfFromIndexedDb(id) {
         var req = tx.objectStore("pdfs").get(id);
         req.onsuccess = function() {
           var rec = req.result;
-          if (!rec || !rec.blob) return resolve(null);
-          if (rec.blob instanceof Blob) {
-            resolve(URL.createObjectURL(rec.blob));
-          } else {
-            resolve(rec.blob);
-          }
+          resolve((rec && rec.blob) ? rec.blob : null);
         };
         req.onerror = function() { resolve(null); };
       } catch (e) { resolve(null); }
     });
+  });
+}
+
+function loadPdfFromIndexedDb(id) {
+  return loadPdfRecordFromIndexedDb(id).then(function(raw) {
+    if (!raw) return null;
+    if (raw instanceof Blob) return URL.createObjectURL(raw);
+    return raw;
   });
 }
 
