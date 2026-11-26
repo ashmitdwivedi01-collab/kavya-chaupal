@@ -4250,13 +4250,7 @@ function renderAdminStudio() {
       "<p style=\"font-size:12.5px; color:var(--text-muted); margin:0 0 12px;\">Google लॉगिन से, या ईमेल-पासवर्ड अथवा पिन से सीधे खोलें।</p>" +
       "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle(\'admin\')\"><span>🔐</span><span>Google से एडमिन खाता लॉगिन करें</span></button>" +
       "<div class=\"auth-divider\">— या एडमिन ईमेल व पासवर्ड से लॉगिन करें —</div>" +
-      "<div class=\"field\" style=\"text-align:left;\"><label>एडमिन ईमेल</label><input id=\"adm-login-email\" type=\"email\" value=\"" + esc(state.settings.adminEmail || "") + "\" placeholder=\"आपका एडमिन ईमेल\" /></div>" +
-      "<div class=\"field\" style=\"text-align:left;\"><label>पासवर्ड</label><input id=\"adm-login-pass\" type=\"password\" placeholder=\"खाता पासवर्ड\" onkeydown=\"if(event.key===\'Enter\') signInAdminEmailPass()\" /></div>" +
-      "<div style=\"margin-bottom:14px;\"><button class=\"action-btn gold\" style=\"width:100%;\" onclick=\"signInAdminEmailPass()\">ईमेल-पासवर्ड से एडमिन लॉगिन</button></div>" +
-      "<div class=\"auth-divider\">— या त्वरित पिन से खोलें —</div>" +
-      "<input id=\"admin-pin-input\" type=\"password\" inputmode=\"numeric\" placeholder=\"पिन लिखें...\" style=\"max-width:220px; text-align:center; font-size:20px; letter-spacing:6px; padding:10px; border-radius:12px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); margin-bottom:12px;\" onkeydown=\"if(event.key===\'Enter\') unlockAdmin()\" />" +
-      "<div><button class=\"action-btn primary\" onclick=\"unlockAdmin()\">पिन से स्टूडियो खोलें →</button></div>" +
-      "</div>";
+      "<div id=\"adm-auth-feedback\" style=\"display:none; padding:10px 12px; border-radius:11px; border:1px solid; font-size:12.5px; font-weight:600; margin-bottom:10px; line-height:1.5; text-align:left;\"></div>" + "<div class=\"field\" style=\"text-align:left;\"><label>एडमिन ईमेल</label><input id=\"adm-login-email\" type=\"email\" value=\"" + esc(state.settings.adminEmail || "") + "\" placeholder=\"आपका एडमिन ईमेल\" /></div>" + "<div class=\"field\" style=\"text-align:left;\"><label>पासवर्ड</label><input id=\"adm-login-pass\" type=\"password\" placeholder=\"खाता पासवर्ड\" onkeydown=\"if(event.key==='Enter') signInAdminEmailPass()\" />" + "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-top:7px; font-size:12.5px;\"><label style=\"display:inline-flex; align-items:center; gap:6px; margin:0; color:var(--text); font-weight:600; cursor:pointer;\"><input type=\"checkbox\" style=\"width:auto; margin:0;\" onchange=\"togglePasswordVisibility('adm-login-pass', this)\" /> पासवर्ड दिखाएँ</label><button type=\"button\" class=\"sm-btn\" onclick=\"sendForgotPasswordReset('adm-login-email', 'adm-auth-feedback')\">🔑 फॉरगेट पासवर्ड</button></div></div>" + "<div style=\"margin-bottom:14px;\"><button type=\"button\" class=\"action-btn gold\" style=\"width:100%;\" onclick=\"signInAdminEmailPass()\">ईमेल-पासवर्ड से एडमिन लॉगिन</button></div>" + "<div class=\"auth-divider\">— या त्वरित पिन से खोलें —</div>" + "<input id=\"admin-pin-input\" type=\"password\" inputmode=\"numeric\" placeholder=\"पिन लिखें...\" style=\"max-width:220px; text-align:center; font-size:20px; letter-spacing:6px; padding:10px; border-radius:12px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); margin-bottom:12px;\" onkeydown=\"if(event.key==='Enter') unlockAdmin()\" />" + "<div><button type=\"button\" class=\"action-btn primary\" onclick=\"unlockAdmin()\">पिन से स्टूडियो खोलें →</button></div>" + "</div>";
     return;
   }
 
@@ -4620,60 +4614,204 @@ function setSubmitTab(tab) { state.submitTab = tab; renderSubmitModal(); }
 function setAuthMode(mode) { state.authMode = mode; renderSubmitModal(); }
 function isMobileOrWebView() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ""); }
 
+function formatAuthErrorHi(err) {
+  var code = (err && err.code) || "";
+  if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+    return "ईमेल या पासवर्ड ग़लत है। ‘पासवर्ड दिखाएँ’ पर टिक करके जाँचें या ‘फॉरगेट पासवर्ड’ का उपयोग करें।";
+  }
+  if (code === "auth/user-not-found") {
+    return "इस ईमेल से कोई खाता नहीं मिला। नया खाता बनाने के लिए ‘नया खाता बनाएँ’ टैब चुनें।";
+  }
+  if (code === "auth/invalid-email") {
+    return "कृपया सही ईमेल पता लिखें।";
+  }
+  if (code === "auth/email-already-in-use") {
+    return "यह ईमेल पहले से पंजीकृत है। कृपया ‘लॉगिन करें’ टैब से प्रवेश करें।";
+  }
+  if (code === "auth/weak-password") {
+    return "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।";
+  }
+  if (code === "auth/too-many-requests") {
+    return "बहुत अधिक प्रयास किए गए हैं। कृपया कुछ देर बाद प्रयास करें या पासवर्ड रीसेट करें।";
+  }
+  if (code === "auth/network-request-failed") {
+    return "इंटरनेट कनेक्शन में समस्या है। नेटवर्क जाँचकर पुनः प्रयास करें।";
+  }
+  if (code === "auth/unauthorized-domain") {
+    return "यह डोमेन Firebase Authorized Domains में जुड़ा नहीं है (Firebase Console -> Auth -> Settings में डोमेन जोड़ें)।";
+  }
+  if (code === "auth/operation-not-allowed") {
+    return "Firebase Console में यह लॉगिन माध्यम (Google / Email) सक्षम नहीं है।";
+  }
+  if (code === "auth/popup-closed-by-user") {
+    return "Google लॉगिन विंडो बीच में बंद कर दी गई।";
+  }
+  return (err && err.message) ? err.message : "लॉगिन प्रक्रिया पूरी नहीं हो सकी।";
+}
+
+function setAuthFeedbackMsg(boxId, msg, isSuccess) {
+  var box = document.getElementById(boxId);
+  if (!box) return;
+  if (!msg) {
+    box.style.display = "none";
+    box.innerHTML = "";
+    return;
+  }
+  box.style.display = "block";
+  box.style.background = isSuccess ? "rgba(22, 163, 74, 0.14)" : "rgba(217, 38, 78, 0.12)";
+  box.style.borderColor = isSuccess ? "#16A34A" : "rgba(217, 38, 78, 0.45)";
+  box.style.color = isSuccess ? "#15803D" : "#B91C1C";
+  if (document.documentElement.getAttribute("data-theme") === "night") {
+    box.style.color = isSuccess ? "#86EFAC" : "#FCA5A5";
+  }
+  box.innerHTML = esc(msg);
+}
+
+function togglePasswordVisibility(inputId, checkboxEl) {
+  var inp = document.getElementById(inputId);
+  if (!inp) return;
+  inp.type = (checkboxEl && checkboxEl.checked) ? "text" : "password";
+}
+
+function sendForgotPasswordReset(emailInputId, feedbackBoxId) {
+  if (!auth) {
+    var m0 = "Firebase Auth उपलब्ध नहीं है।";
+    showToast(m0);
+    setAuthFeedbackMsg(feedbackBoxId, m0, false);
+    return;
+  }
+  var email = ((document.getElementById(emailInputId) || { value: "" }).value || "").trim().toLowerCase();
+  if (!email) {
+    var m1 = "पासवर्ड रीसेट लिंक भेजने के लिए पहले ऊपर अपना ईमेल पता लिखें।";
+    showToast(m1);
+    setAuthFeedbackMsg(feedbackBoxId, m1, false);
+    return;
+  }
+  setAuthFeedbackMsg(feedbackBoxId, "पासवर्ड रीसेट लिंक भेजा जा रहा है...", true);
+  auth.sendPasswordResetEmail(email).then(function() {
+    var okMsg = email + " पर पासवर्ड रीसेट लिंक भेज दिया गया है। अपना Inbox व Spam फ़ोल्डर देखें।";
+    showToast("रीसेट लिंक भेजा गया ✓");
+    setAuthFeedbackMsg(feedbackBoxId, okMsg, true);
+  }).catch(function(err) {
+    var hiErr = formatAuthErrorHi(err);
+    showToast(hiErr);
+    setAuthFeedbackMsg(feedbackBoxId, hiErr, false);
+  });
+}
+
 function signInWithGoogle(context) {
+  var fbId = context === "admin" ? "adm-auth-feedback" : "member-auth-feedback";
   if (!auth || !window.firebase || !firebase.auth || !firebase.auth.GoogleAuthProvider) {
-    showToast("Firebase Auth उपलब्ध नहीं है — ईमेल/पासवर्ड का उपयोग करें");
+    var m0 = "Firebase Auth उपलब्ध नहीं है — कृपया ईमेल और पासवर्ड का उपयोग करें।";
+    showToast(m0);
+    setAuthFeedbackMsg(fbId, m0, false);
     return;
   }
   var provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
   showToast("Google लॉगिन खोला जा रहा है...");
-  if (isMobileOrWebView()) {
-    auth.signInWithRedirect(provider).catch(function(err) {
-      var msg = (err && err.message) ? err.message : "रीडायरेक्ट विफल";
-      showToast("Google त्रुटि: " + msg.slice(0, 75));
-    });
-    return;
-  }
+  setAuthFeedbackMsg(fbId, "Google खाता चुना जा रहा है, कृपया प्रतीक्षा करें...", true);
+
   auth.signInWithPopup(provider).then(function(res) {
     var em = ((res.user && res.user.email) || "").toLowerCase().trim();
-    if (context === "admin" && state.settings.adminEmail && em === state.settings.adminEmail.toLowerCase().trim()) {
+    if (context === "admin" && state.settings.adminEmail && em !== state.settings.adminEmail.toLowerCase().trim()) {
+      var admMismatch = "यह Google खाता (" + em + ") पंजीकृत एडमिन ईमेल से मेल नहीं खाता।";
+      showToast(admMismatch);
+      setAuthFeedbackMsg(fbId, admMismatch, false);
+      return;
+    }
+    if (context === "admin") {
       state.adminUnlocked = true;
       renderAdminStudio();
     }
+    setAuthFeedbackMsg(fbId, "", true);
     renderAll();
     showToast("Google लॉगिन सफल ✓");
   }).catch(function(err) {
     var code = (err && err.code) || "";
     if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+      setAuthFeedbackMsg(fbId, "पॉप-अप अवरुद्ध है, रीडायरेक्ट द्वारा Google लॉगिन खोला जा रहा है...", true);
       auth.signInWithRedirect(provider).catch(function(e2) {
-        showToast("Google त्रुटि: " + (e2 && e2.message ? e2.message.slice(0, 75) : "असफल"));
+        var hi2 = formatAuthErrorHi(e2);
+        showToast(hi2);
+        setAuthFeedbackMsg(fbId, hi2, false);
       });
     } else {
-      showToast("Google लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 75) : "असफल"));
+      var hiErr = formatAuthErrorHi(err);
+      showToast(hiErr);
+      setAuthFeedbackMsg(fbId, hiErr, false);
     }
   });
 }
 
 function submitEmailAuthForm() {
-  if (!auth) { showToast("Auth उपलब्ध नहीं है"); return; }
+  var fbId = "member-auth-feedback";
+  if (!auth) {
+    var m0 = "Firebase Auth उपलब्ध नहीं है।";
+    showToast(m0);
+    setAuthFeedbackMsg(fbId, m0, false);
+    return;
+  }
   var email = ((document.getElementById("auth-email-in") || { value: "" }).value || "").trim().toLowerCase();
   var pass = ((document.getElementById("auth-pass-in") || { value: "" }).value || "").trim();
-  if (!email || pass.length < 6) { showToast("ईमेल और कम से कम 6 अक्षरों का पासवर्ड लिखें"); return; }
+  if (!email) {
+    var m1 = "कृपया अपना ईमेल पता लिखें।";
+    showToast(m1);
+    setAuthFeedbackMsg(fbId, m1, false);
+    return;
+  }
+  if (!pass || pass.length < 6) {
+    var m2 = "कृपया कम से कम 6 अक्षरों का पासवर्ड लिखें।";
+    showToast(m2);
+    setAuthFeedbackMsg(fbId, m2, false);
+    return;
+  }
+  setAuthFeedbackMsg(fbId, "सत्यापन किया जा रहा है...", true);
   var p = (state.authMode === "signup") ? auth.createUserWithEmailAndPassword(email, pass) : auth.signInWithEmailAndPassword(email, pass);
-  p.then(function() { showToast("लॉगिन सफल ✓"); }).catch(function(err) { showToast("लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 60) : "")); });
+  p.then(function() {
+    setAuthFeedbackMsg(fbId, "", true);
+    showToast("लॉगिन सफल ✓");
+  }).catch(function(err) {
+    var hiErr = formatAuthErrorHi(err);
+    showToast(hiErr);
+    setAuthFeedbackMsg(fbId, hiErr, false);
+  });
 }
 
 function signInAdminEmailPass() {
-  if (!auth) { showToast("Auth उपलब्ध नहीं है"); return; }
+  var fbId = "adm-auth-feedback";
+  if (!auth) {
+    var m0 = "Firebase Auth उपलब्ध नहीं है।";
+    showToast(m0);
+    setAuthFeedbackMsg(fbId, m0, false);
+    return;
+  }
   var email = ((document.getElementById("adm-login-email") || { value: "" }).value || "").trim().toLowerCase();
   var pass = ((document.getElementById("adm-login-pass") || { value: "" }).value || "").trim();
-  if (!email || !pass) { showToast("ईमेल और पासवर्ड लिखें"); return; }
+  if (!email || !pass) {
+    var m1 = "कृपया एडमिन ईमेल और पासवर्ड दोनों लिखें।";
+    showToast(m1);
+    setAuthFeedbackMsg(fbId, m1, false);
+    return;
+  }
+  setAuthFeedbackMsg(fbId, "एडमिन विवरण जाँचा जा रहा है...", true);
   auth.signInWithEmailAndPassword(email, pass).then(function(res) {
     var signedIn = ((res.user && res.user.email) || "").toLowerCase().trim();
-    if (state.settings.adminEmail && signedIn !== state.settings.adminEmail.toLowerCase().trim()) { showToast("यह ईमेल पंजीकृत एडमिन ईमेल नहीं है"); return; }
-    state.adminUnlocked = true; renderAdminStudio(); showToast("एडमिन लॉगिन सफल 👑");
-  }).catch(function() { showToast("एडमिन लॉगिन असफल"); });
+    if (state.settings.adminEmail && signedIn !== state.settings.adminEmail.toLowerCase().trim()) {
+      var m2 = "यह ईमेल (" + signedIn + ") पंजीकृत एडमिन ईमेल नहीं है।";
+      showToast(m2);
+      setAuthFeedbackMsg(fbId, m2, false);
+      return;
+    }
+    state.adminUnlocked = true;
+    setAuthFeedbackMsg(fbId, "", true);
+    renderAdminStudio();
+    showToast("एडमिन लॉगिन सफल 👑");
+  }).catch(function(err) {
+    var hiErr = formatAuthErrorHi(err);
+    showToast(hiErr);
+    setAuthFeedbackMsg(fbId, hiErr, false);
+  });
 }
 
 function signOutAccount() {
@@ -4712,10 +4850,7 @@ function renderSubmitModal() {
       "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle(\'poet\')\"><span>🌐</span><span>Google से जारी रखें</span></button>" +
       "<div class=\"auth-divider\">— या ईमेल व पासवर्ड —</div>" +
       "<div class=\"admin-tabs\" style=\"justify-content:center; margin-bottom:10px;\"><button class=\"admin-tab-btn " + (!isSignup ? "active" : "") + "\" onclick=\"setAuthMode(\'login\')\">लॉगिन करें</button><button class=\"admin-tab-btn " + (isSignup ? "active" : "") + "\" onclick=\"setAuthMode(\'signup\')\">नया खाता बनाएँ</button></div>" +
-      "<div class=\"field\"><label>ईमेल *</label><input id=\"auth-email-in\" type=\"email\" /></div>" +
-      "<div class=\"field\"><label>पासवर्ड (6+ अक्षर) *</label><input id=\"auth-pass-in\" type=\"password\" onkeydown=\"if(event.key===\'Enter\') submitEmailAuthForm()\" /></div>" +
-      "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitEmailAuthForm()\">" + (isSignup ? "खाता बनाकर आगे बढ़ें" : "लॉगिन करके आगे बढ़ें") + "</button>" +
-      "</div>";
+      "<div id=\"member-auth-feedback\" style=\"display:none; padding:10px 12px; border-radius:11px; border:1px solid; font-size:12.5px; font-weight:600; margin-bottom:10px; line-height:1.5;\"></div>" + "<div class=\"field\"><label>ईमेल *</label><input id=\"auth-email-in\" type=\"email\" placeholder=\"उदाहरण: name@gmail.com\" /></div>" + "<div class=\"field\"><label>पासवर्ड (6+ अक्षर) *</label><input id=\"auth-pass-in\" type=\"password\" placeholder=\"पासवर्ड लिखें\" onkeydown=\"if(event.key==='Enter') submitEmailAuthForm()\" />" + "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-top:7px; font-size:12.5px;\"><label style=\"display:inline-flex; align-items:center; gap:6px; margin:0; color:var(--text); font-weight:600; cursor:pointer;\"><input type=\"checkbox\" style=\"width:auto; margin:0;\" onchange=\"togglePasswordVisibility('auth-pass-in', this)\" /> पासवर्ड दिखाएँ</label><button type=\"button\" class=\"sm-btn\" onclick=\"sendForgotPasswordReset('auth-email-in', 'member-auth-feedback')\">🔑 फॉरगेट पासवर्ड</button></div></div>" + "<button type=\"button\" class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitEmailAuthForm()\">" + (isSignup ? "खाता बनाकर आगे बढ़ें" : "लॉगिन करके आगे बढ़ें") + "</button>" + "</div>";
     return;
   }
   var userEmail = state.currentUser.email;
