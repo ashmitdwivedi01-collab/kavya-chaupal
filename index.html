@@ -5171,22 +5171,9 @@ function renderDropTapList(items) {
   return dropdownHtml + cardsHtml;
 }
 
-function renderMatraPane() {
-  var box = document.getElementById("manch-matra");
-  if (!box) return;
-  var navHtml = "<div class=\"chhand-subnav\">" +
-    "<button type=\"button\" class=\"chhand-subbtn " + (chhandHubTab === "ganak" ? "active" : "") + "\" onclick=\"setChhandHubTab('ganak')\">⚖️ मात्रा गणक</button>" +
-    "<button type=\"button\" class=\"chhand-subbtn " + (chhandHubTab === "matrik" ? "active" : "") + "\" onclick=\"setChhandHubTab('matrik')\">📐 मात्रिक छंद</button>" +
-    "<button type=\"button\" class=\"chhand-subbtn " + (chhandHubTab === "varnik" ? "active" : "") + "\" onclick=\"setChhandHubTab('varnik')\">🔤 वर्णिक छंद</button>" +
-  "</div>";
-  if (chhandHubTab === "matrik") {
-    box.innerHTML = navHtml + "<div class=\"section-head\" style=\"margin-top:0;\"><h3 class=\"section-title\">📐 मात्रिक छंद चौपाल</h3><span class=\"section-hint\">देखें / छुपाएँ</span></div>" + renderDropTapList(MATRIK_CHHAND_DATA);
-    return;
-  }
-  if (chhandHubTab === "varnik") {
-    box.innerHTML = navHtml + "<div class=\"section-head\" style=\"margin-top:0;\"><h3 class=\"section-title\">🔤 वर्णिक छंद चौपाल</h3><span class=\"section-hint\">देखें / छुपाएँ</span></div>" + renderDropTapList(VARNIK_CHHAND_DATA);
-    return;
-  }
+function updateMatraResultsOnly() {
+  var resBox = document.getElementById("matra-results-container");
+  if (!resBox) return;
   var linesArr = (state.matraInput || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
   var det = detectChhandFromLines(linesArr);
   var linesHtml = linesArr.map(function(l, idx) {
@@ -5200,11 +5187,42 @@ function renderMatraPane() {
       }).join("") + "</div>" +
     "</div>";
   }).join("");
-  box.innerHTML = navHtml +
-    "<div class=\"form-box\"><h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ छंद एवं मात्रा गणक</h3><textarea style=\"width:100%; min-height:96px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" placeholder=\"यहाँ काव्य पंक्तियाँ लिखें...\" oninput=\"state.matraInput=this.value; renderMatraPane()\">" + esc(state.matraInput) + "</textarea></div>" +
+
+  resBox.innerHTML =
     "<div class=\"chhand-detect-card\"><div class=\"chhand-badge-main\">🎭 " + esc(det.name) + "</div>" + (det.statusLabel ? (" <span class=\"mini-badge\">" + esc(det.statusLabel) + "</span>") : "") + "<div style=\"font-size:13px; margin-top:6px; line-height:1.55; color:var(--text);\">" + esc(det.reason) + "</div>" + (det.caution ? ("<div style=\"font-size:12px; margin-top:6px; color:var(--text-muted); line-height:1.5;\">⚠️ <strong>सतर्कता:</strong> " + esc(det.caution) + "</div>") : "") + "</div>" +
     linesHtml;
 }
+
+function renderMatraPane() {
+  var box = document.getElementById("manch-matra");
+  if (!box) return;
+  var navHtml = "<div class=\"chhand-subnav\">" +
+    "<button type=\"button\" class=\"chhand-subbtn " + (chhandHubTab === "ganak" ? "active" : "") + "\" onclick=\"setChhandHubTab('ganak')\">⚖️ मात्रा गणक</button>" +
+    "<button type=\"button\" class=\"chhand-subbtn " + (chhandHubTab === "matrik" ? "active" : "") + "\" onclick=\"setChhandHubTab('matrik')\">📐 मात्रिक छंद</button>" +
+    "<button type=\"button\" class=\"chhand-subbtn " + (chhandHubTab === "varnik" ? "active" : "") + "\" onclick=\"setChhandHubTab('varnik')\">🔤 वर्णिक छंद</button>" +
+  "</div>";
+
+  if (chhandHubTab === "matrik") {
+    box.innerHTML = navHtml + "<div class=\"section-head\" style=\"margin-top:0;\"><h3 class=\"section-title\">📐 मात्रिक छंद चौपाल</h3><span class=\"section-hint\">देखें / छुपाएँ</span></div>" + renderDropTapList(MATRIK_CHHAND_DATA);
+    return;
+  }
+  if (chhandHubTab === "varnik") {
+    box.innerHTML = navHtml + "<div class=\"section-head\" style=\"margin-top:0;\"><h3 class=\"section-title\">🔤 वर्णिक छंद चौपाल</h3><span class=\"section-hint\">देखें / छुपाएँ</span></div>" + renderDropTapList(VARNIK_CHHAND_DATA);
+    return;
+  }
+
+  var existingTa = document.getElementById("matra-textarea-input");
+  var existingRes = document.getElementById("matra-results-container");
+  if (!existingTa || !existingRes) {
+    box.innerHTML = navHtml +
+      "<div class=\"form-box\"><h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ छंद एवं मात्रा गणक</h3><textarea id=\"matra-textarea-input\" style=\"width:100%; min-height:96px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" placeholder=\"यहाँ काव्य पंक्तियाँ लिखें...\" oninput=\"state.matraInput=this.value; updateMatraResultsOnly()\">" + esc(state.matraInput) + "</textarea></div>" +
+      "<div id=\"matra-results-container\"></div>";
+  } else if (existingTa.value !== (state.matraInput || "")) {
+    existingTa.value = state.matraInput || "";
+  }
+  updateMatraResultsOnly();
+}
+
 var DEVANAGARI_LETTERS = ["अ","आ","इ","ई","उ","ऊ","ए","ऐ","ओ","औ","क","ख","ग","घ","च","छ","ज","झ","ट","ठ","ड","ढ","त","थ","द","ध","न","प","फ","ब","भ","म","य","र","ल","व","श","ष","स","ह"];
 function getFirstHindiLetter(str) {
   var s = String(str || "");
