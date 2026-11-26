@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#5B1118" />
+  <meta name="description" content="काव्य चौपाल — हिंदी साहित्य, छंद, गीत, ग़ज़ल और संवेदनशील अभिव्यक्ति को समर्पित डिजिटल साहित्यिक मंच।" />
   <title>काव्य चौपाल — साहित्य का शाही उत्सव</title>
+  <link rel="manifest" href="./manifest.json" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;600;700&family=Rozha+One&family=Yatra+One&display=swap" rel="stylesheet" />
@@ -1520,6 +1522,7 @@
 
 
 
+
   <!-- ================= CINEMATIC OPENING SPLASH ================= -->
   <div id="splash-screen">
     <div class="splash-border"></div>
@@ -1860,6 +1863,7 @@
   <div id="dad-burst-layer"></div>
   <div id="toast"></div>
 
+  
   
   
   
@@ -3582,6 +3586,13 @@ injectPWAManifest();
 renderAll();
 initFirebaseSync();
 initSmartBackNavigation();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function() {
+    navigator.serviceWorker.register("./sw.js").catch(function() {});
+  });
+}
+
   </script>
 </body>
 </html>
