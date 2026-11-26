@@ -1381,7 +1381,7 @@
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
     }
     .book-flip-card.sharp-contrast canvas {
-      filter: contrast(1.35) brightness(1.05);
+      filter: contrast(1.28) brightness(1.04);
     }
     .book-flip-card::before {
       content: "";
@@ -1421,26 +1421,26 @@
       text-align: center;
     }
 
-    /* ================= AUTO SAHITYAKAR BIRTHDAY / JAYANTI SPOTLIGHT ================= */
+    /* ================= AUTO SAHITYAKAR JAYANTI / BIRTHDAY CARD ================= */
     .jayanti-card {
       position: relative;
       border-radius: 24px;
       padding: 18px 16px;
       margin-bottom: 16px;
+      color: #FFF9EC;
       background:
-        radial-gradient(circle at 12% 15%, rgba(247, 220, 139, 0.25), transparent 48%),
-        radial-gradient(circle at 90% 85%, rgba(198, 146, 44, 0.22), transparent 50%),
-        linear-gradient(145deg, #FFFDF7 0%, #F7E8C8 100%);
-      border: 2px solid var(--gold);
-      box-shadow: var(--shadow-strong);
+        radial-gradient(circle at 86% 16%, rgba(252, 226, 154, 0.32), transparent 48%),
+        radial-gradient(circle at 14% 88%, rgba(245, 158, 11, 0.22), transparent 50%),
+        linear-gradient(145deg, #5A0D16 0%, #34070D 60%, #1B0611 100%);
+      border: 2px solid #F3D47E;
+      box-shadow: 0 18px 42px rgba(58, 7, 14, 0.26);
       overflow: hidden;
     }
     [data-theme="night"] .jayanti-card {
-      background:
-        radial-gradient(circle at 15% 15%, rgba(232, 192, 104, 0.2), transparent 50%),
-        linear-gradient(145deg, #1A2240 0%, #10152B 100%);
+      background: linear-gradient(145deg, #1E274E 0%, #10152B 100%);
+      border-color: #E8C068;
     }
-    .jayanti-top {
+    .jayanti-header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1448,37 +1448,35 @@
       flex-wrap: wrap;
       margin-bottom: 10px;
     }
-    .jayanti-person-row {
-      display: flex;
+    .jayanti-pill {
+      display: inline-flex;
       align-items: center;
-      gap: 13px;
-      margin-bottom: 10px;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(247, 220, 139, 0.22);
+      border: 1px solid rgba(247, 220, 139, 0.65);
+      color: #FCE6A4;
+      font-size: 11.5px;
+      font-weight: 700;
     }
-    .jayanti-badge-crest {
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #7B1620, #3E080E);
-      color: #F7DC8B;
-      border: 2px solid var(--gold);
-      display: grid;
-      place-items: center;
+    .jayanti-poet-name {
       font-family: 'Yatra One', serif;
       font-size: 22px;
-      flex-shrink: 0;
-      box-shadow: 0 6px 16px rgba(74, 11, 18, 0.25);
+      color: #F7DC8B;
+      margin: 4px 0 6px;
     }
-    .jayanti-quote {
+    .jayanti-verse {
       font-family: 'Noto Serif Devanagari', serif;
-      font-size: 14.5px;
-      line-height: 1.75;
-      color: var(--text);
-      background: var(--bg-elevated);
-      border-left: 3.5px solid var(--gold);
-      border-radius: 12px;
-      padding: 10px 13px;
+      font-size: 15.5px;
+      line-height: 1.8;
+      color: #FFFDF7;
       margin: 8px 0 12px;
       white-space: pre-line;
+      padding: 10px 13px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.07);
+      border-left: 3px solid #F7DC8B;
     }
 
     /* ================= ABOUT & SOCIAL CARDS ================= */
@@ -1592,22 +1590,15 @@
       background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px; outline: none;
     }
     .field select {
-      min-height: 44px;
-      line-height: 1.4;
-      color: #271710 !important;
-      background-color: #FFFDF7 !important;
-      border: 1.5px solid #C6922C !important;
-      padding-right: 28px;
+      appearance: none;
+      -webkit-appearance: none;
+      color: var(--text);
+      background-color: var(--bg-elevated);
+      padding-right: 34px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23C6922C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 11px center;
       cursor: pointer;
-    }
-    [data-theme="night"] .field select {
-      color: #F6EFE2 !important;
-      background-color: #141A30 !important;
-      border-color: #E8C068 !important;
-    }
-    .field select option {
-      color: #271710;
-      background: #FFFDF7;
     }
     .field textarea { min-height: 96px; resize: vertical; line-height: 1.65; }
     .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--gold); }
@@ -1762,7 +1753,7 @@
     <!-- TAB 1: POEMS (रचनाएँ) -->
     <section id="tab-poems" class="tab-view active">
       <div id="spotlight-wrap"></div>
-      <div id="jayanti-spotlight-wrap"></div>
+      <div id="daily-jayanti-wrap"></div>
 
       <!-- Quick Royal Gateway -->
       <div class="quick-grid">
@@ -2445,7 +2436,8 @@ function initFirebaseSync() {
       if (state.currentUser && state.settings.adminEmail && state.currentUser.email === state.settings.adminEmail.toLowerCase().trim()) {
         state.adminUnlocked = true;
       }
-      renderAll();
+      triggerAutoDailyBirthdaySystem();
+renderAll();
       var sm = document.getElementById("submit-modal");
       if (sm && sm.classList.contains("open")) renderSubmitModal();
       var am = document.getElementById("admin-modal");
@@ -2897,9 +2889,8 @@ function renderAll() {
 
   renderTopAccountBar();
   renderBrandLogo();
-  syncDailyBirthdayAutoNotification();
   renderSpotlight();
-  renderJayantiSpotlight();
+  renderDailyJayantiCard();
   renderDailyRiddle();
   renderHomeDropdowns();
   renderVidhaStrip();
@@ -2956,146 +2947,128 @@ function startSpotlightAutoFlash() {
   }, 5500);
 }
 
-/* ================= AUTO DAILY SAHITYAKAR JAYANTI / BIRTHDAY SYSTEM ================= */
-var SAHITYAKAR_BIRTHDAYS = [
-  { mmdd: "01-11", name: "राहुल द्विवेदी 'स्मित'", year: "1987", role: "कवि, गीतकार एवं संस्थापक — काव्य चौपाल", quote: "शब्दों के दीप जलाकर हर मन को जोड़ना ही काव्य चौपाल की साधना है।" },
-  { mmdd: "01-12", name: "सूर्यकांत त्रिपाठी 'निराला' (जयंती स्मरण)", year: "1896/1899", role: "छायावाद के शलाका पुरुष", quote: "वर दे वीणावादिनि वर दे।
-प्रिय स्वतंत्र रव अमृत मंत्र नव भारत में भर दे।" },
-  { mmdd: "01-29", name: "हरिशंकर परसाई", year: "1924", role: "हिंदी के कालजयी व्यंग्यकार", quote: "व्यंग्य वह आईना है जो समाज की विसंगतियों को मुस्कुराहट के साथ दिखाता है।" },
-  { mmdd: "02-03", name: "जयशंकर प्रसाद", year: "1889", role: "छायावाद के आधार स्तंभ कवि व नाटककार", quote: "ले चल मुझे भुलावा देकर, मेरे नाविक धीरे-धीरे।" },
-  { mmdd: "02-18", name: "दुष्यंत कुमार", year: "1933", role: "हिंदी ग़ज़ल के सशक्त हस्ताक्षर", quote: "हो गई है पीर पर्वत-सी पिघलनी चाहिए,
+/* ================= AUTO DAILY SAHITYAKAR JAYANTI SYSTEM ================= */
+var LITERARY_BIRTHDAYS = [
+  { mmdd: "01-04", name: "गोपाल दास 'नीरज'", role: "महान गीतकार एवं कवि", line: "कारवाँ गुज़र गया, गुबार देखते रहे।" },
+  { mmdd: "01-11", name: "राहुल द्विवेदी 'स्मित'", role: "कवि, गीतकार एवं संस्थापक — काव्य चौपाल", line: "साँझ की मैं देहरी पर प्राण देकर जा रहा था,
+रात्रि के सूने प्रहर में प्राण लेकर आ गये तुम ।।" },
+  { mmdd: "03-07", name: "सच्चिदानंद हीरानन्द वात्स्यायन 'अज्ञेय'", role: "प्रयोगवाद एवं नई कविता के शलाका पुरुष", line: "मौन भी अभिव्यंजना है, जितना तुम्हारा सच है उतना ही कहो।" },
+  { mmdd: "03-26", name: "महादेवी वर्मा", role: "छायावाद की प्रमुख कवयित्री", line: "मैं नीर भरी दुख की बदली।" },
+  { mmdd: "04-12", name: "धूमिल (सुदामा पाण्डेय)", role: "समकालीन हिंदी कविता के सशक्त स्वर", line: "शब्द कैसे होते हैं, यह शब्द से पूछो।" },
+  { mmdd: "05-20", name: "सुमित्रानंदन पंत", role: "प्रकृति के सुकुमार कवि", line: "वियोगी होगा पहला आह, उपजा होगा गान।" },
+  { mmdd: "06-14", name: "इब्न-ए-इंशा", role: "ख्यातनाम शायर एवं व्यंग्यकार", line: "इंशा जी उठो अब कूच करो, इस शहर में जी को लगाना क्या।" },
+  { mmdd: "08-05", name: "शिवमंगल सिंह 'सुमन'", role: "प्रगतिशील गीतकार एवं कवि", line: "हम पंछी उन्मुक्त गगन के, पिंजरबद्ध न गा पाएँगे।" },
+  { mmdd: "08-15", name: "दुष्यंत कुमार", role: "हिंदी ग़ज़ल के लोकप्रिय शायर", line: "हो गई है पीर पर्वत-सी पिघलनी चाहिए,
 इस हिमालय से कोई गंगा निकलनी चाहिए।" },
-  { mmdd: "03-26", name: "महादेवी वर्मा", year: "1907", role: "आधुनिक मीरा एवं छायावाद की कवयित्री", quote: "मैं नीर भरी दुख की बदली।" },
-  { mmdd: "04-14", name: "भगवतीचरण वर्मा", year: "1903", role: "प्रसिद्ध उपन्यासकार व कवि", quote: "हम दीवानों की क्या हस्ती, हैं आज यहाँ कल वहाँ चले।" },
-  { mmdd: "05-12", name: "भवानीप्रसाद मिश्र", year: "1913", role: "दूसरा सप्तक के संवेदनशील कवि", quote: "आज दिशाएँ भी हैं, पर मैं हूँ कि दिशाहीन हूँ।" },
-  { mmdd: "07-31", name: "मुंशी प्रेमचंद", year: "1880", role: "कथा सम्राट", quote: "साहित्य समाज का दर्पण नहीं, बल्कि उसके आगे चलने वाली मशाल है।" },
-  { mmdd: "08-08", name: "गोपाल दास 'नीरज'", year: "1925", role: "गीतकार एवं कवि", quote: "कारवाँ गुज़र गया, गुबार देखते रहे।" },
-  { mmdd: "09-23", name: "रामधारी सिंह 'दिनकर'", year: "1908", role: "राष्ट्रकवि", quote: "अधिकार खोकर बैठे रहना, यह महा दुष्कर्म है।" },
-  { mmdd: "10-10", name: "हरिवंशराय बच्चन", year: "1907", role: "हालावाद के प्रणेता कवि", quote: "असफलता एक चुनौती है, स्वीकार करो,
-क्या कमी रह गई, देखो और सुधार करो।" },
-  { mmdd: "11-26", name: "काव्य चौपाल साहित्य परिवार (विशेष स्मरण दिवस)", year: "मंच उत्सव", role: "आज के साहित्यकार एवं रचनाकारों का सारस्वत नमन", quote: "हर दिन किसी न किसी कलमकार के जन्म का उत्सव है—शब्दों से रचा गया संसार अमर है।" },
-  { mmdd: "12-25", name: "अटल बिहारी वाजपेयी", year: "1924", role: "कवि, वक्ता एवं राजनेता", quote: "हार नहीं मानूँगा, रार नहीं ठानूँगा।" }
+  { mmdd: "09-23", name: "रामधारी सिंह 'दिनकर'", role: "राष्ट्रकवि एवं ओज के कवि", line: "अधिकार खोकर बैठे रहना, यह महा दुष्कर्म है।" },
+  { mmdd: "10-11", name: "जयप्रकाश नारायण / साहित्य पर्व", role: "साहित्यिक स्मरण", line: "सत्य और सृजन का दीप सदा जलता रहे।" },
+  { mmdd: "11-26", name: "रफ़ीक़ शादानी / साहित्य स्मरण", role: "काव्य चौपाल नमन", line: "शब्दों की लौ से रौशन रहे हर आँगन, हर मन।" },
+  { mmdd: "12-25", name: "अटल बिहारी वाजपेयी", role: "कवि, वक्ता एवं राजनेता", line: "क्या हार में क्या जीत में, किंचित नहीं भयभीत मैं।" }
 ];
 
-function getTodayMmDd() {
-  var now = new Date();
-  var m = String(now.getMonth() + 1).padStart(2, "0");
-  var d = String(now.getDate()).padStart(2, "0");
-  return m + "-" + d;
-}
+var jayantiIndex = 0;
 
-function getTodaysSahityakarList() {
-  var today = getTodayMmDd();
-  var matches = SAHITYAKAR_BIRTHDAYS.filter(function(item) { return item.mmdd === today; });
-  // Also check any poet whose birth field mentions today's day and month name
-  var monthsHi = ["जनवरी","फ़रवरी","मार्च","अप्रैल","मई","जून","जुलाई","अगस्त","सितंबर","अक्टूबर","नवंबर","दिसंबर"];
+function getTodayBirthdays() {
   var now = new Date();
-  var dayNum = String(now.getDate());
-  var mName = monthsHi[now.getMonth()];
+  var mm = String(now.getMonth() + 1).padStart(2, "0");
+  var dd = String(now.getDate()).padStart(2, "0");
+  var mmdd = mm + "-" + dd;
+  var todayList = LITERARY_BIRTHDAYS.filter(function(item) { return item.mmdd === mmdd; });
+
+  // Also include any poet in state.poets whose birth contains today's date/month in Hindi or digits
+  var monthNames = ["जनवरी","फ़रवरी","मार्च","अप्रैल","मई","जून","जुलाई","अगस्त","सितंबर","अक्टूबर","नवंबर","दिसंबर"];
+  var hiMonth = monthNames[now.getMonth()];
+  var dayNum = now.getDate();
   state.poets.forEach(function(pt) {
     var bStr = String(pt.birth || "");
-    if (bStr.indexOf(dayNum) !== -1 && bStr.indexOf(mName) !== -1) {
-      if (!matches.some(function(x) { return x.name === pt.name; })) {
-        matches.push({
-          mmdd: today,
+    if (bStr.indexOf(mmdd) !== -1 || (bStr.indexOf(hiMonth) !== -1 && (bStr.indexOf(String(dayNum)) !== -1))) {
+      if (!todayList.some(function(x) { return x.name === pt.name; })) {
+        todayList.push({
+          mmdd: mmdd,
           name: pt.name,
-          year: bStr,
-          role: pt.occupation || "काव्य चौपाल रचनाकार",
-          quote: pt.quote || pt.special || "जन्मदिवस पर काव्य चौपाल परिवार की ओर से हार्दिक शुभकामनाएँ एवं सारस्वत नमन!"
+          role: pt.occupation || "काव्य चौपाल साहित्यकार",
+          line: pt.quote || (pt.special || "साहित्य की सेवा में समर्पित रचनाकार को जन्मदिवस की हार्दिक शुभकामनाएँ।")
         });
       }
     }
   });
-  return matches;
+
+  if (!todayList.length) {
+    // Fallback to a daily rotating featured writer with today's date badge
+    var pick = LITERARY_BIRTHDAYS[now.getDate() % LITERARY_BIRTHDAYS.length];
+    todayList.push(Object.assign({}, pick, { isDailySpotlight: true }));
+  }
+  return todayList;
 }
 
-function syncDailyBirthdayAutoNotification() {
-  var list = getTodaysSahityakarList();
-  var today = getTodayMmDd();
-  var autoId = "notif_bday_" + today;
-  if (state.notifications.some(function(n) { return n.id === autoId; })) return;
-  if (!list.length) return;
-  var names = list.map(function(x) { return x.name; }).join(", ");
-  var item = {
-    id: autoId,
-    title: "🎂 आज साहित्यकार जन्मदिवस विशेष (" + names + ")",
-    body: "आज " + names + " का जन्मदिवस है। काव्य चौपाल परिवार की ओर से हार्दिक बधाई एवं सारस्वत नमन।",
-    type: "birthday",
-    targetId: "",
-    createdAt: Date.now()
-  };
-  state.notifications.unshift(item);
-  saveLocalCache();
-}
-
-function createBirthdayTributeCard(person) {
-  var canvas = document.getElementById("bhav-canvas");
-  if (!canvas) return "";
-  var ctx = canvas.getContext("2d");
-  var W = 1080, H = 1080;
-  var g = ctx.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, 760);
-  g.addColorStop(0, "#7B1620");
-  g.addColorStop(1, "#23050B");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = "#F7DC8B";
-  ctx.lineWidth = 8;
-  ctx.strokeRect(36, 36, W - 72, H - 72);
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#F7DC8B";
-  ctx.font = "700 44px 'Yatra One', serif";
-  ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 130);
-  ctx.font = "700 34px 'Noto Sans Devanagari', sans-serif";
-  ctx.fillStyle = "#FFF8EA";
-  ctx.fillText("🎂 जन्मदिवस की हार्दिक शुभकामनाएँ व नमन", W / 2, 225);
-  ctx.fillStyle = "#FCE29A";
-  ctx.font = "700 54px 'Yatra One', serif";
-  ctx.fillText(person.name, W / 2, 345);
-  ctx.fillStyle = "#F3D47E";
-  ctx.font = "600 28px 'Noto Sans Devanagari', sans-serif";
-  ctx.fillText(person.role || "साहित्यकार", W / 2, 405);
-  ctx.fillStyle = "#FFFDF7";
-  ctx.font = "600 35px 'Noto Serif Devanagari', serif";
-  var qLines = String(person.quote || "").split("\n").filter(Boolean).slice(0, 4);
-  qLines.forEach(function(ln, idx) {
-    ctx.fillText(ln, W / 2, 540 + idx * 62);
+function triggerAutoDailyBirthdaySystem() {
+  var now = new Date();
+  var todayKey = "kc_bday_auto_" + now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+  if (localStorage.getItem(todayKey)) return;
+  localStorage.setItem(todayKey, "1");
+  var list = getTodayBirthdays();
+  list.forEach(function(w) {
+    pushNotification(
+      "🎂 आज का साहित्यकार जन्मदिवस नमन: " + w.name,
+      w.role + " — “" + (w.line || "").split("\n")[0] + "”",
+      "birthday",
+      "",
+      ""
+    );
   });
-  ctx.fillStyle = "#F7DC8B";
-  ctx.font = "700 32px 'Yatra One', serif";
-  ctx.fillText("— स्नेह एवं सम्मान सहित: काव्य चौपाल परिवार", W / 2, H - 110);
-  var url = canvas.toDataURL("image/png");
-  var a = document.createElement("a");
-  a.download = "jayanti-shubhkamna-" + Date.now() + ".png";
-  a.href = url;
-  a.click();
-  showToast("जन्मदिवस शुभकामना चित्र डाउनलोड हुआ 🎉");
 }
 
-function renderJayantiSpotlight() {
-  var wrap = document.getElementById("jayanti-spotlight-wrap");
+function renderDailyJayantiCard() {
+  var wrap = document.getElementById("daily-jayanti-wrap");
   if (!wrap) return;
-  var list = getTodaysSahityakarList();
-  if (!list.length) { wrap.innerHTML = ""; return; }
-  wrap.innerHTML = list.map(function(person, idx) {
-    return "<div class="jayanti-card">" +
-      "<div class="jayanti-top">" +
-        "<span class="genre-tag">🎂 आज साहित्यकार जन्मदिवस • स्वतः सूचना</span>" +
-        "<span style="font-size:11.5px; color:var(--text-muted); font-weight:600;">" + (person.year ? ("जन्म: " + esc(person.year)) : "विशेष स्मरण") + "</span>" +
+  var list = getTodayBirthdays();
+  var cur = list[jayantiIndex % list.length] || list[0];
+  var badgeTxt = cur.isDailySpotlight
+    ? ("🎂 आज का साहित्यकार विशेष नमन • " + esc(cur.mmdd))
+    : ("🎂 आज जन्मदिवस नमन • " + esc(cur.mmdd));
+
+  wrap.innerHTML =
+    "<div class=\"jayanti-card\">" +
+      "<div class=\"jayanti-header-row\">" +
+        "<span class=\"jayanti-pill\">" + badgeTxt + "</span>" +
+        (list.length > 1 ? ("<div style=\"display:flex; gap:5px;\"><button class=\"spot-mini-btn\" onclick=\"jayantiIndex=(jayantiIndex-1+" + list.length + ")%" + list.length + "; renderDailyJayantiCard()\">◀</button><button class=\"spot-mini-btn\" onclick=\"jayantiIndex=(jayantiIndex+1)%" + list.length + "; renderDailyJayantiCard()\">▶</button></div>") : "") +
       "</div>" +
-      "<div class="jayanti-person-row">" +
-        "<div class="jayanti-badge-crest">" + esc(initials(person.name)) + "</div>" +
-        "<div style="min-width:0; flex:1;">" +
-          "<div class="font-royal" style="font-size:20px; color:var(--primary);">" + esc(person.name) + "</div>" +
-          "<div style="font-size:12.5px; color:var(--text-muted); font-weight:600;">" + esc(person.role) + "</div>" +
+      "<div class=\"jayanti-poet-name\">🪔 " + esc(cur.name) + "</div>" +
+      "<div style=\"font-size:12.5px; color:#FCE49C; font-weight:600;\">" + esc(cur.role || "साहित्यकार") + "</div>" +
+      "<div class=\"jayanti-verse\">“" + esc(cur.line) + "”</div>" +
+      "<div style=\"display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center;\">" +
+        "<span style=\"font-size:11.5px; color:rgba(255,249,236,0.82);\">✨ स्वचालित जयंती/जन्मदिवस सम्मान-कार्ड</span>" +
+        "<div style=\"display:flex; gap:7px; flex-wrap:wrap;\">" +
+          "<button class=\"spot-mini-btn\" style=\"background:#F7DC8B; color:#2B080D; font-weight:800;\" onclick=\"generateBirthdayTributeCard(dec(\'" + arg(cur.name) + "\'), dec(\'" + arg(cur.role || "") + "\'), dec(\'" + arg(cur.line || "") + "\'))\">🏅 जन्मदिवस सम्मान-कार्ड बनाएँ</button>" +
+          "<button class=\"spot-mini-btn\" onclick=\"shareBirthdayWish(dec(\'" + arg(cur.name) + "\'), dec(\'" + arg(cur.line || "") + "\'))\">📲 शुभकामना भेजें</button>" +
         "</div>" +
       "</div>" +
-      "<div class="jayanti-quote">“" + esc(person.quote) + "”</div>" +
-      "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">" +
-        "<span style="font-size:12px; color:var(--primary); font-weight:700;">✨ काव्य चौपाल परिवार की ओर से हार्दिक बधाई</span>" +
-        "<button class="action-btn gold" style="padding:7px 13px; font-size:12.5px;" onclick="createBirthdayTributeCard(getTodaysSahityakarList()[" + idx + "])">🎁 शुभकामना कार्ड डाउनलोड</button>" +
-      "</div>" +
     "</div>";
-  }).join("");
+}
+
+function generateBirthdayTributeCard(name, role, line) {
+  state.certTitle = "जन्मदिवस सारस्वत सम्मान-पत्र";
+  state.certName = name || "सम्मानित साहित्यकार";
+  state.certAward = role || "साहित्य सृजन सम्मान";
+  state.certReason = "“" + (line || "शब्दों के माध्यम से साहित्य जगत को समृद्ध करने हेतु सादर नमन एवं जन्मदिवस की हार्दिक शुभकामनाएँ।") + "”";
+  openAdminStudio();
+  if (state.adminUnlocked) {
+    setAdminTab("certificate");
+    setTimeout(function() { drawCertificateCanvas(true); }, 120);
+  } else {
+    showToast("सम्मान-पत्र स्टूडियो से कार्ड तैयार करें 🏅");
+  }
+}
+
+function shareBirthdayWish(name, line) {
+  var txt = "🎂 *जन्मदिवस की हार्दिक शुभकामनाएँ एवं नमन!*
+
+✒️ *" + name + "*
+
+“" + line + "”
+
+— *काव्य चौपाल परिवार*";
+  window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank");
 }
 
 function renderSpotlight(shouldFlash) {
@@ -3560,8 +3533,8 @@ function renderSingleBookPage(pageNum, direction) {
     var unscaled = page.getViewport({ scale: 1 });
     var baseScale = containerWidth / unscaled.width;
 
-    // Ultra HD 3.2x super-sampling for crystal-clear reading on every screen
-    var uhdMultiplier = currentPdfSharpMode ? 3.2 : 1.75;
+    // Ultra HD super-sampling (up to 4.0x) for razor-sharp text & scanned page clarity
+    var uhdMultiplier = currentPdfSharpMode ? Math.max(3.2, Math.min(4.0, (window.devicePixelRatio || 2) * 1.6)) : 1.75;
     var renderViewport = page.getViewport({ scale: baseScale * uhdMultiplier });
 
     stage.innerHTML = "";
@@ -3818,8 +3791,6 @@ function handleNotifClick(id) {
   } else if (n.type === "approval") {
     openAdminStudio();
     if (state.adminUnlocked) setAdminTab("approvals");
-  } else if (n.type === "birthday") {
-    switchTab("poems");
   }
 }
 
@@ -5131,6 +5102,7 @@ injectPWAManifest();
 renderAll();
 initFirebaseSync();
 initSmartBackNavigation();
+setTimeout(renderHomeDropdowns, 100);
   </script>
 </body>
 </html>
