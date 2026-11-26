@@ -1429,9 +1429,55 @@
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35); max-width: 90vw; text-align: center;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  </style>
+  
+.top-account-strip {
+  max-width: 860px;
+  margin: 10px auto 0;
+  padding: 0 14px;
+  position: relative;
+  z-index: 2;
+}
+.top-account-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 13px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+.top-account-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+}
+.top-account-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7B1620, #C6922C);
+  color: #FFF7E6;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1.5px solid var(--gold);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.top-account-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.top-account-title { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-account-sub { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-account-btns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+</style>
 </head>
 <body>
+
 
 
 
@@ -1487,6 +1533,13 @@
       </div>
     </div>
   </header>
+
+  <!-- ================= TOP MEMBER LOGIN / PROFILE STRIP ================= -->
+  <div class="top-account-strip">
+    <div class="top-account-box" id="top-account-bar"></div>
+  </div>
+
+
 
   <!-- ================= MAIN CONTENT ================= -->
   <main class="app-main">
@@ -1782,6 +1835,7 @@
   
   
   
+  
   <script>window.addEventListener("error", function() {
   try {
     var sp = document.getElementById("splash-screen");
@@ -1803,10 +1857,10 @@ var auth = null;
 var cloudStatus = "connecting";
 
 try {
-  if (window.firebase && firebase.apps && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
   if (window.firebase) {
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     db = firebase.firestore();
     auth = firebase.auth();
   }
@@ -1838,6 +1892,7 @@ var DEFAULT_POETS = [
     id: "poet_rahul",
     name: "राहुल द्विवेदी 'स्मित'",
     ownerEmail: "",
+    mobile: "",
     birth: "11 जनवरी 1987",
     city: "लखनऊ, उत्तर प्रदेश",
     education: "",
@@ -1855,6 +1910,7 @@ var DEFAULT_POETS = [
     id: "poet_dheeraj",
     name: "धीरज श्रीवास्तव",
     ownerEmail: "",
+    mobile: "",
     birth: "",
     city: "मनकापुर, गोण्डा",
     education: "",
@@ -1872,6 +1928,7 @@ var DEFAULT_POETS = [
     id: "poet_sunita",
     name: "डॉ० सुनीता आजमगढ़ी",
     ownerEmail: "",
+    mobile: "",
     birth: "",
     city: "आजमगढ़, उत्तर प्रदेश",
     education: "पीएच.डी.",
@@ -2038,12 +2095,21 @@ function updateSyncUI() {
 
 function initFirebaseSync() {
   if (auth) {
-    auth.getRedirectResult().catch(function() {});
+    auth.getRedirectResult().then(function(res) {
+      if (res && res.user && res.user.email) {
+        showToast("Google लॉगिन सफल ✓");
+      }
+    }).catch(function(err) {
+      if (err && err.message && err.code !== "auth/no-auth-event") {
+        showToast("Google लॉगिन सूचना: " + err.message.slice(0, 60));
+      }
+    });
     auth.onAuthStateChanged(function(user) {
       state.currentUser = user ? {
         uid: user.uid,
         email: (user.email || "").toLowerCase().trim(),
-        displayName: user.displayName || ""
+        displayName: user.displayName || "",
+        photoURL: user.photoURL || ""
       } : null;
       if (state.currentUser && state.settings.adminEmail && state.currentUser.email === state.settings.adminEmail.toLowerCase().trim()) {
         state.adminUnlocked = true;
@@ -2309,6 +2375,55 @@ function getAllPoetObjects() {
   return Array.from(map.values());
 }
 
+function getPoetByEmail(email) {
+  var em = (email || "").toLowerCase().trim();
+  if (!em) return null;
+  return state.poets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null;
+}
+function getPendingPoetByEmail(email) {
+  var em = (email || "").toLowerCase().trim();
+  if (!em) return null;
+  return state.pendingPoets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null;
+}
+
+function renderTopAccountBar() {
+  var bar = document.getElementById("top-account-bar");
+  if (!bar) return;
+  if (!state.currentUser || !state.currentUser.email) {
+    bar.innerHTML =
+      "<div class=\"top-account-left\">" +
+      "<div class=\"top-account-av\">🔐</div>" +
+      "<div style=\"min-width:0;\">" +
+      "<div class=\"top-account-title\">रचनाकार खाता लॉगिन नहीं हुआ है</div>" +
+      "<div class=\"top-account-sub\">अपनी प्रोफ़ाइल व रचनाएँ सुरक्षित रखने के लिए लॉगिन करें</div>" +
+      "</div></div>" +
+      "<div class=\"top-account-btns\">" +
+      "<button class=\"action-btn gold\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"signInWithGoogle(\'poet\')\">🌐 Google लॉगिन</button>" +
+      "<button class=\"action-btn primary\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"openSubmitModal(\'poet\')\">ईमेल / प्रोफ़ाइल</button>" +
+      "</div>";
+    return;
+  }
+  var em = state.currentUser.email;
+  var prof = getPoetByEmail(em) || getPendingPoetByEmail(em);
+  var isPub = !!getPoetByEmail(em);
+  var av = (prof && prof.photo) ? ("<img src=\"" + prof.photo + "\">") : (state.currentUser.photoURL ? ("<img src=\"" + esc(state.currentUser.photoURL) + "\">") : esc(initials(prof ? prof.name : em)));
+  var titleTxt = prof ? (prof.name + (isPub ? " • प्रकाशित प्रोफ़ाइल" : " • स्वीकृति प्रतीक्षारत")) : ("लॉगिन खाता: " + em);
+  var subTxt = em + (prof && prof.city ? (" • 📍 " + prof.city) : "");
+  var viewBtn = prof && isPub ? ("<button class=\"sm-btn\" onclick=\"openPoetProfile(dec(\'" + arg(prof.name) + "\'))\">प्रोफ़ाइल देखें</button>") : ("<button class=\"sm-btn\" onclick=\"openSubmitModal(\'poet\')\">प्रोफ़ाइल बनाएँ</button>");
+  bar.innerHTML =
+    "<div class=\"top-account-left\">" +
+    "<div class=\"top-account-av\">" + av + "</div>" +
+    "<div style=\"min-width:0;\">" +
+    "<div class=\"top-account-title\">" + esc(titleTxt) + "</div>" +
+    "<div class=\"top-account-sub\">" + esc(subTxt) + "</div>" +
+    "</div></div>" +
+    "<div class=\"top-account-btns\">" +
+    viewBtn +
+    "<button class=\"sm-btn\" onclick=\"openSubmitModal(\'poem\')\">रचना भेजें</button>" +
+    "<button class=\"sm-btn del\" onclick=\"signOutAccount()\">लॉगआउट</button>" +
+    "</div>";
+}
+
 function switchTab(tabName, fromPop) {
   if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);
   state.activeTab = tabName;
@@ -2369,6 +2484,7 @@ function renderAll() {
     pendBadge.textContent = pendTotal;
     pendBadge.classList.toggle("show", pendTotal > 0);
   }
+  renderTopAccountBar();
   renderBrandLogo();
   renderSpotlight();
   renderDailyRiddle();
@@ -2503,12 +2619,15 @@ function openPoetProfile(poetName) {
 }
 function closePoetDetail(fromPop) { state.activePoetName = null; document.getElementById("poet-detail-view").style.display = "none"; document.getElementById("poets-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 
-function renderStructuredBioCard(person, titleText) {
+function renderStructuredBioCard(person, titleText, allowPrivateMobile) {
   var items = [];
   if (person.birth && person.birth.trim()) items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });
   if (person.city && person.city.trim()) items.push({ ic: "📍", lbl: "स्थान", val: esc(person.city), full: false });
   if (person.education && person.education.trim()) items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });
   if (person.occupation && person.occupation.trim()) items.push({ ic: "💼", lbl: "सम्प्रति", val: esc(person.occupation), full: false });
+  if (allowPrivateMobile && person.mobile && person.mobile.trim()) {
+    items.push({ ic: "🔒", lbl: "मोबाइल (केवल एडमिन/निजी)", val: esc(person.mobile), full: false });
+  }
   if (person.mainGenres && person.mainGenres.trim()) {
     var pills = person.mainGenres.split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
     items.push({ ic: "✒️", lbl: "मुख्य विधा", val: "<div class=\"vidha-pills-row\">" + pills.map(function(g) { return "<span class=\"mini-badge\">❖ " + esc(g) + "</span>"; }).join("") + "</div>", full: true });
@@ -2526,10 +2645,12 @@ function renderPoetDetail(poetName) {
   var pt = getAllPoetObjects().find(function(p) { return p.name === poetName; }) || { name: poetName, city: "", bio: "", photo: "" };
   var allPoems = state.poems.filter(function(p) { return p.poet === poetName; });
   var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
+  var isOwner = !!(state.currentUser && state.currentUser.email && pt.ownerEmail && state.currentUser.email.toLowerCase().trim() === pt.ownerEmail.toLowerCase().trim());
+  var canSeePrivate = isOwner || !!state.adminUnlocked;
   container.innerHTML =
     "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
     "<div class=\"profile-hero\"><div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + "</div></div></div>" + (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") + "</div>" +
-    renderStructuredBioCard(pt, "कवि परिचय") +
+    renderStructuredBioCard(pt, "कवि परिचय", canSeePrivate) +
     "<h3 class=\"section-title\">✦ इनकी रचनाएँ (" + allPoems.length + ")</h3>" +
     "<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>";
 }
@@ -2593,7 +2714,7 @@ function openAdminDetail(id) { pushAppView("admin"); state.activeAdminId = id; d
 function closeAdminDetail(fromPop) { state.activeAdminId = null; document.getElementById("admin-detail-view").style.display = "none"; document.getElementById("admins-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 function renderAdminDetail(id) {
   var a = state.admins.find(function(x) { return x.id === id; }); var c = document.getElementById("admin-detail-view"); if (!a || !c) return;
-  c.innerHTML = "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button><div class=\"profile-hero\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div></div>" + renderStructuredBioCard(a, "परिचय");
+  c.innerHTML = "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button><div class=\"profile-hero\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div></div>" + renderStructuredBioCard(a, "परिचय", false);
 }
 function renderSocialLinks() {
   var s = state.settings.socials || DEFAULT_SETTINGS.socials;
@@ -2784,7 +2905,7 @@ function renderAdminStudio() {
       "<div class=\"auth-gate-box\" style=\"text-align:center;\">" +
       "<div style=\"font-size:42px; margin-bottom:6px;\">👑</div>" +
       "<h3 class=\"font-royal\" style=\"font-size:24px; margin:0 0 6px; color:var(--primary);\">एडमिन खाता एवं पिन प्रवेश</h3>" +
-      "<p style=\"font-size:12.5px; color:var(--text-muted); margin:0 0 12px;\">मोबाइल/ऐप में Google लॉगिन रीडायरेक्ट से, या ईमेल-पासवर्ड अथवा पिन से सीधे खोलें।</p>" +
+      "<p style=\"font-size:12.5px; color:var(--text-muted); margin:0 0 12px;\">Google लॉगिन से, या ईमेल-पासवर्ड अथवा पिन से सीधे खोलें।</p>" +
       "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle(\'admin\')\"><span>🔐</span><span>Google से एडमिन खाता लॉगिन करें</span></button>" +
       "<div class=\"auth-divider\">— या एडमिन ईमेल व पासवर्ड से लॉगिन करें —</div>" +
       "<div class=\"field\" style=\"text-align:left;\"><label>एडमिन ईमेल</label><input id=\"adm-login-email\" type=\"email\" value=\"" + esc(state.settings.adminEmail || "") + "\" placeholder=\"आपका एडमिन ईमेल\" /></div>" +
@@ -2803,7 +2924,7 @@ function renderAdminStudio() {
       return "<div class=\"pending-card\"><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span><div class=\"font-royal\" style=\"font-size:19px; color:var(--primary); margin-top:4px;\">" + esc(p.title) + "</div><div class=\"pending-meta\"><span>✒️ <strong>" + esc(p.poet) + "</strong></span>" + (p.ownerEmail ? ("<span>✉️ " + esc(p.ownerEmail) + "</span>") : "") + "</div><div class=\"pending-poem-preview\">" + esc(p.content) + "</div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoem(dec(\'" + arg(p.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoem(dec(\'" + arg(p.id) + "\'))\">❌ अस्वीकार</button></div></div>";
     }).join("") || "<div class=\"empty-box\">कोई लंबित रचना नहीं है।</div>";
     var poetsQ = state.pendingPoets.map(function(pt) {
-      return "<div class=\"pending-card\"><div class=\"font-royal\" style=\"font-size:19px; color:var(--primary);\">" + esc(pt.name) + "</div><div class=\"pending-meta\"><span>📍 " + esc(pt.city || "") + "</span>" + (pt.ownerEmail ? ("<span>✉️ " + esc(pt.ownerEmail) + "</span>") : "") + "</div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoet(dec(\'" + arg(pt.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार</button></div></div>";
+      return "<div class=\"pending-card\"><div class=\"font-royal\" style=\"font-size:19px; color:var(--primary);\">" + esc(pt.name) + "</div><div class=\"pending-meta\"><span>📍 " + esc(pt.city || "") + "</span>" + (pt.mobile ? ("<span>🔒 मो.: <strong>" + esc(pt.mobile) + "</strong></span>") : "") + (pt.ownerEmail ? ("<span>✉️ " + esc(pt.ownerEmail) + "</span>") : "") + "</div><div class=\"pending-actions\"><button class=\"btn-approve\" onclick=\"approvePendingPoet(dec(\'" + arg(pt.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button><button class=\"btn-reject\" onclick=\"rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार</button></div></div>";
     }).join("") || "<div class=\"empty-box\">कोई लंबित कवि परिचय नहीं है।</div>";
     contentHtml = "<h4 class=\"section-title\">📜 लंबित रचनाएँ (" + state.pendingPoems.length + ")</h4>" + poemsQ + "<h4 class=\"section-title\" style=\"margin-top:14px;\">✒️ लंबित कवि परिचय (" + state.pendingPoets.length + ")</h4>" + poetsQ;
   } else if (state.adminTab === "poems") {
@@ -2815,8 +2936,18 @@ function renderAdminStudio() {
   } else if (state.adminTab === "poets") {
     var ept = state.editingPoetId ? state.poets.find(function(x) { return x.id === state.editingPoetId; }) : null;
     var curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें") + "</h4><div class=\"field\"><label>नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" /></div><div class=\"two-fields\"><div class=\"field\"><label>जन्म</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" /></div><div class=\"field\"><label>स्थान</label><input id=\"f-poet-city\" value=\"" + esc(ept ? (ept.city || "") : "") + "\" /></div></div><div class=\"field\"><label>मुख्य विधा</label><input id=\"f-poet-genres\" value=\"" + esc(ept ? (ept.mainGenres || "") : "") + "\" /></div><div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div><div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div><div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempPoetPhoto\', \'poet-photo-prev\', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div></div></div><button class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editPoet(dec(\'" + arg(pt.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec(\'" + arg(pt.id) + "\'))\">हटाएँ</button></div></div>";
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें") + "</h4>" +
+      "<div class=\"field\"><label>नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" /></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" /></div><div class=\"field\"><label>स्थान</label><input id=\"f-poet-city\" value=\"" + esc(ept ? (ept.city || "") : "") + "\" /></div></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>शिक्षा</label><input id=\"f-poet-edu\" value=\"" + esc(ept ? (ept.education || "") : "") + "\" /></div><div class=\"field\"><label>सम्प्रति / पद</label><input id=\"f-poet-occ\" value=\"" + esc(ept ? (ept.occupation || "") : "") + "\" /></div></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>मोबाइल (केवल एडमिन के लिए)</label><input id=\"f-poet-mobile\" value=\"" + esc(ept ? (ept.mobile || "") : "") + "\" /></div><div class=\"field\"><label>मुख्य विधा</label><input id=\"f-poet-genres\" value=\"" + esc(ept ? (ept.mainGenres || "") : "") + "\" /></div></div>" +
+      "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"f-poet-pubs\" value=\"" + esc(ept ? (ept.publications || "") : "") + "\" /></div>" +
+      "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"f-poet-awards\" value=\"" + esc(ept ? (ept.awards || "") : "") + "\" /></div>" +
+      "<div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div>" +
+      "<div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div>" +
+      "<div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempPoetPhoto\', \'poet-photo-prev\', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div></div></div>" +
+      "<button class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + (pt.mobile ? (" • 🔒 मो.: " + esc(pt.mobile)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editPoet(dec(\'" + arg(pt.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec(\'" + arg(pt.id) + "\'))\">हटाएँ</button></div></div>";
     }).join("");
   } else if (state.adminTab === "admins") {
     var ea = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
@@ -2894,9 +3025,14 @@ function savePoetForm() {
   var ex = state.poets.find(function(x) { return x.id === id; }) || {};
   var item = {
     id: id, name: name, ownerEmail: ex.ownerEmail || "",
+    mobile: (document.getElementById("f-poet-mobile") || { value: "" }).value.trim(),
     birth: (document.getElementById("f-poet-birth") || { value: "" }).value.trim(),
     city: (document.getElementById("f-poet-city") || { value: "" }).value.trim(),
+    education: (document.getElementById("f-poet-edu") || { value: "" }).value.trim(),
+    occupation: (document.getElementById("f-poet-occ") || { value: "" }).value.trim(),
     mainGenres: (document.getElementById("f-poet-genres") || { value: "" }).value.trim(),
+    publications: (document.getElementById("f-poet-pubs") || { value: "" }).value.trim(),
+    awards: (document.getElementById("f-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("f-poet-quote") || { value: "" }).value.trim(),
     special: (document.getElementById("f-poet-special") || { value: "" }).value.trim(),
     photo: state.tempPoetPhoto || ex.photo || "", bio: ""
@@ -2969,23 +3105,41 @@ function saveSettingsForm() {
   cloudSaveDoc("settings", "settings", state.settings).then(function() { renderAll(); renderAdminStudio(); showToast("सेटिंग्स सहेजी गईं ✨"); });
 }
 
-function getPoetByEmail(email) { var em = (email || "").toLowerCase().trim(); return em ? (state.poets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null) : null; }
-function getPendingPoetByEmail(email) { var em = (email || "").toLowerCase().trim(); return em ? (state.pendingPoets.find(function(pt) { return (pt.ownerEmail || "").toLowerCase().trim() === em; }) || null) : null; }
 function openSubmitModal(tab) { if (!document.getElementById("submit-modal").classList.contains("open")) pushAppView("submit"); state.submitTab = tab || "poem"; state.submitSuccessMsg = ""; document.getElementById("submit-modal").classList.add("open"); renderSubmitModal(); }
 function setSubmitTab(tab) { state.submitTab = tab; renderSubmitModal(); }
 function setAuthMode(mode) { state.authMode = mode; renderSubmitModal(); }
 function isMobileOrWebView() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ""); }
 
 function signInWithGoogle(context) {
-  if (!auth) { showToast("Firebase Auth उपलब्ध नहीं है"); return; }
+  if (!auth || !window.firebase || !firebase.auth || !firebase.auth.GoogleAuthProvider) {
+    showToast("Firebase Google Auth उपलब्ध नहीं है — ईमेल/पासवर्ड या पिन का उपयोग करें");
+    return;
+  }
   var provider = new firebase.auth.GoogleAuthProvider();
-  if (isMobileOrWebView()) { auth.signInWithRedirect(provider); return; }
+  provider.setCustomParameters({ prompt: "select_account" });
+  if (isMobileOrWebView()) {
+    auth.signInWithRedirect(provider).catch(function(err) {
+      showToast("Google रीडायरेक्ट त्रुटि: " + (err && err.message ? err.message.slice(0, 60) : ""));
+    });
+    return;
+  }
   auth.signInWithPopup(provider).then(function(res) {
     var em = ((res.user && res.user.email) || "").toLowerCase().trim();
-    if (context === "admin" && state.settings.adminEmail && em === state.settings.adminEmail.toLowerCase().trim()) { state.adminUnlocked = true; renderAdminStudio(); }
+    if (context === "admin" && state.settings.adminEmail && em === state.settings.adminEmail.toLowerCase().trim()) {
+      state.adminUnlocked = true;
+      renderAdminStudio();
+    }
+    renderAll();
     showToast("Google लॉगिन सफल ✓");
-  }).catch(function() {
-    try { auth.signInWithRedirect(provider); } catch (e2) { showToast("Google लॉगिन असफल"); }
+  }).catch(function(err) {
+    var code = (err && err.code) || "";
+    if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+      auth.signInWithRedirect(provider).catch(function(e2) {
+        showToast("Google लॉगिन त्रुटि: " + (e2 && e2.message ? e2.message.slice(0, 60) : ""));
+      });
+    } else {
+      showToast("Google लॉगिन त्रुटि: " + (err && err.message ? err.message.slice(0, 65) : "असफल"));
+    }
   });
 }
 
@@ -3012,9 +3166,13 @@ function signInAdminEmailPass() {
 
 function signOutAccount() {
   if (auth) { auth.signOut().catch(function() {}); }
-  state.currentUser = null; state.adminUnlocked = false; renderAll();
+  state.currentUser = null;
+  state.adminUnlocked = false;
+  state.submitSuccessMsg = "";
+  renderAll();
   var sm = document.getElementById("submit-modal"); if (sm && sm.classList.contains("open")) renderSubmitModal();
   var am = document.getElementById("admin-modal"); if (am && am.classList.contains("open")) renderAdminStudio();
+  showToast("लॉगआउट हो गया ✓");
 }
 
 function renderSubmitModal() {
@@ -3035,15 +3193,29 @@ function renderSubmitModal() {
     return;
   }
   var userEmail = state.currentUser.email;
-  var activePoetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail);
+  var pubPoet = getPoetByEmail(userEmail);
+  var pendPoet = getPendingPoetByEmail(userEmail);
+  var activePoetObj = pubPoet || pendPoet;
   var genres = getAllGenres();
-  var hdrHtml = "<div class=\"account-chip-bar\"><div class=\"account-user-info\"><span>✅</span><div><div class=\"account-email-txt\">" + esc(userEmail) + "</div><div style=\"font-size:11px; color:var(--text-muted);\">" + (activePoetObj ? ("तय प्रोफ़ाइल: <strong>" + esc(activePoetObj.name) + "</strong>") : "प्रोफ़ाइल अभी नहीं बनी") + "</div></div></div><button class=\"sm-btn del\" onclick=\"signOutAccount()\">लॉगआउट</button></div>";
+  var hdrHtml = "<div class=\"account-chip-bar\"><div class=\"account-user-info\"><span>✅</span><div><div class=\"account-email-txt\">" + esc(userEmail) + "</div><div style=\"font-size:11px; color:var(--text-muted);\">" + (activePoetObj ? ("प्रोफ़ाइल: <strong>" + esc(activePoetObj.name) + "</strong> (" + (pubPoet ? "प्रकाशित" : "स्वीकृति प्रतीक्षारत") + ")") : "प्रोफ़ाइल अभी नहीं बनी") + "</div></div></div><div style=\"display:flex; gap:6px;\">" + (pubPoet ? ("<button class=\"sm-btn\" onclick=\"closeModal(\'submit-modal\'); openPoetProfile(dec(\'" + arg(pubPoet.name) + "\'))\">प्रोफ़ाइल देखें</button>") : "") + "<button class=\"sm-btn del\" onclick=\"signOutAccount()\">लॉगआउट</button></div></div>";
   var formHtml = "";
   if (state.submitTab === "poem") {
-    if (!activePoetObj) formHtml = "<div class=\"my-profile-card\" style=\"text-align:center;\"><p style=\"margin:0 0 10px;\">पहले अपनी कवि प्रोफ़ाइल बनाएँ।</p><button class=\"action-btn primary\" onclick=\"setSubmitTab(\'poet\')\">✒️ कवि प्रोफ़ाइल बनाएँ →</button></div>";
-    else formHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:8px;\">📜 नई रचना भेजें (" + esc(activePoetObj.name) + ")</h4><div class=\"field\"><label>शीर्षक *</label><input id=\"sub-poem-title\" /></div><div class=\"field\"><label>विधा *</label><input id=\"sub-poem-genre\" list=\"sub-g-dl\" value=\"गीत\" /><datalist id=\"sub-g-dl\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:130px;\"></textarea></div><button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoem()\">📤 स्वीकृति हेतु भेजें</button></div>";
+    if (!activePoetObj) {
+      formHtml = "<div class=\"my-profile-card\" style=\"text-align:center;\"><p style=\"margin:0 0 10px;\">रचना भेजने से पहले अपनी कवि प्रोफ़ाइल बनाएँ।</p><button class=\"action-btn primary\" onclick=\"setSubmitTab(\'poet\')\">✒️ कवि प्रोफ़ाइल बनाएँ →</button></div>";
+    } else {
+      formHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:8px;\">📜 नई रचना भेजें (" + esc(activePoetObj.name) + ")</h4><div class=\"field\"><label>शीर्षक *</label><input id=\"sub-poem-title\" /></div><div class=\"field\"><label>विधा *</label><input id=\"sub-poem-genre\" list=\"sub-g-dl\" value=\"गीत\" /><datalist id=\"sub-g-dl\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\">"; }).join("") + "</datalist></div><div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:130px;\"></textarea></div><button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoem()\">📤 स्वीकृति हेतु भेजें</button></div>";
+    }
   } else {
-    formHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:8px;\">✒️ " + (activePoetObj ? "प्रोफ़ाइल अपडेट करें" : "कवि प्रोफ़ाइल बनाएँ") + "</h4><div class=\"field\"><label>नाम एवं उपनाम *</label><input id=\"sub-poet-name\" value=\"" + esc(activePoetObj ? activePoetObj.name : "") + "\" /></div><div class=\"field\"><label>शहर / स्थान *</label><input id=\"sub-poet-city\" value=\"" + esc(activePoetObj ? activePoetObj.city : "") + "\" /></div><div class=\"field\"><label>मुख्य विधा</label><input id=\"sub-poet-genres\" value=\"" + esc(activePoetObj ? (activePoetObj.mainGenres || "") : "") + "\" /></div><div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"sub-poet-quote\" style=\"min-height:60px;\">" + esc(activePoetObj ? (activePoetObj.quote || "") : "") + "</textarea></div><button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">📤 स्वीकृति हेतु भेजें</button></div>";
+    formHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:8px;\">✒️ " + (activePoetObj ? "कवि प्रोफ़ाइल अपडेट करें" : "कवि प्रोफ़ाइल बनाएँ") + "</h4>" +
+      "<div class=\"field\"><label>नाम एवं उपनाम *</label><input id=\"sub-poet-name\" value=\"" + esc(activePoetObj ? activePoetObj.name : "") + "\" /></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म तिथि / वर्ष</label><input id=\"sub-poet-birth\" value=\"" + esc(activePoetObj ? (activePoetObj.birth || "") : "") + "\" placeholder=\"जैसे: 11 जनवरी 1987\" /></div><div class=\"field\"><label>शहर / स्थान *</label><input id=\"sub-poet-city\" value=\"" + esc(activePoetObj ? activePoetObj.city : "") + "\" placeholder=\"जैसे: लखनऊ, उ.प्र.\" /></div></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>शिक्षा</label><input id=\"sub-poet-edu\" value=\"" + esc(activePoetObj ? (activePoetObj.education || "") : "") + "\" /></div><div class=\"field\"><label>सम्प्रति / कार्यक्षेत्र</label><input id=\"sub-poet-occ\" value=\"" + esc(activePoetObj ? (activePoetObj.occupation || "") : "") + "\" /></div></div>" +
+      "<div class=\"two-fields\"><div class=\"field\"><label>मोबाइल नम्बर 🔒 (केवल एडमिन के लिए)</label><input id=\"sub-poet-mobile\" type=\"tel\" value=\"" + esc(activePoetObj ? (activePoetObj.mobile || "") : "") + "\" placeholder=\"सार्वजनिक नहीं होगा\" /></div><div class=\"field\"><label>मुख्य विधाएँ</label><input id=\"sub-poet-genres\" value=\"" + esc(activePoetObj ? (activePoetObj.mainGenres || "") : "") + "\" placeholder=\"गीत, दोहा, ग़ज़ल\" /></div></div>" +
+      "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"sub-poet-pubs\" value=\"" + esc(activePoetObj ? (activePoetObj.publications || "") : "") + "\" /></div>" +
+      "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"sub-poet-awards\" value=\"" + esc(activePoetObj ? (activePoetObj.awards || "") : "") + "\" /></div>" +
+      "<div class=\"field\"><label>काव्य-मुद्रा / चुनिंदा पंक्तियाँ</label><textarea id=\"sub-poet-quote\" style=\"min-height:58px;\">" + esc(activePoetObj ? (activePoetObj.quote || "") : "") + "</textarea></div>" +
+      "<div class=\"field\"><label>विशेष / संक्षिप्त परिचय</label><textarea id=\"sub-poet-special\" style=\"min-height:64px;\">" + esc(activePoetObj ? (activePoetObj.special || activePoetObj.bio || "") : "") + "</textarea></div>" +
+      "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">📤 स्वीकृति हेतु भेजें</button></div>";
   }
   body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poem\')\">📜 रचना भेजें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab(\'poet\')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल अपडेट" : "प्रोफ़ाइल बनाएँ") + "</button></div>" + formHtml;
 }
@@ -3072,17 +3244,29 @@ function submitPublicPoet() {
   var city = (document.getElementById("sub-poet-city") || { value: "" }).value.trim();
   if (!name || !city) { showToast("नाम और स्थान भरें"); return; }
   var existingPend = getPendingPoetByEmail(userEmail);
+  var existingPub = getPoetByEmail(userEmail);
   var id = existingPend ? existingPend.id : ("pend_poet_" + Date.now());
   var item = {
-    id: id, ownerEmail: userEmail, name: name, city: city,
+    id: id,
+    ownerEmail: userEmail,
+    name: name,
+    city: city,
+    mobile: (document.getElementById("sub-poet-mobile") || { value: "" }).value.trim(),
+    birth: (document.getElementById("sub-poet-birth") || { value: "" }).value.trim(),
+    education: (document.getElementById("sub-poet-edu") || { value: "" }).value.trim(),
+    occupation: (document.getElementById("sub-poet-occ") || { value: "" }).value.trim(),
     mainGenres: (document.getElementById("sub-poet-genres") || { value: "" }).value.trim(),
+    publications: (document.getElementById("sub-poet-pubs") || { value: "" }).value.trim(),
+    awards: (document.getElementById("sub-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("sub-poet-quote") || { value: "" }).value.trim(),
+    special: (document.getElementById("sub-poet-special") || { value: "" }).value.trim(),
+    photo: (existingPub && existingPub.photo) || "",
     submittedAt: Date.now()
   };
   var idx = state.pendingPoets.findIndex(function(x) { return x.id === id; });
   if (idx >= 0) state.pendingPoets[idx] = item; else state.pendingPoets.unshift(item);
   cloudSaveDoc("pending_poets", id, item).then(function() {
-    state.submitSuccessMsg = name + " जी, आपकी प्रोफ़ाइल आपके खाते (" + userEmail + ") से जुड़ गई है।";
+    state.submitSuccessMsg = name + " जी, आपकी प्रोफ़ाइल आपके खाते (" + userEmail + ") से जुड़ गई है। एडमिन स्वीकृति के बाद प्रकाशित होगी।";
     renderAll(); renderSubmitModal();
   });
 }
@@ -3102,7 +3286,23 @@ function approvePendingPoet(id) {
   var pt = state.pendingPoets.find(function(x) { return x.id === id; }); if (!pt) return;
   var existing = state.poets.find(function(x) { return x.name.trim() === pt.name.trim(); });
   var tid = existing ? existing.id : ("poet_" + Date.now());
-  var pub = { id: tid, name: pt.name, ownerEmail: (pt.ownerEmail || "").toLowerCase().trim(), city: pt.city || "", mainGenres: pt.mainGenres || "", quote: pt.quote || "", photo: "", bio: "" };
+  var pub = {
+    id: tid,
+    name: pt.name,
+    ownerEmail: (pt.ownerEmail || "").toLowerCase().trim(),
+    mobile: pt.mobile || (existing && existing.mobile) || "",
+    birth: pt.birth || (existing && existing.birth) || "",
+    city: pt.city || (existing && existing.city) || "",
+    education: pt.education || (existing && existing.education) || "",
+    occupation: pt.occupation || (existing && existing.occupation) || "",
+    mainGenres: pt.mainGenres || (existing && existing.mainGenres) || "",
+    publications: pt.publications || (existing && existing.publications) || "",
+    awards: pt.awards || (existing && existing.awards) || "",
+    quote: pt.quote || (existing && existing.quote) || "",
+    special: pt.special || (existing && existing.special) || "",
+    photo: (existing && existing.photo) || pt.photo || "",
+    bio: ""
+  };
   if (existing) state.poets = state.poets.map(function(x) { return x.id === tid ? pub : x; }); else state.poets.push(pub);
   state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
   Promise.all([cloudSaveDoc("poets", tid, pub), cloudDeleteDoc("pending_poets", id)]).then(function() { renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅"); });
