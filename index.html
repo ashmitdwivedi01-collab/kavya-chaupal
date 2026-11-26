@@ -1793,6 +1793,9 @@
         <button class="icon-btn" title="सूचनाएँ (Notifications)" onclick="openNotificationsModal()">
           🔔<span class="hdr-badge" id="hdr-notif-badge">0</span>
         </button>
+        <button class="icon-btn" title="AI काव्य-सहायक (चित्र व प्रश्न)" onclick="openAiStudioModal()">
+          ✨
+        </button>
         <button class="icon-btn" title="मेरा कॉर्नर" onclick="openMyCorner()">
           🏛️
         </button>
@@ -1847,9 +1850,9 @@
           <div class="quick-ic">🏛️</div>
           <div class="quick-lbl">मेरा<br/>कॉर्नर</div>
         </div>
-        <div class="quick-tile" onclick="switchTab('admins')">
-          <div class="quick-ic">👑</div>
-          <div class="quick-lbl">एडमिन<br/>मण्डल</div>
+        <div class="quick-tile" onclick="openAiStudioModal()" style="border-color:var(--gold); background:var(--gold-soft);">
+          <div class="quick-ic">✨</div>
+          <div class="quick-lbl">AI सहायक<br/>चित्र व प्रश्न</div>
         </div>
       </div>
 
@@ -2146,6 +2149,20 @@
         <button class="close-btn" onclick="closeModal('bhav-modal')">✕</button>
       </div>
       <div class="modal-body" id="bhav-studio-body"></div>
+    </div>
+  </div>
+
+  <!-- ================= AI KAVYA-SAHAYAK MODAL (FREE IMAGE + GEMINI Q&A) ================= -->
+  <div class="modal-overlay" id="ai-modal" onclick="closeModalOnBg(event, 'ai-modal')">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('ai-modal')">← वापस</button>
+          <h3 class="modal-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">✨ AI काव्य-सहायक (चित्र एवं प्रश्न)</h3>
+        </div>
+        <button class="close-btn" onclick="closeModal('ai-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="ai-studio-body"></div>
     </div>
   </div>
 
@@ -4744,7 +4761,7 @@ function renderAdminStudio() {
     setTimeout(function() { drawCertificateCanvas(false); }, 30);
   } else {
     var s = state.settings; var curLogo = state.tempLogoData || s.logo || "";
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">⚙️ लोगो, एडमिन ईमेल व पिन</h4><div class=\"field\"><label>लोगो अपलोड करें</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempLogoData\', \'adm-logo-prev\', 320, true)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" style=\"border-radius:50%;\" id=\"adm-logo-prev\">" + (curLogo ? ("<img src=\"" + curLogo + "\">") : "🪔") + "</div></div></div><div class=\"field\"><label>ऐप का नाम</label><input id=\"f-set-name\" value=\"" + esc(s.appName) + "\" /></div><div class=\"field\"><label>पंजीकृत एडमिन ईमेल</label><input id=\"f-set-adm-email\" type=\"email\" value=\"" + esc(s.adminEmail || "") + "\" /></div><div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin) + "\" /></div><button class=\"action-btn primary\" onclick=\"saveSettingsForm()\">💾 सेटिंग्स सहेजें</button></div>";
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">⚙️ लोगो, एडमिन ईमेल व पिन</h4><div class=\"field\"><label>लोगो अपलोड करें</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempLogoData\', \'adm-logo-prev\', 320, true)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" style=\"border-radius:50%;\" id=\"adm-logo-prev\">" + (curLogo ? ("<img src=\"" + curLogo + "\">") : "🪔") + "</div></div></div><div class=\"field\"><label>ऐप का नाम</label><input id=\"f-set-name\" value=\"" + esc(s.appName) + "\" /></div><div class=\"field\"><label>पंजीकृत एडमिन ईमेल</label><input id=\"f-set-adm-email\" type=\"email\" value=\"" + esc(s.adminEmail || "") + "\" /></div><div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin) + "\" /></div><div class=\"field\"><label>✨ Google Gemini मुफ़्त API Key (वैकल्पिक — इन-ऐप AI उत्तर हेतु)</label><input id=\"f-set-gemini-key\" type=\"password\" value=\"" + esc(s.geminiApiKey || "") + "\" placeholder=\"AIza... (यदि खाली छोड़ें तो मुफ़्त बैकअप AI स्वतः चलेगा)\" /></div><button class=\"action-btn primary\" onclick=\"saveSettingsForm()\">💾 सेटिंग्स सहेजें</button></div>";
   }
 
   var unreadMsgs = state.messages.filter(function(m) { return !m.adminReply; }).length;
@@ -4957,6 +4974,7 @@ function saveSettingsForm() {
   state.settings.appName = (document.getElementById("f-set-name") || { value: "काव्य चौपाल" }).value.trim() || "काव्य चौपाल";
   state.settings.adminEmail = ((document.getElementById("f-set-adm-email") || { value: "" }).value || "").trim().toLowerCase();
   state.settings.adminPin = (document.getElementById("f-set-pin") || { value: "1234" }).value.trim() || "1234";
+  state.settings.geminiApiKey = ((document.getElementById("f-set-gemini-key") || { value: "" }).value || "").trim();
   if (state.tempLogoData) { state.settings.logo = state.tempLogoData; state.tempLogoData = ""; }
   cloudSaveDoc("settings", "settings", state.settings).then(function() { renderAll(); renderAdminStudio(); showToast("सेटिंग्स सहेजी गईं ✨"); });
 }
@@ -5859,6 +5877,154 @@ function drawCertificateCanvas(triggerDownload) {
   });
 }
 
+var aiStudioTab = "qa";
+var aiChatHistory = [];
+var aiLastImageUrl = "";
+var aiLastImagePrompt = "";
+var aiBusy = false;
+
+function openAiStudioModal(tab) {
+  if (tab) aiStudioTab = tab;
+  var m = document.getElementById("ai-modal");
+  if (m && !m.classList.contains("open")) pushAppView("ai");
+  if (m) m.classList.add("open");
+  renderAiStudioModal();
+}
+
+function setAiStudioTab(t) {
+  aiStudioTab = t;
+  renderAiStudioModal();
+}
+
+function setAiQuickQuestion(qTxt) {
+  var inp = document.getElementById("ai-qa-input");
+  if (inp) { inp.value = qTxt; inp.focus(); }
+}
+
+function openPromptInGoogleGemini() {
+  var inp = document.getElementById("ai-qa-input");
+  var q = (inp ? inp.value : "").trim();
+  if (q && navigator.clipboard) {
+    navigator.clipboard.writeText(q).catch(function() {});
+    showToast("प्रश्न कॉपी हो गया — Google Gemini में पेस्ट करें ✨");
+  }
+  window.open("https://gemini.google.com/app", "_blank", "noopener,noreferrer");
+}
+
+function askAiQuestionInApp() {
+  if (aiBusy) return;
+  var inp = document.getElementById("ai-qa-input");
+  var q = (inp ? inp.value : "").trim();
+  if (!q) { showToast("कृपया अपना प्रश्न या विषय लिखें"); return; }
+  aiBusy = true;
+  aiChatHistory.push({ role: "user", text: q });
+  aiChatHistory.push({ role: "ai", text: "✨ उत्तर तैयार किया जा रहा है, कृपया प्रतीक्षा करें..." });
+  if (inp) inp.value = "";
+  renderAiStudioModal();
+
+  var systemInstruction = "तुम 'काव्य चौपाल' हिंदी साहित्य मंच के विनम्र, विद्वान और रचनात्मक AI सहायक हो। सदैव शुद्ध, सरल और सुंदर हिंदी (देवनागरी) में संक्षिप्त व सटीक उत्तर दो।";
+  var gKey = (state.settings && state.settings.geminiApiKey) ? state.settings.geminiApiKey.trim() : "";
+
+  var finishAnswer = function(ansText) {
+    aiBusy = false;
+    aiChatHistory[aiChatHistory.length - 1] = { role: "ai", text: ansText || "क्षमा करें, अभी उत्तर प्राप्त नहीं हो सका। कृपया पुनः प्रयास करें।" };
+    renderAiStudioModal();
+  };
+
+  var callFreeFallbackText = function() {
+    var fullPrompt = systemInstruction + "\n\nप्रश्न: " + q;
+    fetch("https://text.pollinations.ai/" + encodeURIComponent(fullPrompt))
+      .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function(txt) { finishAnswer((txt || "").trim()); })
+      .catch(function() {
+        finishAnswer("नेटवर्क व्यस्त होने के कारण उत्तर लोड नहीं हो सका। आप नीचे ‘Google Gemini में खोलें’ बटन से तुरंत उत्तर पा सकते हैं।");
+      });
+  };
+
+  if (gKey) {
+    fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + encodeURIComponent(gKey), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: systemInstruction + "\n\nप्रश्न: " + q }] }]
+      })
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var ans = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+        if (ans) finishAnswer(ans.trim()); else callFreeFallbackText();
+      })
+      .catch(function() { callFreeFallbackText(); });
+  } else {
+    callFreeFallbackText();
+  }
+}
+
+function generateFreeAiImageInApp() {
+  var inp = document.getElementById("ai-img-prompt");
+  var styleSel = document.getElementById("ai-img-style");
+  var pTxt = (inp ? inp.value : "").trim();
+  if (!pTxt) { showToast("कृपया चित्र का विवरण लिखें (जैसे: चाँदनी रात में जलता दीपक)"); return; }
+  var stSuffix = (styleSel ? styleSel.value : "") || "traditional Indian royal literary painting, warm gold and crimson lighting, ultra detailed, no text";
+  aiLastImagePrompt = pTxt;
+  var seed = Math.floor(Math.random() * 999999);
+  var combined = pTxt + ", " + stSuffix;
+  aiLastImageUrl = "https://image.pollinations.ai/prompt/" + encodeURIComponent(combined) + "?width=1024&height=1024&nologo=true&seed=" + seed;
+  showToast("AI चित्र तैयार हो रहा है (5–10 सेकंड)... 🎨");
+  renderAiStudioModal();
+}
+
+function renderAiStudioModal() {
+  var body = document.getElementById("ai-studio-body");
+  if (!body) return;
+  var tabsHtml = "<div class=\"admin-tabs\" style=\"justify-content:center;\">" +
+    "<button type=\"button\" class=\"admin-tab-btn " + (aiStudioTab === "qa" ? "active" : "") + "\" onclick=\"setAiStudioTab('qa')\">💬 प्रश्न पूछें (AI चैट)</button>" +
+    "<button type=\"button\" class=\"admin-tab-btn " + (aiStudioTab === "image" ? "active" : "") + "\" onclick=\"setAiStudioTab('image')\">🎨 मुफ़्त AI चित्र बनाएँ</button>" +
+  "</div>";
+
+  if (aiStudioTab === "qa") {
+    var msgsHtml = aiChatHistory.length
+      ? aiChatHistory.map(function(m) {
+          var isU = m.role === "user";
+          return "<div style=\"margin-bottom:9px; padding:10px 12px; border-radius:13px; border:1px solid var(--border); background:" + (isU ? "var(--gold-soft)" : "var(--bg-elevated)") + "; text-align:left;\">" +
+            "<div style=\"font-size:11.5px; font-weight:700; color:var(--primary); margin-bottom:3px;\">" + (isU ? "👤 आपका प्रश्न" : "✨ AI काव्य-सहायक") + "</div>" +
+            "<div class=\"font-literary\" style=\"font-size:14px; line-height:1.7; white-space:pre-line; color:var(--text);\">" + esc(m.text) + "</div>" +
+          "</div>";
+        }).join("")
+      : "<div class=\"empty-box\" style=\"padding:18px;\">अपनी कोई भी साहित्यिक या सामान्य शंका यहाँ पूछें—जैसे छंद के नियम, तुकांत शब्द, कठिन शब्दों का अर्थ या कविता सुझाव।</div>";
+
+    body.innerHTML = tabsHtml +
+      "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;\">" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"setAiQuickQuestion('दोहा छंद के नियम और एक सुंदर उदाहरण बताइए')\">दोहा नियम</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"setAiQuickQuestion('चाँदनी रात विषय पर 4 पंक्तियों का मुक्तक लिखिए')\">मुक्तक लिखवाएँ</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"setAiQuickQuestion('संध्या और उजाला शब्दों के सुंदर तुकांत शब्द बताइए')\">तुकांत शब्द</button>" +
+      "</div>" +
+      "<div style=\"max-height:280px; overflow-y:auto; margin-bottom:12px;\">" + msgsHtml + "</div>" +
+      "<div class=\"form-box\" style=\"margin-bottom:0;\">" +
+        "<div class=\"field\" style=\"margin-bottom:8px;\"><label>अपना प्रश्न लिखें</label><textarea id=\"ai-qa-input\" style=\"min-height:72px;\" placeholder=\"यहाँ अपना प्रश्न लिखें (हिंदी या अंग्रेज़ी में)...\"></textarea></div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+          "<button type=\"button\" class=\"action-btn primary\" style=\"flex:1;\" onclick=\"askAiQuestionInApp()\">✨ ऐप में उत्तर पाएँ</button>" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"openPromptInGoogleGemini()\">🌐 Google Gemini में खोलें ↗</button>" +
+        "</div>" +
+      "</div>";
+  } else {
+    body.innerHTML = tabsHtml +
+      "<div class=\"form-box\">" +
+        "<div class=\"field\"><label>चित्र का भाव / विवरण लिखें *</label><textarea id=\"ai-img-prompt\" style=\"min-height:76px;\" placeholder=\"उदाहरण: चाँदनी रात में नदी किनारे जलता हुआ मिट्टी का दीपक और कमल के फूल\">" + esc(aiLastImagePrompt) + "</textarea></div>" +
+        "<div class=\"field\"><label>कला शैली चुनें</label><select id=\"ai-img-style\">" +
+          "<option value=\"traditional Indian royal literary painting, warm gold and crimson lighting, ultra detailed, no text\">🎨 शाही भारतीय चित्रकला (सैफ्रॉन व स्वर्ण)</option>" +
+          "<option value=\"watercolor poetic illustration, dreamy soft lighting, serene nature, no text\">🖌️ वाटरकलर काव्य-चित्र</option>" +
+          "<option value=\"cinematic realistic photography, golden hour, 8k, no text\">📸 यथार्थवादी सिनेमाई चित्र</option>" +
+          "<option value=\"minimalist spiritual oil painting, warm candle glow, calm atmosphere, no text\">🪔 आध्यात्मिक तैलचित्र</option>" +
+        "</select></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" style=\"width:100%;\" onclick=\"generateFreeAiImageInApp()\">✨ मुफ़्त AI चित्र बनाएँ</button>" +
+      "</div>" +
+      (aiLastImageUrl
+        ? ("<div style=\"text-align:center;\"><img src=\"" + aiLastImageUrl + "\" class=\"studio-preview-img\" alt=\"AI निर्मित चित्र\" /><div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\"><a class=\"action-btn gold\" href=\"" + aiLastImageUrl + "\" target=\"_blank\" download=\"kavya-ai-chitra.jpg\">⬇️ चित्र खोलें / डाउनलोड करें</a></div></div>")
+        : "<div class=\"empty-box\">ऊपर अपने मन का भाव लिखें और 100% मुफ़्त AI चित्र बनाएँ।</div>");
+  }
+}
+
 function injectPWAManifest() {
   try {
     var manifest = { name: "काव्य चौपाल", short_name: "काव्य चौपाल", start_url: ".", display: "standalone", background_color: "#3E0B14", theme_color: "#5B1118" };
@@ -5873,7 +6039,7 @@ function syncBackAfterUiClose() { if (navDepth > 0) { navDepth -= 1; ignoreNextP
 function handleSystemBackStep() {
   if (ignoreNextPop) { ignoreNextPop = false; return; }
   var splash = document.getElementById("splash-screen"); if (splash && !splash.classList.contains("hide")) { dismissSplash(true); return; }
-  var modalIds = ["admin-preview-modal", "bhav-modal", "admin-modal", "submit-modal", "video-modal", "pdf-modal", "notif-modal", "reader-modal"];
+  var modalIds = ["ai-modal", "admin-preview-modal", "bhav-modal", "admin-modal", "submit-modal", "video-modal", "pdf-modal", "notif-modal", "reader-modal"];
   for (var i = 0; i < modalIds.length; i++) {
     var m = document.getElementById(modalIds[i]); if (m && m.classList.contains("open")) { closeModal(modalIds[i], true); return; }
   }
