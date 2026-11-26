@@ -1368,17 +1368,20 @@
     .book-flip-card {
       position: relative;
       width: 100%;
-      max-width: 560px;
-      background: #FFFDF8;
+      max-width: 780px;
+      background: #FFFFFF;
       border: 2px solid var(--gold);
       border-radius: 6px 18px 18px 6px;
-      padding: 8px;
+      padding: 6px;
       box-shadow:
-        -6px 0 14px rgba(74, 11, 18, 0.18),
-        0 16px 36px rgba(39, 23, 16, 0.24);
+        -6px 0 16px rgba(74, 11, 18, 0.18),
+        0 18px 40px rgba(39, 23, 16, 0.26);
       transform-origin: left center;
       transform-style: preserve-3d;
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
+    }
+    .book-flip-card.sharp-contrast canvas {
+      filter: contrast(1.16) brightness(1.03);
     }
     .book-flip-card::before {
       content: "";
@@ -1952,7 +1955,7 @@
 
   <!-- ================= PDF READER MODAL ================= -->
   <div class="modal-overlay" id="pdf-modal" onclick="closeModalOnBg(event, 'pdf-modal')">
-    <div class="modal-sheet" style="max-width:860px; height:92vh;">
+    <div class="modal-sheet" style="max-width:920px; width:98%; height:94vh;">
       <div class="modal-head">
         <div style="display:flex; align-items:center; gap:9px; min-width:0;">
           <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('pdf-modal')">← वापस</button>
@@ -3299,8 +3302,16 @@ function renderEbooksPane() {
 
 var currentPdfDoc = null;
 var currentPdfPage = 1;
-var currentPdfScale = 1.05;
+var currentPdfScale = 1.15;
+var currentPdfSharpMode = true;
 var pdfTouchStartX = 0;
+
+function togglePdfSharpMode() {
+  currentPdfSharpMode = !currentPdfSharpMode;
+  var btn = document.getElementById("pdf-sharp-btn");
+  if (btn) btn.textContent = currentPdfSharpMode ? "✨ HD स्पष्ट" : "📄 सामान्य";
+  if (currentPdfDoc) renderSingleBookPage(currentPdfPage, null);
+}
 
 function renderSingleBookPage(pageNum, direction) {
   var stage = document.getElementById("pdf-pages-container");
@@ -3316,15 +3327,20 @@ function renderSingleBookPage(pageNum, direction) {
   if (prevBtn) prevBtn.disabled = currentPdfPage <= 1;
   if (nextBtn) nextBtn.disabled = currentPdfPage >= totalPages;
 
-  var containerWidth = Math.max(250, (stage.clientWidth || 340) - 24);
+  var containerWidth = Math.max(280, (stage.clientWidth || 360) - 16);
   currentPdfDoc.getPage(currentPdfPage).then(function(page) {
     var unscaled = page.getViewport({ scale: 1 });
-    var fitScale = (containerWidth / unscaled.width) * currentPdfScale;
-    var viewport = page.getViewport({ scale: fitScale });
+    var displayScale = (containerWidth / unscaled.width) * currentPdfScale;
+    var displayViewport = page.getViewport({ scale: displayScale });
+
+    // High-DPI super-sampling for razor-sharp Devanagari & book text visibility
+    var dpr = Math.min(window.devicePixelRatio || 2, 3);
+    var qualityBoost = currentPdfSharpMode ? Math.max(2.0, dpr * 1.25) : Math.max(1.25, dpr);
+    var renderViewport = page.getViewport({ scale: displayScale * qualityBoost });
 
     stage.innerHTML = "";
     var card = document.createElement("div");
-    card.className = "book-flip-card" + (direction === "next" ? " flip-next" : (direction === "prev" ? " flip-prev" : ""));
+    card.className = "book-flip-card" + (currentPdfSharpMode ? " sharp-contrast" : "") + (direction === "next" ? " flip-next" : (direction === "prev" ? " flip-prev" : ""));
     card.addEventListener("touchstart", function(ev) {
       if (ev.touches && ev.touches[0]) pdfTouchStartX = ev.touches[0].clientX;
     }, { passive: true });
@@ -3340,9 +3356,9 @@ function renderSingleBookPage(pageNum, direction) {
     topBar.innerHTML = "<span>📖 बाएँ से दाएँ पन्ना पलटें</span><span>पृष्ठ " + currentPdfPage + " / " + totalPages + "</span>";
 
     var canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.style.cssText = "width:100%; height:auto; display:block; border-radius:8px; cursor:pointer;";
+    canvas.width = Math.round(renderViewport.width);
+    canvas.height = Math.round(renderViewport.height);
+    canvas.style.cssText = "width:100%; max-width:" + Math.round(displayViewport.width) + "px; height:auto; display:block; margin:0 auto; border-radius:8px; cursor:pointer; background:#fff;";
     canvas.addEventListener("click", function(ev) {
       var rect = canvas.getBoundingClientRect();
       var clickX = ev.clientX - rect.left;
@@ -3354,8 +3370,13 @@ function renderSingleBookPage(pageNum, direction) {
     card.appendChild(canvas);
     stage.appendChild(card);
 
-    var ctx = canvas.getContext("2d");
-    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
+    var ctx = canvas.getContext("2d", { alpha: false });
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    page.render({ canvasContext: ctx, viewport: renderViewport, intent: "display" }).promise.then(function() {
       requestAnimationFrame(function() {
         card.classList.remove("flip-next");
         card.classList.remove("flip-prev");
@@ -3392,7 +3413,7 @@ function openPdfReader(id) {
   if (!b) return;
   currentPdfDoc = null;
   currentPdfPage = 1;
-  currentPdfScale = 1.05;
+  currentPdfScale = 1.15;
   document.getElementById("pdf-modal-title").textContent = "📖 " + b.title;
   document.getElementById("pdf-modal-body").innerHTML =
     "<div class=\"book-nav-bar\">" +
@@ -3401,9 +3422,10 @@ function openPdfReader(id) {
         "<span id=\"book-page-ind\" class=\"book-page-indicator\">पृष्ठ 1 / …</span>" +
         "<button id=\"book-next-btn\" class=\"sm-btn\" onclick=\"turnBookPage(1)\" disabled>अगला पन्ना ▶</button>" +
       "</div>" +
-      "<div style=\"display:flex; gap:6px; align-items:center;\">" +
+      "<div style=\"display:flex; gap:6px; align-items:center; flex-wrap:wrap;\">" +
+        "<button id=\"pdf-sharp-btn\" class=\"sm-btn\" onclick=\"togglePdfSharpMode()\">✨ HD स्पष्ट</button>" +
         "<button class=\"sm-btn\" onclick=\"zoomPdfReader(-0.15)\">🔍-</button>" +
-        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:40px; text-align:center;\">105%</span>" +
+        "<span id=\"pdf-zoom-lbl\" style=\"font-size:12px; font-weight:700; min-width:42px; text-align:center;\">115%</span>" +
         "<button class=\"sm-btn\" onclick=\"zoomPdfReader(0.15)\">🔍+</button>" +
         "<div id=\"pdf-dl-slot\"></div>" +
       "</div>" +
