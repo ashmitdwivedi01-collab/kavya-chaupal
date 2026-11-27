@@ -5633,6 +5633,26 @@ function rejoinConferenceCall(callId, silentAuto) {
   }).catch(function() {});
 }
 
+function closeSinglePeerConnection(peerEmail) {
+  var pEm = (peerEmail || "").toLowerCase().trim();
+  if (!pEm) return;
+  if (chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm]) {
+    try { chaupalSocialState.peerConnectionsMap[pEm].close(); } catch (e) {}
+    delete chaupalSocialState.peerConnectionsMap[pEm];
+  }
+  if (chaupalSocialState.remoteStreamsMap && chaupalSocialState.remoteStreamsMap[pEm]) {
+    try {
+      (chaupalSocialState.remoteStreamsMap[pEm].stream.getTracks() || []).forEach(function(t) { t.stop(); });
+    } catch (e) {}
+    delete chaupalSocialState.remoteStreamsMap[pEm];
+  }
+  var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+  var vidEl = document.getElementById(safeId);
+  if (vidEl && vidEl.srcObject) {
+    try { vidEl.srcObject = null; } catch (e) {}
+  }
+}
+
 function subscribeToActiveCallDoc(callId, isCaller) {
   if (chaupalSocialState.callUnsubscribe) {
     try { chaupalSocialState.callUnsubscribe(); } catch (e) {}
@@ -5662,15 +5682,21 @@ function subscribeToActiveCallDoc(callId, isCaller) {
     }
 
     var pMap = chaupalSocialState.peerStatusMap || {};
+    var activeCount = 0;
     parts.forEach(function(p) {
       var pEm = (p.email || "").toLowerCase().trim();
-      if (pEm && pEm !== myEm) {
+      if (!pEm) return;
+      if (p.status === "connected" || p.status === "accepted") activeCount++;
+      if (pEm !== myEm) {
         if (p.status) pMap[pEm] = p.status;
-        if (p.status === "accepted" || p.status === "connected") {
-          ensureMeshPeerConnection(callId, pEm, p.name || pEm, isCaller ? "caller" : "callee", myEm > pEm);
+        if (p.status === "left" || p.status === "declined" || p.status === "ended") {
+          closeSinglePeerConnection(pEm);
+        } else if (p.status === "accepted" || p.status === "connected") {
+          ensureMeshPeerConnection(callId, pEm, p.name || pEm, isCaller ? "caller" : "callee", myEm < pEm);
         }
       }
     });
+    chaupalSocialState.activeParticipantCount = activeCount;
 
     var anyConnected = Object.keys(pMap).some(function(k) { return pMap[k] === "connected" || pMap[k] === "accepted"; });
     if (anyConnected) {
@@ -5688,12 +5714,14 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       if (!otherEm) return;
 
       var otherPart = parts.find(function(x) { return (x.email || "").toLowerCase().trim() === otherEm; });
+      if (otherPart && (otherPart.status === "left" || otherPart.status === "declined")) return;
       var otherName = (otherPart && otherPart.name) || otherEm;
       var pc = ensureMeshPeerConnection(callId, otherEm, otherName, isCaller ? "caller" : "callee", false);
       if (!pc) return;
 
       var offerTs = Number(sig.offerTs || sig.updatedAt || 1);
       if (sig.toEmail === myEm && sig.offer && chaupalSocialState.lastAppliedOfferTs[lk] !== offerTs) {
+        if (pc.signalingState !== "stable" && pc.signalingState !== "have-remote-offer") return;
         chaupalSocialState.lastAppliedOfferTs[lk] = offerTs;
         pc.setRemoteDescription(new RTCSessionDescription(sig.offer)).then(function() {
           flushQueuedIceCandidates(otherEm, pc);
@@ -5752,7 +5780,7 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       chaupalSocialState._lastRenderedCallStatus = nextStatus;
       updateCallParticipantsStatusDomOnly();
     }
-    setTimeout(attachMediaToDom, 60);
+    setTimeout(attachMediaToDom, 80);
 
     if (data.status === "ended") {
       cleanupWebRtcCall(true);
@@ -5767,387 +5795,83 @@ function inviteMemberToActiveCall(targetEmailArg, targetNameArg) {
   var sel = document.getElementById("soc-call-add-member-sel");
   var rawEm = targetEmailArg || (sel ? sel.value : "");
   var tEmail = resolveTargetEmailForPerson(rawEm, targetNameArg || "");
-  if (!tEmail || tEmail === me.email) {
-    showToast("कृपया जोड़ने के लिए कोई अन्य सदस्य चुनें");
-    return;
-  }
-  var allM = getAllCallableMembers(me.email);
-  var foundM = allM.find(function(x) { return x.email === tEmail; });
-  var tName = targetNameArg || (foundM && foundM.name) || tEmail;
+  if (!tEmail) { showToast("कृपया कॉल में जोड़ने के लिए सदस्य चुनें"); return; }
+  if (tEmail === me.email) { showToast("आप पहले से कॉल में हैं"); return; }
+
+  var members = getAllCallableMembers(me.email);
+  var foundPeer = members.find(function(m) { return (m.email || "").toLowerCase().trim() === tEmail; });
+  var tName = targetNameArg || (foundPeer && foundPeer.name) || tEmail;
 
   var callId = chaupalSocialState.activeCallDocId;
-  var tType = (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallSession.type) || chaupalSocialState.callType || "video";
-
   if (!callId || !chaupalSocialState.activeCallSession) {
-    startChaupalCallSession(tType, tName + " के साथ कॉल", tEmail, tName);
+    startChaupalCallSession(chaupalSocialState.callType || "video", tName + " के साथ कॉन्फ्रेंस कॉल", tEmail, tName);
     return;
   }
 
-  var parts = Array.isArray(chaupalSocialState.activeCallSession.participants) ? chaupalSocialState.activeCallSession.participants.slice() : [];
-  if (!parts.some(function(p) { return (p.email || "").toLowerCase().trim() === me.email; })) {
-    parts.unshift({ email: me.email, name: me.name, status: "connected" });
-  }
-  if (!parts.some(function(p) { return (p.email || "").toLowerCase().trim() === tEmail; })) {
-    parts.push({ email: tEmail, name: tName, status: "ringing" });
+  var parts = Array.isArray(chaupalSocialState.activeCallSession.participants)
+    ? chaupalSocialState.activeCallSession.participants.slice()
+    : [];
+  var existingIdx = parts.findIndex(function(p) { return (p.email || "").toLowerCase().trim() === tEmail; });
+  if (existingIdx >= 0) {
+    parts[existingIdx] = Object.assign({}, parts[existingIdx], { status: "ringing", invitedAt: Date.now() });
+  } else {
+    parts.push({ email: tEmail, name: tName, status: "ringing", invitedAt: Date.now() });
   }
   chaupalSocialState.activeCallSession.participants = parts;
   if (!chaupalSocialState.peerStatusMap) chaupalSocialState.peerStatusMap = {};
   chaupalSocialState.peerStatusMap[tEmail] = "ringing";
 
-  var newLabel = parts.map(function(p) { return p.name || p.email; }).join(", ") + " (कॉन्फ्रेंस)";
-  chaupalSocialState.activeCallSession.target = newLabel;
-
   var ref = getCallDocRef(callId);
   if (ref) {
-    ref.set({
-      participants: parts,
-      targetLabel: newLabel,
-      status: "ringing"
-    }, { merge: true }).catch(function() {});
+    ref.set({ participants: parts }, { merge: true }).catch(function() {});
   }
   pushNotification(
-    (tType === "audio" ? "📞 कॉन्फ्रेंस ऑडियो कॉल निमंत्रण: " : "🎥 कॉन्फ्रेंस वीडियो कॉल निमंत्रण: ") + me.name,
-    tName + " सहित " + parts.length + " सदस्यों की कॉल में जुड़ने के लिए कॉल स्वीकार करें।",
+    (chaupalSocialState.callType === "audio" ? "📞 ऑडियो कॉन्फ्रेंस में आमंत्रण: " : "🎥 वीडियो कॉन्फ्रेंस में आमंत्रण: ") + me.name,
+    "आपको सक्रिय कॉल में जोड़ा गया है।",
     "info",
     callId,
     tEmail
   );
-  startOutgoingRingTone();
-  ensureMeshPeerConnection(callId, tEmail, tName, "caller", true);
+  ensureMeshPeerConnection(callId, tEmail, tName, "caller", myEm < tEmail);
   renderChaupalSocial();
-  setTimeout(attachMediaToDom, 40);
-  showToast(tName + " को कॉल में रिंग भेजा गया ✓");
+  setTimeout(attachMediaToDom, 60);
+  showToast(tName + " को कॉल में जोड़ा जा रहा है...");
 }
 
-function startChaupalCallSession(modeType, targetLabel, calleeEmailArg, calleeNameArg) {
+function leaveConferenceCall() {
+  var callId = chaupalSocialState.activeCallDocId;
   var me = getCurrentMemberIdentity();
-  if (!me) { showToast("कृपया पहले लॉगिन करें"); return; }
-  ensureChaupalSocialCollections();
-  var tType = modeType || "video";
-  var rawName = (calleeNameArg || "").trim();
-  var tEmail = resolveTargetEmailForPerson(calleeEmailArg || chaupalSocialState.selectedPeerEmail || "", rawName);
-  if (!tEmail && !rawName) {
-    var allPeers = getAllCallableMembers(me.email);
-    if (allPeers.length) {
-      tEmail = allPeers[0].email;
-      rawName = allPeers[0].name;
-    }
-  }
-  if (tEmail) chaupalSocialState.selectedPeerEmail = tEmail;
-  var callId = "call_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
-
-  var participants = [{ email: me.email, name: me.name, status: "connected" }];
-  if (tEmail) {
-    participants.push({ email: tEmail, name: rawName || tEmail, status: "ringing" });
-  }
-
-  chaupalSocialState.callType = tType;
-  chaupalSocialState.activeCallDocId = callId;
-  chaupalSocialState.isMuted = false;
-  chaupalSocialState.isCamOff = false;
-  chaupalSocialState.peerConnectionsMap = {};
-  chaupalSocialState.remoteStreamsMap = {};
-  chaupalSocialState.peerStatusMap = {};
-  if (tEmail) chaupalSocialState.peerStatusMap[tEmail] = "ringing";
-
-  chaupalSocialState.activeCallSession = {
-    id: callId,
-    type: tType,
-    target: targetLabel || ((rawName || tEmail || "चौपाल सदस्य") + " के साथ कॉल"),
-    calleeEmail: tEmail,
-    calleeName: rawName,
-    participants: participants,
-    status: "ringing",
-    startedAt: Date.now()
-  };
-
-  var basePayload = {
-    id: callId,
-    callerEmail: me.email,
-    callerName: me.name,
-    calleeEmail: tEmail,
-    calleeName: rawName,
-    participants: participants,
-    targetLabel: chaupalSocialState.activeCallSession.target,
-    callType: tType,
-    status: "ringing",
-    meshSignals: {},
-    meshCandidates: [],
-    createdAt: Date.now()
-  };
-  var ref = getCallDocRef(callId);
-  if (ref) {
-    ref.set(basePayload).catch(function(err) {
-      showToast("कॉल सिग्नल त्रुटि: " + ((err && err.message) || "Firestore"));
-    });
-  }
-  if (tEmail) {
-    pushNotification(
-      (tType === "audio" ? "📞 ऑडियो कॉल रिंग हो रही है: " : "🎥 वीडियो कॉल रिंग हो रही है: ") + me.name,
-      "कॉल स्क्रीन से कॉल स्वीकार करें।",
-      "info",
-      callId,
-      tEmail
-    );
-  }
-  startOutgoingRingTone();
-  subscribeToActiveCallDoc(callId, true);
-  renderChaupalSocial();
-  showToast((tType === "audio" ? "🎙️ ऑडियो कॉल" : "🎥 वीडियो कॉल") + " रिंग हो रही है...");
-
-  acquireCallMediaStream(tType).then(function(stream) {
-    if (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== callId) {
-      if (stream) { try { stream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {} }
-      return;
-    }
-    chaupalSocialState.localStream = stream;
-    var curParts = Array.isArray(chaupalSocialState.activeCallSession.participants) ? chaupalSocialState.activeCallSession.participants : participants;
-    curParts.forEach(function(p) {
-      var pEm = (p.email || "").toLowerCase().trim();
-      if (pEm && pEm !== me.email) {
-        ensureMeshPeerConnection(callId, pEm, p.name || pEm, "caller", true);
-      }
-    });
-    setTimeout(attachMediaToDom, 50);
-  });
-}
-
-function acceptIncomingCall(explicitCallId) {
-  var inc = chaupalSocialState.incomingCallDoc;
-  var me = getCurrentMemberIdentity();
-  if (!me) {
-    showToast("कॉल जुड़ने के लिए कृपया लॉगिन करें");
+  if (!callId || !me) {
+    cleanupWebRtcCall(true);
+    renderChaupalSocial();
     return;
   }
-  var callId = explicitCallId || (inc && inc.id);
-  if (!callId) return;
-
-  stopIncomingRingTone();
-  stopOutgoingRingTone();
-  try { dismissSplash(true); } catch (e) {}
-  document.querySelectorAll(".modal-overlay.open").forEach(function(m) { m.classList.remove("open"); });
-
-  var tType = (inc && inc.callType) || "video";
-  var initParts = (inc && Array.isArray(inc.participants)) ? inc.participants.slice() : [];
-  if (inc && inc.callerEmail && !initParts.some(function(p) { return (p.email || "").toLowerCase().trim() === (inc.callerEmail || "").toLowerCase().trim(); })) {
-    initParts.unshift({ email: inc.callerEmail, name: inc.callerName || inc.callerEmail, status: "connected" });
-  }
-  var foundMe = false;
-  initParts = initParts.map(function(p) {
+  var ref = getCallDocRef(callId);
+  var curParts = (chaupalSocialState.activeCallSession && Array.isArray(chaupalSocialState.activeCallSession.participants))
+    ? chaupalSocialState.activeCallSession.participants.slice()
+    : [];
+  var updatedParts = curParts.map(function(p) {
     if ((p.email || "").toLowerCase().trim() === me.email) {
-      foundMe = true;
-      return Object.assign({}, p, { status: "connected" });
+      return Object.assign({}, p, { status: "left", leftAt: Date.now() });
     }
     return p;
   });
-  if (!foundMe) {
-    initParts.push({ email: me.email, name: me.name, status: "connected" });
-  }
-
-  chaupalSocialState.callType = tType;
-  chaupalSocialState.activeCallDocId = callId;
-  chaupalSocialState.incomingCallDoc = null;
-  chaupalSocialState.isMuted = false;
-  chaupalSocialState.isCamOff = false;
-  chaupalSocialState.peerConnectionsMap = {};
-  chaupalSocialState.remoteStreamsMap = {};
-  chaupalSocialState.peerStatusMap = {};
-  initParts.forEach(function(p) {
-    var pEm = (p.email || "").toLowerCase().trim();
-    if (pEm && pEm !== me.email) {
-      chaupalSocialState.peerStatusMap[pEm] = p.status || "connected";
-    }
+  var remainingActive = updatedParts.filter(function(p) {
+    return p.status === "connected" || p.status === "accepted";
   });
 
-  chaupalSocialState.activeCallSession = {
-    id: callId,
-    type: tType,
-    target: (inc && inc.targetLabel) || (((inc && (inc.callerName || inc.callerEmail)) || "सदस्य") + " के साथ कॉल"),
-    callerEmail: (inc && inc.callerEmail) || "",
-    participants: initParts,
-    status: "connected",
-    startedAt: Date.now()
-  };
-
-  renderGlobalIncomingCallOverlay();
+  if (ref) {
+    if (remainingActive.length === 0) {
+      ref.set({ participants: updatedParts, status: "ended", endedAt: Date.now() }, { merge: true }).catch(function() {});
+    } else {
+      ref.set({ participants: updatedParts }, { merge: true }).catch(function() {});
+    }
+  }
+  cleanupWebRtcCall(true);
   chaupalSocialState.subTab = "call";
   switchTab("social");
   renderChaupalSocial();
-  showToast("कॉल जुड़ रही है ✓");
-
-  var ref = getCallDocRef(callId);
-  if (!ref) return;
-
-  ref.get().then(function(snap) {
-    var latest = (snap && snap.exists && snap.data()) || {};
-    if (latest.status === "ended") {
-      cleanupWebRtcCall(true);
-      renderChaupalSocial();
-      showToast("यह कॉल पहले ही समाप्त हो चुकी है");
-      return;
-    }
-    var latestParts = Array.isArray(latest.participants) ? latest.participants.slice() : initParts.slice();
-    if (latest.callerEmail && !latestParts.some(function(p) { return (p.email || "").toLowerCase().trim() === (latest.callerEmail || "").toLowerCase().trim(); })) {
-      latestParts.unshift({ email: latest.callerEmail, name: latest.callerName || latest.callerEmail, status: "connected" });
-    }
-    var seenMe = false;
-    latestParts = latestParts.map(function(p) {
-      if ((p.email || "").toLowerCase().trim() === me.email) {
-        seenMe = true;
-        return Object.assign({}, p, { status: "connected" });
-      }
-      return p;
-    });
-    if (!seenMe) {
-      latestParts.push({ email: me.email, name: me.name, status: "connected" });
-    }
-
-    if (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallDocId === callId) {
-      chaupalSocialState.activeCallSession.participants = latestParts;
-      chaupalSocialState.activeCallSession.type = latest.callType || tType;
-      chaupalSocialState.callType = latest.callType || tType;
-      if (latest.targetLabel) chaupalSocialState.activeCallSession.target = latest.targetLabel;
-    }
-
-    ref.set({
-      participants: latestParts,
-      status: "connected",
-      acceptedBy: me.email,
-      acceptedAt: Date.now()
-    }, { merge: true }).catch(function() {});
-
-    subscribeToActiveCallDoc(callId, false);
-    renderChaupalSocial();
-
-    acquireCallMediaStream(latest.callType || tType).then(function(stream) {
-      if (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== callId) {
-        if (stream) { try { stream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {} }
-        return;
-      }
-      chaupalSocialState.localStream = stream;
-      var meshSig = latest.meshSignals || {};
-
-      latestParts.forEach(function(p) {
-        var pEm = (p.email || "").toLowerCase().trim();
-        if (!pEm || pEm === me.email) return;
-        var lk = getLegKey(me.email, pEm);
-        var existingSig = meshSig[lk];
-
-        if (existingSig && existingSig.toEmail === me.email && existingSig.offer) {
-          var pcAns = ensureMeshPeerConnection(callId, pEm, p.name || pEm, "callee", false);
-          if (pcAns && !pcAns.currentRemoteDescription) {
-            chaupalSocialState.lastAppliedOfferTs[lk] = Number(existingSig.offerTs || existingSig.updatedAt || 1);
-            pcAns.setRemoteDescription(new RTCSessionDescription(existingSig.offer)).then(function() {
-              flushQueuedIceCandidates(pEm, pcAns);
-              return pcAns.createAnswer();
-            }).then(function(ans) {
-              return pcAns.setLocalDescription(ans).then(function() {
-                var ansUpd = {};
-                ansUpd[lk] = Object.assign({}, existingSig, {
-                  answer: { type: ans.type, sdp: ans.sdp },
-                  answeredAt: Date.now()
-                });
-                return ref.set({ meshSignals: ansUpd }, { merge: true });
-              });
-            }).catch(function() {});
-          }
-        } else {
-          ensureMeshPeerConnection(callId, pEm, p.name || pEm, "callee", true);
-        }
-      });
-
-      var cands = Array.isArray(latest.meshCandidates) ? latest.meshCandidates : [];
-      cands.forEach(function(c) {
-        if (!c || c.toEmail !== me.email || !c.fromEmail) return;
-        var cid = c.id || (c.candidate + "_" + c.sdpMLineIndex);
-        if (chaupalSocialState.processedCandidatesMap[cid]) return;
-        chaupalSocialState.processedCandidatesMap[cid] = true;
-        var pc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[c.fromEmail];
-        if (pc && pc.remoteDescription) {
-          pc.addIceCandidate(new RTCIceCandidate(c)).catch(function() {});
-        } else {
-          if (!chaupalSocialState.pendingIceQueue) chaupalSocialState.pendingIceQueue = {};
-          if (!chaupalSocialState.pendingIceQueue[c.fromEmail]) chaupalSocialState.pendingIceQueue[c.fromEmail] = [];
-          chaupalSocialState.pendingIceQueue[c.fromEmail].push(c);
-        }
-      });
-
-      setTimeout(attachMediaToDom, 50);
-    });
-  }).catch(function() {
-    subscribeToActiveCallDoc(callId, false);
-    renderChaupalSocial();
-  });
-}
-
-function declineIncomingCall() {
-  var inc = chaupalSocialState.incomingCallDoc;
-  var me = getCurrentMemberIdentity();
-  if (!inc) return;
-  stopIncomingRingTone();
-  stopOutgoingRingTone();
-  var ref = getCallDocRef(inc.id);
-  if (ref) {
-    var parts = Array.isArray(inc.participants) ? inc.participants.map(function(p) {
-      if (me && (p.email || "").toLowerCase().trim() === me.email) {
-        return Object.assign({}, p, { status: "declined" });
-      }
-      return p;
-    }) : [];
-    ref.set({ participants: parts, declinedBy: (me && me.email) || "", declinedAt: Date.now() }, { merge: true }).catch(function() {});
-  }
-  chaupalSocialState.incomingCallDoc = null;
-  renderGlobalIncomingCallOverlay();
-  renderChaupalSocial();
-  showToast("कॉल अस्वीकार की गई");
-}
-
-function toggleCallMute() {
-  if (!chaupalSocialState.localStream) return;
-  chaupalSocialState.isMuted = !chaupalSocialState.isMuted;
-  chaupalSocialState.localStream.getAudioTracks().forEach(function(tr) { tr.enabled = !chaupalSocialState.isMuted; });
-  renderChaupalSocial();
-  setTimeout(attachMediaToDom, 40);
-}
-
-function toggleCallCamera() {
-  if (!chaupalSocialState.localStream) return;
-  chaupalSocialState.isCamOff = !chaupalSocialState.isCamOff;
-  chaupalSocialState.localStream.getVideoTracks().forEach(function(tr) { tr.enabled = !chaupalSocialState.isCamOff; });
-  renderChaupalSocial();
-  setTimeout(attachMediaToDom, 40);
-}
-
-function cleanupWebRtcCall(skipRemoteUpdate) {
-  stopIncomingRingTone();
-  stopOutgoingRingTone();
-  if (chaupalSocialState.callUnsubscribe) {
-    try { chaupalSocialState.callUnsubscribe(); } catch (e) {}
-    chaupalSocialState.callUnsubscribe = null;
-  }
-  if (!skipRemoteUpdate && chaupalSocialState.activeCallDocId) {
-    var ref = getCallDocRef(chaupalSocialState.activeCallDocId);
-    if (ref) ref.set({ status: "ended", endedAt: Date.now() }, { merge: true }).catch(function() {});
-  }
-  var pcMap = chaupalSocialState.peerConnectionsMap || {};
-  Object.keys(pcMap).forEach(function(k) {
-    try { pcMap[k].close(); } catch (e) {}
-  });
-  chaupalSocialState.peerConnectionsMap = {};
-  chaupalSocialState.remoteStreamsMap = {};
-  chaupalSocialState.peerStatusMap = {};
-  chaupalSocialState.processedCandidatesMap = {};
-  chaupalSocialState.pendingIceQueue = {};
-  if (chaupalSocialState.localStream) {
-    try { chaupalSocialState.localStream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
-    chaupalSocialState.localStream = null;
-  }
-  chaupalSocialState.remoteStream = null;
-  chaupalSocialState.activeCallSession = null;
-  chaupalSocialState.activeCallDocId = null;
-  chaupalSocialState.isLiveActive = false;
-  chaupalSocialState.isMuted = false;
-  chaupalSocialState.isCamOff = false;
+  showToast("आप कॉल से लेफ्ट हो गए — बाकी सदस्यों की कॉल जारी है");
 }
 
 function stopChaupalCallSession() {
@@ -6541,9 +6265,9 @@ function renderChaupalSocial() {
           "</div>" +
           "<button type=\"button\" class=\"action-btn " + (chaupalSocialState.isLiveActive ? "danger" : "gold") + "\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"toggleSocialLiveBroadcast()\">" + (chaupalSocialState.isLiveActive ? "⏹️ लाइव रोकें" : "🔴 सोशल लाइव शुरू करें") + "</button>" +
         "</div>" +
-        "<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;\">" +
-          "<button type=\"button\" class=\"action-btn gold\" onclick=\"leaveConferenceCall()\">🚪 कॉल से बाहर निकलें (Leave Call)</button>" +
-          "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalCallSession()\">📞 सभी के लिए कॉल समाप्त करें</button>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; align-items:center;\">" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"leaveConferenceCall()\">🚪 केवल कॉल से लेफ्ट हों (Leave Call)</button>" +
+          "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalCallSession()\">⛔ सबके लिए कॉल काटें (End for All)</button>" +
         "</div>" +
       "</div>";
   }
