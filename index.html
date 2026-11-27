@@ -2613,6 +2613,7 @@ var state = {
   competition: safeParseJson(JSON.stringify(DEFAULT_COMPETITION), {}),
   ebooks: safeParseJson(JSON.stringify(DEFAULT_EBOOKS), []),
   comments: [],
+  follows: [],
   messages: [],
   notifications: [
     { id: "notif_welcome", title: "काव्य चौपाल में स्वागत है 🪔", body: "अब आप अपनी रचना पर स्वतः AI भाव-चित्र बना सकते हैं, पुस्तक लाइब्रेरी में PDF जोड़ सकते हैं और अपने निजी कॉर्नर से जुड़ सकते हैं।", type: "system", targetId: "", createdAt: Date.now() - 3600000 }
@@ -2681,6 +2682,7 @@ if (cached) {
   if (Array.isArray(cached.pendingPoems)) state.pendingPoems = cached.pendingPoems;
   if (Array.isArray(cached.pendingPoets)) state.pendingPoets = cached.pendingPoets;
   if (Array.isArray(cached.comments)) state.comments = cached.comments;
+  if (Array.isArray(cached.follows)) state.follows = cached.follows;
   if (Array.isArray(cached.messages)) state.messages = cached.messages;
   if (Array.isArray(cached.notifications) && cached.notifications.length) state.notifications = cached.notifications;
 }
@@ -2699,6 +2701,7 @@ function saveLocalCache() {
       pendingPoems: state.pendingPoems,
       pendingPoets: state.pendingPoets,
       comments: state.comments,
+      follows: state.follows,
       messages: state.messages,
       notifications: state.notifications
     }));
@@ -2802,6 +2805,7 @@ function initFirebaseSync() {
   syncCollection("pending_poems", "pendingPoems", "submittedAt");
   syncCollection("pending_poets", "pendingPoets", "submittedAt");
   syncCollection("comments", "comments", "createdAt");
+  syncCollection("follows", "follows", "createdAt");
   syncCollection("messages", "messages", "createdAt");
   syncCollection("notifications", "notifications", "createdAt");
 
@@ -3132,6 +3136,186 @@ function recordPoetView(poetName) {
       docRef.set({ views: firebase.firestore.FieldValue.increment(1) }, { merge: true }).catch(function() {});
     });
   }
+}
+
+
+function getCurrentMemberIdentity() {
+  if (!state.currentUser || !state.currentUser.email) return null;
+  var em = state.currentUser.email.toLowerCase().trim();
+  var prof = getPoetByEmail(em) || getPendingPoetByEmail(em);
+  var nm = prof ? (prof.name || "").trim() : (state.currentUser.displayName || em.split("@")[0]);
+  return {
+    key: "em:" + em,
+    email: em,
+    name: nm,
+    poetId: prof ? prof.id : ""
+  };
+}
+
+function resolvePoetObjByNameOrId(poetName, poetId) {
+  var all = getAllPoetObjects();
+  if (poetId) {
+    var byId = all.find(function(x) { return x.id === poetId; });
+    if (byId) return byId;
+  }
+  var nm = (poetName || "").trim();
+  if (nm) {
+    var byNm = all.find(function(x) { return (x.name || "").trim() === nm; });
+    if (byNm) return byNm;
+  }
+  return nm ? { id: "auto_" + nm, name: nm, ownerEmail: "" } : null;
+}
+
+function getPoetCanonicalKeys(pt) {
+  if (!pt) return [];
+  var keys = [];
+  if (pt.ownerEmail && pt.ownerEmail.trim()) keys.push("em:" + pt.ownerEmail.toLowerCase().trim());
+  if (pt.id && pt.id.indexOf("auto_") !== 0) keys.push("id:" + pt.id);
+  if (pt.name && pt.name.trim()) keys.push("nm:" + pt.name.trim());
+  return keys;
+}
+
+function doesFollowRecordMatchTarget(f, pt) {
+  if (!f || !pt) return false;
+  var keys = getPoetCanonicalKeys(pt);
+  if (f.targetKey && keys.indexOf(f.targetKey) !== -1) return true;
+  if (f.targetEmail && pt.ownerEmail && f.targetEmail.toLowerCase().trim() === pt.ownerEmail.toLowerCase().trim()) return true;
+  if (f.targetPoetId && pt.id && f.targetPoetId === pt.id) return true;
+  if (f.targetPoetName && pt.name && f.targetPoetName.trim() === pt.name.trim()) return true;
+  return false;
+}
+
+function doesFollowRecordMatchFollower(f, pt) {
+  if (!f || !pt) return false;
+  var keys = getPoetCanonicalKeys(pt);
+  if (f.followerKey && keys.indexOf(f.followerKey) !== -1) return true;
+  if (f.followerEmail && pt.ownerEmail && f.followerEmail.toLowerCase().trim() === pt.ownerEmail.toLowerCase().trim()) return true;
+  if (f.followerPoetId && pt.id && f.followerPoetId === pt.id) return true;
+  if (f.followerName && pt.name && f.followerName.trim() === pt.name.trim()) return true;
+  return false;
+}
+
+function getFollowersForPoet(pt) {
+  if (!pt) return [];
+  var seen = {};
+  return (state.follows || []).filter(function(f) {
+    if (!doesFollowRecordMatchTarget(f, pt)) return false;
+    var k = f.followerKey || f.followerEmail || f.followerName || f.id;
+    if (seen[k]) return false;
+    seen[k] = true;
+    return true;
+  });
+}
+
+function getFollowingForPoet(pt) {
+  if (!pt) return [];
+  var seen = {};
+  return (state.follows || []).filter(function(f) {
+    if (!doesFollowRecordMatchFollower(f, pt)) return false;
+    var k = f.targetKey || f.targetEmail || f.targetPoetName || f.id;
+    if (seen[k]) return false;
+    seen[k] = true;
+    return true;
+  });
+}
+
+function getFollowRelationState(poetName, poetId) {
+  var me = getCurrentMemberIdentity();
+  var target = resolvePoetObjByNameOrId(poetName, poetId);
+  if (!target) return { isSelf: false, isFollowing: false, followsMe: false, label: "➕ फ़ॉलो करें" };
+  if (me) {
+    var myKeys = [me.key];
+    if (me.poetId) myKeys.push("id:" + me.poetId);
+    if (me.name) myKeys.push("nm:" + me.name);
+    var tKeys = getPoetCanonicalKeys(target);
+    var isSelf = myKeys.some(function(k) { return tKeys.indexOf(k) !== -1; });
+    if (isSelf) return { isSelf: true, isFollowing: false, followsMe: false, label: "" };
+
+    var myPseudoPt = { id: me.poetId, name: me.name, ownerEmail: me.email };
+    var isFollowing = (state.follows || []).some(function(f) {
+      return doesFollowRecordMatchFollower(f, myPseudoPt) && doesFollowRecordMatchTarget(f, target);
+    });
+    var followsMe = (state.follows || []).some(function(f) {
+      return doesFollowRecordMatchFollower(f, target) && doesFollowRecordMatchTarget(f, myPseudoPt);
+    });
+    var lbl = "➕ फ़ॉलो करें";
+    if (isFollowing && followsMe) lbl = "🤝 परस्पर जुड़े (Mutual)";
+    else if (isFollowing) lbl = "✓ फ़ॉलो किया गया";
+    else if (followsMe) lbl = "🔁 फ़ॉलोबैक करें";
+    return { isSelf: false, isFollowing: isFollowing, followsMe: followsMe, label: lbl };
+  }
+  return { isSelf: false, isFollowing: false, followsMe: false, label: "➕ फ़ॉलो करें" };
+}
+
+function toggleFollowPoet(poetName, poetId) {
+  var me = getCurrentMemberIdentity();
+  if (!me) {
+    showToast("फ़ॉलो या फ़ॉलोबैक करने के लिए कृपया पहले लॉगिन करें 🔐");
+    openSubmitModal("poet");
+    return;
+  }
+  var target = resolvePoetObjByNameOrId(poetName, poetId);
+  if (!target) return;
+  var rel = getFollowRelationState(target.name, target.id);
+  if (rel.isSelf) {
+    showToast("यह आपकी स्वयं की प्रोफ़ाइल है");
+    return;
+  }
+  var myPseudoPt = { id: me.poetId, name: me.name, ownerEmail: me.email };
+  var existingList = (state.follows || []).filter(function(f) {
+    return doesFollowRecordMatchFollower(f, myPseudoPt) && doesFollowRecordMatchTarget(f, target);
+  });
+
+  if (existingList.length) {
+    var idsToRemove = existingList.map(function(x) { return x.id; });
+    state.follows = state.follows.filter(function(f) { return idsToRemove.indexOf(f.id) === -1; });
+    saveLocalCache();
+    renderAll();
+    if (state.currentReaderPoemId) openReader(state.currentReaderPoemId);
+    idsToRemove.forEach(function(fid) { cloudDeleteDoc("follows", fid); });
+    showToast(target.name + " जी को अनफ़ॉलो किया गया");
+  } else {
+    var tKey = (target.ownerEmail && target.ownerEmail.trim())
+      ? ("em:" + target.ownerEmail.toLowerCase().trim())
+      : ((target.id && target.id.indexOf("auto_") !== 0) ? ("id:" + target.id) : ("nm:" + target.name.trim()));
+    var docId = ("flw_" + me.email + "__" + tKey).replace(/[^a-zA-Z0-9_@.-]/g, "_");
+    var rec = {
+      id: docId,
+      followerKey: me.key,
+      followerEmail: me.email,
+      followerName: me.name,
+      followerPoetId: me.poetId || "",
+      targetKey: tKey,
+      targetEmail: (target.ownerEmail || "").toLowerCase().trim(),
+      targetPoetId: target.id || "",
+      targetPoetName: target.name || "",
+      createdAt: Date.now()
+    };
+    state.follows.unshift(rec);
+    saveLocalCache();
+    renderAll();
+    if (state.currentReaderPoemId) openReader(state.currentReaderPoemId);
+    cloudSaveDoc("follows", docId, rec);
+    var isFollowBack = rel.followsMe;
+    if (rec.targetEmail) {
+      pushNotification(
+        isFollowBack ? ("🤝 " + me.name + " ने आपको फ़ॉलोबैक किया!") : ("➕ " + me.name + " ने आपको फ़ॉलो किया"),
+        isFollowBack ? "अब आप दोनों परस्पर जुड़े हुए हैं।" : "अपने ‘मेरा कॉर्नर > फ़ॉलोअर्स’ से आप भी फ़ॉलोबैक कर सकते हैं।",
+        "info",
+        me.poetId || "",
+        rec.targetEmail
+      );
+    }
+    showToast(isFollowBack ? ("🤝 " + target.name + " जी को फ़ॉलोबैक किया गया!") : ("✓ अब आप " + target.name + " जी को फ़ॉलो कर रहे हैं"));
+  }
+}
+
+function buildFollowActionBtnHTML(poetName, poetId, extraStyle) {
+  var rel = getFollowRelationState(poetName, poetId);
+  if (rel.isSelf) return "";
+  var cls = rel.isFollowing ? "sm-btn" : (rel.followsMe ? "btn-approve" : "action-btn gold");
+  var st = extraStyle || "padding:5px 11px; font-size:12px; border-radius:99px;";
+  return "<button type="button" class="" + cls + "" style="" + st + "" onclick="event.stopPropagation(); toggleFollowPoet(dec('" + arg(poetName) + "'), dec('" + arg(poetId || "") + "'))">" + esc(rel.label) + "</button>";
 }
 
 function getPoetByEmail(email, fallbackName) {
@@ -3788,8 +3972,10 @@ function renderPoetsDirectory() {
   grid.innerHTML = poets.map(function(pt) {
     var poems = state.poems.filter(function(p) { return p.poet === pt.name; });
     var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
-    var vBadgePt = !pt.hideViews ? ("<span class=\"mini-badge\">👁️ " + Number(pt.views || 0) + " बार देखा गया</span>") : "";
-    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(pt.name) + "</h3>" + (pt.occupation ? ("<div class=\"person-role\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span>" + vBadgePt + "</div></div></div>";
+    var vBadgePt = !pt.hideViews ? ("<span class=\"mini-badge\">👁️ " + Number(pt.views || 0) + "</span>") : "";
+    var flwrsCnt = getFollowersForPoet(pt).length;
+    var flwBtnHtml = buildFollowActionBtnHTML(pt.name, pt.id, "padding:4px 10px; font-size:11.5px; border-radius:99px;");
+    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><div style=\"display:flex; justify-content:space-between; align-items:flex-start; gap:6px; flex-wrap:wrap;\"><h3 class=\"person-name\">" + esc(pt.name) + "</h3>" + flwBtnHtml + "</div>" + (pt.occupation ? ("<div class=\"person-role\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span><span class=\"mini-badge\">👥 " + flwrsCnt + " फ़ॉलोअर्स</span>" + vBadgePt + "</div></div></div>";
   }).join("");
 }
 
@@ -3827,19 +4013,65 @@ function renderStructuredBioCard(person, titleText, allowPrivateMobile) {
   return "<div class=\"bio-card\"><h3 class=\"section-title\" style=\"margin:0;\">📜 " + (titleText || "साहित्यिक परिचय") + "</h3><div class=\"bio-grid\">" + items.map(function(it) { return "<div class=\"bio-item " + (it.full ? "full" : "") + "\"><div class=\"bio-ic\">" + it.ic + "</div><div style=\"min-width:0; flex:1;\"><div class=\"bio-lbl\">" + it.lbl + "</div><div class=\"bio-val\">" + it.val + "</div></div></div>"; }).join("") + "</div></div>";
 }
 
+var poetDetailSubView = "poems";
+function setPoetDetailSubView(v, poetName) {
+  poetDetailSubView = v;
+  renderPoetDetail(poetName);
+}
+
 function renderPoetDetail(poetName) {
   var container = document.getElementById("poet-detail-view"); if (!container) return;
   var pt = getAllPoetObjects().find(function(p) { return p.name === poetName; }) || { name: poetName, city: "", bio: "", photo: "" };
   var allPoems = state.poems.filter(function(p) { return p.poet === poetName; });
+  var followersList = getFollowersForPoet(pt);
+  var followingList = getFollowingForPoet(pt);
   var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
   var isOwner = !!(state.currentUser && state.currentUser.email && pt.ownerEmail && state.currentUser.email.toLowerCase().trim() === pt.ownerEmail.toLowerCase().trim());
   var canSeePrivate = isOwner || !!state.adminUnlocked;
+  var flwActionBtn = buildFollowActionBtnHTML(pt.name, pt.id, "padding:8px 15px; font-size:13px; border-radius:99px;");
+
+  var bottomContentHtml = "";
+  if (poetDetailSubView === "followers") {
+    bottomContentHtml = "<h3 class=\"section-title\">👥 फ़ॉलोअर्स (" + followersList.length + ")</h3>" +
+      (followersList.length ? ("<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + followersList.map(function(f) {
+        var fPt = resolvePoetObjByNameOrId(f.followerName, f.followerPoetId);
+        var fName = (fPt && fPt.name) || f.followerName || "रचनाकार";
+        var fId = (fPt && fPt.id) || f.followerPoetId || "";
+        var fAv = (fPt && fPt.photo) ? ("<img src=\"" + fPt.photo + "\">") : esc(initials(fName));
+        return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(fName) + "\'))\"><div class=\"avatar-md\">" + fAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(fName) + "</div><div class=\"person-meta\">" + esc((fPt && fPt.city) || "काव्य चौपाल सदस्य") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(fName, fId, "padding:4px 10px; font-size:11.5px; border-radius:99px;") + "</div></div></div>";
+      }).join("") + "</div>") : "<div class=\"empty-box\">अभी कोई फ़ॉलोअर नहीं है। पहले फ़ॉलोअर बनें!</div>");
+  } else if (poetDetailSubView === "following") {
+    bottomContentHtml = "<h3 class=\"section-title\">✨ फ़ॉलोइंग (" + followingList.length + ")</h3>" +
+      (followingList.length ? ("<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + followingList.map(function(f) {
+        var tPt = resolvePoetObjByNameOrId(f.targetPoetName, f.targetPoetId);
+        var tName = (tPt && tPt.name) || f.targetPoetName || "रचनाकार";
+        var tId = (tPt && tPt.id) || f.targetPoetId || "";
+        var tAv = (tPt && tPt.photo) ? ("<img src=\"" + tPt.photo + "\">") : esc(initials(tName));
+        return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(tName) + "\'))\"><div class=\"avatar-md\">" + tAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(tName) + "</div><div class=\"person-meta\">" + esc((tPt && tPt.city) || "काव्य चौपाल रचनाकार") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(tName, tId, "padding:4px 10px; font-size:11.5px; border-radius:99px;") + "</div></div></div>";
+      }).join("") + "</div>") : "<div class=\"empty-box\">अभी किसी को फ़ॉलो नहीं किया गया है।</div>");
+  } else {
+    bottomContentHtml = "<h3 class=\"section-title\">✦ इनकी रचनाएँ (" + allPoems.length + ")</h3>" +
+      "<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>";
+  }
+
   container.innerHTML =
     "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
-    "<div class=\"profile-hero\"><div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div></div></div>" + (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") + "</div>" +
+    "<div class=\"profile-hero\">" +
+      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + "</div></div>" +
+      "<div class=\"corner-stats-grid\">" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'poems\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + allPoems.length + "</div><div class=\"corner-stat-lbl\">रचनाएँ</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'followers\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followersList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोअर्स</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'following\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followingList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोइंग</div></div>" +
+      "</div>" +
+      (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") +
+    "</div>" +
     renderStructuredBioCard(pt, "कवि परिचय", canSeePrivate) +
-    "<h3 class=\"section-title\">✦ इनकी रचनाएँ (" + allPoems.length + ")</h3>" +
-    "<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>";
+    "<div class=\"admin-tabs\" style=\"justify-content:center;\">" +
+      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "poems" ? "active" : "") + "\" onclick=\"setPoetDetailSubView(\'poems\', dec(\'" + arg(pt.name) + "\'))\">📜 रचनाएँ (" + allPoems.length + ")</button>" +
+      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "followers" ? "active" : "") + "\" onclick=\"setPoetDetailSubView(\'followers\', dec(\'" + arg(pt.name) + "\'))\">👥 फ़ॉलोअर्स (" + followersList.length + ")</button>" +
+      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "following" ? "active" : "") + "\" onclick=\"setPoetDetailSubView(\'following\', dec(\'" + arg(pt.name) + "\'))\">✨ फ़ॉलोइंग (" + followingList.length + ")</button>" +
+    "</div>" +
+    bottomContentHtml;
 }
 
 /* ================= MEMBER PERSONAL CORNER (हर सदस्य का निजी कॉर्नर + एडमिन संदेश) ================= */
@@ -3871,6 +4103,9 @@ function renderMyCorner() {
   var myPublishedPoems = prof ? state.poems.filter(function(p) { return p.poet === prof.name || p.ownerEmail === em; }) : state.poems.filter(function(p) { return p.ownerEmail === em; });
   var myPendingPoems = state.pendingPoems.filter(function(p) { return p.ownerEmail === em; });
   var myMessages = state.messages.filter(function(m) { return (m.senderEmail || "").toLowerCase() === em; });
+  var myNetPt = { id: prof ? prof.id : "", name: memberName, ownerEmail: em };
+  var myFollowersList = getFollowersForPoet(myNetPt);
+  var myFollowingList = getFollowingForPoet(myNetPt);
 
   var av = (prof && prof.photo) ? ("<img src=\"" + prof.photo + "\">") : (state.currentUser.photoURL ? ("<img src=\"" + esc(state.currentUser.photoURL) + "\">") : esc(initials(memberName)));
 
@@ -3895,6 +4130,35 @@ function renderMyCorner() {
            ? ("<div style=\"max-width:380px; margin:10px auto; text-align:left;\"><label style=\"font-size:12.5px; font-weight:700; color:var(--primary);\">🔗 यदि एडमिन ने आपकी प्रोफ़ाइल पहले बना दी है तो चुनकर लिंक करें:</label><div style=\"display:flex; gap:6px; margin-top:5px;\"><select id=\"corner-claim-poet-sel\" style=\"flex:1; padding:8px; border-radius:10px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text);\"><option value=\"\">— सूची से अपनी मूल प्रोफ़ाइल चुनें —</option>" + unlinkedInCorner.map(function(x) { return "<option value=\"" + esc(x.id) + "\">" + esc(x.name) + (x.city ? (" (" + esc(x.city) + ")") : "") + "</option>"; }).join("") + "</select><button class=\"btn-approve\" onclick=\"linkUserToExistingPoetProfile('corner-claim-poet-sel')\">लिंक करें</button></div></div>")
            : "") +
          "<button class=\"action-btn primary\" style=\"margin-top:8px;\" onclick=\"openSubmitModal('poet')\">✒️ नई प्रोफ़ाइल बनाएँ</button></div>");
+  } else if (state.cornerSubTab === "network") {
+    var followersCards = myFollowersList.length ? ("<div class=\"cards-grid two-col\" style=\"margin-bottom:14px;\">" + myFollowersList.map(function(f) {
+      var fPt = resolvePoetObjByNameOrId(f.followerName, f.followerPoetId);
+      var fName = (fPt && fPt.name) || f.followerName || "रचनाकार";
+      var fId = (fPt && fPt.id) || f.followerPoetId || "";
+      var fAv = (fPt && fPt.photo) ? ("<img src=\"" + fPt.photo + "\">") : esc(initials(fName));
+      return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(fName) + "\'))\"><div class=\"avatar-md\">" + fAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(fName) + "</div><div class=\"person-meta\">" + esc((fPt && fPt.city) || "काव्य चौपाल सदस्य") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(fName, fId, "padding:5px 11px; font-size:12px; border-radius:99px;") + "</div></div></div>";
+    }).join("") + "</div>") : "<div class=\"empty-box\" style=\"margin-bottom:14px;\">अभी आपको किसी ने फ़ॉलो नहीं किया है।</div>";
+
+    var followingCards = myFollowingList.length ? ("<div class=\"cards-grid two-col\" style=\"margin-bottom:14px;\">" + myFollowingList.map(function(f) {
+      var tPt = resolvePoetObjByNameOrId(f.targetPoetName, f.targetPoetId);
+      var tName = (tPt && tPt.name) || f.targetPoetName || "रचनाकार";
+      var tId = (tPt && tPt.id) || f.targetPoetId || "";
+      var tAv = (tPt && tPt.photo) ? ("<img src=\"" + tPt.photo + "\">") : esc(initials(tName));
+      return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(tName) + "\'))\"><div class=\"avatar-md\">" + tAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(tName) + "</div><div class=\"person-meta\">" + esc((tPt && tPt.city) || "काव्य चौपाल रचनाकार") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(tName, tId, "padding:5px 11px; font-size:12px; border-radius:99px;") + "</div></div></div>";
+    }).join("") + "</div>") : "<div class=\"empty-box\" style=\"margin-bottom:14px;\">आपने अभी किसी कवि को फ़ॉलो नहीं किया है।</div>";
+
+    var discoverPoets = getAllPoetObjects().filter(function(pt) {
+      var r = getFollowRelationState(pt.name, pt.id);
+      return !r.isSelf && !r.isFollowing;
+    }).slice(0, 6);
+    var discoverHtml = discoverPoets.length ? ("<h3 class=\"section-title\">✨ अन्य रचनाकारों से जुड़ें</h3><div class=\"cards-grid two-col\">" + discoverPoets.map(function(pt) {
+      var pAv = pt.photo ? ("<img src=\"" + pt.photo + "\">") : esc(initials(pt.name));
+      return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + pAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(pt.name) + "</div><div class=\"person-meta\">📍 " + esc(pt.city || "भारत") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(pt.name, pt.id, "padding:5px 11px; font-size:12px; border-radius:99px;") + "</div></div></div>";
+    }).join("") + "</div>") : "";
+
+    subHtml = "<h3 class=\"section-title\">👥 मुझे फ़ॉलो करने वाले कवि/सदस्य (" + myFollowersList.length + ")</h3>" + followersCards +
+      "<h3 class=\"section-title\">✨ जिन्हें मैं फ़ॉलो कर रहा हूँ (" + myFollowingList.length + ")</h3>" + followingCards +
+      discoverHtml;
   } else {
     subHtml =
       "<div class=\"form-box\">" +
@@ -3929,10 +4193,11 @@ function renderMyCorner() {
           "<div style=\"font-size:11.5px; color:rgba(255,248,234,0.78); margin-top:3px;\">✉️ " + esc(em) + "</div>" +
         "</div>" +
       "</div>" +
-      "<div class=\"corner-stats-grid\">" +
-        "<div class=\"corner-stat-box\"><div class=\"corner-stat-num\">" + myPublishedPoems.length + "</div><div class=\"corner-stat-lbl\">प्रकाशित रचनाएँ</div></div>" +
-        "<div class=\"corner-stat-box\"><div class=\"corner-stat-num\">" + myPendingPoems.length + "</div><div class=\"corner-stat-lbl\">समीक्षाधीन</div></div>" +
-        "<div class=\"corner-stat-box\"><div class=\"corner-stat-num\">" + myMessages.length + "</div><div class=\"corner-stat-lbl\">एडमिन संवाद</div></div>" +
+      "<div class=\"corner-stats-grid\" style=\"grid-template-columns:repeat(4, 1fr);\">" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setCornerSubTab(\'poems\')\"><div class=\"corner-stat-num\">" + myPublishedPoems.length + "</div><div class=\"corner-stat-lbl\">रचनाएँ</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setCornerSubTab(\'network\')\"><div class=\"corner-stat-num\">" + myFollowersList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोअर्स</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setCornerSubTab(\'network\')\"><div class=\"corner-stat-num\">" + myFollowingList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोइंग</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setCornerSubTab(\'messages\')\"><div class=\"corner-stat-num\">" + myMessages.length + "</div><div class=\"corner-stat-lbl\">संवाद</div></div>" +
       "</div>" +
       "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
         "<button class=\"action-btn gold\" style=\"padding:8px 13px; font-size:12.5px;\" onclick=\"openSubmitModal(\'poem\')\">✍️ नई रचना पोस्ट करें</button>" +
@@ -3941,8 +4206,9 @@ function renderMyCorner() {
     "</div>" +
     "<div class=\"admin-tabs\" style=\"justify-content:center;\">" +
       "<button class=\"admin-tab-btn " + (state.cornerSubTab === "poems" ? "active" : "") + "\" onclick=\"setCornerSubTab(\'poems\')\">📜 मेरी रचनाएँ</button>" +
+      "<button class=\"admin-tab-btn " + (state.cornerSubTab === "network" ? "active" : "") + "\" onclick=\"setCornerSubTab(\'network\')\">🤝 फ़ॉलो व फ़ॉलोबैक (" + myFollowersList.length + ")</button>" +
       "<button class=\"admin-tab-btn " + (state.cornerSubTab === "bio" ? "active" : "") + "\" onclick=\"setCornerSubTab(\'bio\')\">👤 मेरा विवरण</button>" +
-      "<button class=\"admin-tab-btn " + (state.cornerSubTab === "messages" ? "active" : "") + "\" onclick=\"setCornerSubTab(\'messages\')\">✉️ एडमिन को संदेश</button>" +
+      "<button class=\"admin-tab-btn " + (state.cornerSubTab === "messages" ? "active" : "") + "\" onclick=\"setCornerSubTab(\'messages\')\">✉️ संदेश</button>" +
     "</div>" +
     subHtml;
 }
@@ -4435,7 +4701,7 @@ function openReader(poemId) {
         (!isViewsHiddenForPoetName(p.poet) ? ("<span id=\"reader-views-badge\" class=\"mood-tag\">👁️ " + Number(p.views || 0) + " बार देखा गया</span>") : "") +
       "</div>" +
       "<h2 class=\"reader-poem-title\">" + esc(p.title) + "</h2>" +
-      "<button class=\"reader-poet-btn\" onclick=\"openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</button>" +
+      "<div style=\"display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px;\"><button class=\"reader-poet-btn\" style=\"margin-bottom:0;\" onclick=\"openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</button>" + buildFollowActionBtnHTML(p.poet, "", "padding:5px 12px; font-size:12px; border-radius:99px;") + "</div>" +
       (p.bhavImage ? ("<div><img class=\"reader-bhav-img\" src=\"" + p.bhavImage + "\" alt=\"स्वतः निर्मित भाव चित्र\" /><div style=\"margin-bottom:10px;\"><a class=\"sm-btn\" href=\"" + p.bhavImage + "\" download=\"bhav-chitra-" + p.id + ".jpg\">⬇️ भाव चित्र डाउनलोड करें</a></div></div>") : "") +
       "<div id=\"reader-poem-text\" class=\"reader-text\" style=\"font-size:" + state.readerFontSize + "px;\">" + esc(p.content) + "</div>" +
     "</div>" +
