@@ -5411,17 +5411,29 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
     pc.ontrack = function(ev) {
       var targetEntry = chaupalSocialState.remoteStreamsMap[pEm];
       var ms = (targetEntry && targetEntry.stream) ? targetEntry.stream : new MediaStream();
-      if (ev.streams && ev.streams[0]) {
-        ev.streams[0].getTracks().forEach(function(t) {
-          if (ms.getTracks().indexOf(t) === -1) ms.addTrack(t);
-        });
-      } else if (ev.track) {
-        if (ms.getTracks().indexOf(ev.track) === -1) ms.addTrack(ev.track);
+      var attachTrackToStream = function(t) {
+        if (!t) return;
+        t.enabled = true;
+        if (ms.getTracks().indexOf(t) === -1) {
+          try { ms.addTrack(t); } catch (e) {}
+        }
+        t.onunmute = function() {
+          t.enabled = true;
+          attachMediaToDom();
+        };
+      };
+      if (ev.streams && ev.streams[0] && ev.streams[0].getTracks) {
+        ev.streams[0].getTracks().forEach(attachTrackToStream);
+      }
+      if (ev.track) {
+        attachTrackToStream(ev.track);
       }
       chaupalSocialState.remoteStreamsMap[pEm] = { stream: ms, name: peerName || pEm };
       chaupalSocialState.peerStatusMap[pEm] = "connected";
       stopOutgoingRingTone();
       attachMediaToDom();
+      setTimeout(attachMediaToDom, 250);
+      setTimeout(attachMediaToDom, 800);
     };
 
     pc.oniceconnectionstatechange = function() {
@@ -5548,24 +5560,44 @@ function attachMediaToDom() {
     var el = document.getElementById(safeId);
     var st = remMap[emKey] && remMap[emKey].stream;
     if (el && st && st.getTracks && st.getTracks().length > 0) {
+      st.getTracks().forEach(function(tr) { tr.enabled = true; });
       if (el.srcObject !== st) {
         el.srcObject = st;
-        el.muted = false;
-        el.volume = 1.0;
-        try {
-          var p = el.play();
-          if (p && p.catch) {
-            p.catch(function() {
-              el.muted = true;
-              el.play().then(function() { el.muted = false; }).catch(function() {});
-            });
-          }
-        } catch (e) {}
-      } else if (el.paused) {
-        try { el.play().catch(function() {}); } catch (e) {}
       }
+      el.muted = false;
+      el.volume = 1.0;
+      try {
+        var p = el.play();
+        if (p && p.catch) {
+          p.catch(function() {
+            el.muted = true;
+            el.play().then(function() {
+              setTimeout(function() { el.muted = false; }, 120);
+            }).catch(function() {});
+          });
+        }
+      } catch (e) {}
     }
   });
+}
+
+function forceRefreshRemoteMedia() {
+  var remMap = chaupalSocialState.remoteStreamsMap || {};
+  Object.keys(remMap).forEach(function(emKey) {
+    var safeId = "soc-rem-vid-" + emKey.replace(/[^a-zA-Z0-9]/g, "_");
+    var el = document.getElementById(safeId);
+    var st = remMap[emKey] && remMap[emKey].stream;
+    if (el && st) {
+      st.getTracks().forEach(function(tr) { tr.enabled = true; });
+      el.srcObject = null;
+      el.srcObject = st;
+      el.muted = false;
+      el.volume = 1.0;
+      try { el.play().catch(function() {}); } catch (e) {}
+    }
+  });
+  attachMediaToDom();
+  showToast("ऑडियो व वीडियो स्ट्रीम रीफ्रेश की गई 🔊");
 }
 
 function applyVideoSenderBitrateCap(pc) {
@@ -6055,6 +6087,10 @@ function subscribeToActiveCallDoc(callId, isCaller) {
 
       var offerTs = Number(sig.offerTs || sig.updatedAt || 1);
       if (sig.toEmail === myEm && sig.offer && chaupalSocialState.lastAppliedOfferTs[lk] !== offerTs) {
+        if (pc.signalingState === "have-local-offer" && myEm < otherEm) {
+          // Glare resolution: lexicographically smaller email keeps local offer
+          return;
+        }
         if (pc.signalingState !== "stable" && pc.signalingState !== "have-remote-offer") return;
         chaupalSocialState.lastAppliedOfferTs[lk] = offerTs;
         pc.setRemoteDescription(new RTCSessionDescription(sig.offer)).then(function() {
@@ -6707,6 +6743,7 @@ function renderChaupalSocial() {
         "<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
           "<button type=\"button\" class=\"sm-btn\" onclick=\"toggleCallMute()\">" + (chaupalSocialState.isMuted ? "🔇 माइक बंद (चालू करें)" : "🎤 माइक चालू") + "</button>" +
           (cs.type === "video" ? ("<button type=\"button\" class=\"sm-btn\" onclick=\"toggleCallCamera()\">" + (chaupalSocialState.isCamOff ? "📷 कैमरा बंद (चालू करें)" : "📹 कैमरा चालू") + "</button>") : "") +
+          "<button type=\"button\" class=\"sm-btn\" onclick=\"forceRefreshRemoteMedia()\">🔊 ऑडियो/वीडियो रीफ्रेश</button>" +
         "</div>" +
         (chaupalSocialState.conferenceMode
           ? ("<div class=\"conf-grid\">" +
