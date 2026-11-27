@@ -13,7 +13,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
   <style>
     :root {
       --bg: #FBF5E8;
@@ -220,26 +219,6 @@
     }
     @keyframes loadBar { from { width: 0%; } to { width: 100%; } }
     @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
-
-    /* ================= REFINED LITERARY FINISH ================= */
-    .app-main { padding-top: 18px; }
-    .poem-card, .ebook-card, .event-card, .video-card, .person-card, .notif-card {
-      transition: transform .2s ease, box-shadow .22s ease, border-color .22s ease;
-    }
-    @media (hover:hover) {
-      .poem-card:hover, .ebook-card:hover, .event-card:hover, .video-card:hover, .person-card:hover {
-        transform: translateY(-2px); border-color: var(--gold); box-shadow: var(--shadow-strong);
-      }
-    }
-    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
-      outline: 3px solid var(--gold); outline-offset: 3px;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: .01ms !important; animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important; transition-duration: .01ms !important;
-      }
-    }
 
     /* ================= HEADER ================= */
     .app-header {
@@ -4887,11 +4866,8 @@ function openPdfReader(id) {
       loadingTask.promise.then(function(pdfDoc) {
         currentPdfDoc = pdfDoc;
         renderSingleBookPage(1, null);
-      }).catch(function(err) {
-        var directUrl = (typeof sourceArg === "string") ? sourceArg : (sourceArg && sourceArg.url) || "";
-        var openLink = directUrl ? '<div style="margin-top:12px"><a class="action-btn primary" target="_blank" rel="noopener" href="' + esc(directUrl) + '">🌐 ब्राउज़र में PDF खोलें</a></div>' : "";
-        pagesWrap.innerHTML = '<div class="empty-box">इन-ऐप PDF रीडर इसे नहीं खोल पाया। सार्वजनिक लिंक होने पर ब्राउज़र में खोलें या डाउनलोड करें.' + openLink +
-          '<div style="font-size:11px;opacity:.72;margin-top:8px">निजी/अनुमति-सीमित लिंक के लिए सार्वजनिक PDF लिंक आवश्यक है.</div></div>';
+      }).catch(function() {
+        pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल पढ़ी नहीं जा सकी। कृपया दूसरी PDF फ़ाइल चुनें या डाउनलोड करें।</div>";
       });
     };
 
@@ -4911,10 +4887,9 @@ function openPdfReader(id) {
     } else if (b.pdfData) {
       setupDownloadLink(b.pdfData);
       loadWithPdfJs(b.pdfData);
-    } else if (b.pdfUrl || b.link) {
-      var savedPdfUrl = b.pdfUrl || b.link;
-      setupDownloadLink(savedPdfUrl);
-      loadWithPdfJs({ url: savedPdfUrl, withCredentials: false });
+    } else if (b.link) {
+      setupDownloadLink(b.link);
+      loadWithPdfJs(b.link);
     } else {
       pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इसी डिवाइस में अपलोड की गई थी। कृपया इसे इसी डिवाइस से खोलें या वेब/ड्राइव लिंक जोड़ें।</div>";
     }
@@ -4963,10 +4938,34 @@ var chaupalSocialState = {
 };
 
 var RTC_ICE_CONFIG = {
+  iceCandidatePoolSize: 10,
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun2.l.google.com:19302" }
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
+    { urls: "stun:stun.relay.metered.ca:80" },
+    {
+      urls: "turn:global.relay.metered.ca:80",
+      username: "e8dd65b92f62d3e365b807c9",
+      credential: "3k/8+x+5+2+8+9"
+    },
+    {
+      urls: "turn:global.relay.metered.ca:80?transport=tcp",
+      username: "e8dd65b92f62d3e365b807c9",
+      credential: "3k/8+x+5+2+8+9"
+    },
+    {
+      urls: "turn:global.relay.metered.ca:443",
+      username: "e8dd65b92f62d3e365b807c9",
+      credential: "3k/8+x+5+2+8+9"
+    },
+    {
+      urls: "turns:global.relay.metered.ca:443?transport=tcp",
+      username: "e8dd65b92f62d3e365b807c9",
+      credential: "3k/8+x+5+2+8+9"
+    }
   ]
 };
 
@@ -5386,11 +5385,6 @@ function renderGlobalIncomingCallOverlay() {
     "</div>";
 }
 
-function getCallDocRef(callId) {
-  if (!db || !callId) return null;
-  return db.collection(ROOT_COL).doc("social_calls").collection("items").doc(callId);
-}
-
 function getLegKey(emailA, emailB) {
   return [String(emailA || "").toLowerCase().trim(), String(emailB || "").toLowerCase().trim()].sort().join("__");
 }
@@ -5577,14 +5571,18 @@ function attachMediaToDom() {
 function applyVideoSenderBitrateCap(pc) {
   if (!pc || !pc.getSenders) return;
   var net = chaupalSocialState.networkMode || "auto";
-  var maxBitrate = (net === "uhd") ? 1200000 : 450000;
+  var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  var isSlowNet = conn && (conn.saveData || conn.effectiveType === "slow-2g" || conn.effectiveType === "2g" || conn.effectiveType === "3g");
+  var maxBitrate = (net === "uhd" && !isSlowNet) ? 1100000 : ((net === "low_data" || isSlowNet) ? 160000 : 350000);
+  var maxFps = (net === "uhd" && !isSlowNet) ? 24 : ((net === "low_data" || isSlowNet) ? 12 : 16);
   try {
     pc.getSenders().forEach(function(sender) {
       if (sender && sender.track && sender.track.kind === "video" && sender.getParameters && sender.setParameters) {
         var params = sender.getParameters();
         if (!params.encodings || !params.encodings.length) params.encodings = [{}];
         params.encodings[0].maxBitrate = maxBitrate;
-        params.encodings[0].maxFramerate = (net === "uhd") ? 24 : 18;
+        params.encodings[0].maxFramerate = maxFps;
+        params.degradationPreference = "maintain-framerate";
         sender.setParameters(params).catch(function() {});
       }
     });
@@ -5596,11 +5594,17 @@ function acquireCallMediaStream(modeType) {
     return Promise.resolve(null);
   }
   var net = chaupalSocialState.networkMode || "auto";
+  var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  var isSlowNet = conn && (conn.saveData || conn.effectiveType === "slow-2g" || conn.effectiveType === "2g" || conn.effectiveType === "3g");
   var videoConstraint = false;
-  if (modeType === "video" && net !== "low_data") {
-    videoConstraint = (net === "uhd")
-      ? { width: { ideal: 960, max: 1280 }, height: { ideal: 540, max: 720 }, frameRate: { ideal: 24, max: 24 }, facingMode: "user" }
-      : { width: { ideal: 480, max: 640 }, height: { ideal: 360, max: 480 }, frameRate: { ideal: 15, max: 20 }, facingMode: "user" };
+  if (modeType === "video") {
+    if (net === "uhd" && !isSlowNet) {
+      videoConstraint = { width: { ideal: 960, max: 1280 }, height: { ideal: 540, max: 720 }, frameRate: { ideal: 24, max: 24 }, facingMode: "user" };
+    } else if (net === "low_data" || isSlowNet) {
+      videoConstraint = { width: { ideal: 320, max: 426 }, height: { ideal: 240, max: 240 }, frameRate: { ideal: 12, max: 15 }, facingMode: "user" };
+    } else {
+      videoConstraint = { width: { ideal: 480, max: 640 }, height: { ideal: 360, max: 480 }, frameRate: { ideal: 15, max: 20 }, facingMode: "user" };
+    }
   }
   var constraints = {
     audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -5608,11 +5612,11 @@ function acquireCallMediaStream(modeType) {
   };
   return navigator.mediaDevices.getUserMedia(constraints).catch(function() {
     if (constraints.video) {
-      return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: "user" } }).catch(function() {
+      return navigator.mediaDevices.getUserMedia({ audio: true, video: { facingMode: "user" } }).catch(function() {
         return navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(function() { return null; });
       });
     }
-    return null;
+    return navigator.mediaDevices.getUserMedia({ audio: true, video: false }).catch(function() { return null; });
   });
 }
 
@@ -5814,7 +5818,7 @@ function listenForIncomingCalls(myEmail) {
         stopIncomingRingTone();
         renderGlobalIncomingCallOverlay();
         if (state.activeTab === "social") renderChaupalSocial();
-      } else if (state.activeTab === "social" && chaupalSocialState.subTab === "call") {
+      } else if (state.activeTab === "social" && chaupalSocialState.subTab === "call" && !chaupalSocialState.activeCallSession) {
         renderChaupalSocial();
       }
     }, function() {});
@@ -5870,42 +5874,6 @@ function cleanupWebRtcCall(keepCallDocAlive) {
   chaupalSocialState.isCamOff = false;
   chaupalSocialState.isLiveActive = false;
   renderGlobalActiveCallBanner();
-}
-
-function leaveConferenceCall() {
-  var callId = chaupalSocialState.activeCallDocId;
-  var me = getCurrentMemberIdentity();
-  if (!callId || !me) {
-    cleanupWebRtcCall(true);
-    renderChaupalSocial();
-    return;
-  }
-  var ref = getCallDocRef(callId);
-  var curParts = (chaupalSocialState.activeCallSession && Array.isArray(chaupalSocialState.activeCallSession.participants))
-    ? chaupalSocialState.activeCallSession.participants.slice()
-    : [];
-  var updatedParts = curParts.map(function(p) {
-    if ((p.email || "").toLowerCase().trim() === me.email) {
-      return Object.assign({}, p, { status: "left", leftAt: Date.now() });
-    }
-    return p;
-  });
-  var remainingActive = updatedParts.filter(function(p) {
-    return p.status === "connected" || p.status === "accepted";
-  });
-
-  if (ref) {
-    if (remainingActive.length === 0) {
-      ref.set({ participants: updatedParts, status: "ended", endedAt: Date.now() }, { merge: true }).catch(function() {});
-    } else {
-      ref.set({ participants: updatedParts }, { merge: true }).catch(function() {});
-    }
-  }
-  cleanupWebRtcCall(true);
-  chaupalSocialState.subTab = "call";
-  switchTab("social");
-  renderChaupalSocial();
-  showToast("आप कॉल से बाहर आ गए — अन्य सदस्यों की कॉल जारी है");
 }
 
 function rejoinConferenceCall(callId, silentAuto) {
@@ -6017,6 +5985,8 @@ function subscribeToActiveCallDoc(callId, isCaller) {
     var me = getCurrentMemberIdentity();
     var myEm = (me && me.email) || "";
     var parts = Array.isArray(data.participants) ? data.participants : [];
+    var meshSig = data.meshSignals || {};
+
     var prevPartsSig = chaupalSocialState.activeCallSession
       ? JSON.stringify((chaupalSocialState.activeCallSession.participants || []).map(function(x) { return x.email + ":" + x.status; }))
       : "";
@@ -6028,7 +5998,6 @@ function subscribeToActiveCallDoc(callId, isCaller) {
     }
 
     var pMap = chaupalSocialState.peerStatusMap || {};
-    var meshSig = data.meshSignals || {};
     var activeCount = 0;
     parts.forEach(function(p) {
       var pEm = (p.email || "").toLowerCase().trim();
@@ -6039,20 +6008,25 @@ function subscribeToActiveCallDoc(callId, isCaller) {
         if (p.status === "left" || p.status === "declined" || p.status === "ended") {
           closeSinglePeerConnection(pEm);
         } else if (p.status === "accepted" || p.status === "connected") {
-          var shouldOffer = !!isCaller && (!meshSig[getLegKey(myEm, pEm)] || !meshSig[getLegKey(myEm, pEm)].offer);
-          var peerPc = ensureMeshPeerConnection(callId, pEm, p.name || pEm, isCaller ? "caller" : "callee", shouldOffer);
+          var lkCheck = getLegKey(myEm, pEm);
+          var existingSig = meshSig[lkCheck];
+          var isInitiator = !!isCaller || ((data.callerEmail || "").toLowerCase().trim() === myEm);
+          var shouldOffer = isInitiator && (!existingSig || !existingSig.offer);
+          var peerPc = ensureMeshPeerConnection(callId, pEm, p.name || pEm, isInitiator ? "caller" : "callee", shouldOffer);
           if (peerPc && chaupalSocialState.localStream && peerPc.getSenders && peerPc.getSenders().length === 0 && peerPc.signalingState === "stable") {
             chaupalSocialState.localStream.getTracks().forEach(function(tr) {
               try { peerPc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
             });
-            peerPc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(function(off) {
-              return peerPc.setLocalDescription(off).then(function() {
-                var lkNow = getLegKey(myEm, pEm);
-                var up = {};
-                up[lkNow] = { fromEmail: myEm, toEmail: pEm, offer: { type: off.type, sdp: off.sdp }, offerTs: Date.now() };
-                return ref.set({ meshSignals: up }, { merge: true });
-              });
-            }).catch(function() {});
+            applyVideoSenderBitrateCap(peerPc);
+            if (isInitiator) {
+              peerPc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(function(off) {
+                return peerPc.setLocalDescription(off).then(function() {
+                  var up = {};
+                  up[lkCheck] = { fromEmail: myEm, toEmail: pEm, offer: { type: off.type, sdp: off.sdp }, offerTs: Date.now() };
+                  return ref.set({ meshSignals: up }, { merge: true });
+                });
+              }).catch(function() {});
+            }
           }
         }
       }
@@ -6084,6 +6058,16 @@ function subscribeToActiveCallDoc(callId, isCaller) {
         if (pc.signalingState !== "stable" && pc.signalingState !== "have-remote-offer") return;
         chaupalSocialState.lastAppliedOfferTs[lk] = offerTs;
         pc.setRemoteDescription(new RTCSessionDescription(sig.offer)).then(function() {
+          if (chaupalSocialState.localStream && pc.getSenders) {
+            var senders = pc.getSenders();
+            chaupalSocialState.localStream.getTracks().forEach(function(tr) {
+              var hasTr = senders.some(function(s) { return s.track && s.track.id === tr.id; });
+              if (!hasTr) {
+                try { pc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
+              }
+            });
+            applyVideoSenderBitrateCap(pc);
+          }
           flushQueuedIceCandidates(otherEm, pc);
           return pc.createAnswer();
         }).then(function(ans) {
@@ -6095,6 +6079,10 @@ function subscribeToActiveCallDoc(callId, isCaller) {
             });
             return ref.set({ meshSignals: ansUpdate }, { merge: true });
           });
+        }).then(function() {
+          pMap[otherEm] = "connected";
+          stopOutgoingRingTone();
+          attachMediaToDom();
         }).catch(function() {
           chaupalSocialState.lastAppliedOfferTs[lk] = 0;
         });
@@ -6133,18 +6121,18 @@ function subscribeToActiveCallDoc(callId, isCaller) {
     var prevStatus = chaupalSocialState._lastRenderedCallStatus || "";
     var nextStatus = (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallSession.status) || data.status || "";
     var isCallScreenOpen = (state.activeTab === "social" && chaupalSocialState.subTab === "call");
-    if (!isCallScreenOpen && (prevPartsSig !== nextPartsSig || prevStatus !== nextStatus)) {
+    if (prevPartsSig !== nextPartsSig || prevStatus !== nextStatus) {
       chaupalSocialState._lastRenderedCallStatus = nextStatus;
-      renderChaupalSocial();
-    } else if (isCallScreenOpen && (prevPartsSig !== nextPartsSig || prevStatus !== nextStatus)) {
-      chaupalSocialState._lastRenderedCallStatus = nextStatus;
-      updateCallParticipantsStatusDomOnly();
+      if (isCallScreenOpen) {
+        renderChaupalSocial();
+      }
     }
-    setTimeout(attachMediaToDom, 80);
+    setTimeout(attachMediaToDom, 60);
 
     if (data.status === "ended") {
       cleanupWebRtcCall(true);
       renderChaupalSocial();
+      showToast("कॉल सत्र समाप्त हुआ");
     }
   }, function() {});
 }
@@ -6192,7 +6180,7 @@ function inviteMemberToActiveCall(targetEmailArg, targetNameArg) {
     callId,
     tEmail
   );
-  ensureMeshPeerConnection(callId, tEmail, tName, "caller", myEm < tEmail);
+  ensureMeshPeerConnection(callId, tEmail, tName, "caller", true);
   renderChaupalSocial();
   setTimeout(attachMediaToDom, 60);
   showToast(tName + " को कॉल में जोड़ा जा रहा है...");
@@ -6235,53 +6223,115 @@ function leaveConferenceCall() {
 }
 
 function toggleCallMute() {
+  if (!chaupalSocialState.activeCallSession) return;
   chaupalSocialState.isMuted = !chaupalSocialState.isMuted;
   var muted = chaupalSocialState.isMuted;
-  if (chaupalSocialState.localStream && chaupalSocialState.localStream.getAudioTracks) {
-    chaupalSocialState.localStream.getAudioTracks().forEach(function(tr) {
-      tr.enabled = !muted;
-    });
-  }
-  if (chaupalSocialState.peerConnectionsMap) {
-    Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
-      var pc = chaupalSocialState.peerConnectionsMap[k];
-      if (pc && pc.getSenders) {
-        pc.getSenders().forEach(function(s) {
-          if (s && s.track && s.track.kind === "audio") {
-            s.track.enabled = !muted;
+
+  var applyAudioState = function(stream) {
+    if (stream && stream.getAudioTracks) {
+      stream.getAudioTracks().forEach(function(tr) {
+        tr.enabled = !muted;
+      });
+    }
+    if (chaupalSocialState.peerConnectionsMap) {
+      Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+        var pc = chaupalSocialState.peerConnectionsMap[k];
+        if (pc && pc.getSenders) {
+          pc.getSenders().forEach(function(s) {
+            if (s && s.track && s.track.kind === "audio") {
+              s.track.enabled = !muted;
+            }
+          });
+        }
+      });
+    }
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    setTimeout(attachMediaToDom, 40);
+    showToast(muted ? "🔇 माइक बंद किया गया" : "🎤 माइक चालू किया गया");
+  };
+
+  if (!chaupalSocialState.localStream || !chaupalSocialState.localStream.getAudioTracks().length) {
+    if (!muted && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(audSt) {
+        if (!chaupalSocialState.localStream) chaupalSocialState.localStream = new MediaStream();
+        audSt.getAudioTracks().forEach(function(tr) {
+          chaupalSocialState.localStream.addTrack(tr);
+          if (chaupalSocialState.peerConnectionsMap) {
+            Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+              var pc = chaupalSocialState.peerConnectionsMap[k];
+              if (pc) {
+                try { pc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
+              }
+            });
           }
         });
-      }
-    });
+        applyAudioState(chaupalSocialState.localStream);
+      }).catch(function() {
+        showToast("माइक अनुमति नहीं मिल सकी");
+      });
+      return;
+    }
   }
-  if (typeof renderChaupalSocial === "function") renderChaupalSocial();
-  setTimeout(attachMediaToDom, 40);
-  showToast(muted ? "🔇 माइक बंद किया गया" : "🎤 माइक चालू किया गया");
+  applyAudioState(chaupalSocialState.localStream);
 }
 
 function toggleCallCamera() {
+  if (!chaupalSocialState.activeCallSession) return;
   chaupalSocialState.isCamOff = !chaupalSocialState.isCamOff;
   var camOff = chaupalSocialState.isCamOff;
-  if (chaupalSocialState.localStream && chaupalSocialState.localStream.getVideoTracks) {
-    chaupalSocialState.localStream.getVideoTracks().forEach(function(tr) {
-      tr.enabled = !camOff;
+
+  var applyVideoState = function(stream) {
+    if (stream && stream.getVideoTracks) {
+      stream.getVideoTracks().forEach(function(tr) {
+        tr.enabled = !camOff;
+      });
+    }
+    if (chaupalSocialState.peerConnectionsMap) {
+      Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+        var pc = chaupalSocialState.peerConnectionsMap[k];
+        if (pc && pc.getSenders) {
+          pc.getSenders().forEach(function(s) {
+            if (s && s.track && s.track.kind === "video") {
+              s.track.enabled = !camOff;
+            }
+          });
+        }
+      });
+    }
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    setTimeout(attachMediaToDom, 40);
+    showToast(camOff ? "📷 कैमरा बंद किया गया" : "📹 कैमरा चालू किया गया");
+  };
+
+  var hasVideoTrack = chaupalSocialState.localStream && chaupalSocialState.localStream.getVideoTracks && chaupalSocialState.localStream.getVideoTracks().length > 0;
+  if (!hasVideoTrack && !camOff && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 480, max: 640 }, height: { ideal: 360, max: 480 }, frameRate: { ideal: 15, max: 20 }, facingMode: "user" }, audio: false }).then(function(vidSt) {
+      if (!chaupalSocialState.localStream) chaupalSocialState.localStream = new MediaStream();
+      vidSt.getVideoTracks().forEach(function(tr) {
+        chaupalSocialState.localStream.addTrack(tr);
+        if (chaupalSocialState.peerConnectionsMap) {
+          Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+            var pc = chaupalSocialState.peerConnectionsMap[k];
+            if (pc) {
+              var vidSender = pc.getSenders ? pc.getSenders().find(function(s) { return s.track && s.track.kind === "video"; }) : null;
+              if (vidSender && vidSender.replaceTrack) {
+                vidSender.replaceTrack(tr).catch(function() {});
+              } else {
+                try { pc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
+              }
+            }
+          });
+        }
+      });
+      applyVideoState(chaupalSocialState.localStream);
+    }).catch(function() {
+      chaupalSocialState.isCamOff = true;
+      showToast("कैमरा अनुमति नहीं मिल सकी");
+      if (typeof renderChaupalSocial === "function") renderChaupalSocial();
     });
+    return;
   }
-  if (chaupalSocialState.peerConnectionsMap) {
-    Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
-      var pc = chaupalSocialState.peerConnectionsMap[k];
-      if (pc && pc.getSenders) {
-        pc.getSenders().forEach(function(s) {
-          if (s && s.track && s.track.kind === "video") {
-            s.track.enabled = !camOff;
-          }
-        });
-      }
-    });
-  }
-  if (typeof renderChaupalSocial === "function") renderChaupalSocial();
-  setTimeout(attachMediaToDom, 40);
-  showToast(camOff ? "📷 कैमरा बंद किया गया" : "📹 कैमरा चालू किया गया");
+  applyVideoState(chaupalSocialState.localStream);
 }
 
 function stopChaupalCallSession() {
@@ -6600,7 +6650,7 @@ function renderChaupalSocial() {
     });
 
     var remVideoTilesHtml = "";
-    if (cs.type === "video" && chaupalSocialState.networkMode !== "low_data") {
+    if (cs.type === "video") {
       var tiles = [
         "<div style=\"background:rgba(0,0,0,0.45); border:1.5px solid rgba(252,225,152,0.6); border-radius:14px; padding:6px;\">" +
           "<video id=\"soc-local-video\" autoplay muted playsinline style=\"width:100%; height:150px; object-fit:cover; border-radius:10px; background:#000; display:block;\"></video>" +
@@ -7802,19 +7852,6 @@ function saveCompetitionForm() {
   cloudSaveDoc("competition", "competition", state.competition).then(function() { renderAll(); showToast("प्रतियोगिता अपडेट हुई 🏆"); });
 }
 
-function uploadEbookPdfToCloud(item, fileBlob) {
-  if (!fileBlob || !window.firebase || !firebase.storage || !auth || !auth.currentUser) return Promise.resolve("");
-  try {
-    var storageRef = firebase.storage().ref().child("kavya-chaupal/ebooks/" +
-      String(item.id || "book").replace(/[^a-zA-Z0-9_-]/g, "_") + ".pdf");
-    return storageRef.put(fileBlob, {
-      contentType: "application/pdf",
-      customMetadata: { title: String(item.title || ""), author: String(item.author || "") }
-    }).then(function(snapshot) { return snapshot.ref.getDownloadURL(); })
-      .catch(function(err) { console.warn("PDF Storage upload failed; retaining local PDF.", err); return ""; });
-  } catch (e) { return Promise.resolve(""); }
-}
-
 function saveEbookForm() {
   var title = (document.getElementById("f-eb-title") || { value: "" }).value.trim();
   var author = (document.getElementById("f-eb-author") || { value: "" }).value.trim();
@@ -7824,19 +7861,26 @@ function saveEbookForm() {
   var hasLocalPdf = !!(state.tempEbookPdfBlob || state.tempEbookPdfData);
   if (!title || !author) { showToast("पुस्तक का नाम और लेखक भरें"); return; }
   if (!hasLocalPdf && !link) { showToast("कृपया PDF फ़ाइल चुनें या PDF लिंक दें"); return; }
-
   var id = "eb_" + Date.now();
+  var sizeKb = state.tempEbookPdfSizeKb || 0;
   var item = {
-    id: id, title: title, author: author, category: category, description: description,
-    link: link, pdfUrl: "", hasLocalPdf: hasLocalPdf,
-    pdfSizeKb: state.tempEbookPdfSizeKb || 0, pdfData: state.tempEbookPdfData || "",
+    id: id,
+    title: title,
+    author: author,
+    category: category,
+    description: description,
+    link: link,
+    hasLocalPdf: hasLocalPdf,
+    pdfSizeKb: sizeKb,
+    pdfData: state.tempEbookPdfData || "",
     createdAt: Date.now()
   };
-
-  function persistBook() {
+  var finishSave = function() {
     state.ebooks.unshift(item);
     var cloudItem = Object.assign({}, item);
-    if (!cloudItem.pdfData || cloudItem.pdfData.length > 750000) cloudItem.pdfData = "";
+    if (!cloudItem.pdfData || cloudItem.pdfData.length > 750000) {
+      cloudItem.pdfData = "";
+    }
     cloudSaveDoc("ebooks", id, cloudItem).then(function() {
       state.tempEbookPdfData = "";
       state.tempEbookPdfBlob = null;
@@ -7845,26 +7889,16 @@ function saveEbookForm() {
       pushNotification("पुस्तक लाइब्रेरी में नई पुस्तक जुड़ी 📚", "“" + title + "” — " + author, "info", id, "");
       renderAll();
       renderAdminStudio();
-      showToast(item.pdfUrl ? "PDF क्लाउड लाइब्रेरी में सुरक्षित हुई 📚" :
-        (hasLocalPdf ? "पुस्तक जुड़ी; PDF इस डिवाइस पर सुरक्षित है। साझा करने हेतु Storage अनुमति या सार्वजनिक PDF लिंक चाहिए।" : "PDF पुस्तक लाइब्रेरी में जुड़ गई 📚"));
+      showToast("PDF पुस्तक लाइब्रेरी में जुड़ गई 📚");
     });
-  }
-
-  function saveLocalAndPersist() {
-    if (state.tempEbookPdfBlob) {
-      savePdfToIndexedDb(id, state.tempEbookPdfBlob, state.tempEbookPdfName).then(persistBook);
-    } else if (state.tempEbookPdfData) {
-      savePdfToIndexedDb(id, state.tempEbookPdfData, state.tempEbookPdfName).then(persistBook);
-    } else persistBook();
-  }
-
+  };
   if (state.tempEbookPdfBlob) {
-    showToast("PDF को क्लाउड लाइब्रेरी में सुरक्षित करने का प्रयास…");
-    uploadEbookPdfToCloud(item, state.tempEbookPdfBlob).then(function(downloadUrl) {
-      if (downloadUrl) { item.pdfUrl = downloadUrl; item.link = downloadUrl; }
-      saveLocalAndPersist();
-    });
-  } else saveLocalAndPersist();
+    savePdfToIndexedDb(id, state.tempEbookPdfBlob, state.tempEbookPdfName).then(finishSave);
+  } else if (state.tempEbookPdfData) {
+    savePdfToIndexedDb(id, state.tempEbookPdfData, state.tempEbookPdfName).then(finishSave);
+  } else {
+    finishSave();
+  }
 }
 function deleteEbook(id) { state.ebooks = state.ebooks.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("ebooks", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
