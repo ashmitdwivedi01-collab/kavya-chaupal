@@ -2205,7 +2205,7 @@
     </div>
   </nav>
 
-  <!-- ================= INCOMING CALL RING MODAL (दूसरे यूज़र को कॉल प्राप्त होने हेतु) ================= -->
+  <!-- ================= INCOMING CALL RING MODAL ================= -->
   <div class="modal-overlay" id="incoming-call-modal" style="z-index:480;">
     <div class="modal-sheet" style="max-width:440px; text-align:center;">
       <div class="modal-head">
@@ -2825,10 +2825,6 @@ var state = {
   certDate: new Date().toLocaleDateString("hi-IN", { day: "numeric", month: "long", year: "numeric" }),
   certSign: "राहुल द्विवेदी 'स्मित' (संस्थापक, काव्य चौपाल)",
   socialCalls: [],
-  socialChats: [],
-  socialCallRequests: [],
-  socialPermissions: [],
-  socialGroups: [],
   currentUser: null,
   authMode: "login"
 };
@@ -2850,10 +2846,6 @@ if (cached) {
   if (Array.isArray(cached.messages)) state.messages = cached.messages;
   if (Array.isArray(cached.notifications) && cached.notifications.length) state.notifications = cached.notifications;
   if (Array.isArray(cached.socialCalls)) state.socialCalls = cached.socialCalls;
-  if (Array.isArray(cached.socialChats)) state.socialChats = cached.socialChats;
-  if (Array.isArray(cached.socialCallRequests)) state.socialCallRequests = cached.socialCallRequests;
-  if (Array.isArray(cached.socialPermissions)) state.socialPermissions = cached.socialPermissions;
-  if (Array.isArray(cached.socialGroups) && cached.socialGroups.length) state.socialGroups = cached.socialGroups;
 }
 
 function saveLocalCache() {
@@ -2873,11 +2865,7 @@ function saveLocalCache() {
       follows: state.follows,
       messages: state.messages,
       notifications: state.notifications,
-      socialCalls: state.socialCalls,
-      socialChats: state.socialChats,
-      socialCallRequests: state.socialCallRequests,
-      socialPermissions: state.socialPermissions,
-      socialGroups: state.socialGroups
+      socialCalls: state.socialCalls
     }));
   } catch (e) {}
 }
@@ -2983,10 +2971,6 @@ function initFirebaseSync() {
   syncCollection("messages", "messages", "createdAt");
   syncCollection("notifications", "notifications", "createdAt");
   syncCollection("social_calls", "socialCalls", "createdAt");
-  syncCollection("social_chats", "socialChats", "createdAt");
-  syncCollection("social_call_requests", "socialCallRequests", "createdAt");
-  syncCollection("social_permissions", "socialPermissions", "updatedAt");
-  syncCollection("social_groups", "socialGroups", "createdAt");
 
   rootRef.doc("competition").onSnapshot(function(docSnap) {
     if (docSnap.exists) {
@@ -3931,7 +3915,7 @@ function renderAll() {
   renderAdminsDirectory();
   if (state.activeAdminId) renderAdminDetail(state.activeAdminId);
   renderSocialLinks();
-  if (typeof checkIncomingSocialCalls === "function") checkIncomingSocialCalls();
+  checkIncomingSocialCalls();
 }
 
 /* ================= GRAND ROYAL SPOTLIGHT (आज का विशेष भाव कॉर्नर) ================= */
@@ -5064,7 +5048,6 @@ function checkIncomingSocialCalls() {
     return;
   }
 
-  // Also if our outgoing call was accepted or ended by the other side
   if (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallSession.callId) {
     var curOut = state.socialCalls.find(function(c) { return c.id === chaupalSocialState.activeCallSession.callId; });
     if (curOut && curOut.status === "declined") {
@@ -5100,16 +5083,16 @@ function checkIncomingSocialCalls() {
   if (modal && body) {
     var isAud = incoming.callType === "audio";
     body.innerHTML =
-      "<div style="padding:12px 6px;">" +
-        "<div style="font-size:46px; margin-bottom:8px; animation:pulseGlow 1.5s infinite; display:inline-block; border-radius:50%; padding:8px;">" + (isAud ? "🎙️" : "🎥") + "</div>" +
-        "<div style="font-size:12px; font-weight:700; color:var(--gold); margin-bottom:4px;">" + (isAud ? "इनकमिंग ऑडियो कॉल" : "इनकमिंग वीडियो कॉल") + "</div>" +
-        "<h4 class="font-royal" style="font-size:22px; color:var(--primary); margin:0 0 6px;">" + esc(incoming.fromName || incoming.fromEmail || "रचनाकार") + "</h4>" +
-        "<div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">" + esc(incoming.targetLabel || "चौपाल कॉल") + "</div>" +
-        "<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">" +
-          "<button type="button" class="btn-approve" style="padding:11px 20px; font-size:14px; border-radius:999px;" onclick="acceptIncomingCall(dec('" + arg(incoming.id) + "'))">📞 कॉल उठाएँ (Accept)</button>" +
-          "<button type="button" class="btn-reject" style="padding:11px 18px; font-size:14px; border-radius:999px;" onclick="declineIncomingCall(dec('" + arg(incoming.id) + "'))">✕ काटें (Decline)</button>" +
-        "</div>" +
-      "</div>";
+      '<div style="padding:12px 6px;">' +
+        '<div style="font-size:46px; margin-bottom:8px;">' + (isAud ? "🎙️" : "🎥") + '</div>' +
+        '<div style="font-size:12px; font-weight:700; color:var(--gold); margin-bottom:4px;">' + (isAud ? "इनकमिंग ऑडियो कॉल" : "इनकमिंग वीडियो कॉल") + '</div>' +
+        '<h4 class="font-royal" style="font-size:22px; color:var(--primary); margin:0 0 6px;">' + esc(incoming.fromName || incoming.fromEmail || "रचनाकार") + '</h4>' +
+        '<div style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">' + esc(incoming.targetLabel || "चौपाल कॉल") + '</div>' +
+        '<div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">' +
+          '<button type="button" class="btn-approve" style="padding:11px 20px; font-size:14px; border-radius:999px;" onclick="acceptIncomingCall(dec(\'' + arg(incoming.id) + '\'))">📞 कॉल उठाएँ (Accept)</button>' +
+          '<button type="button" class="btn-reject" style="padding:11px 18px; font-size:14px; border-radius:999px;" onclick="declineIncomingCall(dec(\'' + arg(incoming.id) + '\'))">✕ काटें (Decline)</button>' +
+        '</div>' +
+      '</div>';
     if (!modal.classList.contains("open")) {
       modal.classList.add("open");
       playIncomingRingTone();
@@ -5330,7 +5313,6 @@ function renderChaupalSocial() {
     callStageHtml =
       "<div class=\"call-stage-card\">" +
         "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
-          "<span class=\"mini-badge\">" + (cs.status === "accepted" ? "✅ जुड़ गया" : "🔔 रिंग हो रही है (दूसरे डिवाइस पर सूचना सक्रिय)") + "</span>" +
           "<span class=\"genre-tag\">" + (chaupalSocialState.isLiveActive ? ("🔴 लाइव: " + esc(chaupalSocialState.livePlatform)) : (cs.type === "audio" ? "🎙️ ऑडियो कॉल सक्रिय" : "🎥 कॉन्फ्रेंस वीडियो कक्ष")) + "</span>" +
           "<span style=\"font-size:12px; color:#FCE49C;\">" + esc(netLabel) + "</span>" +
         "</div>" +
