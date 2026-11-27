@@ -263,7 +263,7 @@
     }
     .brand-seal img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .brand-title { font-family: 'Yatra One', serif; font-size: 21px; line-height: 1.05; color: #F7DC8B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-title { font-family: 'Yatra One', serif; font-size: 21px; line-height: 1.05; color: #F7DC8B; white-space: nowrap; overflow: visible; text-overflow: clip; }
     .brand-sub { font-size: 11px; color: rgba(255, 245, 224, 0.82); display: flex; align-items: center; gap: 5px; }
 
     .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; display: inline-block; box-shadow: 0 0 6px #4ADE80; }
@@ -938,11 +938,16 @@
       font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-bottom: 14px;
     }
     .profile-hero {
-      background: radial-gradient(circle at 85% 18%, rgba(246, 218, 134, 0.24), transparent 50%), linear-gradient(135deg, #611019 0%, #36080E 100%);
-      color: #FFF7E8; border-radius: var(--radius-lg); padding: 22px 18px; border: 1.5px solid rgba(243, 212, 126, 0.45);
-      box-shadow: var(--shadow-strong); margin-bottom: 18px;
+      background:
+        radial-gradient(circle at 85% 18%, rgba(252, 226, 154, 0.30), transparent 52%),
+        linear-gradient(145deg, #7B1620 0%, #4A0B12 58%, #26060B 100%) !important;
+      color: #FFF9EC !important;
+      border-radius: var(--radius-lg);
+      padding: 22px 18px;
+      border: 2px solid #F3D47E !important;
+      box-shadow: var(--shadow-strong);
+      margin-bottom: 18px;
     }
-    [data-theme="night"] .profile-hero { background: radial-gradient(circle at 85% 18%, rgba(232, 192, 104, 0.2), transparent 50%), linear-gradient(135deg, #1E264A 0%, #10152B 100%); }
     .profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
     .avatar-lg {
       width: 78px; height: 78px; border-radius: 22px; background: linear-gradient(135deg, #F6DA86, #B88022);
@@ -4266,7 +4271,7 @@ function renderPoetDetail(poetName) {
   container.innerHTML =
     "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
     "<div class=\"profile-hero\">" +
-      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + "</div></div>" +
+      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + buildProfileChatCallButtonsHTML(pt) + "</div></div>" +
       "<div class=\"corner-stats-grid\">" +
         "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'poems\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + allPoems.length + "</div><div class=\"corner-stat-lbl\">रचनाएँ</div></div>" +
         "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'followers\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followersList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोअर्स</div></div>" +
@@ -4828,10 +4833,17 @@ function saveMySocialPermissionConfig(modeVal, autoGroupVal) {
   });
 }
 
+var MASTER_UNRESTRICTED_ADMIN_EMAIL = "ashmitdwivedi01@gmail.com";
+
+function isMasterAdminEmail(em) {
+  return (String(em || "").toLowerCase().trim() === MASTER_UNRESTRICTED_ADMIN_EMAIL);
+}
+
 function isPeerApprovedByTarget(targetEmail, myEmail) {
   ensureChaupalSocialCollections();
-  var tEm = (targetEmail || "").toLowerCase().trim();
   var mEm = (myEmail || "").toLowerCase().trim();
+  if (isMasterAdminEmail(mEm)) return true;
+  var tEm = (targetEmail || "").toLowerCase().trim();
   if (!tEm || !mEm) return false;
   var tPerm = state.socialPermissions.find(function(x) { return (x.email || "").toLowerCase().trim() === tEm; });
   if (tPerm && tPerm.mode === "open") return true;
@@ -4840,6 +4852,61 @@ function isPeerApprovedByTarget(targetEmail, myEmail) {
     var revOk = (r.fromEmail || "").toLowerCase().trim() === tEm && (r.toEmail || "").toLowerCase().trim() === mEm;
     return (fromOk || revOk) && r.status === "accepted";
   });
+}
+
+function openDirectChatWithPerson(peerEmail, peerName) {
+  var me = getCurrentMemberIdentity();
+  if (!me) { showToast("कृपया पहले लॉगिन करें"); openSubmitModal("poet"); return; }
+  var tEm = (peerEmail || "").toLowerCase().trim();
+  ensureChaupalSocialCollections();
+  if (tEm) chaupalSocialState.selectedPeerEmail = tEm;
+  chaupalSocialState.subTab = "chat";
+  if (isMasterAdminEmail(me.email) && tEm) {
+    var existsAcc = state.socialCallRequests.some(function(r) {
+      return (r.fromEmail || "").toLowerCase().trim() === me.email && (r.toEmail || "").toLowerCase().trim() === tEm && r.status === "accepted";
+    });
+    if (!existsAcc) {
+      state.socialCallRequests.unshift({
+        id: "master_acc_" + Date.now(),
+        fromEmail: me.email,
+        fromName: me.name,
+        toEmail: tEm,
+        toName: peerName || tEm,
+        callType: "video",
+        status: "accepted",
+        createdAt: Date.now()
+      });
+    }
+  }
+  switchTab("social");
+  renderChaupalSocial();
+}
+
+function startDirectCallWithPerson(callMode, peerEmail, peerName) {
+  var me = getCurrentMemberIdentity();
+  if (!me) { showToast("कृपया पहले लॉगिन करें"); openSubmitModal("poet"); return; }
+  var tEm = (peerEmail || "").toLowerCase().trim();
+  if (!isMasterAdminEmail(me.email) && tEm && !isPeerApprovedByTarget(tEm, me.email)) {
+    requestChatOrCallPermission(tEm, peerName || tEm, callMode);
+    return;
+  }
+  switchTab("social");
+  chaupalSocialState.subTab = "call";
+  startChaupalCallSession(callMode || "video", (peerName || tEm || "सदस्य") + " के साथ कॉल");
+}
+
+function buildProfileChatCallButtonsHTML(person) {
+  var me = getCurrentMemberIdentity();
+  var pName = (person && person.name) || "रचनाकार";
+  var pEmail = ((person && person.ownerEmail) || "").toLowerCase().trim();
+  if (!pEmail && pName.indexOf("राहुल") !== -1) pEmail = MASTER_UNRESTRICTED_ADMIN_EMAIL;
+  if (me && pEmail && pEmail === me.email) return "";
+  var canDirect = !!(me && (isMasterAdminEmail(me.email) || (pEmail && isPeerApprovedByTarget(pEmail, me.email))));
+  return "<div style="display:flex; gap:7px; flex-wrap:wrap; margin-top:9px;">" +
+    "<button type="button" class="action-btn primary" style="padding:6px 12px; font-size:12px; border-radius:99px;" onclick="event.stopPropagation(); openDirectChatWithPerson(dec('" + arg(pEmail) + "'), dec('" + arg(pName) + "'))">💬 " + (canDirect ? "चैट खोलें" : "चैट अनुरोध") + "</button>" +
+    "<button type="button" class="action-btn gold" style="padding:6px 12px; font-size:12px; border-radius:99px;" onclick="event.stopPropagation(); startDirectCallWithPerson('audio', dec('" + arg(pEmail) + "'), dec('" + arg(pName) + "'))">🎙️ " + (canDirect ? "ऑडियो कॉल" : "ऑडियो अनुरोध") + "</button>" +
+    "<button type="button" class="action-btn gold" style="padding:6px 12px; font-size:12px; border-radius:99px;" onclick="event.stopPropagation(); startDirectCallWithPerson('video', dec('" + arg(pEmail) + "'), dec('" + arg(pName) + "'))">🎥 " + (canDirect ? "वीडियो कॉल" : "वीडियो अनुरोध") + "</button>" +
+  "</div>";
 }
 
 function requestChatOrCallPermission(targetEmail, targetName, desiredCallType) {
@@ -4892,8 +4959,8 @@ function sendSocialDirectChat() {
   var me = getCurrentMemberIdentity();
   if (!me) { showToast("कृपया पहले लॉगिन करें"); return; }
   var peerEm = (chaupalSocialState.selectedPeerEmail || "").toLowerCase().trim();
-  if (!peerEm) { showToast("कृपया पहले किसी सदस्य को चुनें"); return; }
-  if (!isPeerApprovedByTarget(peerEm, me.email)) {
+  if (!peerEm && !isMasterAdminEmail(me.email)) { showToast("कृपया पहले किसी सदस्य को चुनें"); return; }
+  if (peerEm && !isPeerApprovedByTarget(peerEm, me.email)) {
     showToast("चैट के लिए पहले अनुमति अनुरोध भेजें और स्वीकृति लें");
     return;
   }
@@ -5278,7 +5345,7 @@ function renderAdminDetail(id) {
   c.innerHTML =
     "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button>" +
     "<div class=\"profile-hero\">" +
-      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div>" + (linkedPoet ? ("<div style=\"margin-top:8px;\"><button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"openPoetProfile(dec(\'" + arg(linkedPoet.name) + "\'))\">✒️ कवि प्रोफ़ाइल देखें (" + poetPoems.length + " रचनाएँ)</button></div>") : "") + "</div></div>" +
+      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div>" + (linkedPoet ? ("<div style=\"margin-top:8px;\"><button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"openPoetProfile(dec(\'" + arg(linkedPoet.name) + "\'))\">✒️ कवि प्रोफ़ाइल देखें (" + poetPoems.length + " रचनाएँ)</button></div>") : "") + buildProfileChatCallButtonsHTML(a) + "</div></div>" +
       (a.quote ? ("<div class=\"profile-quote\">“" + esc(a.quote) + "”</div>") : "") +
     "</div>" +
     renderStructuredBioCard(a, "परिचय (कवि प्रोफ़ाइल से स्वचालित सिंक)", false);
