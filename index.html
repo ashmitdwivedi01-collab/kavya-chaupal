@@ -263,7 +263,7 @@
     }
     .brand-seal img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .brand-title { font-family: 'Yatra One', serif; font-size: 21px; line-height: 1.05; color: #F7DC8B; white-space: nowrap; overflow: visible; text-overflow: clip; }
+    .brand-title { font-family: 'Yatra One', serif; font-size: 21px; line-height: 1.05; color: #F7DC8B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .brand-sub { font-size: 11px; color: rgba(255, 245, 224, 0.82); display: flex; align-items: center; gap: 5px; }
 
     .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; display: inline-block; box-shadow: 0 0 6px #4ADE80; }
@@ -938,16 +938,11 @@
       font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; margin-bottom: 14px;
     }
     .profile-hero {
-      background:
-        radial-gradient(circle at 85% 18%, rgba(252, 226, 154, 0.30), transparent 52%),
-        linear-gradient(145deg, #7B1620 0%, #4A0B12 58%, #26060B 100%) !important;
-      color: #FFF9EC !important;
-      border-radius: var(--radius-lg);
-      padding: 22px 18px;
-      border: 2px solid #F3D47E !important;
-      box-shadow: var(--shadow-strong);
-      margin-bottom: 18px;
+      background: radial-gradient(circle at 85% 18%, rgba(246, 218, 134, 0.24), transparent 50%), linear-gradient(135deg, #611019 0%, #36080E 100%);
+      color: #FFF7E8; border-radius: var(--radius-lg); padding: 22px 18px; border: 1.5px solid rgba(243, 212, 126, 0.45);
+      box-shadow: var(--shadow-strong); margin-bottom: 18px;
     }
+    [data-theme="night"] .profile-hero { background: radial-gradient(circle at 85% 18%, rgba(232, 192, 104, 0.2), transparent 50%), linear-gradient(135deg, #1E264A 0%, #10152B 100%); }
     .profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
     .avatar-lg {
       width: 78px; height: 78px; border-radius: 22px; background: linear-gradient(135deg, #F6DA86, #B88022);
@@ -1757,110 +1752,80 @@
       .top-account-btns { width: auto; justify-content: flex-end; }
     }
   
-    /* ================= ROYAL POLISH, QUICK GRID & CHAUPAL SOCIAL ================= */
-    .poem-card {
-      transition: transform 0.2s ease, box-shadow 0.22s ease, border-color 0.2s ease;
+    /* ================= KAVYA CHAUPAL LOGO-INSPIRED MULTI-COLOR PALETTE ================= */
+    :root {
+      --bg: #FDF7EC;
+      --bg-elevated: #FFFDF8;
+      --bg-soft: #F3E6CC;
+      --surface-glass: rgba(255, 252, 244, 0.94);
+      --primary: #0F234E;
+      --primary-deep: #081229;
+      --gold: #D49B27;
+      --gold-light: #FCE198;
+      --gold-soft: rgba(212, 155, 39, 0.16);
+      --accent-crimson: #7E1624;
+      --text: #101A30;
+      --text-muted: #55617A;
+      --border: rgba(212, 155, 39, 0.34);
+      --shadow: 0 10px 28px rgba(15, 35, 78, 0.08);
+      --shadow-strong: 0 18px 42px rgba(15, 35, 78, 0.16);
     }
-    .poem-card:hover {
-      border-color: var(--gold);
-      box-shadow: var(--shadow-strong);
+
+    [data-theme="night"] {
+      --bg: #080E1F;
+      --bg-elevated: #101A36;
+      --bg-soft: #18254A;
+      --surface-glass: rgba(11, 18, 38, 0.95);
+      --primary: #F5C85C;
+      --primary-deep: #050914;
+      --gold: #E5B442;
+      --gold-light: #FFE6A3;
+      --gold-soft: rgba(229, 180, 66, 0.16);
+      --accent-crimson: #A62134;
+      --text: #F7F2E6;
+      --text-muted: #B6C0D8;
+      --border: rgba(229, 180, 66, 0.28);
     }
-    .poem-card-title {
-      font-family: 'Yatra One', 'Khand', serif;
-      letter-spacing: 0.2px;
+
+    .app-header {
+      background: linear-gradient(135deg, #0D1D42 0%, #172B59 55%, #2A1224 100%) !important;
+      border-bottom: 2px solid var(--gold) !important;
     }
-    .poem-card-excerpt, .reader-text, .spotlight-quote, .jayanti-quote {
-      font-family: 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif;
-      text-rendering: optimizeLegibility;
+    .brand-title {
+      color: #FFE599 !important;
+      font-size: 19px !important;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.65);
+      white-space: nowrap !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
     }
-    .reader-text {
-      line-height: 2.02;
-      letter-spacing: 0.15px;
+    @media (min-width: 480px) {
+      .brand-title { font-size: 22px !important; }
     }
-    .droptap-item {
-      background: var(--bg-elevated);
-      border: 1.5px solid var(--border);
-      border-radius: 15px;
-      margin-bottom: 10px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
+    .spotlight-card {
+      background:
+        radial-gradient(circle at 82% 18%, rgba(252, 225, 152, 0.26), transparent 50%),
+        radial-gradient(circle at 15% 88%, rgba(126, 22, 36, 0.32), transparent 48%),
+        linear-gradient(150deg, #0E1F46 0%, #1B2F5E 52%, #3A1020 100%) !important;
+      border: 2px solid var(--gold) !important;
     }
-    .droptap-head {
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: var(--text);
-      padding: 13px 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      text-align: left;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    .droptap-title {
-      font-family: 'Yatra One', serif;
-      font-size: 16.5px;
-      color: var(--primary);
-    }
-    .droptap-arrow {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--gold);
-      flex-shrink: 0;
-    }
-    .droptap-panel {
-      display: none;
-      padding: 0 15px 14px;
-      border-top: 1px dashed var(--border);
-    }
-    .droptap-item.open .droptap-panel {
-      display: block;
-    }
-    .chhand-subnav {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-      margin-bottom: 12px;
-      scrollbar-width: none;
-    }
-    .chhand-subnav::-webkit-scrollbar { display: none; }
-    .chhand-subbtn {
-      flex-shrink: 0;
-      padding: 8px 13px;
-      border-radius: 999px;
-      border: 1.5px solid var(--border);
-      background: var(--bg-elevated);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 12.5px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .chhand-subbtn.active {
-      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
-      color: #F7DC8B;
-      border-color: var(--gold);
-    }
-    [data-theme="night"] .chhand-subbtn.active {
-      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
-      color: #160D06;
+    .profile-hero {
+      background:
+        radial-gradient(circle at 85% 18%, rgba(252, 225, 152, 0.26), transparent 50%),
+        linear-gradient(145deg, #0E1F46 0%, #1C3161 55%, #4A1224 100%) !important;
+      color: #FFF9EC !important;
+      border: 2px solid var(--gold) !important;
     }
     .social-hub-hero {
       background:
-        radial-gradient(circle at 85% 18%, rgba(246, 218, 134, 0.28), transparent 48%),
-        linear-gradient(145deg, #6B111B 0%, #3A080F 65%, #1E0713 100%);
+        radial-gradient(circle at 85% 18%, rgba(252, 225, 152, 0.26), transparent 48%),
+        linear-gradient(145deg, #0E1F46 0%, #1B2F5E 58%, #3B1020 100%);
       color: #FFF8EA;
       border-radius: 22px;
       padding: 18px 16px;
-      border: 1.5px solid rgba(243, 212, 126, 0.55);
+      border: 1.5px solid var(--gold);
       box-shadow: var(--shadow-strong);
       margin-bottom: 14px;
-    }
-    [data-theme="night"] .social-hub-hero {
-      background: linear-gradient(145deg, #1E274E 0%, #10152C 65%, #090C1B 100%);
     }
     .social-subnav {
       display: flex;
@@ -1884,13 +1849,9 @@
       cursor: pointer;
     }
     .social-subbtn.active {
-      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
-      color: #F7DC8B;
+      background: linear-gradient(135deg, #0F234E 0%, #2B1328 100%);
+      color: #FFE599;
       border-color: var(--gold);
-    }
-    [data-theme="night"] .social-subbtn.active {
-      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
-      color: #160D06;
     }
     .social-thread-box {
       background: var(--bg);
@@ -1913,7 +1874,7 @@
       border-color: var(--gold);
     }
     .call-stage-card {
-      background: linear-gradient(155deg, #1B0D18 0%, #0D0916 100%);
+      background: linear-gradient(155deg, #0D1A38 0%, #1E1024 100%);
       color: #FFF8EA;
       border: 2px solid var(--gold);
       border-radius: 20px;
@@ -1932,14 +1893,14 @@
     }
     .conf-tile {
       background: rgba(255, 255, 255, 0.06);
-      border: 1.5px solid rgba(247, 220, 139, 0.35);
+      border: 1.5px solid rgba(252, 225, 152, 0.35);
       border-radius: 14px;
       padding: 12px 10px;
       text-align: center;
     }
     .conf-tile.active-speaker {
-      border-color: #FCE29A;
-      box-shadow: 0 0 18px rgba(247, 220, 139, 0.28);
+      border-color: #FFE599;
+      box-shadow: 0 0 18px rgba(252, 225, 152, 0.28);
     }
 
   </style>
@@ -4739,6 +4700,12 @@ function renderFavorites() {
   grid.innerHTML = favPoems.length ? favPoems.map(poemCardHTML).join("") : "<div class=\"empty-box\" style=\"grid-column:1/-1;\">कोई पसंदीदा रचना नहीं है।</div>";
 }
 
+var MASTER_UNRESTRICTED_ADMIN_EMAIL = "ashmitdwivedi01@gmail.com";
+
+function isMasterAdminEmail(em) {
+  return (String(em || "").toLowerCase().trim() === MASTER_UNRESTRICTED_ADMIN_EMAIL);
+}
+
 function findMatchingPoetForAdmin(adm) {
   if (!adm) return null;
   var admEmail = (adm.ownerEmail || "").toLowerCase().trim();
@@ -4831,12 +4798,6 @@ function saveMySocialPermissionConfig(modeVal, autoGroupVal) {
     renderChaupalSocial();
     showToast("कॉल व ग्रुप अनुमति सेटिंग सहेजी गई ✓");
   });
-}
-
-var MASTER_UNRESTRICTED_ADMIN_EMAIL = "ashmitdwivedi01@gmail.com";
-
-function isMasterAdminEmail(em) {
-  return (String(em || "").toLowerCase().trim() === MASTER_UNRESTRICTED_ADMIN_EMAIL);
 }
 
 function isPeerApprovedByTarget(targetEmail, myEmail) {
@@ -5130,12 +5091,12 @@ function renderChaupalSocial() {
   var me = getCurrentMemberIdentity();
   if (!me) {
     box.innerHTML =
-      "<div class=\"auth-gate-box\" style=\"text-align:center;\">" +
-        "<div style=\"font-size:44px; margin-bottom:6px;\">🎙️</div>" +
-        "<h2 class=\"font-royal\" style=\"font-size:24px; color:var(--primary); margin:0 0 6px;\">चौपाल सोशल — चैट, ग्रुप व कॉल</h2>" +
-        "<p class=\"font-literary\" style=\"font-size:14px; color:var(--text-muted); margin:0 0 14px;\">अनुमति-आधारित 1-ऑन-1 व ग्रुप चैट, ऑडियो/वीडियो कॉल, कमज़ोर नेटवर्क अनुकूल मोड और कॉन्फ्रेंस लाइव के लिए लॉगिन करें।</p>" +
-        "<button class=\"google-auth-btn\" style=\"max-width:340px; margin:0 auto 10px;\" onclick=\"signInWithGoogle(\'poet\')\"><span>🌐</span><span>Google से लॉगिन करें</span></button>" +
-        "<div><button class=\"action-btn primary\" onclick=\"openSubmitModal(\'poet\')\">ईमेल से लॉगिन करें →</button></div>" +
+      "<div class="auth-gate-box" style="text-align:center;">" +
+        "<div style="font-size:44px; margin-bottom:6px;">🎙️</div>" +
+        "<h2 class="font-royal" style="font-size:24px; color:var(--primary); margin:0 0 6px;">चौपाल सोशल — चैट, ग्रुप व कॉल</h2>" +
+        "<p class="font-literary" style="font-size:14px; color:var(--text-muted); margin:0 0 14px;">अनुमति-आधारित 1-ऑन-1 व ग्रुप चैट, ऑडियो/वीडियो कॉल, कमज़ोर नेटवर्क अनुकूल मोड और कॉन्फ्रेंस लाइव के लिए लॉगिन करें।</p>" +
+        "<button class="google-auth-btn" style="max-width:340px; margin:0 auto 10px;" onclick="signInWithGoogle('poet')"><span>🌐</span><span>Google से लॉगिन करें</span></button>" +
+        "<div><button class="action-btn primary" onclick="openSubmitModal('poet')">ईमेल से लॉगिन करें →</button></div>" +
       "</div>";
     return;
   }
@@ -5168,150 +5129,153 @@ function renderChaupalSocial() {
     : (chaupalSocialState.networkMode === "low_data" ? "📶 पुअर नेटवर्क ऑडियो-स्मूद (कम डेटा)" : "⚡ ऑटो-अडैप्टिव (नेटवर्क अनुसार स्वयं समायोजित)");
 
   var subNavHtml =
-    "<div class=\"social-subnav\">" +
-      "<button type=\"button\" class=\"social-subbtn " + (chaupalSocialState.subTab === "chat" ? "active" : "") + "\" onclick=\"chaupalSocialState.subTab=\'chat\'; renderChaupalSocial()\">💬 चैट व अनुमति (" + incomingReqs.length + ")</button>" +
-      "<button type=\"button\" class=\"social-subbtn " + (chaupalSocialState.subTab === "groups" ? "active" : "") + "\" onclick=\"chaupalSocialState.subTab=\'groups\'; renderChaupalSocial()\">👥 ग्रुप व निमंत्रण (" + myInvites.length + ")</button>" +
-      "<button type=\"button\" class=\"social-subbtn " + (chaupalSocialState.subTab === "call" ? "active" : "") + "\" onclick=\"chaupalSocialState.subTab=\'call\'; renderChaupalSocial()\">🎥 कॉल, कॉन्फ्रेंस व लाइव</button>" +
-      "<button type=\"button\" class=\"social-subbtn " + (chaupalSocialState.subTab === "privacy" ? "active" : "") + "\" onclick=\"chaupalSocialState.subTab=\'privacy\'; renderChaupalSocial()\">🔒 मेरी अनुमतियाँ</button>" +
+    "<div class="social-subnav">" +
+      "<button type="button" class="social-subbtn " + (chaupalSocialState.subTab === "chat" ? "active" : "") + "" onclick="chaupalSocialState.subTab='chat'; renderChaupalSocial()">💬 चैट व अनुमति (" + incomingReqs.length + ")</button>" +
+      "<button type="button" class="social-subbtn " + (chaupalSocialState.subTab === "groups" ? "active" : "") + "" onclick="chaupalSocialState.subTab='groups'; renderChaupalSocial()">👥 ग्रुप व निमंत्रण (" + myInvites.length + ")</button>" +
+      "<button type="button" class="social-subbtn " + (chaupalSocialState.subTab === "call" ? "active" : "") + "" onclick="chaupalSocialState.subTab='call'; renderChaupalSocial()">🎥 कॉल, कॉन्फ्रेंस व लाइव</button>" +
+      "<button type="button" class="social-subbtn " + (chaupalSocialState.subTab === "privacy" ? "active" : "") + "" onclick="chaupalSocialState.subTab='privacy'; renderChaupalSocial()">🔒 मेरी अनुमतियाँ</button>" +
     "</div>";
 
   var callStageHtml = "";
   if (chaupalSocialState.activeCallSession) {
     var cs = chaupalSocialState.activeCallSession;
     callStageHtml =
-      "<div class=\"call-stage-card\">" +
-        "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
-          "<span class=\"genre-tag\">" + (chaupalSocialState.isLiveActive ? ("🔴 लाइव: " + esc(chaupalSocialState.livePlatform)) : (cs.type === "audio" ? "🎙️ ऑडियो कॉल सक्रिय" : "🎥 कॉन्फ्रेंस वीडियो कक्ष")) + "</span>" +
-          "<span style=\"font-size:12px; color:#FCE49C;\">" + esc(netLabel) + "</span>" +
+      "<div class="call-stage-card">" +
+        "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">" +
+          "<span class="genre-tag">" + (chaupalSocialState.isLiveActive ? ("🔴 लाइव: " + esc(chaupalSocialState.livePlatform)) : (cs.type === "audio" ? "🎙️ ऑडियो कॉल सक्रिय" : "🎥 कॉन्फ्रेंस वीडियो कक्ष")) + "</span>" +
+          "<span style="font-size:12px; color:#FCE49C;">" + esc(netLabel) + "</span>" +
         "</div>" +
-        "<h4 class=\"font-royal\" style=\"font-size:19px; color:#F7DC8B; margin:8px 0 6px;\">" + esc(cs.target) + "</h4>" +
+        "<h4 class="font-royal" style="font-size:19px; color:#F7DC8B; margin:8px 0 6px;">" + esc(cs.target) + "</h4>" +
         (cs.type === "video" && chaupalSocialState.networkMode !== "low_data"
-          ? ("<video id=\"soc-local-video\" autoplay muted playsinline style=\"width:100%; max-height:210px; object-fit:cover; border-radius:14px; border:1.5px solid var(--gold); background:#000; margin-bottom:8px;\"></video>")
-          : "<div style=\"padding:14px; border-radius:14px; background:rgba(247,220,139,0.1); border:1px dashed var(--gold); font-size:13px; color:#FCE49C; margin-bottom:8px;\">📶 कमज़ोर नेटवर्क / ऑडियो-स्मूद मोड सक्रिय: आवाज़ स्पष्ट व अवरोध-मुक्त रखने के लिए भारी वीडियो फ़्रेम रोके गए हैं।</div>") +
+          ? ("<video id="soc-local-video" autoplay muted playsinline style="width:100%; max-height:210px; object-fit:cover; border-radius:14px; border:1.5px solid var(--gold); background:#000; margin-bottom:8px;"></video>")
+          : "<div style="padding:14px; border-radius:14px; background:rgba(247,220,139,0.1); border:1px dashed var(--gold); font-size:13px; color:#FCE49C; margin-bottom:8px;">📶 कमज़ोर नेटवर्क / ऑडियो-स्मूद मोड सक्रिय: आवाज़ स्पष्ट व अवरोध-मुक्त रखने के लिए भारी वीडियो फ़्रेम रोके गए हैं।</div>") +
         (chaupalSocialState.conferenceMode
-          ? ("<div class=\"conf-grid\">" +
-              "<div class=\"conf-tile active-speaker\"><div style=\"font-size:22px;\">🎤</div><div style=\"font-weight:700; font-size:13px; color:#F7DC8B;\">" + esc(me.name) + "</div><div style=\"font-size:11px; opacity:0.85;\">संचालक / वक्ता</div></div>" +
-              "<div class=\"conf-tile\"><div style=\"font-size:22px;\">✒️</div><div style=\"font-weight:700; font-size:13px; color:#FFF8EA;\">" + esc(activePeerObj ? activePeerObj.name : "सह-रचनाकार") + "</div><div style=\"font-size:11px; opacity:0.85;\">मंच कक्ष</div></div>" +
-              "<div class=\"conf-tile\"><div style=\"font-size:22px;\">🪔</div><div style=\"font-weight:700; font-size:13px; color:#FFF8EA;\">काव्य चौपाल मंच</div><div style=\"font-size:11px; opacity:0.85;\">दर्शक / श्रोता कक्ष</div></div>" +
+          ? ("<div class="conf-grid">" +
+              "<div class="conf-tile active-speaker"><div style="font-size:22px;">🎤</div><div style="font-weight:700; font-size:13px; color:#F7DC8B;">" + esc(me.name) + "</div><div style="font-size:11px; opacity:0.85;">संचालक / वक्ता</div></div>" +
+              "<div class="conf-tile"><div style="font-size:22px;">✒️</div><div style="font-weight:700; font-size:13px; color:#FFF8EA;">" + esc(activePeerObj ? activePeerObj.name : "सह-रचनाकार") + "</div><div style="font-size:11px; opacity:0.85;">मंच कक्ष</div></div>" +
+              "<div class="conf-tile"><div style="font-size:22px;">🪔</div><div style="font-weight:700; font-size:13px; color:#FFF8EA;">काव्य चौपाल मंच</div><div style="font-size:11px; opacity:0.85;">दर्शक / श्रोता कक्ष</div></div>" +
             "</div>")
           : "") +
-        "<div class=\"form-box\" style=\"background:rgba(255,255,255,0.06); border-color:rgba(247,220,139,0.35); margin-bottom:10px;\">" +
-          "<div style=\"font-size:12.5px; font-weight:700; color:#F7DC8B; margin-bottom:6px;\">📡 सोशल प्लेटफ़ॉर्म लाइव ब्रिज (YouTube / Facebook / RTMP)</div>" +
-          "<div class=\"two-fields\">" +
-            "<div class=\"field\" style=\"margin-bottom:6px;\"><select id=\"soc-live-plat-sel\"><option value=\"YouTube Live\" " + (chaupalSocialState.livePlatform === "YouTube Live" ? "selected" : "") + ">YouTube Live</option><option value=\"Facebook Live\" " + (chaupalSocialState.livePlatform === "Facebook Live" ? "selected" : "") + ">Facebook Live</option><option value=\"Custom RTMP\" " + (chaupalSocialState.livePlatform === "Custom RTMP" ? "selected" : "") + ">Custom RTMP</option></select></div>" +
-            "<div class=\"field\" style=\"margin-bottom:6px;\"><input id=\"soc-live-key-in\" value=\"" + esc(chaupalSocialState.liveStreamKey) + "\" placeholder=\"Stream Key / URL (वैकल्पिक)\" /></div>" +
+        "<div class="form-box" style="background:rgba(255,255,255,0.06); border-color:rgba(247,220,139,0.35); margin-bottom:10px;">" +
+          "<div style="font-size:12.5px; font-weight:700; color:#F7DC8B; margin-bottom:6px;">📡 सोशल प्लेटफ़ॉर्म लाइव ब्रिज (YouTube / Facebook / RTMP)</div>" +
+          "<div class="two-fields">" +
+            "<div class="field" style="margin-bottom:6px;"><select id="soc-live-plat-sel"><option value="YouTube Live" " + (chaupalSocialState.livePlatform === "YouTube Live" ? "selected" : "") + ">YouTube Live</option><option value="Facebook Live" " + (chaupalSocialState.livePlatform === "Facebook Live" ? "selected" : "") + ">Facebook Live</option><option value="Custom RTMP" " + (chaupalSocialState.livePlatform === "Custom RTMP" ? "selected" : "") + ">Custom RTMP</option></select></div>" +
+            "<div class="field" style="margin-bottom:6px;"><input id="soc-live-key-in" value="" + esc(chaupalSocialState.liveStreamKey) + "" placeholder="Stream Key / URL (वैकल्पिक)" /></div>" +
           "</div>" +
-          "<button type=\"button\" class=\"action-btn " + (chaupalSocialState.isLiveActive ? "danger" : "gold") + "\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"toggleSocialLiveBroadcast()\">" + (chaupalSocialState.isLiveActive ? "⏹️ लाइव रोकें" : "🔴 सोशल लाइव शुरू करें") + "</button>" +
+          "<button type="button" class="action-btn " + (chaupalSocialState.isLiveActive ? "danger" : "gold") + "" style="padding:7px 12px; font-size:12px;" onclick="toggleSocialLiveBroadcast()">" + (chaupalSocialState.isLiveActive ? "⏹️ लाइव रोकें" : "🔴 सोशल लाइव शुरू करें") + "</button>" +
         "</div>" +
-        "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalCallSession()\">📞 कॉल समाप्त करें</button>" +
+        "<button type="button" class="action-btn danger" onclick="stopChaupalCallSession()">📞 कॉल समाप्त करें</button>" +
       "</div>";
   }
 
   var paneHtml = "";
   if (chaupalSocialState.subTab === "chat") {
-    var reqBoxes = incomingReqs.length ? ("<div class=\"form-box\" style=\"border-color:var(--gold);\"><h4 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">🔔 प्राप्त कॉल / चैट अनुमति अनुरोध</h4>" + incomingReqs.map(function(r) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(r.fromName || r.fromEmail) + "</div><div class=\"admin-item-sub\">" + esc(r.callType === "audio" ? "ऑडियो कॉल व चैट अनुरोध" : "वीडियो कॉल व चैट अनुरोध") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"btn-approve\" onclick=\"respondToCallRequest(dec(\'" + arg(r.id) + "\'), true)\">✅ अनुमति दें</button><button type=\"button\" class=\"btn-reject\" onclick=\"respondToCallRequest(dec(\'" + arg(r.id) + "\'), false)\">✕ मना करें</button></div></div>";
+    var reqBoxes = incomingReqs.length ? ("<div class="form-box" style="border-color:var(--gold);"><h4 class="section-title" style="font-size:15px; margin-bottom:8px;">🔔 प्राप्त कॉल / चैट अनुमति अनुरोध</h4>" + incomingReqs.map(function(r) {
+      return "<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">" + esc(r.fromName || r.fromEmail) + "</div><div class="admin-item-sub">" + esc(r.callType === "audio" ? "ऑडियो कॉल व चैट अनुरोध" : "वीडियो कॉल व चैट अनुरोध") + "</div></div><div class="admin-item-btns"><button type="button" class="btn-approve" onclick="respondToCallRequest(dec('" + arg(r.id) + "'), true)">✅ अनुमति दें</button><button type="button" class="btn-reject" onclick="respondToCallRequest(dec('" + arg(r.id) + "'), false)">✕ मना करें</button></div></div>";
     }).join("") + "</div>") : "";
 
     var threadMsgs = state.socialChats.filter(function(m) {
-      if (m.scope !== "dm" || !activePeerEm) return false;
+      if (m.scope !== "dm") return false;
+      if (!activePeerEm && isMasterAdminEmail(me.email)) return (m.senderEmail || "").toLowerCase().trim() === me.email;
+      if (!activePeerEm) return false;
       var sEm = (m.senderEmail || "").toLowerCase().trim();
       var rEm = (m.receiverEmail || "").toLowerCase().trim();
       return (sEm === me.email && rEm === activePeerEm) || (sEm === activePeerEm && rEm === me.email);
     });
 
     paneHtml = reqBoxes +
-      "<div class=\"form-box\">" +
-        "<div class=\"field\"><label>सदस्य चुनें (1-ऑन-1 चैट व कॉल)</label>" +
-          "<select onchange=\"chaupalSocialState.selectedPeerEmail=this.value; renderChaupalSocial()\">" +
+      "<div class="form-box">" +
+        "<div class="field"><label>सदस्य चुनें (1-ऑन-1 चैट व कॉल)</label>" +
+          "<select onchange="chaupalSocialState.selectedPeerEmail=this.value; renderChaupalSocial()">" +
             (members.length ? members.map(function(pt) {
               var pem = (pt.ownerEmail || "").toLowerCase().trim();
-              return "<option value=\"" + esc(pem) + "\" " + (pem === activePeerEm ? "selected" : "") + ">" + esc(pt.name) + (pt.city ? (" • " + esc(pt.city)) : "") + "</option>";
-            }).join("") : "<option value=\"\">अभी अन्य पंजीकृत सदस्य ईमेल उपलब्ध नहीं हैं</option>") +
+              return "<option value="" + esc(pem) + "" " + (pem === activePeerEm ? "selected" : "") + ">" + esc(pt.name) + (pt.city ? (" • " + esc(pt.city)) : "") + "</option>";
+            }).join("") : "<option value="">सभी सदस्य या सीधा चौपाल संवाद</option>") +
           "</select>" +
         "</div>" +
-        (activePeerEm ? (approvedPeer
-          ? ("<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
-               "<span class=\"mini-badge\">✅ अनुमति स्वीकृत</span>" +
-               "<button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"startChaupalCallSession(\'audio\', dec(\'" + arg((activePeerObj && activePeerObj.name) || activePeerEm) + "\'))\">🎙️ ऑडियो कॉल</button>" +
-               "<button type=\"button\" class=\"action-btn primary\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"startChaupalCallSession(\'video\', dec(\'" + arg((activePeerObj && activePeerObj.name) || activePeerEm) + "\'))\">🎥 वीडियो कॉल</button>" +
+        ((activePeerEm && approvedPeer) || isMasterAdminEmail(me.email)
+          ? ("<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">" +
+               "<span class="mini-badge">" + (isMasterAdminEmail(me.email) ? "👑 मुख्य एडमिन सीधी पहुँच" : "✅ अनुमति स्वीकृत") + "</span>" +
+               "<button type="button" class="action-btn gold" style="padding:6px 12px; font-size:12px;" onclick="startChaupalCallSession('audio', dec('" + arg((activePeerObj && activePeerObj.name) || activePeerEm || "सदस्य") + "'))">🎙️ ऑडियो कॉल</button>" +
+               "<button type="button" class="action-btn primary" style="padding:6px 12px; font-size:12px;" onclick="startChaupalCallSession('video', dec('" + arg((activePeerObj && activePeerObj.name) || activePeerEm || "सदस्य") + "'))">🎥 वीडियो कॉल</button>" +
              "</div>" +
-             "<div class=\"social-thread-box\">" +
+             "<div class="social-thread-box">" +
                (threadMsgs.length ? threadMsgs.map(function(m) {
                  var mine = (m.senderEmail || "").toLowerCase().trim() === me.email;
-                 return "<div class=\"social-msg-bubble " + (mine ? "mine" : "") + "\"><div style=\"font-size:11.5px; font-weight:700; color:var(--primary);\">" + esc(mine ? "आप" : (m.senderName || m.senderEmail)) + " • " + formatTimeHi(m.createdAt) + "</div><div class=\"font-literary\" style=\"font-size:14px; margin-top:3px; white-space:pre-line;\">" + esc(m.text) + "</div></div>";
-               }).join("") : "<div style=\"text-align:center; color:var(--text-muted); font-size:13px; padding:16px;\">संवाद शुरू करने के लिए पहला संदेश लिखें।</div>") +
+                 return "<div class="social-msg-bubble " + (mine ? "mine" : "") + ""><div style="font-size:11.5px; font-weight:700; color:var(--primary);">" + esc(mine ? "आप" : (m.senderName || m.senderEmail)) + " • " + formatTimeHi(m.createdAt) + "</div><div class="font-literary" style="font-size:14px; margin-top:3px; white-space:pre-line;">" + esc(m.text) + "</div></div>";
+               }).join("") : "<div style="text-align:center; color:var(--text-muted); font-size:13px; padding:16px;">संवाद शुरू करने के लिए पहला संदेश लिखें।</div>") +
              "</div>" +
-             "<div style=\"display:flex; gap:8px;\"><input id=\"social-chat-input\" placeholder=\"संदेश लिखें...\" style=\"flex:1; padding:10px 12px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" onkeydown=\"if(event.key===\'Enter\') sendSocialDirectChat()\" /><button type=\"button\" class=\"action-btn primary\" onclick=\"sendSocialDirectChat()\">भेजें</button></div>")
-          : ("<div class=\"my-profile-card\" style=\"text-align:center;\"><div style=\"font-weight:700; color:var(--primary); margin-bottom:5px;\">🔒 चैट व कॉल के लिए अनुमति आवश्यक है</div><div style=\"font-size:12.5px; color:var(--text-muted); margin-bottom:10px;\">" + esc((activePeerObj && activePeerObj.name) || activePeerEm) + " को चैट व ऑडियो/वीडियो कॉल अनुरोध भेजें। स्वीकृति मिलते ही चैट व कॉल खुल जाएगी।</div><button type=\"button\" class=\"action-btn primary\" onclick=\"requestChatOrCallPermission(dec(\'" + arg(activePeerEm) + "\'), dec(\'" + arg((activePeerObj && activePeerObj.name) || activePeerEm) + "\'), \'video\')\">📩 चैट व कॉल अनुमति अनुरोध भेजें</button></div>"))
-        : "") +
+             "<div style="display:flex; gap:8px;"><input id="social-chat-input" placeholder="संदेश लिखें..." style="flex:1; padding:10px 12px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);" onkeydown="if(event.key==='Enter') sendSocialDirectChat()" /><button type="button" class="action-btn primary" onclick="sendSocialDirectChat()">भेजें</button></div>")
+          : (activePeerEm
+              ? ("<div class="my-profile-card" style="text-align:center;"><div style="font-weight:700; color:var(--primary); margin-bottom:5px;">🔒 चैट व कॉल के लिए अनुमति आवश्यक है</div><div style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">" + esc((activePeerObj && activePeerObj.name) || activePeerEm) + " को चैट व ऑडियो/वीडियो कॉल अनुरोध भेजें। स्वीकृति मिलते ही चैट व कॉल खुल जाएगी।</div><button type="button" class="action-btn primary" onclick="requestChatOrCallPermission(dec('" + arg(activePeerEm) + "'), dec('" + arg((activePeerObj && activePeerObj.name) || activePeerEm) + "'), 'video')">📩 चैट व कॉल अनुमति अनुरोध भेजें</button></div>")
+              : "")) +
       "</div>";
   } else if (chaupalSocialState.subTab === "groups") {
-    var invHtml = myInvites.length ? ("<div class=\"form-box\" style=\"border-color:var(--gold);\"><h4 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">✉️ ग्रुप में जुड़ने के निमंत्रण</h4>" + myInvites.map(function(g) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(g.name) + "</div><div class=\"admin-item-sub\">" + esc(g.topic || "") + " • आमंत्रक: " + esc(g.ownerName || "") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"btn-approve\" onclick=\"respondToGroupInvite(dec(\'" + arg(g.id) + "\'), true)\">✅ जुड़ें</button><button type=\"button\" class=\"btn-reject\" onclick=\"respondToGroupInvite(dec(\'" + arg(g.id) + "\'), false)\">✕ अस्वीकार</button></div></div>";
+    var invHtml = myInvites.length ? ("<div class="form-box" style="border-color:var(--gold);"><h4 class="section-title" style="font-size:15px; margin-bottom:8px;">✉️ ग्रुप में जुड़ने के निमंत्रण</h4>" + myInvites.map(function(g) {
+      return "<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">" + esc(g.name) + "</div><div class="admin-item-sub">" + esc(g.topic || "") + " • आमंत्रक: " + esc(g.ownerName || "") + "</div></div><div class="admin-item-btns"><button type="button" class="btn-approve" onclick="respondToGroupInvite(dec('" + arg(g.id) + "'), true)">✅ जुड़ें</button><button type="button" class="btn-reject" onclick="respondToGroupInvite(dec('" + arg(g.id) + "'), false)">✕ अस्वीकार</button></div></div>";
     }).join("") + "</div>") : "";
 
     var grpMsgs = curGroup ? state.socialChats.filter(function(m) { return m.scope === "group" && m.groupId === curGroup.id; }) : [];
     paneHtml = invHtml +
-      "<div class=\"form-box\">" +
-        "<h4 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">➕ नया चौपाल ग्रुप बनाएँ</h4>" +
-        "<div class=\"two-fields\"><div class=\"field\"><label>ग्रुप का नाम *</label><input id=\"soc-grp-name\" placeholder=\"जैसे: छंद अभ्यास मंडल\" /></div><div class=\"field\"><label>विषय</label><input id=\"soc-grp-topic\" placeholder=\"जैसे: दोहा व गीत कार्यशाला\" /></div></div>" +
-        "<button type=\"button\" class=\"action-btn gold\" onclick=\"createSocialGroup()\">✓ ग्रुप बनाएँ</button>" +
+      "<div class="form-box">" +
+        "<h4 class="section-title" style="font-size:15px; margin-bottom:8px;">➕ नया चौपाल ग्रुप बनाएँ</h4>" +
+        "<div class="two-fields"><div class="field"><label>ग्रुप का नाम *</label><input id="soc-grp-name" placeholder="जैसे: छंद अभ्यास मंडल" /></div><div class="field"><label>विषय</label><input id="soc-grp-topic" placeholder="जैसे: दोहा व गीत कार्यशाला" /></div></div>" +
+        "<button type="button" class="action-btn gold" onclick="createSocialGroup()">✓ ग्रुप बनाएँ</button>" +
       "</div>" +
-      "<div class=\"form-box\">" +
-        "<div class=\"field\"><label>सक्रिय ग्रुप चुनें</label><select onchange=\"chaupalSocialState.selectedGroupId=this.value; renderChaupalSocial()\">" + myGroups.map(function(g) {
-          return "<option value=\"" + esc(g.id) + "\" " + (curGroup && curGroup.id === g.id ? "selected" : "") + ">" + esc(g.name) + "</option>";
+      "<div class="form-box">" +
+        "<div class="field"><label>सक्रिय ग्रुप चुनें</label><select onchange="chaupalSocialState.selectedGroupId=this.value; renderChaupalSocial()">" + myGroups.map(function(g) {
+          return "<option value="" + esc(g.id) + "" " + (curGroup && curGroup.id === g.id ? "selected" : "") + ">" + esc(g.name) + "</option>";
         }).join("") + "</select></div>" +
         (curGroup ? (
-          "<div class=\"field\"><label>अनुमति द्वारा सदस्य को ग्रुप में आमंत्रित करें</label><div style=\"display:flex; gap:7px; flex-wrap:wrap;\"><select id=\"soc-grp-invite-sel\" style=\"flex:1; min-width:180px; padding:9px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\"><option value=\"\">— सदस्य चुनें —</option>" + members.map(function(pt) {
+          "<div class="field"><label>अनुमति द्वारा सदस्य को ग्रुप में आमंत्रित करें</label><div style="display:flex; gap:7px; flex-wrap:wrap;"><select id="soc-grp-invite-sel" style="flex:1; min-width:180px; padding:9px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);"><option value="">— सदस्य चुनें —</option>" + members.map(function(pt) {
             var pem = (pt.ownerEmail || "").toLowerCase().trim();
-            return "<option value=\"" + esc(pem) + "\">" + esc(pt.name) + "</option>";
-          }).join("") + "</select><button type=\"button\" class=\"sm-btn\" onclick=\"inviteMemberToSocialGroup()\">📩 निमंत्रण भेजें</button></div></div>" +
-          "<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
-            "<button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"startChaupalCallSession(\'audio\', dec(\'" + arg("ग्रुप ऑडियो कॉल: " + curGroup.name) + "\'))\">🎙️ ग्रुप ऑडियो कॉल</button>" +
-            "<button type=\"button\" class=\"action-btn primary\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"startChaupalCallSession(\'video\', dec(\'" + arg("ग्रुप वीडियो कॉन्फ्रेंस: " + curGroup.name) + "\'))\">🎥 ग्रुप वीडियो कॉल</button>" +
+            return "<option value="" + esc(pem) + "">" + esc(pt.name) + "</option>";
+          }).join("") + "</select><button type="button" class="sm-btn" onclick="inviteMemberToSocialGroup()">📩 निमंत्रण भेजें</button></div></div>" +
+          "<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">" +
+            "<button type="button" class="action-btn gold" style="padding:6px 12px; font-size:12px;" onclick="startChaupalCallSession('audio', dec('" + arg("ग्रुप ऑडियो कॉल: " + curGroup.name) + "'))">🎙️ ग्रुप ऑडियो कॉल</button>" +
+            "<button type="button" class="action-btn primary" style="padding:6px 12px; font-size:12px;" onclick="startChaupalCallSession('video', dec('" + arg("ग्रुप वीडियो कॉन्फ्रेंस: " + curGroup.name) + "'))">🎥 ग्रुप वीडियो कॉल</button>" +
           "</div>" +
-          "<div class=\"social-thread-box\">" +
+          "<div class="social-thread-box">" +
             (grpMsgs.length ? grpMsgs.map(function(m) {
               var mine = (m.senderEmail || "").toLowerCase().trim() === me.email;
-              return "<div class=\"social-msg-bubble " + (mine ? "mine" : "") + "\"><div style=\"font-size:11.5px; font-weight:700; color:var(--primary);\">" + esc(mine ? "आप" : (m.senderName || m.senderEmail)) + " • " + formatTimeHi(m.createdAt) + "</div><div class=\"font-literary\" style=\"font-size:14px; margin-top:3px; white-space:pre-line;\">" + esc(m.text) + "</div></div>";
-            }).join("") : "<div style=\"text-align:center; color:var(--text-muted); font-size:13px; padding:16px;\">इस ग्रुप में अभी कोई संदेश नहीं है।</div>") +
+              return "<div class="social-msg-bubble " + (mine ? "mine" : "") + ""><div style="font-size:11.5px; font-weight:700; color:var(--primary);">" + esc(mine ? "आप" : (m.senderName || m.senderEmail)) + " • " + formatTimeHi(m.createdAt) + "</div><div class="font-literary" style="font-size:14px; margin-top:3px; white-space:pre-line;">" + esc(m.text) + "</div></div>";
+            }).join("") : "<div style="text-align:center; color:var(--text-muted); font-size:13px; padding:16px;">इस ग्रुप में अभी कोई संदेश नहीं है।</div>") +
           "</div>" +
-          "<div style=\"display:flex; gap:8px;\"><input id=\"soc-grp-msg-in\" placeholder=\"ग्रुप में संदेश लिखें...\" style=\"flex:1; padding:10px 12px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" onkeydown=\"if(event.key===\'Enter\') sendSocialGroupMessage()\" /><button type=\"button\" class=\"action-btn primary\" onclick=\"sendSocialGroupMessage()\">भेजें</button></div>"
+          "<div style="display:flex; gap:8px;"><input id="soc-grp-msg-in" placeholder="ग्रुप में संदेश लिखें..." style="flex:1; padding:10px 12px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);" onkeydown="if(event.key==='Enter') sendSocialGroupMessage()" /><button type="button" class="action-btn primary" onclick="sendSocialGroupMessage()">भेजें</button></div>"
         ) : "") +
       "</div>";
   } else if (chaupalSocialState.subTab === "call") {
     paneHtml =
-      "<div class=\"form-box\">" +
-        "<h4 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">📶 नेटवर्क क्वालिटी व स्मूद कॉल मोड</h4>" +
-        "<div class=\"field\"><select onchange=\"chaupalSocialState.networkMode=this.value; renderChaupalSocial()\">" +
-          "<option value=\"auto\" " + (chaupalSocialState.networkMode === "auto" ? "selected" : "") + ">⚡ ऑटो-अडैप्टिव (कमज़ोर नेटवर्क पर स्वतः स्मूद व ऑडियो-फोकस्ड)</option>" +
-          "<option value=\"uhd\" " + (chaupalSocialState.networkMode === "uhd" ? "selected" : "") + ">✨ Ultra HD कॉन्फ्रेंस मोड (मज़बूत इंटरनेट हेतु)</option>" +
-          "<option value=\"low_data\" " + (chaupalSocialState.networkMode === "low_data" ? "selected" : "") + ">📶 पुअर नेटवर्क ऑडियो-स्मूद मोड (अत्यंत धीमे इंटरनेट हेतु)</option>" +
+      "<div class="form-box">" +
+        "<h4 class="section-title" style="font-size:15px; margin-bottom:8px;">📶 नेटवर्क क्वालिटी व स्मूद कॉल मोड</h4>" +
+        "<div class="field"><select onchange="chaupalSocialState.networkMode=this.value; renderChaupalSocial()">" +
+          "<option value="auto" " + (chaupalSocialState.networkMode === "auto" ? "selected" : "") + ">⚡ ऑटो-अडैप्टिव (कमज़ोर नेटवर्क पर स्वतः स्मूद व ऑडियो-फोकस्ड)</option>" +
+          "<option value="uhd" " + (chaupalSocialState.networkMode === "uhd" ? "selected" : "") + ">✨ Ultra HD कॉन्फ्रेंस मोड (मज़बूत इंटरनेट हेतु)</option>" +
+          "<option value="low_data" " + (chaupalSocialState.networkMode === "low_data" ? "selected" : "") + ">📶 पुअर नेटवर्क ऑडियो-स्मूद मोड (अत्यंत धीमे इंटरनेट हेतु)</option>" +
         "</select></div>" +
-        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);\"><input type=\"checkbox\" " + (chaupalSocialState.conferenceMode ? "checked" : "") + " onchange=\"chaupalSocialState.conferenceMode=this.checked; renderChaupalSocial()\" style=\"width:auto; margin:0;\" /><span>🏛️ कॉन्फ्रेंस मंच लेआउट (वक्ता व सह-रचनाकार ग्रिड)</span></label></div>" +
-        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
-          "<button type=\"button\" class=\"action-btn gold\" onclick=\"startChaupalCallSession(\'audio\', \'चौपाल ऑडियो महफ़िल\')\">🎙️ ऑडियो कॉल शुरू करें</button>" +
-          "<button type=\"button\" class=\"action-btn primary\" onclick=\"startChaupalCallSession(\'video\', \'चौपाल वीडियो कॉन्फ्रेंस\')\">🎥 वीडियो कॉन्फ्रेंस शुरू करें</button>" +
+        "<div class="field"><label style="display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);"><input type="checkbox" " + (chaupalSocialState.conferenceMode ? "checked" : "") + " onchange="chaupalSocialState.conferenceMode=this.checked; renderChaupalSocial()" style="width:auto; margin:0;" /><span>🏛️ कॉन्फ्रेंस मंच लेआउट (वक्ता व सह-रचनाकार ग्रिड)</span></label></div>" +
+        "<div style="display:flex; gap:8px; flex-wrap:wrap;">" +
+          "<button type="button" class="action-btn gold" onclick="startChaupalCallSession('audio', 'चौपाल ऑडियो महफ़िल')">🎙️ ऑडियो कॉल शुरू करें</button>" +
+          "<button type="button" class="action-btn primary" onclick="startChaupalCallSession('video', 'चौपाल वीडियो कॉन्फ्रेंस')">🎥 वीडियो कॉन्फ्रेंस शुरू करें</button>" +
         "</div>" +
       "</div>";
   } else {
     paneHtml =
-      "<div class=\"form-box\">" +
-        "<h4 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">🔒 मेरी कॉल, चैट व ग्रुप अनुमति सेटिंग्स</h4>" +
-        "<div class=\"field\"><label>1-ऑन-1 कॉल व चैट अनुमति नियम</label>" +
-          "<select id=\"soc-perm-mode-sel\"><option value=\"request\" " + (permCfg.mode === "request" ? "selected" : "") + ">अनुमति अनुरोध अनिवार्य (सुरक्षित)</option><option value=\"open\" " + (permCfg.mode === "open" ? "selected" : "") + ">पंजीकृत सदस्यों से सीधी अनुमति</option></select>" +
+      "<div class="form-box">" +
+        "<h4 class="section-title" style="font-size:15px; margin-bottom:8px;">🔒 मेरी कॉल, चैट व ग्रुप अनुमति सेटिंग्स</h4>" +
+        "<div class="field"><label>1-ऑन-1 कॉल व चैट अनुमति नियम</label>" +
+          "<select id="soc-perm-mode-sel"><option value="request" " + (permCfg.mode === "request" ? "selected" : "") + ">अनुमति अनुरोध अनिवार्य (सुरक्षित)</option><option value="open" " + (permCfg.mode === "open" ? "selected" : "") + ">पंजीकृत सदस्यों से सीधी अनुमति</option></select>" +
         "</div>" +
-        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);\"><input type=\"checkbox\" id=\"soc-perm-grp-cb\" " + (permCfg.allowGroupAuto ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>ग्रुप निमंत्रण स्वतः स्वीकारें (अन्यथा स्वीकृति/अस्वीकार का विकल्प मिलेगा)</span></label></div>" +
-        "<button type=\"button\" class=\"action-btn primary\" onclick=\"saveMySocialPermissionConfig(document.getElementById(\'soc-perm-mode-sel\').value, document.getElementById(\'soc-perm-grp-cb\').checked)\">💾 अनुमति सेटिंग सहेजें</button>" +
+        "<div class="field"><label style="display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);"><input type="checkbox" id="soc-perm-grp-cb" " + (permCfg.allowGroupAuto ? "checked" : "") + " style="width:auto; margin:0;" /><span>ग्रुप निमंत्रण स्वतः स्वीकारें (अन्यथा स्वीकृति/अस्वीकार का विकल्प मिलेगा)</span></label></div>" +
+        "<button type="button" class="action-btn primary" onclick="saveMySocialPermissionConfig(document.getElementById('soc-perm-mode-sel').value, document.getElementById('soc-perm-grp-cb').checked)">💾 अनुमति सेटिंग सहेजें</button>" +
       "</div>";
   }
 
   box.innerHTML =
-    "<div class=\"social-hub-hero\">" +
-      "<div style=\"font-size:11.5px; color:#F3D47E; letter-spacing:1px;\">🎙️ चौपाल सोशल • अनुमति-आधारित संवाद व कॉन्फ्रेंस</div>" +
-      "<h2 class=\"profile-name\" style=\"margin-top:3px;\">" + esc(me.name) + "</h2>" +
-      "<div class=\"profile-sub\">" + esc(netLabel) + "</div>" +
+    "<div class="social-hub-hero">" +
+      "<div style="font-size:11.5px; color:#F3D47E; letter-spacing:1px;">🎙️ चौपाल सोशल • अनुमति-आधारित संवाद व कॉन्फ्रेंस</div>" +
+      "<h2 class="profile-name" style="margin-top:3px;">" + esc(me.name) + "</h2>" +
+      "<div class="profile-sub">" + esc(netLabel) + "</div>" +
     "</div>" +
     subNavHtml +
     callStageHtml +
