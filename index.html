@@ -1844,6 +1844,111 @@
       color: #160D06;
     }
 
+  
+    /* ================= CHAUPAL SOCIAL CALL, GROUP & CONFERENCE STUDIO ================= */
+    .social-call-hero {
+      background:
+        radial-gradient(circle at 86% 14%, rgba(247, 220, 139, 0.25), transparent 48%),
+        linear-gradient(145deg, #68111B 0%, #37080F 62%, #190712 100%);
+      color: #FFF8EA;
+      border-radius: 22px;
+      padding: 18px 16px;
+      border: 1.5px solid rgba(243, 212, 126, 0.55);
+      box-shadow: var(--shadow-strong);
+      margin-bottom: 14px;
+    }
+    [data-theme="night"] .social-call-hero {
+      background: linear-gradient(145deg, #1E2852 0%, #10162E 62%, #080C1B 100%);
+    }
+    .call-net-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: rgba(255, 248, 234, 0.14);
+      border: 1px solid rgba(247, 220, 139, 0.6);
+      color: #FCE49C;
+    }
+    .group-card {
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      border-radius: 17px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .group-chat-feed {
+      max-height: 250px;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin: 10px 0;
+    }
+    .gchat-msg {
+      padding: 8px 10px;
+      border-radius: 11px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      margin-bottom: 7px;
+    }
+    .gchat-msg.mine {
+      background: var(--gold-soft);
+      border-color: var(--gold);
+    }
+    .conf-stage-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 480;
+      display: none;
+      flex-direction: column;
+      background: radial-gradient(circle at 50% 25%, #2B1220 0%, #0C0914 75%);
+      color: #FFF8EA;
+      padding: 14px;
+      overflow-y: auto;
+    }
+    .conf-stage-overlay.open { display: flex; }
+    .conf-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      flex: 1;
+      margin: 10px 0;
+    }
+    @media (min-width: 600px) {
+      .conf-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .conf-tile {
+      position: relative;
+      border-radius: 18px;
+      background: linear-gradient(155deg, #251324 0%, #130C1A 100%);
+      border: 2px solid rgba(247, 220, 139, 0.45);
+      padding: 14px;
+      min-height: 155px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+    }
+    .conf-tile.speaking {
+      border-color: #4ADE80;
+      box-shadow: 0 0 24px rgba(74, 222, 128, 0.28);
+    }
+    .conf-controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      padding: 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(247, 220, 139, 0.35);
+    }
+
   </style>
 </head>
 <body>
@@ -1949,6 +2054,10 @@
         <div class="quick-tile" onclick="openAiStudioModal()" style="border-color:var(--gold); background:var(--gold-soft);">
           <div class="quick-ic">✨</div>
           <div class="quick-lbl">AI सहायक<br/>चित्र व प्रश्न</div>
+        </div>
+        <div class="quick-tile" onclick="openSocialCallHub()" style="border-color:var(--gold);">
+          <div class="quick-ic">📞</div>
+          <div class="quick-lbl">कॉल व ग्रुप<br/>कॉन्फ्रेंस</div>
         </div>
       </div>
 
@@ -6667,6 +6776,513 @@ state.poems.forEach(function(p) {
   }
 });
 
+
+var DEFAULT_CHAUPAL_GROUPS = [
+  {
+    id: "grp_chhand_shala",
+    name: "छंद एवं मात्रा अभ्यास चौपाल",
+    topic: "दोहा, गीतिका, चौपाई व छंद-संरचना चर्चा",
+    creatorEmail: "",
+    creatorName: "राहुल द्विवेदी 'स्मित'",
+    members: ["राहुल द्विवेदी 'स्मित'", "धीरज श्रीवास्तव", "डॉ० सुनीता आजमगढ़ी"],
+    createdAt: 1732500001000
+  }
+];
+
+if (!Array.isArray(state.chaupalGroups)) state.chaupalGroups = DEFAULT_CHAUPAL_GROUPS.slice();
+if (!Array.isArray(state.groupInvites)) state.groupInvites = [];
+if (!Array.isArray(state.groupMessages)) state.groupMessages = [];
+if (!Array.isArray(state.callRequests)) state.callRequests = [];
+
+var activeGroupId = (state.chaupalGroups[0] && state.chaupalGroups[0].id) || "grp_chhand_shala";
+var socialCallTab = "groups"; // "groups" | "direct" | "requests"
+var callQualityMode = "auto"; // "auto" | "uhd" | "low_net"
+var callSession = {
+  active: false,
+  mode: "video", // "audio" | "video"
+  title: "",
+  participants: [],
+  micOn: true,
+  camOn: true,
+  localStream: null,
+  livePlatform: "", // "" | "Facebook Live" | "YouTube Live" | "vMix RTMP"
+  liveStreamKey: "",
+  liveStartedAt: 0
+};
+
+function getCallerIdentity() {
+  if (state.currentUser && state.currentUser.email) {
+    var em = state.currentUser.email.toLowerCase().trim();
+    var prof = getPoetByEmail(em) || getPendingPoetByEmail(em);
+    return {
+      email: em,
+      name: prof ? prof.name : (state.currentUser.displayName || em.split("@")[0]),
+      loggedIn: true
+    };
+  }
+  return { email: "", name: "अतिथि साहित्यकार", loggedIn: false };
+}
+
+function openSocialCallHub(tab) {
+  if (tab) socialCallTab = tab;
+  var m = document.getElementById("call-perm-modal");
+  if (m && !m.classList.contains("open")) pushAppView("socialcall");
+  if (m) m.classList.add("open");
+  renderSocialCallHub();
+}
+
+function setSocialCallTab(t) {
+  socialCallTab = t;
+  renderSocialCallHub();
+}
+
+function createChaupalGroup() {
+  var me = getCallerIdentity();
+  if (!me.loggedIn) {
+    showToast("चौपाल ग्रुप बनाने के लिए पहले लॉगिन करें 🔐");
+    closeModal("call-perm-modal");
+    openSubmitModal("poet");
+    return;
+  }
+  var name = ((document.getElementById("cg-name-in") || { value: "" }).value || "").trim();
+  var topic = ((document.getElementById("cg-topic-in") || { value: "" }).value || "").trim();
+  if (!name) { showToast("कृपया ग्रुप का नाम लिखें"); return; }
+  var id = "grp_" + Date.now();
+  var grp = {
+    id: id,
+    name: name,
+    topic: topic || "साहित्यिक चर्चा व काव्य संवाद",
+    creatorEmail: me.email,
+    creatorName: me.name,
+    members: [me.name],
+    createdAt: Date.now()
+  };
+  state.chaupalGroups.unshift(grp);
+  activeGroupId = id;
+  cloudSaveDoc("chaupal_groups", id, grp).then(function() {
+    renderSocialCallHub();
+    showToast("नया चौपाल ग्रुप बन गया ✓");
+  });
+}
+
+function sendGroupPermissionInvite(groupId) {
+  var me = getCallerIdentity();
+  if (!me.loggedIn) {
+    showToast("ग्रुप में जोड़ने का निमंत्रण भेजने के लिए लॉगिन करें");
+    return;
+  }
+  var grp = state.chaupalGroups.find(function(g) { return g.id === groupId; });
+  if (!grp) return;
+  var sel = document.getElementById("cg-invite-sel-" + groupId);
+  var targetName = sel ? sel.value : "";
+  if (!targetName) { showToast("कृपया जोड़ने के लिए सदस्य/कवि चुनें"); return; }
+  var targetPoet = getAllPoetObjects().find(function(pt) { return pt.name === targetName; });
+  var alreadyMember = (grp.members || []).indexOf(targetName) !== -1;
+  if (alreadyMember) { showToast(targetName + " पहले से इस ग्रुप में हैं"); return; }
+
+  var invId = "ginv_" + Date.now();
+  var inv = {
+    id: invId,
+    groupId: grp.id,
+    groupName: grp.name,
+    fromName: me.name,
+    fromEmail: me.email,
+    toName: targetName,
+    toEmail: (targetPoet && targetPoet.ownerEmail) ? targetPoet.ownerEmail.toLowerCase().trim() : "",
+    status: "pending",
+    createdAt: Date.now()
+  };
+  state.groupInvites.unshift(inv);
+  cloudSaveDoc("group_invites", invId, inv);
+  pushNotification(
+    "ग्रुप में जुड़ने हेतु अनुमति अनुरोध: “" + grp.name + "”",
+    me.name + " आपको “" + grp.name + "” ग्रुप में जोड़ना चाहते हैं। स्वीकार करें?",
+    "info",
+    grp.id,
+    inv.toEmail || ""
+  );
+  renderSocialCallHub();
+  showToast(targetName + " को अनुमति अनुरोध भेज दिया गया ✓");
+}
+
+function respondGroupInvite(inviteId, accept) {
+  var inv = state.groupInvites.find(function(x) { return x.id === inviteId; });
+  if (!inv) return;
+  inv.status = accept ? "accepted" : "declined";
+  if (accept) {
+    var grp = state.chaupalGroups.find(function(g) { return g.id === inv.groupId; });
+    if (grp) {
+      if (!Array.isArray(grp.members)) grp.members = [];
+      if (grp.members.indexOf(inv.toName) === -1) grp.members.push(inv.toName);
+      cloudSaveDoc("chaupal_groups", grp.id, grp);
+    }
+  }
+  cloudSaveDoc("group_invites", inviteId, inv).then(function() {
+    renderSocialCallHub();
+    showToast(accept ? ("आप “" + inv.groupName + "” ग्रुप में जुड़ गए ✓") : "निमंत्रण अस्वीकार किया गया");
+  });
+}
+
+function postGroupChatMessage(groupId) {
+  var me = getCallerIdentity();
+  if (!me.loggedIn) {
+    showToast("ग्रुप चैट में लिखने के लिए पहले लॉगिन करें 🔐");
+    return;
+  }
+  var inp = document.getElementById("cg-chat-in-" + groupId);
+  var txt = inp ? inp.value.trim() : "";
+  if (!txt) { showToast("कृपया संदेश लिखें"); return; }
+  var id = "gmsg_" + Date.now();
+  var msg = {
+    id: id,
+    groupId: groupId,
+    senderName: me.name,
+    senderEmail: me.email,
+    text: txt,
+    createdAt: Date.now()
+  };
+  state.groupMessages.unshift(msg);
+  cloudSaveDoc("group_messages", id, msg).then(function() {
+    renderSocialCallHub();
+  });
+}
+
+function requestPermissionCall(targetName, targetEmail, mode, contextTitle) {
+  var me = getCallerIdentity();
+  if (!me.loggedIn) {
+    showToast("कॉल अनुमति अनुरोध भेजने के लिए पहले लॉगिन करें 🔐");
+    closeModal("call-perm-modal");
+    openSubmitModal("poet");
+    return;
+  }
+  var id = "callreq_" + Date.now();
+  var req = {
+    id: id,
+    fromName: me.name,
+    fromEmail: me.email,
+    toName: targetName,
+    toEmail: (targetEmail || "").toLowerCase().trim(),
+    mode: mode || "video", // "audio" | "video"
+    contextTitle: contextTitle || "व्यक्तिगत काव्य संवाद",
+    status: "pending", // "pending" | "accepted" | "declined"
+    createdAt: Date.now()
+  };
+  state.callRequests.unshift(req);
+  cloudSaveDoc("call_requests", id, req);
+  pushNotification(
+    (mode === "audio" ? "🎙️ ऑडियो कॉल अनुमति अनुरोध" : "📹 वीडियो कॉल अनुमति अनुरोध"),
+    me.name + " आपसे " + (mode === "audio" ? "ऑडियो" : "वीडियो") + " कॉल की अनुमति माँग रहे हैं (" + req.contextTitle + ")।",
+    "info",
+    id,
+    req.toEmail || ""
+  );
+  socialCallTab = "requests";
+  renderSocialCallHub();
+  showToast(targetName + " को कॉल अनुमति अनुरोध भेजा गया 📞");
+}
+
+function respondCallRequest(reqId, accept) {
+  var req = state.callRequests.find(function(x) { return x.id === reqId; });
+  if (!req) return;
+  req.status = accept ? "accepted" : "declined";
+  cloudSaveDoc("call_requests", reqId, req);
+  if (accept) {
+    launchConferenceStage(req.mode || "video", req.contextTitle || (req.fromName + " • " + req.toName), [req.fromName, req.toName]);
+  } else {
+    renderSocialCallHub();
+    showToast("कॉल अनुरोध अस्वीकार किया गया");
+  }
+}
+
+function launchConferenceStage(mode, title, participantsArr) {
+  closeModal("call-perm-modal");
+  var me = getCallerIdentity();
+  var list = (participantsArr && participantsArr.length) ? participantsArr.slice() : [me.name, "धीरज श्रीवास्तव", "डॉ० सुनीता आजमगढ़ी"];
+  if (list.indexOf(me.name) === -1) list.unshift(me.name);
+  callSession = {
+    active: true,
+    mode: mode || "video",
+    title: title || "काव्य चौपाल कॉन्फ्रेंस कक्ष",
+    participants: list,
+    micOn: true,
+    camOn: (mode !== "audio"),
+    localStream: null,
+    livePlatform: "",
+    liveStreamKey: "",
+    liveStartedAt: 0
+  };
+  var stage = document.getElementById("conf-stage-modal");
+  if (stage) stage.classList.add("open");
+  requestMediaForCallIfAvailable();
+  renderConferenceStage();
+}
+
+function requestMediaForCallIfAvailable() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  var constraints = {
+    audio: true,
+    video: callSession.mode === "video" && callSession.camOn && callQualityMode !== "low_net"
+      ? { width: { ideal: callQualityMode === "uhd" ? 1920 : 1280 }, height: { ideal: callQualityMode === "uhd" ? 1080 : 720 }, facingMode: "user" }
+      : false
+  };
+  navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
+    stopLocalCallStream();
+    callSession.localStream = stream;
+    var vid = document.getElementById("conf-local-video");
+    if (vid && callSession.mode === "video" && callSession.camOn) {
+      vid.srcObject = stream;
+    }
+  }).catch(function() {
+    // Graceful fallback to simulated conference tile if camera/mic blocked or unavailable
+  });
+}
+
+function stopLocalCallStream() {
+  if (callSession.localStream && callSession.localStream.getTracks) {
+    callSession.localStream.getTracks().forEach(function(t) { try { t.stop(); } catch (e) {} });
+  }
+  callSession.localStream = null;
+}
+
+function toggleCallMic() {
+  callSession.micOn = !callSession.micOn;
+  if (callSession.localStream && callSession.localStream.getAudioTracks) {
+    callSession.localStream.getAudioTracks().forEach(function(t) { t.enabled = callSession.micOn; });
+  }
+  renderConferenceStage();
+}
+
+function toggleCallCam() {
+  callSession.camOn = !callSession.camOn;
+  if (callSession.camOn) callSession.mode = "video";
+  if (callSession.localStream && callSession.localStream.getVideoTracks) {
+    callSession.localStream.getVideoTracks().forEach(function(t) { t.enabled = callSession.camOn; });
+  } else if (callSession.camOn) {
+    requestMediaForCallIfAvailable();
+  }
+  renderConferenceStage();
+}
+
+function setCallQualityMode(qMode) {
+  callQualityMode = qMode;
+  if (qMode === "low_net") {
+    callSession.camOn = false;
+  }
+  requestMediaForCallIfAvailable();
+  renderConferenceStage();
+  showToast(qMode === "uhd" ? "अल्ट्रा-HD कॉन्फ्रेंस मोड सक्रिय" : (qMode === "low_net" ? "कमज़ोर नेटवर्क स्मूद मोड सक्रिय" : "स्मार्ट ऑटो-एडजस्ट मोड सक्रिय"));
+}
+
+function startSocialLiveFromCall() {
+  var platSel = document.getElementById("conf-live-platform");
+  var keyIn = document.getElementById("conf-live-key");
+  var plat = platSel ? platSel.value : "YouTube Live";
+  var sKey = keyIn ? keyIn.value.trim() : "";
+  callSession.livePlatform = plat;
+  callSession.liveStreamKey = sKey;
+  callSession.liveStartedAt = Date.now();
+  pushNotification(
+    "🔴 सजीव कॉन्फ्रेंस प्रसारण शुरू: " + callSession.title,
+    "प्लेटफ़ॉर्म: " + plat + " • होस्ट: " + getCallerIdentity().name,
+    "info",
+    "",
+    ""
+  );
+  renderConferenceStage();
+  showToast("“" + plat + "” पर सजीव कॉन्फ्रेंस प्रसारण शुरू ✓");
+}
+
+function stopSocialLiveFromCall() {
+  callSession.livePlatform = "";
+  callSession.liveStreamKey = "";
+  renderConferenceStage();
+  showToast("सोशल लाइव प्रसारण समाप्त किया गया");
+}
+
+function endConferenceStage() {
+  stopLocalCallStream();
+  callSession.active = false;
+  callSession.livePlatform = "";
+  var stage = document.getElementById("conf-stage-modal");
+  if (stage) stage.classList.remove("open");
+}
+
+function renderConferenceStage() {
+  var body = document.getElementById("conf-stage-body");
+  if (!body || !callSession.active) return;
+  var me = getCallerIdentity();
+  var qLabel = callQualityMode === "uhd"
+    ? "✨ Ultra-HD (1080p • हाई बैंडविड्थ)"
+    : (callQualityMode === "low_net" ? "📶 पुअर नेटवर्क स्मूद मोड (ऑडियो-प्राथमिक)" : "⚡ ऑटो-एडजस्ट (HD + पुअर नेट स्मूद)");
+
+  var tilesHtml = callSession.participants.map(function(pName, idx) {
+    var isMe = pName === me.name;
+    var ptObj = getAllPoetObjects().find(function(x) { return x.name === pName; });
+    var av = (ptObj && ptObj.photo) ? ("<img src="" + ptObj.photo + "" style="width:62px; height:62px; border-radius:18px; object-fit:cover; border:2px solid #F7DC8B;" />")
+      : ("<div class="avatar-md" style="width:58px; height:58px;">" + esc(initials(pName)) + "</div>");
+    var showVideoElement = isMe && callSession.mode === "video" && callSession.camOn && callQualityMode !== "low_net";
+    return "<div class="conf-tile " + (idx === 0 ? "speaking" : "") + "">" +
+      "<div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">" +
+        "<span class="call-net-badge">" + (idx === 0 ? "🎙️ वक्ता / होस्ट" : "❖ प्रतिभागी") + "</span>" +
+        "<span style="font-size:11.5px; color:#FCE49C;">" + (isMe ? (callSession.micOn ? "🎤 माइक चालू" : "🔇 म्यूट") : "🔊 जुड़ा हुआ") + "</span>" +
+      "</div>" +
+      (showVideoElement
+        ? ("<video id="conf-local-video" autoplay playsinline muted style="width:100%; max-height:170px; object-fit:cover; border-radius:12px; margin:8px 0; background:#000;"></video>")
+        : ("<div style="display:flex; align-items:center; gap:10px; margin:10px 0;">" + av + "<div><div class="font-royal" style="font-size:17px; color:#F7DC8B;">" + esc(pName) + "</div><div style="font-size:12px; color:rgba(255,248,234,0.8);">" + esc((ptObj && ptObj.city) || "काव्य चौपाल कॉन्फ्रेंस") + "</div></div></div>")) +
+      "<div style="font-size:11.5px; color:#F3D47E; border-top:1px solid rgba(247,220,139,0.2); padding-top:6px;">" + esc(callQualityMode === "low_net" ? "कमज़ोर नेटवर्क के लिए हल्का ऑडियो/स्टेटस पैकेट" : "स्पष्ट कॉन्फ्रेंस फ़्रेम") + "</div>" +
+    "</div>";
+  }).join("");
+
+  body.innerHTML =
+    "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">" +
+      "<div>" +
+        "<div style="font-size:11.5px; color:#F3D47E;">🏛️ काव्य चौपाल कॉन्फ्रेंस कक्ष</div>" +
+        "<h2 class="font-royal" style="font-size:21px; color:#FFF8EA; margin:2px 0;">" + esc(callSession.title) + "</h2>" +
+      "</div>" +
+      "<div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">" +
+        "<span class="call-net-badge">" + qLabel + "</span>" +
+        (callSession.livePlatform ? ("<span class="call-net-badge" style="background:rgba(225,29,72,0.85); color:#fff; border-color:#FDA4AF;">🔴 " + esc(callSession.livePlatform) + " LIVE</span>") : "") +
+        "<button class="close-btn" onclick="endConferenceStage()">✕</button>" +
+      "</div>" +
+    "</div>" +
+    "<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">" +
+      "<button class="spot-mini-btn" style="" + (callQualityMode === "auto" ? "background:#F7DC8B; color:#2B080D;" : "") + "" onclick="setCallQualityMode('auto')">⚡ ऑटो (HD + पुअर नेट)</button>" +
+      "<button class="spot-mini-btn" style="" + (callQualityMode === "uhd" ? "background:#F7DC8B; color:#2B080D;" : "") + "" onclick="setCallQualityMode('uhd')">✨ Ultra-HD</button>" +
+      "<button class="spot-mini-btn" style="" + (callQualityMode === "low_net" ? "background:#F7DC8B; color:#2B080D;" : "") + "" onclick="setCallQualityMode('low_net')">📶 पुअर नेटवर्क स्मूद</button>" +
+    "</div>" +
+    "<div class="conf-grid">" + tilesHtml + "</div>" +
+    "<div class="form-box" style="background:rgba(255,255,255,0.07); border-color:rgba(247,220,139,0.4); margin-bottom:10px;">" +
+      "<div class="font-royal" style="font-size:15px; color:#F7DC8B; margin-bottom:6px;">📡 सोशल प्लेटफ़ॉर्म पर लाइव प्रसारण (Facebook / YouTube / vMix)</div>" +
+      (callSession.livePlatform
+        ? ("<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;"><span style="font-size:13px;">🔴 <strong>" + esc(callSession.livePlatform) + "</strong> पर कॉन्फ्रेंस लाइव प्रसारण सक्रिय है।</span><button class="btn-reject" onclick="stopSocialLiveFromCall()">⏹ लाइव रोकें</button></div>")
+        : ("<div class="two-fields"><div class="field" style="margin-bottom:0;"><select id="conf-live-platform"><option value="Facebook Live">Facebook Live (काव्य चौपाल)</option><option value="YouTube Live">YouTube Live (@kavyachaupal)</option><option value="vMix RTMP">vMix स्टूडियो / RTMP फीड</option></select></div><div class="field" style="margin-bottom:0;"><input id="conf-live-key" placeholder="स्ट्रीम की / लिंक (वैकल्पिक)" /></div></div><button type="button" class="action-btn gold" style="margin-top:8px; padding:8px 14px; font-size:12.5px;" onclick="startSocialLiveFromCall()">🔴 सोशल प्लेटफ़ॉर्म पर लाइव करें</button>")) +
+    "</div>" +
+    "<div class="conf-controls-bar">" +
+      "<button type="button" class="action-btn" onclick="toggleCallMic()">" + (callSession.micOn ? "🎤 माइक चालू" : "🔇 माइक बंद") + "</button>" +
+      "<button type="button" class="action-btn" onclick="toggleCallCam()">" + (callSession.camOn ? "📹 कैमरा चालू" : "📷 कैमरा बंद") + "</button>" +
+      "<button type="button" class="action-btn danger" onclick="endConferenceStage()">📞 कॉल समाप्त करें</button>" +
+    "</div>";
+
+  if (callSession.localStream && callSession.mode === "video" && callSession.camOn) {
+    var vidEl = document.getElementById("conf-local-video");
+    if (vidEl && vidEl.srcObject !== callSession.localStream) vidEl.srcObject = callSession.localStream;
+  }
+}
+
+function renderSocialCallHub() {
+  var body = document.getElementById("call-perm-body");
+  if (!body) return;
+  var me = getCallerIdentity();
+  var allPoets = getAllPoetObjects();
+  var myPendingCalls = state.callRequests.filter(function(r) {
+    if (r.status !== "pending") return false;
+    return (me.email && (r.toEmail === me.email || r.fromEmail === me.email)) || r.toName === me.name || r.fromName === me.name;
+  });
+  var myPendingGroupInvites = state.groupInvites.filter(function(inv) {
+    if (inv.status !== "pending") return false;
+    return (me.email && inv.toEmail === me.email) || inv.toName === me.name;
+  });
+
+  var paneHtml = "";
+  if (socialCallTab === "groups") {
+    var grp = state.chaupalGroups.find(function(g) { return g.id === activeGroupId; }) || state.chaupalGroups[0];
+    var gMsgs = grp ? state.groupMessages.filter(function(m) { return m.groupId === grp.id; }).slice().reverse() : [];
+    var inviteOptions = allPoets.filter(function(pt) { return grp && (!grp.members || grp.members.indexOf(pt.name) === -1); });
+
+    paneHtml =
+      "<div class="form-box">" +
+        "<h4 class="section-title" style="margin-bottom:8px;">➕ नया चौपाल ग्रुप बनाएँ</h4>" +
+        "<div class="two-fields">" +
+          "<div class="field"><input id="cg-name-in" placeholder="ग्रुप का नाम (जैसे: दोहा गोष्ठी)" /></div>" +
+          "<div class="field"><input id="cg-topic-in" placeholder="विषय (वैकल्पिक)" /></div>" +
+        "</div>" +
+        "<button type="button" class="action-btn primary" style="padding:8px 14px; font-size:12.5px;" onclick="createChaupalGroup()">✓ ग्रुप बनाएँ</button>" +
+      "</div>" +
+      "<div class="h-scroll">" +
+        state.chaupalGroups.map(function(g) {
+          var isAct = grp && g.id === grp.id;
+          return "<button type="button" class="pill-chip " + (isAct ? "active" : "") + "" onclick="activeGroupId=dec('" + arg(g.id) + "'); renderSocialCallHub()">👥 " + esc(g.name) + " <span class="count">" + ((g.members && g.members.length) || 1) + "</span></button>";
+        }).join("") +
+      "</div>" +
+      (grp ? ("<div class="group-card">" +
+        "<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">" +
+          "<div><h3 class="poem-card-title" style="font-size:18px; margin:0;">" + esc(grp.name) + "</h3><div style="font-size:12px; color:var(--text-muted);">" + esc(grp.topic || "") + " • सदस्य: " + esc((grp.members || []).join(", ")) + "</div></div>" +
+          "<div style="display:flex; gap:6px; flex-wrap:wrap;">" +
+            "<button type="button" class="btn-approve" style="padding:6px 11px; font-size:12px;" onclick="launchConferenceStage('video', dec('" + arg(grp.name + " — ग्रुप वीडियो कॉन्फ्रेंस") + "'), " + JSON.stringify(grp.members || [me.name]) + ")">📹 ग्रुप वीडियो कॉल</button>" +
+            "<button type="button" class="sm-btn" onclick="launchConferenceStage('audio', dec('" + arg(grp.name + " — ग्रुप ऑडियो कॉल") + "'), " + JSON.stringify(grp.members || [me.name]) + ")">🎙️ ऑडियो कॉल</button>" +
+          "</div>" +
+        "</div>" +
+        "<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">" +
+          "<select id="cg-invite-sel-" + grp.id + "" style="flex:1; min-width:170px; padding:8px 10px; border-radius:10px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); font-size:12.5px;">" +
+            "<option value="">— परमिशन अनुरोध भेजने हेतु सदस्य चुनें —</option>" +
+            inviteOptions.map(function(pt) { return "<option value="" + esc(pt.name) + "">" + esc(pt.name) + "</option>"; }).join("") +
+          "</select>" +
+          "<button type="button" class="action-btn gold" style="padding:7px 12px; font-size:12px;" onclick="sendGroupPermissionInvite(dec('" + arg(grp.id) + "'))">🔒 परमिशन भेजें</button>" +
+        "</div>" +
+        "<div class="group-chat-feed">" +
+          (gMsgs.length ? gMsgs.map(function(m) {
+            var mine = me.email && m.senderEmail === me.email;
+            return "<div class="gchat-msg " + (mine ? "mine" : "") + ""><div style="font-size:11.5px; font-weight:700; color:var(--primary);">" + esc(m.senderName) + " <span style="font-weight:400; color:var(--text-muted);">• " + formatTimeHi(m.createdAt) + "</span></div><div style="font-size:13.5px; margin-top:2px; white-space:pre-line;">" + esc(m.text) + "</div></div>";
+          }).join("") : "<div style="font-size:12.5px; color:var(--text-muted); text-align:center; padding:12px;">ग्रुप चैट शुरू करें — साहित्यिक चर्चा व संवाद यहाँ दिखेगा।</div>") +
+        "</div>" +
+        "<div style="display:flex; gap:6px;">" +
+          "<input id="cg-chat-in-" + grp.id + "" placeholder="ग्रुप में संदेश लिखें..." style="flex:1; padding:9px 12px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);" onkeydown="if(event.key==='Enter') postGroupChatMessage(dec('" + arg(grp.id) + "'))" />" +
+          "<button type="button" class="action-btn primary" style="padding:8px 14px; font-size:12.5px;" onclick="postGroupChatMessage(dec('" + arg(grp.id) + "'))">भेजें</button>" +
+        "</div>" +
+      "</div>") : "");
+  } else if (socialCallTab === "direct") {
+    paneHtml = "<div class="cards-grid two-col">" + allPoets.map(function(pt) {
+      if (pt.name === me.name) return "";
+      var av = pt.photo ? ("<img src="" + pt.photo + "" alt="" + esc(pt.name) + "">") : esc(initials(pt.name));
+      return "<div class="person-card" style="cursor:default;"><div class="avatar-md">" + av + "</div><div class="person-info"><h3 class="person-name">" + esc(pt.name) + "</h3><div class="person-meta">📍 " + esc(pt.city || "भारत") + "</div><div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;"><button type="button" class="btn-approve" style="padding:5px 10px; font-size:11.5px;" onclick="requestPermissionCall(dec('" + arg(pt.name) + "'), dec('" + arg(pt.ownerEmail || "") + "'), 'video', dec('" + arg(pt.name + " से वीडियो कॉल") + "'))">📹 वीडियो कॉल अनुमति</button><button type="button" class="sm-btn" onclick="requestPermissionCall(dec('" + arg(pt.name) + "'), dec('" + arg(pt.ownerEmail || "") + "'), 'audio', dec('" + arg(pt.name + " से ऑडियो कॉल") + "'))">🎙️ ऑडियो कॉल</button></div></div></div>";
+    }).join("") + "</div>";
+  } else {
+    var callReqHtml = myPendingCalls.map(function(r) {
+      var incoming = (me.email && r.toEmail === me.email) || r.toName === me.name;
+      return "<div class="pending-card">" +
+        "<span class="genre-tag">" + (r.mode === "audio" ? "🎙️ ऑडियो कॉल अनुरोध" : "📹 वीडियो कॉल अनुरोध") + "</span>" +
+        "<div style="font-weight:700; margin-top:6px; color:var(--primary);">" + esc(r.fromName) + " → " + esc(r.toName) + "</div>" +
+        "<div style="font-size:12.5px; color:var(--text-muted); margin-top:3px;">" + esc(r.contextTitle || "") + "</div>" +
+        "<div class="pending-actions">" +
+          (incoming
+            ? ("<button type="button" class="btn-approve" onclick="respondCallRequest(dec('" + arg(r.id) + "'), true)">✅ अनुमति दें व कॉल शुरू करें</button><button type="button" class="btn-reject" onclick="respondCallRequest(dec('" + arg(r.id) + "'), false)">❌ अस्वीकार</button>")
+            : ("<button type="button" class="btn-approve" onclick="respondCallRequest(dec('" + arg(r.id) + "'), true)">▶ कॉन्फ्रेंस कक्ष खोलें</button>")) +
+        "</div>" +
+      "</div>";
+    }).join("");
+
+    var grpInvHtml = myPendingGroupInvites.map(function(inv) {
+      return "<div class="pending-card">" +
+        "<span class="genre-tag">👥 ग्रुप जुड़ने की अनुमति</span>" +
+        "<div style="font-weight:700; margin-top:6px; color:var(--primary);">“" + esc(inv.groupName) + "”</div>" +
+        "<div style="font-size:12.5px; color:var(--text-muted); margin-top:3px;">" + esc(inv.fromName) + " ने आपको ग्रुप में जोड़ने का अनुरोध भेजा है।</div>" +
+        "<div class="pending-actions">" +
+          "<button type="button" class="btn-approve" onclick="respondGroupInvite(dec('" + arg(inv.id) + "'), true)">✅ जुड़ने की अनुमति दें</button>" +
+          "<button type="button" class="btn-reject" onclick="respondGroupInvite(dec('" + arg(inv.id) + "'), false)">❌ अस्वीकार</button>" +
+        "</div>" +
+      "</div>";
+    }).join("");
+
+    paneHtml = (callReqHtml + grpInvHtml) || "<div class="empty-box">अभी कोई लंबित कॉल या ग्रुप अनुमति अनुरोध नहीं है। ‘ग्रुप’ या ‘व्यक्तिगत कॉल’ टैब से अनुरोध भेजें या कॉन्फ्रेंस कक्ष खोलें।<div style="margin-top:10px;"><button type="button" class="action-btn gold" onclick="launchConferenceStage('video', 'काव्य चौपाल सजीव कॉन्फ्रेंस कक्ष', [me.name, 'धीरज श्रीवास्तव'])">📹 डेमो कॉन्फ्रेंस व सोशल लाइव खोलें</button></div></div>";
+  }
+
+  body.innerHTML =
+    "<div class="social-call-hero">" +
+      "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">" +
+        "<span class="call-net-badge">🔒 परमिशन-आधारित ऑडियो/वीडियो कॉल व ग्रुप</span>" +
+        "<span class="call-net-badge">⚡ Ultra-HD + पुअर नेट स्मूद</span>" +
+      "</div>" +
+      "<h3 class="font-royal" style="font-size:22px; color:#F7DC8B; margin:8px 0 4px;">चौपाल सोशल कॉल, ग्रुप व कॉन्फ्रेंस लाइव</h3>" +
+      "<p style="font-size:12.5px; color:rgba(255,248,234,0.88); margin:0;">अनुमति लेकर व्यक्तिगत या ग्रुप कॉल करें, कमज़ोर नेटवर्क में स्मूद मोड चलाएँ और कॉन्फ्रेंस को सोशल प्लेटफ़ॉर्म पर लाइव करें।</p>" +
+    "</div>" +
+    "<div class="admin-tabs" style="justify-content:center;">" +
+      "<button type="button" class="admin-tab-btn " + (socialCallTab === "groups" ? "active" : "") + "" onclick="setSocialCallTab('groups')">👥 चौपाल ग्रुप (" + state.chaupalGroups.length + ")</button>" +
+      "<button type="button" class="admin-tab-btn " + (socialCallTab === "direct" ? "active" : "") + "" onclick="setSocialCallTab('direct')">📞 व्यक्तिगत कॉल</button>" +
+      "<button type="button" class="admin-tab-btn " + (socialCallTab === "requests" ? "active" : "") + "" onclick="setSocialCallTab('requests')">🔔 अनुमतियाँ (" + (myPendingCalls.length + myPendingGroupInvites.length) + ")</button>" +
+    "</div>" +
+    paneHtml;
+}
+
 applyTheme(localStorage.getItem(THEME_KEY) || "light");
 initSplashParticles();
 startSplashTimer();
@@ -6675,5 +7291,25 @@ renderAll();
 initFirebaseSync();
 initSmartBackNavigation();
   </script>
+
+  <!-- ================= INCOMING / OUTGOING CALL PERMISSION MODAL ================= -->
+  <div class="modal-overlay" id="call-perm-modal" style="z-index:470;" onclick="closeModalOnBg(event, 'call-perm-modal')">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+          <button class="close-btn" style="width:auto; padding:0 11px; border-radius:99px; font-size:13px; font-weight:700;" onclick="closeModal('call-perm-modal')">← वापस</button>
+          <h3 class="modal-title" id="call-perm-title">📞 कॉल अनुमति व संवाद</h3>
+        </div>
+        <button class="close-btn" onclick="closeModal('call-perm-modal')">✕</button>
+      </div>
+      <div class="modal-body" id="call-perm-body"></div>
+    </div>
+  </div>
+
+  <!-- ================= CONFERENCE CALL & SOCIAL LIVE STAGE ================= -->
+  <div class="conf-stage-overlay" id="conf-stage-modal">
+    <div id="conf-stage-body" style="max-width:920px; width:100%; margin:0 auto; display:flex; flex-direction:column; flex:1;"></div>
+  </div>
+
 </body>
 </html>
