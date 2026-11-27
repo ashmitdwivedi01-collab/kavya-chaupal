@@ -5795,6 +5795,58 @@ function listenForIncomingCalls(myEmail) {
     }, function() {});
 }
 
+function cleanupWebRtcCall(keepCallDocAlive) {
+  stopIncomingRingTone();
+  stopOutgoingRingTone();
+  if (chaupalSocialState.callUnsubscribe) {
+    try { chaupalSocialState.callUnsubscribe(); } catch (e) {}
+    chaupalSocialState.callUnsubscribe = null;
+  }
+  var callId = chaupalSocialState.activeCallDocId;
+  var me = getCurrentMemberIdentity();
+  if (!keepCallDocAlive && callId && db) {
+    var ref = getCallDocRef(callId);
+    if (ref) {
+      ref.set({ status: "ended", endedAt: Date.now() }, { merge: true }).catch(function() {});
+    }
+  }
+  if (chaupalSocialState.peerConnectionsMap) {
+    Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+      try { chaupalSocialState.peerConnectionsMap[k].close(); } catch (e) {}
+    });
+  }
+  if (chaupalSocialState.peerConnection) {
+    try { chaupalSocialState.peerConnection.close(); } catch (e) {}
+  }
+  if (chaupalSocialState.remoteStreamsMap) {
+    Object.keys(chaupalSocialState.remoteStreamsMap).forEach(function(k) {
+      var entry = chaupalSocialState.remoteStreamsMap[k];
+      if (entry && entry.stream && entry.stream.getTracks) {
+        try { entry.stream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
+      }
+    });
+  }
+  if (chaupalSocialState.localStream && chaupalSocialState.localStream.getTracks) {
+    try { chaupalSocialState.localStream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
+  }
+  chaupalSocialState.localStream = null;
+  chaupalSocialState.remoteStream = null;
+  chaupalSocialState.peerConnection = null;
+  chaupalSocialState.peerConnectionsMap = {};
+  chaupalSocialState.remoteStreamsMap = {};
+  chaupalSocialState.peerStatusMap = {};
+  chaupalSocialState.processedCandidatesMap = {};
+  chaupalSocialState.pendingIceQueue = {};
+  chaupalSocialState.lastAppliedOfferTs = {};
+  chaupalSocialState.lastAppliedAnswerTs = {};
+  chaupalSocialState.activeCallSession = null;
+  chaupalSocialState.activeCallDocId = null;
+  chaupalSocialState.isMuted = false;
+  chaupalSocialState.isCamOff = false;
+  chaupalSocialState.isLiveActive = false;
+  renderGlobalActiveCallBanner();
+}
+
 function leaveConferenceCall() {
   var callId = chaupalSocialState.activeCallDocId;
   var me = getCurrentMemberIdentity();
@@ -5961,7 +6013,21 @@ function subscribeToActiveCallDoc(callId, isCaller) {
         if (p.status === "left" || p.status === "declined" || p.status === "ended") {
           closeSinglePeerConnection(pEm);
         } else if (p.status === "accepted" || p.status === "connected") {
-          ensureMeshPeerConnection(callId, pEm, p.name || pEm, isCaller ? "caller" : "callee", myEm < pEm);
+          var shouldOffer = (myEm < pEm) && (!meshSig[getLegKey(myEm, pEm)] || !meshSig[getLegKey(myEm, pEm)].offer);
+          var peerPc = ensureMeshPeerConnection(callId, pEm, p.name || pEm, isCaller ? "caller" : "callee", shouldOffer);
+          if (peerPc && chaupalSocialState.localStream && peerPc.getSenders && peerPc.getSenders().length === 0 && peerPc.signalingState === "stable") {
+            chaupalSocialState.localStream.getTracks().forEach(function(tr) {
+              try { peerPc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
+            });
+            peerPc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(function(off) {
+              return peerPc.setLocalDescription(off).then(function() {
+                var lkNow = getLegKey(myEm, pEm);
+                var up = {};
+                up[lkNow] = { fromEmail: myEm, toEmail: pEm, offer: { type: off.type, sdp: off.sdp }, offerTs: Date.now() };
+                return ref.set({ meshSignals: up }, { merge: true });
+              });
+            }).catch(function() {});
+          }
         }
       }
     });
