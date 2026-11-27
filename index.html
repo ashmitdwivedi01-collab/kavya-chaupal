@@ -1752,67 +1752,123 @@
       .top-account-btns { width: auto; justify-content: flex-end; }
     }
   
-    /* ================= LOGO-INSPIRED MULTI-COLOR THEME ================= */
+    /* ================= LOGO-INSPIRED AMBER-GOLD & WARM MAROON THEME ================= */
     :root {
-      --bg: #FDF7EC;
-      --bg-elevated: #FFFDF8;
-      --bg-soft: #F3E6CC;
-      --surface-glass: rgba(255, 252, 244, 0.95);
-      --primary: #0F234E;
-      --primary-deep: #081229;
-      --gold: #D49B27;
-      --gold-light: #FCE198;
-      --gold-soft: rgba(212, 155, 39, 0.16);
-      --text: #101A30;
-      --text-muted: #55617A;
-      --border: rgba(212, 155, 39, 0.34);
-      --shadow: 0 10px 28px rgba(15, 35, 78, 0.08);
-      --shadow-strong: 0 18px 42px rgba(15, 35, 78, 0.16);
+      --bg: #FCF6E8;
+      --bg-elevated: #FFFDF7;
+      --bg-soft: #F5E6C6;
+      --surface-glass: rgba(255, 251, 240, 0.96);
+      --primary: #8C4A08;
+      --primary-deep: #5A1118;
+      --gold: #CC840C;
+      --gold-light: #FCE29A;
+      --gold-soft: rgba(204, 132, 12, 0.15);
+      --text: #26160D;
+      --text-muted: #6B5342;
+      --border: rgba(204, 132, 12, 0.34);
+      --shadow: 0 10px 28px rgba(108, 62, 10, 0.08);
+      --shadow-strong: 0 18px 42px rgba(90, 17, 24, 0.16);
     }
     [data-theme="night"] {
-      --bg: #080E1F;
-      --bg-elevated: #101A36;
-      --bg-soft: #18254A;
-      --surface-glass: rgba(11, 18, 38, 0.95);
-      --primary: #F5C85C;
-      --primary-deep: #050914;
-      --gold: #E5B442;
+      --bg: #140D0B;
+      --bg-elevated: #201511;
+      --bg-soft: #2C1C16;
+      --surface-glass: rgba(24, 15, 12, 0.96);
+      --primary: #F0B43A;
+      --primary-deep: #0C0706;
+      --gold: #E4840C;
       --gold-light: #FFE6A3;
-      --gold-soft: rgba(229, 180, 66, 0.16);
-      --text: #F7F2E6;
-      --text-muted: #B6C0D8;
-      --border: rgba(229, 180, 66, 0.28);
+      --gold-soft: rgba(228, 132, 12, 0.18);
+      --text: #FBF3E4;
+      --text-muted: #C8B49A;
+      --border: rgba(228, 132, 12, 0.32);
     }
     .app-header {
-      background: linear-gradient(135deg, #0D1D42 0%, #172B59 55%, #3B1020 100%) !important;
-      border-bottom: 2px solid var(--gold) !important;
+      background: linear-gradient(135deg, #5C1218 0%, #8E4B0A 52%, #C97E0B 100%) !important;
+      border-bottom: 2px solid #F7DC8B !important;
+      height: 68px !important;
+    }
+    .header-inner {
+      padding: 0 14px !important;
+      gap: 10px !important;
+    }
+    .brand-group {
+      gap: 11px !important;
+      flex: 1;
+      min-width: 0;
+    }
+    .brand-seal {
+      width: 44px !important;
+      height: 44px !important;
+      border: 2px solid #FFE599 !important;
     }
     .brand-title {
-      color: #FFE599 !important;
-      font-size: 18.5px !important;
+      color: #FFF4CC !important;
+      font-size: 20px !important;
+      letter-spacing: 0.3px;
       white-space: nowrap !important;
       overflow: visible !important;
       text-overflow: clip !important;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
     }
-    @media (min-width: 480px) { .brand-title { font-size: 22px !important; } }
+    @media (min-width: 480px) { .brand-title { font-size: 23px !important; } }
+    .brand-sub {
+      color: #FCE6A4 !important;
+      font-size: 11.5px !important;
+      margin-top: 2px;
+    }
+    .top-account-strip {
+      margin: 12px auto 4px !important;
+    }
+    .top-account-box {
+      padding: 11px 14px !important;
+      border-radius: 16px !important;
+      border-color: rgba(204, 132, 12, 0.42) !important;
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, #FFF7E4 100%) !important;
+    }
+    [data-theme="night"] .top-account-box {
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, #261813 100%) !important;
+    }
     .spotlight-card {
       background:
-        radial-gradient(circle at 82% 18%, rgba(252, 225, 152, 0.26), transparent 50%),
-        radial-gradient(circle at 15% 88%, rgba(126, 22, 36, 0.32), transparent 48%),
-        linear-gradient(150deg, #0E1F46 0%, #1B2F5E 52%, #3A1020 100%) !important;
-      border: 2px solid var(--gold) !important;
+        radial-gradient(circle at 82% 18%, rgba(252, 226, 154, 0.28), transparent 50%),
+        radial-gradient(circle at 15% 88%, rgba(228, 132, 12, 0.28), transparent 48%),
+        linear-gradient(150deg, #69121B 0%, #8F4A0B 56%, #4B0D14 100%) !important;
+      border: 2px solid #F3D47E !important;
+      margin-bottom: 18px !important;
+    }
+    .quick-grid {
+      gap: 9px !important;
+      margin-bottom: 18px !important;
+    }
+    .quick-tile {
+      padding: 12px 6px !important;
+      border-radius: 17px !important;
+      border-color: rgba(204, 132, 12, 0.32) !important;
+    }
+    .submit-cta-bar {
+      padding: 15px 16px !important;
+      margin-bottom: 16px !important;
+      border-radius: 18px !important;
+      background: linear-gradient(135deg, rgba(204, 132, 12, 0.16) 0%, rgba(123, 22, 32, 0.08) 100%) !important;
+    }
+    .search-box {
+      margin-bottom: 16px !important;
+    }
+    .section-head {
+      margin: 18px 0 10px !important;
     }
     .profile-hero {
       background:
         radial-gradient(circle at 85% 18%, rgba(252, 225, 152, 0.26), transparent 50%),
-        linear-gradient(145deg, #0E1F46 0%, #1C3161 55%, #4A1224 100%) !important;
+        linear-gradient(145deg, #69121B 0%, #8F4A0B 58%, #4B0D14 100%) !important;
       color: #FFF9EC !important;
       border: 2px solid var(--gold) !important;
     }
     .social-hub-hero {
       background:
         radial-gradient(circle at 85% 18%, rgba(252, 225, 152, 0.26), transparent 48%),
-        linear-gradient(145deg, #0E1F46 0%, #1B2F5E 58%, #3B1020 100%);
+        linear-gradient(145deg, #69121B 0%, #8F4A0B 58%, #4B0D14 100%);
       color: #FFF8EA;
       border-radius: 22px;
       padding: 18px 16px;
@@ -1823,11 +1879,11 @@
     .social-subnav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
     .social-subnav::-webkit-scrollbar { display: none; }
     .social-subbtn { flex-shrink: 0; padding: 8px 13px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--bg-elevated); color: var(--text); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-    .social-subbtn.active { background: linear-gradient(135deg, #0F234E 0%, #2B1328 100%); color: #FFE599; border-color: var(--gold); }
+    .social-subbtn.active { background: linear-gradient(135deg, #7B1620 0%, #9E530B 100%); color: #FFE599; border-color: var(--gold); }
     .social-thread-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 15px; padding: 12px; max-height: 290px; overflow-y: auto; margin-bottom: 10px; }
     .social-msg-bubble { padding: 9px 12px; border-radius: 13px; background: var(--bg-elevated); border: 1px solid var(--border); margin-bottom: 8px; }
     .social-msg-bubble.mine { background: var(--gold-soft); border-color: var(--gold); }
-    .call-stage-card { background: linear-gradient(155deg, #0D1A38 0%, #1E1024 100%); color: #FFF8EA; border: 2px solid var(--gold); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-strong); }
+    .call-stage-card { background: linear-gradient(155deg, #4B0D14 0%, #24130C 100%); color: #FFF8EA; border: 2px solid var(--gold); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-strong); }
     .conf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0 12px; }
     @media (min-width: 600px) { .conf-grid { grid-template-columns: repeat(3, 1fr); } }
     .conf-tile { background: rgba(255, 255, 255, 0.06); border: 1.5px solid rgba(252, 225, 152, 0.35); border-radius: 14px; padding: 12px 10px; text-align: center; }
