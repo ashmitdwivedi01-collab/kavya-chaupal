@@ -3980,13 +3980,26 @@ function renderPoetsDirectory() {
 }
 
 function openPoetProfile(poetName) {
-  recordPoetView(poetName); closeModal("reader-modal", true); pushAppView("poet"); state.activeTab = "poets"; state.activePoetName = poetName;
+  var nm = (poetName || "").trim();
+  if (!nm) return;
+  try { recordPoetView(nm); } catch (e) {}
+  try { closeModal("reader-modal", true); } catch (e) {
+    var rm = document.getElementById("reader-modal");
+    if (rm) rm.classList.remove("open");
+  }
+  try { pushAppView("poet"); } catch (e) {}
+  state.activeTab = "poets";
+  state.activePoetName = nm;
   document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
-  document.getElementById("tab-poets").classList.add("active");
+  var tPoets = document.getElementById("tab-poets");
+  if (tPoets) tPoets.classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === "poets"); });
-  document.getElementById("poets-list-view").style.display = "none";
-  document.getElementById("poet-detail-view").style.display = "block";
-  renderPoetDetail(poetName); window.scrollTo({ top: 0, behavior: "smooth" });
+  var listV = document.getElementById("poets-list-view");
+  var detV = document.getElementById("poet-detail-view");
+  if (listV) listV.style.display = "none";
+  if (detV) detV.style.display = "block";
+  try { renderPoetDetail(nm); } catch (e) {}
+  try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
 }
 function closePoetDetail(fromPop) { state.activePoetName = null; document.getElementById("poet-detail-view").style.display = "none"; document.getElementById("poets-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 
@@ -4681,8 +4694,14 @@ function toggleMehfilMusic() {
 
 function openReader(poemId) {
   var p = state.poems.find(function(x) { return x.id === poemId; });
-  if (p && !document.getElementById("reader-modal").classList.contains("open")) pushAppView("reader");
-  if (!p) return; recordPoemView(poemId); stopTeleprompter(); state.currentReaderPoemId = poemId;
+  if (!p) return;
+  var rModal = document.getElementById("reader-modal");
+  if (rModal && !rModal.classList.contains("open")) {
+    try { pushAppView("reader"); } catch (e) {}
+  }
+  try { recordPoemView(poemId); } catch (e) {}
+  try { stopTeleprompter(); } catch (e) {}
+  state.currentReaderPoemId = poemId;
   var liked = state.favorites.indexOf(p.id) !== -1; var d = getDaadCounts(p);
   var poemComments = state.comments.filter(function(c) { return c.poemId === p.id; });
   var defaultCommenter = "";
@@ -4725,7 +4744,7 @@ function openReader(poemId) {
         "</div>";
       }).join("") : "<div style=\"font-size:13px; color:var(--text-muted); text-align:center; padding:10px;\">पहली टिप्पणी लिखकर रचनाकार का उत्साहवर्धन करें।</div>") +
     "</div>";
-  document.getElementById("reader-modal").classList.add("open");
+  if (rModal) rModal.classList.add("open");
 }
 
 function postPoemComment(poemId) {
