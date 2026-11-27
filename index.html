@@ -5489,25 +5489,35 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
     }
   }
 
-  if (offerToCreate && pc.signalingState === "stable") {
-    var me2 = getCurrentMemberIdentity();
-    var myEm2 = (me2 && me2.email) || "";
-    var legKey2 = getLegKey(myEm2, pEm);
-    var ref2 = getCallDocRef(callId);
-    if (ref2 && myEm2) {
-      pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(function(offer) {
-        return pc.setLocalDescription(offer).then(function() {
-          var meshUpdate = {};
-          meshUpdate[legKey2] = {
-            fromEmail: myEm2,
-            toEmail: pEm,
-            offer: { type: offer.type, sdp: offer.sdp },
-            offerTs: Date.now()
-          };
-          return ref2.set({ meshSignals: meshUpdate }, { merge: true });
-        });
-      }).catch(function() {});
+  var me2 = getCurrentMemberIdentity();
+  var myEm2 = (me2 && me2.email) || "";
+  var legKey2 = getLegKey(myEm2, pEm);
+  var ref2 = getCallDocRef(callId);
+  if (!chaupalSocialState._sentOfferLegs) chaupalSocialState._sentOfferLegs = {};
+  var shouldSendOfferNow = false;
+  if (ref2 && myEm2 && pc.signalingState === "stable") {
+    if (offerToCreate || addedNewTrack) {
+      shouldSendOfferNow = true;
+    } else if (!chaupalSocialState._sentOfferLegs[legKey2] && chaupalSocialState.localStream && myEm2 > pEm) {
+      shouldSendOfferNow = true;
     }
+  }
+  if (shouldSendOfferNow) {
+    chaupalSocialState._sentOfferLegs[legKey2] = Date.now();
+    pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(function(offer) {
+      return pc.setLocalDescription(offer).then(function() {
+        var meshUpdate = {};
+        meshUpdate[legKey2] = {
+          fromEmail: myEm2,
+          toEmail: pEm,
+          offer: { type: offer.type, sdp: offer.sdp },
+          offerTs: Date.now()
+        };
+        return ref2.set({ meshSignals: meshUpdate }, { merge: true });
+      });
+    }).catch(function() {
+      if (chaupalSocialState._sentOfferLegs) delete chaupalSocialState._sentOfferLegs[legKey2];
+    });
   }
 
   return pc;
@@ -5559,6 +5569,14 @@ function attachMediaToDom() {
     var safeId = "soc-rem-vid-" + emKey.replace(/[^a-zA-Z0-9]/g, "_");
     var el = document.getElementById(safeId);
     var st = remMap[emKey] && remMap[emKey].stream;
+    var dbgEl = document.getElementById("media-dbg-" + safeId);
+    if (dbgEl) {
+      var aCnt = (st && st.getAudioTracks) ? st.getAudioTracks().length : 0;
+      var vCnt = (st && st.getVideoTracks) ? st.getVideoTracks().length : 0;
+      var pcObj = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[emKey];
+      var iceSt = (pcObj && pcObj.iceConnectionState) || "new";
+      dbgEl.textContent = "🔊 ऑडियो:" + aCnt + " | 📹 वीडियो:" + vCnt + " | ICE:" + iceSt;
+    }
     if (el && st && st.getTracks && st.getTracks().length > 0) {
       st.getTracks().forEach(function(tr) { tr.enabled = true; });
       if (el.srcObject !== st) {
@@ -6043,7 +6061,8 @@ function subscribeToActiveCallDoc(callId, isCaller) {
           var lkCheck = getLegKey(myEm, pEm);
           var existingSig = meshSig[lkCheck];
           var isInitiator = !!isCaller || ((data.callerEmail || "").toLowerCase().trim() === myEm);
-          var shouldOffer = isInitiator && (!existingSig || !existingSig.offer);
+          var alreadySentOffer = !!(chaupalSocialState._sentOfferLegs && chaupalSocialState._sentOfferLegs[lkCheck]);
+          var shouldOffer = (!existingSig || !existingSig.offer) && !alreadySentOffer && (isInitiator || (myEm > pEm));
           var peerPc = ensureMeshPeerConnection(callId, pEm, p.name || pEm, isInitiator ? "caller" : "callee", shouldOffer);
           if (peerPc && chaupalSocialState.localStream && peerPc.getSenders && peerPc.getSenders().length === 0 && peerPc.signalingState === "stable") {
             chaupalSocialState.localStream.getTracks().forEach(function(tr) {
@@ -6701,6 +6720,7 @@ function renderChaupalSocial() {
           "<div id=\"tile-wrap-" + safeId + "\" style=\"background:rgba(0,0,0,0.45); border:1.5px solid " + (stLbl === "connected" ? "#4ADE80" : "var(--gold)") + "; border-radius:14px; padding:6px;\">" +
             "<video id=\"" + safeId + "\" autoplay playsinline style=\"width:100%; height:150px; object-fit:cover; border-radius:10px; background:#000; display:block;\"></video>" +
             "<div style=\"font-size:11.5px; color:#FFF8EA; font-weight:700; margin-top:5px; text-align:center;\">" + esc(rp.name || rpEm) + " • <span id=\"st-lbl-" + safeId + "\" style=\"color:" + (stLbl === "connected" ? "#86EFAC" : "#FDE047") + ";\">" + (stLbl === "connected" ? "🟢 जुड़ा" : "🔔 रिंग") + "</span></div>" +
+"<div id=\"media-dbg-" + safeId + "\" style=\"font-size:10px; color:#FCE49C; opacity:0.85; text-align:center; margin-top:2px;\">ऑडियो/वीडियो प्रतीक्षा...</div>" +
           "</div>"
         );
       });
