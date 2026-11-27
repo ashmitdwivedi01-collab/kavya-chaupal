@@ -2640,6 +2640,15 @@ var DEFAULT_SETTINGS = {
   aboutText: "काव्य चौपाल हिंदी साहित्य, छंद, गीत, ग़ज़ल और संवेदनशील अभिव्यक्ति को समर्पित एक सशक्त डिजिटल साहित्यिक मंच है।\n\nहमारा उद्देश्य नवांकुर एवं वरिष्ठ रचनाकारों को एक गरिमामय मंच प्रदान करना, साप्ताहिक काव्य कार्यशालाओं, मासिक काव्य गोष्ठियों, स्वरचित काव्यपाठ प्रतियोगिताओं और सजीव कवि सम्मेलनों के माध्यम से हिंदी कविता की परंपरा को जन-जन तक पहुँचाना है।",
   adminPin: "1234",
   adminEmail: "",
+  sfuEnabled: false,
+  sfuProvider: "auto-sfu-mesh",
+  sfuEndpoint: "",
+  sfuTokenEndpoint: "",
+  sfuApiKey: "",
+  customTurnUrl: "",
+  customTurnUsername: "",
+  customTurnCredential: "",
+  forceTurnRelay: false,
   featuredPoemId: "poem_rahul_1",
   genres: ["गीत", "दोहा", "ग़ज़ल", "मुक्तक", "कविता", "छंद", "नवगीत", "बाल साहित्य"],
   socials: {
@@ -5443,7 +5452,7 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
   var isNewlyCreated = false;
   if (!pc) {
     isNewlyCreated = true;
-    pc = new RTCPeerConnection(RTC_ICE_CONFIG);
+    pc = new RTCPeerConnection(getEffectiveRtcIceConfig());
     chaupalSocialState.peerConnectionsMap[pEm] = pc;
     var remStream = new MediaStream();
     chaupalSocialState.remoteStreamsMap[pEm] = { stream: remStream, name: peerName || pEm };
@@ -5734,12 +5743,72 @@ var CHAUPAL_CONFERENCE_CONFIG = {
   sfuEnabled: false,
   sfuProvider: "auto-sfu-mesh",
   sfuEndpoint: "",
+  sfuTokenEndpoint: "",
   sfuApiKey: "",
   maxLowNetParticipants: 15,
   maxUhdParticipants: 6,
   audioFallbackThreshold: 3,
   turnServers: []
 };
+
+function syncConferenceConfigFromSettings() {
+  var st = (typeof state !== "undefined" && state.settings) ? state.settings : {};
+  CHAUPAL_CONFERENCE_CONFIG.sfuEnabled = Boolean(st.sfuEnabled && (st.sfuEndpoint || "").trim());
+  CHAUPAL_CONFERENCE_CONFIG.sfuProvider = (st.sfuProvider || "auto-sfu-mesh").trim();
+  CHAUPAL_CONFERENCE_CONFIG.sfuEndpoint = (st.sfuEndpoint || "").trim();
+  CHAUPAL_CONFERENCE_CONFIG.sfuTokenEndpoint = (st.sfuTokenEndpoint || "").trim();
+  CHAUPAL_CONFERENCE_CONFIG.sfuApiKey = (st.sfuApiKey || "").trim();
+  var turns = [];
+  var tUrl = (st.customTurnUrl || "").trim();
+  if (tUrl) {
+    var entry = { urls: tUrl };
+    if ((st.customTurnUsername || "").trim()) entry.username = st.customTurnUsername.trim();
+    if ((st.customTurnCredential || "").trim()) entry.credential = st.customTurnCredential.trim();
+    turns.push(entry);
+  }
+  CHAUPAL_CONFERENCE_CONFIG.turnServers = turns;
+  return CHAUPAL_CONFERENCE_CONFIG;
+}
+
+function fetchChaupalSfuToken(roomId, participantIdentity, participantName) {
+  syncConferenceConfigFromSettings();
+  var tokUrl = CHAUPAL_CONFERENCE_CONFIG.sfuTokenEndpoint;
+  if (!tokUrl) {
+    return Promise.resolve({
+      enabled: CHAUPAL_CONFERENCE_CONFIG.sfuEnabled,
+      provider: CHAUPAL_CONFERENCE_CONFIG.sfuProvider,
+      endpoint: CHAUPAL_CONFERENCE_CONFIG.sfuEndpoint,
+      token: CHAUPAL_CONFERENCE_CONFIG.sfuApiKey || ""
+    });
+  }
+  var sep = tokUrl.indexOf("?") === -1 ? "?" : "&";
+  var fullUrl = tokUrl + sep + "room=" + encodeURIComponent(roomId || "kavya_chaupal") +
+    "&identity=" + encodeURIComponent(participantIdentity || "member") +
+    "&name=" + encodeURIComponent(participantName || "सदस्य");
+  var headers = { "Accept": "application/json" };
+  if (CHAUPAL_CONFERENCE_CONFIG.sfuApiKey) {
+    headers["Authorization"] = "Bearer " + CHAUPAL_CONFERENCE_CONFIG.sfuApiKey;
+  }
+  return fetch(fullUrl, { method: "GET", headers: headers })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(data) {
+      return {
+        enabled: CHAUPAL_CONFERENCE_CONFIG.sfuEnabled,
+        provider: CHAUPAL_CONFERENCE_CONFIG.sfuProvider,
+        endpoint: (data && (data.url || data.wsUrl || data.endpoint)) || CHAUPAL_CONFERENCE_CONFIG.sfuEndpoint,
+        token: (data && (data.token || data.accessToken)) || CHAUPAL_CONFERENCE_CONFIG.sfuApiKey || ""
+      };
+    })
+    .catch(function(err) {
+      console.warn("SFU token fetch fallback:", err);
+      return {
+        enabled: false,
+        provider: "auto-sfu-mesh",
+        endpoint: CHAUPAL_CONFERENCE_CONFIG.sfuEndpoint,
+        token: ""
+      };
+    });
+}
 
 function getChaupalNetworkProfile(participantCount) {
   var pCount = Math.max(1, Number(participantCount || 1));
@@ -5796,12 +5865,14 @@ function getChaupalNetworkProfile(participantCount) {
 }
 
 function getEffectiveRtcIceConfig(forceRelayOnly) {
+  syncConferenceConfigFromSettings();
   var base = (typeof RTC_ICE_CONFIG !== "undefined" && RTC_ICE_CONFIG) ? RTC_ICE_CONFIG : { iceServers: [] };
   var extraTurn = Array.isArray(CHAUPAL_CONFERENCE_CONFIG.turnServers) ? CHAUPAL_CONFERENCE_CONFIG.turnServers.filter(Boolean) : [];
   var servers = extraTurn.concat(base.iceServers || []);
+  var stForce = Boolean(typeof state !== "undefined" && state.settings && state.settings.forceTurnRelay);
   return Object.assign({}, base, {
     iceServers: servers,
-    iceTransportPolicy: forceRelayOnly ? "relay" : (base.iceTransportPolicy || "all")
+    iceTransportPolicy: (forceRelayOnly || stForce) ? "relay" : (base.iceTransportPolicy || "all")
   });
 }
 
@@ -8137,7 +8208,35 @@ function renderAdminStudio() {
     setTimeout(function() { drawCertificateCanvas(false); }, 30);
   } else {
     var s = state.settings; var curLogo = state.tempLogoData || s.logo || "";
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">⚙️ लोगो, एडमिन ईमेल व पिन</h4><div class=\"field\"><label>लोगो अपलोड करें</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempLogoData\', \'adm-logo-prev\', 320, true)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" style=\"border-radius:50%;\" id=\"adm-logo-prev\">" + (curLogo ? ("<img src=\"" + curLogo + "\">") : "🪔") + "</div></div></div><div class=\"field\"><label>ऐप का नाम</label><input id=\"f-set-name\" value=\"" + esc(s.appName) + "\" /></div><div class=\"field\"><label>पंजीकृत एडमिन ईमेल</label><input id=\"f-set-adm-email\" type=\"email\" value=\"" + esc(s.adminEmail || "") + "\" /></div><div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin) + "\" /></div><div class=\"field\"><label>✨ Google Gemini मुफ़्त API Key (वैकल्पिक — इन-ऐप AI उत्तर हेतु)</label><input id=\"f-set-gemini-key\" type=\"password\" value=\"" + esc(s.geminiApiKey || "") + "\" placeholder=\"AIza... (यदि खाली छोड़ें तो मुफ़्त बैकअप AI स्वतः चलेगा)\" /></div><button class=\"action-btn primary\" onclick=\"saveSettingsForm()\">💾 सेटिंग्स सहेजें</button></div>";
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\" style=\"margin-bottom:10px;\">⚙️ लोगो, एडमिन ईमेल व पिन</h4>" +
+        "<div class=\"field\"><label>लोगो अपलोड करें</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempLogoData', 'adm-logo-prev', 320, true)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" style=\"border-radius:50%;\" id=\"adm-logo-prev\">" + (curLogo ? ("<img src=\"" + curLogo + "\">") : "🪔") + "</div></div></div>" +
+        "<div class=\"field\"><label>ऐप का नाम</label><input id=\"f-set-name\" value=\"" + esc(s.appName) + "\" /></div>" +
+        "<div class=\"field\"><label>पंजीकृत एडमिन ईमेल</label><input id=\"f-set-adm-email\" type=\"email\" value=\"" + esc(s.adminEmail || "") + "\" /></div>" +
+        "<div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin) + "\" /></div>" +
+        "<div class=\"field\"><label>✨ Google Gemini मुफ़्त API Key (वैकल्पिक — इन-ऐप AI उत्तर हेतु)</label><input id=\"f-set-gemini-key\" type=\"password\" value=\"" + esc(s.geminiApiKey || "") + "\" placeholder=\"AIza... (यदि खाली छोड़ें तो मुफ़्त बैकअप AI स्वतः चलेगा)\" /></div>" +
+      "</div>" +
+      "<div class=\"form-box\" style=\"border-color:var(--gold);\">" +
+        "<h4 class=\"section-title\" style=\"margin-bottom:6px;\">📡 LiveKit / SFU व कस्टम TURN रिले सेटअप</h4>" +
+        "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:10px;\">देशभर के अलग-अलग मोबाइल नेटवर्क व बड़ी कॉन्फ्रेंस के लिए अपना LiveKit/SFU सर्वर या कस्टम TURN रिले यहाँ जोड़ें (वैकल्पिक — खाली रहने पर निःशुल्क अंतर्निहित रिले स्वतः चलेगा)।</div>" +
+        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer;\"><input type=\"checkbox\" id=\"f-set-sfu-enabled\" " + (s.sfuEnabled ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>SFU / LiveKit मीडिया सर्वर सक्रिय करें</span></label></div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>मीडिया मोड / प्रदाता</label><select id=\"f-set-sfu-provider\"><option value=\"auto-sfu-mesh\" " + ((s.sfuProvider || "auto-sfu-mesh") === "auto-sfu-mesh" ? "selected" : "") + ">ऑटो (SFU + P2P रिले)</option><option value=\"livekit\" " + (s.sfuProvider === "livekit" ? "selected" : "") + ">LiveKit Cloud / Self-Hosted</option><option value=\"mediasoup\" " + (s.sfuProvider === "mediasoup" ? "selected" : "") + ">mediasoup / Custom SFU</option></select></div>" +
+          "<div class=\"field\"><label>SFU / LiveKit WebSocket URL</label><input id=\"f-set-sfu-url\" value=\"" + esc(s.sfuEndpoint || "") + "\" placeholder=\"wss://your-project.livekit.cloud\" /></div>" +
+        "</div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>Token Endpoint URL (वैकल्पिक)</label><input id=\"f-set-sfu-token-url\" value=\"" + esc(s.sfuTokenEndpoint || "") + "\" placeholder=\"https://.../get-livekit-token\" /></div>" +
+          "<div class=\"field\"><label>Static Token / API Key</label><input id=\"f-set-sfu-key\" type=\"password\" value=\"" + esc(s.sfuApiKey || "") + "\" placeholder=\"टोकन या कुंजी\" /></div>" +
+        "</div>" +
+        "<div class=\"field\"><label>कस्टम TURN Server URL (Coturn / Metered)</label><input id=\"f-set-turn-url\" value=\"" + esc(s.customTurnUrl || "") + "\" placeholder=\"turn:your-turn.example.com:3478?transport=tcp\" /></div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>TURN Username</label><input id=\"f-set-turn-user\" value=\"" + esc(s.customTurnUsername || "") + "\" placeholder=\"username\" /></div>" +
+          "<div class=\"field\"><label>TURN Credential / Password</label><input id=\"f-set-turn-pass\" type=\"password\" value=\"" + esc(s.customTurnCredential || "") + "\" placeholder=\"password\" /></div>" +
+        "</div>" +
+        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer;\"><input type=\"checkbox\" id=\"f-set-force-relay\" " + (s.forceTurnRelay ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>सख्त फ़ायरवॉल मोड (केवल TURN रिले मार्ग उपयोग करें)</span></label></div>" +
+      "</div>" +
+      "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"saveSettingsForm()\">💾 सभी सेटिंग्स सहेजें</button>";
   }
 
   var unreadMsgs = state.messages.filter(function(m) { return !m.adminReply; }).length;
@@ -8378,8 +8477,18 @@ function saveSettingsForm() {
   state.settings.adminEmail = ((document.getElementById("f-set-adm-email") || { value: "" }).value || "").trim().toLowerCase();
   state.settings.adminPin = (document.getElementById("f-set-pin") || { value: "1234" }).value.trim() || "1234";
   state.settings.geminiApiKey = ((document.getElementById("f-set-gemini-key") || { value: "" }).value || "").trim();
+  state.settings.sfuEnabled = Boolean((document.getElementById("f-set-sfu-enabled") || {}).checked);
+  state.settings.sfuProvider = ((document.getElementById("f-set-sfu-provider") || { value: "auto-sfu-mesh" }).value || "auto-sfu-mesh").trim();
+  state.settings.sfuEndpoint = ((document.getElementById("f-set-sfu-url") || { value: "" }).value || "").trim();
+  state.settings.sfuTokenEndpoint = ((document.getElementById("f-set-sfu-token-url") || { value: "" }).value || "").trim();
+  state.settings.sfuApiKey = ((document.getElementById("f-set-sfu-key") || { value: "" }).value || "").trim();
+  state.settings.customTurnUrl = ((document.getElementById("f-set-turn-url") || { value: "" }).value || "").trim();
+  state.settings.customTurnUsername = ((document.getElementById("f-set-turn-user") || { value: "" }).value || "").trim();
+  state.settings.customTurnCredential = ((document.getElementById("f-set-turn-pass") || { value: "" }).value || "").trim();
+  state.settings.forceTurnRelay = Boolean((document.getElementById("f-set-force-relay") || {}).checked);
+  syncConferenceConfigFromSettings();
   if (state.tempLogoData) { state.settings.logo = state.tempLogoData; state.tempLogoData = ""; }
-  cloudSaveDoc("settings", "settings", state.settings).then(function() { renderAll(); renderAdminStudio(); showToast("सेटिंग्स सहेजी गईं ✨"); });
+  cloudSaveDoc("settings", "settings", state.settings).then(function() { renderAll(); renderAdminStudio(); showToast("सेटिंग्स व कॉन्फ़्रेंस कॉन्फ़िगरेशन सहेजा गया ✨"); });
 }
 
 function openSubmitModal(tab) {
