@@ -3545,6 +3545,7 @@ function syncLinkedProfilesForCurrentUser(userObj) {
     state.adminUnlocked = true;
   }
   registerCurrentUserInSocialDirectory(userObj, matchedPoet);
+  listenForIncomingCalls(em);
 }
 
 function registerCurrentUserInSocialDirectory(userObj, matchedPoet) {
@@ -4941,14 +4942,42 @@ function getCallDocRef(callId) {
 var callRingAudioCtx = null;
 var callRingTimer = null;
 
+function ensureUnlockedAudioContext(existingCtx) {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  var ctx = existingCtx;
+  if (!ctx || ctx.state === "closed") {
+    try { ctx = new AC(); } catch (e) { return null; }
+  }
+  if (ctx.state === "suspended") {
+    try { ctx.resume().catch(function() {}); } catch (e) {}
+  }
+  return ctx;
+}
+
+(function bindGlobalAudioUnlock() {
+  var unlockOnce = function() {
+    if (incomingRingAudioCtx && incomingRingAudioCtx.state === "suspended") {
+      try { incomingRingAudioCtx.resume(); } catch (e) {}
+    }
+    if (callRingAudioCtx && callRingAudioCtx.state === "suspended") {
+      try { callRingAudioCtx.resume(); } catch (e) {}
+    }
+  };
+  document.addEventListener("touchstart", unlockOnce, { passive: true });
+  document.addEventListener("click", unlockOnce, { passive: true });
+})();
+
 function startOutgoingRingTone() {
   stopOutgoingRingTone();
-  var AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
+  callRingAudioCtx = ensureUnlockedAudioContext(callRingAudioCtx);
+  if (!callRingAudioCtx) return;
   try {
-    callRingAudioCtx = new AC();
     var playToneBurst = function() {
       if (!callRingAudioCtx || !chaupalSocialState.activeCallSession) return;
+      if (callRingAudioCtx.state === "suspended") {
+        try { callRingAudioCtx.resume(); } catch (e) {}
+      }
       var anyConnected = Object.keys(chaupalSocialState.peerStatusMap || {}).some(function(k) {
         return chaupalSocialState.peerStatusMap[k] === "connected";
       });
@@ -4960,7 +4989,7 @@ function startOutgoingRingTone() {
         osc.type = "sine";
         osc.frequency.setValueAtTime(freq, now);
         g.gain.setValueAtTime(0.0001, now);
-        g.gain.exponentialRampToValueAtTime(0.035, now + 0.08);
+        g.gain.exponentialRampToValueAtTime(0.04, now + 0.08);
         g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
         osc.connect(g);
         g.connect(callRingAudioCtx.destination);
@@ -4987,12 +5016,14 @@ var incomingRingAudioCtx = null;
 
 function startIncomingRingTone() {
   stopIncomingRingTone();
-  var AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return;
+  incomingRingAudioCtx = ensureUnlockedAudioContext(incomingRingAudioCtx);
+  if (!incomingRingAudioCtx) return;
   try {
-    incomingRingAudioCtx = new AC();
     var ringOnce = function() {
       if (!incomingRingAudioCtx || !chaupalSocialState.incomingCallDoc) return;
+      if (incomingRingAudioCtx.state === "suspended") {
+        try { incomingRingAudioCtx.resume(); } catch (e) {}
+      }
       var now = incomingRingAudioCtx.currentTime;
       var notes = [523.25, 659.25, 783.99, 1046.5];
       notes.forEach(function(freq, idx) {
@@ -5001,16 +5032,16 @@ function startIncomingRingTone() {
         osc.type = "triangle";
         osc.frequency.setValueAtTime(freq, now + idx * 0.14);
         g.gain.setValueAtTime(0.0001, now + idx * 0.14);
-        g.gain.exponentialRampToValueAtTime(0.06, now + idx * 0.14 + 0.04);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.14 + 0.32);
+        g.gain.exponentialRampToValueAtTime(0.08, now + idx * 0.14 + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.14 + 0.34);
         osc.connect(g);
         g.connect(incomingRingAudioCtx.destination);
         osc.start(now + idx * 0.14);
-        osc.stop(now + idx * 0.14 + 0.35);
+        osc.stop(now + idx * 0.14 + 0.38);
       });
     };
     ringOnce();
-    incomingRingTimer = setInterval(ringOnce, 2000);
+    incomingRingTimer = setInterval(ringOnce, 1900);
   } catch (e) {}
 }
 
@@ -5037,16 +5068,16 @@ function renderGlobalIncomingCallOverlay() {
   overlay.style.display = "flex";
   var partsList = Array.isArray(inc.participants) ? inc.participants : [];
   card.innerHTML =
-    "<div style=\"font-size:46px; margin-bottom:8px; animation:pulseGlow 1.5s infinite;\">" + (inc.callType === "audio" ? "📞" : "🎥") + "</div>" +
-    "<div style=\"font-size:12px; letter-spacing:1.5px; color:#FCE29A; font-weight:700; margin-bottom:4px;\">काव्य चौपाल • आने वाली " + (inc.callType === "audio" ? "ऑडियो कॉन्फ्रेंस कॉल" : "वीडियो कॉन्फ्रेंस कॉल") + "</div>" +
+    "<div style=\"font-size:48px; margin-bottom:8px; animation:pulseGlow 1.4s infinite;\">" + (inc.callType === "audio" ? "📞" : "🎥") + "</div>" +
+    "<div style=\"font-size:12px; letter-spacing:1.5px; color:#FCE29A; font-weight:700; margin-bottom:4px;\">काव्य चौपाल • आने वाली " + (inc.callType === "audio" ? "ऑडियो कॉल" : "वीडियो कॉल") + "</div>" +
     "<h3 class=\"font-royal\" style=\"font-size:25px; color:#F7DC8B; margin:4px 0 6px;\">" + esc(inc.callerName || inc.callerEmail || "रचनाकार") + "</h3>" +
-    "<div style=\"font-size:13px; color:rgba(255,249,236,0.88); margin-bottom:14px;\">" + esc(inc.targetLabel || "बहु-सदस्यीय कॉन्फ्रेंस कॉल") + "</div>" +
-    (partsList.length > 1
-      ? ("<div style=\"font-size:12px; color:#FCE29A; margin-bottom:14px; background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:12px;\">👥 जुड़े/आमंत्रित सदस्य (" + partsList.length + "): " + esc(partsList.map(function(p) { return p.name || p.email; }).join(", ")) + "</div>")
+    "<div style=\"font-size:13px; color:rgba(255,249,236,0.9); margin-bottom:14px;\">" + esc(inc.targetLabel || "काव्य चौपाल कॉल") + "</div>" +
+    (partsList.length > 2
+      ? ("<div style=\"font-size:12px; color:#FCE29A; margin-bottom:14px; background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:12px;\">👥 प्रतिभागी (" + partsList.length + "): " + esc(partsList.map(function(p) { return p.name || p.email; }).join(", ")) + "</div>")
       : "") +
     "<div style=\"display:flex; gap:12px; justify-content:center; flex-wrap:wrap;\">" +
-      "<button type=\"button\" class=\"btn-approve\" style=\"padding:12px 20px; font-size:14px; border-radius:99px;\" onclick=\"acceptIncomingCall()\">✅ कॉल स्वीकार करें</button>" +
-      "<button type=\"button\" class=\"btn-reject\" style=\"padding:12px 20px; font-size:14px; border-radius:99px; background:#DC2626; color:#fff; border:none;\" onclick=\"declineIncomingCall()\">❌ अस्वीकार करें</button>" +
+      "<button type=\"button\" class=\"btn-approve\" style=\"padding:13px 22px; font-size:15px; border-radius:99px;\" onclick=\"acceptIncomingCall()\">✅ कॉल रिसीव करें</button>" +
+      "<button type=\"button\" class=\"btn-reject\" style=\"padding:13px 22px; font-size:15px; border-radius:99px; background:#DC2626; color:#fff; border:none;\" onclick=\"declineIncomingCall()\">❌ अस्वीकार करें</button>" +
     "</div>";
 }
 
@@ -5066,87 +5097,146 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
   if (!chaupalSocialState.remoteStreamsMap) chaupalSocialState.remoteStreamsMap = {};
   if (!chaupalSocialState.peerStatusMap) chaupalSocialState.peerStatusMap = {};
   if (!chaupalSocialState.processedCandidatesMap) chaupalSocialState.processedCandidatesMap = {};
+  if (!chaupalSocialState.pendingIceQueue) chaupalSocialState.pendingIceQueue = {};
 
-  if (chaupalSocialState.peerConnectionsMap[pEm]) {
-    return chaupalSocialState.peerConnectionsMap[pEm];
-  }
+  var pc = chaupalSocialState.peerConnectionsMap[pEm];
+  if (!pc) {
+    pc = new RTCPeerConnection(RTC_ICE_CONFIG);
+    chaupalSocialState.peerConnectionsMap[pEm] = pc;
+    var remStream = new MediaStream();
+    chaupalSocialState.remoteStreamsMap[pEm] = { stream: remStream, name: peerName || pEm };
+    if (!chaupalSocialState.peerStatusMap[pEm]) {
+      chaupalSocialState.peerStatusMap[pEm] = "ringing";
+    }
 
-  var pc = new RTCPeerConnection(RTC_ICE_CONFIG);
-  chaupalSocialState.peerConnectionsMap[pEm] = pc;
-  var remStream = new MediaStream();
-  chaupalSocialState.remoteStreamsMap[pEm] = { stream: remStream, name: peerName || pEm };
-  if (!chaupalSocialState.peerStatusMap[pEm]) {
-    chaupalSocialState.peerStatusMap[pEm] = "ringing";
+    pc.ontrack = function(ev) {
+      var targetEntry = chaupalSocialState.remoteStreamsMap[pEm];
+      var ms = (targetEntry && targetEntry.stream) ? targetEntry.stream : new MediaStream();
+      if (ev.streams && ev.streams[0]) {
+        ev.streams[0].getTracks().forEach(function(t) {
+          if (ms.getTracks().indexOf(t) === -1) ms.addTrack(t);
+        });
+      } else if (ev.track) {
+        if (ms.getTracks().indexOf(ev.track) === -1) ms.addTrack(ev.track);
+      }
+      chaupalSocialState.remoteStreamsMap[pEm] = { stream: ms, name: peerName || pEm };
+      chaupalSocialState.peerStatusMap[pEm] = "connected";
+      stopOutgoingRingTone();
+      attachMediaToDom();
+    };
+
+    pc.oniceconnectionstatechange = function() {
+      var st = pc.iceConnectionState;
+      if (st === "connected" || st === "completed") {
+        chaupalSocialState.peerStatusMap[pEm] = "connected";
+        stopOutgoingRingTone();
+        attachMediaToDom();
+      } else if (st === "failed") {
+        try { pc.restartIce(); } catch (e) {}
+      }
+    };
+
+    var me = getCurrentMemberIdentity();
+    var myEm = (me && me.email) || "";
+    var legKey = getLegKey(myEm, pEm);
+    var ref = getCallDocRef(callId);
+
+    pc.onicecandidate = function(ev) {
+      if (!ev.candidate || !db || !callId || !ref) return;
+      var candObj = {
+        id: Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        legKey: legKey,
+        fromEmail: myEm,
+        toEmail: pEm,
+        candidate: ev.candidate.candidate,
+        sdpMid: ev.candidate.sdpMid,
+        sdpMLineIndex: ev.candidate.sdpMLineIndex
+      };
+      if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
+        ref.set({ meshCandidates: firebase.firestore.FieldValue.arrayUnion(candObj) }, { merge: true }).catch(function() {});
+      }
+    };
   }
 
   if (chaupalSocialState.localStream) {
+    var existingSenders = pc.getSenders ? pc.getSenders() : [];
+    var addedNewTrack = false;
     chaupalSocialState.localStream.getTracks().forEach(function(tr) {
-      try { pc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
+      var alreadySent = existingSenders.some(function(s) { return s.track && s.track.id === tr.id; });
+      if (!alreadySent) {
+        try {
+          pc.addTrack(tr, chaupalSocialState.localStream);
+          addedNewTrack = true;
+        } catch (e) {}
+      }
     });
+    if (addedNewTrack && pc.signalingState === "stable") {
+      offerToCreate = true;
+    }
   }
 
-  pc.ontrack = function(ev) {
-    if (ev.streams && ev.streams[0]) {
-      chaupalSocialState.remoteStreamsMap[pEm] = { stream: ev.streams[0], name: peerName || pEm };
-    } else if (ev.track) {
-      remStream.addTrack(ev.track);
-      chaupalSocialState.remoteStreamsMap[pEm] = { stream: remStream, name: peerName || pEm };
+  if (offerToCreate && pc.signalingState === "stable") {
+    var me2 = getCurrentMemberIdentity();
+    var myEm2 = (me2 && me2.email) || "";
+    var legKey2 = getLegKey(myEm2, pEm);
+    var ref2 = getCallDocRef(callId);
+    if (ref2 && myEm2) {
+      pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(function(offer) {
+        return pc.setLocalDescription(offer).then(function() {
+          var meshUpdate = {};
+          meshUpdate[legKey2] = {
+            fromEmail: myEm2,
+            toEmail: pEm,
+            offer: { type: offer.type, sdp: offer.sdp },
+            offerTs: Date.now()
+          };
+          return ref2.set({ meshSignals: meshUpdate }, { merge: true });
+        });
+      }).catch(function() {});
     }
-    chaupalSocialState.peerStatusMap[pEm] = "connected";
-    stopOutgoingRingTone();
-    attachMediaToDom();
-  };
-
-  var me = getCurrentMemberIdentity();
-  var myEm = (me && me.email) || "";
-  var legKey = getLegKey(myEm, pEm);
-  var ref = getCallDocRef(callId);
-
-  pc.onicecandidate = function(ev) {
-    if (!ev.candidate || !db || !callId || !ref) return;
-    var candObj = {
-      id: Date.now() + "_" + Math.random().toString(36).slice(2, 7),
-      legKey: legKey,
-      fromEmail: myEm,
-      toEmail: pEm,
-      candidate: ev.candidate.candidate,
-      sdpMid: ev.candidate.sdpMid,
-      sdpMLineIndex: ev.candidate.sdpMLineIndex
-    };
-    if (window.firebase && firebase.firestore && firebase.firestore.FieldValue) {
-      ref.set({ meshCandidates: firebase.firestore.FieldValue.arrayUnion(candObj) }, { merge: true }).catch(function() {});
-    }
-  };
-
-  if (offerToCreate && ref) {
-    pc.createOffer().then(function(offer) {
-      return pc.setLocalDescription(offer).then(function() {
-        var meshUpdate = {};
-        meshUpdate[legKey] = {
-          fromEmail: myEm,
-          toEmail: pEm,
-          offer: { type: offer.type, sdp: offer.sdp },
-          updatedAt: Date.now()
-        };
-        return ref.set({ meshSignals: meshUpdate }, { merge: true });
-      });
-    }).catch(function() {});
   }
 
   return pc;
 }
 
+function flushQueuedIceCandidates(peerEmail, pc) {
+  var q = (chaupalSocialState.pendingIceQueue && chaupalSocialState.pendingIceQueue[peerEmail]) || [];
+  if (!q.length || !pc || !pc.remoteDescription) return;
+  chaupalSocialState.pendingIceQueue[peerEmail] = [];
+  q.forEach(function(c) {
+    pc.addIceCandidate(new RTCIceCandidate(c)).catch(function() {});
+  });
+}
+
 function attachMediaToDom() {
   var locVid = document.getElementById("soc-local-video");
   if (locVid && chaupalSocialState.localStream) {
-    locVid.srcObject = chaupalSocialState.localStream;
+    if (locVid.srcObject !== chaupalSocialState.localStream) {
+      locVid.srcObject = chaupalSocialState.localStream;
+    }
+    locVid.muted = true;
+    try { locVid.play().catch(function() {}); } catch (e) {}
   }
   var remMap = chaupalSocialState.remoteStreamsMap || {};
   Object.keys(remMap).forEach(function(emKey) {
     var safeId = "soc-rem-vid-" + emKey.replace(/[^a-zA-Z0-9]/g, "_");
     var el = document.getElementById(safeId);
-    if (el && remMap[emKey] && remMap[emKey].stream) {
-      el.srcObject = remMap[emKey].stream;
+    var st = remMap[emKey] && remMap[emKey].stream;
+    if (el && st) {
+      if (el.srcObject !== st) {
+        el.srcObject = st;
+      }
+      el.muted = false;
+      el.volume = 1.0;
+      try {
+        var playPromise = el.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch(function() {
+            el.muted = true;
+            el.play().then(function() { el.muted = false; }).catch(function() {});
+          });
+        }
+      } catch (e) {}
     }
   });
 }
@@ -5155,10 +5245,16 @@ function acquireCallMediaStream(modeType) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     return Promise.resolve(null);
   }
-  var lowNet = chaupalSocialState.networkMode === "low_data";
+  var net = chaupalSocialState.networkMode || "auto";
+  var videoConstraint = false;
+  if (modeType === "video" && net !== "low_data") {
+    videoConstraint = (net === "uhd")
+      ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 }, facingMode: "user" }
+      : { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24 }, facingMode: "user" };
+  }
   var constraints = {
-    audio: true,
-    video: (modeType === "video" && !lowNet) ? { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" } : false
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    video: videoConstraint
   };
   return navigator.mediaDevices.getUserMedia(constraints).catch(function() {
     if (constraints.video) {
@@ -5171,7 +5267,7 @@ function acquireCallMediaStream(modeType) {
 function triggerSystemIncomingCallAlert(callDoc) {
   try {
     if (navigator.vibrate) {
-      navigator.vibrate([400, 200, 400, 200, 600]);
+      navigator.vibrate([500, 200, 500, 200, 700]);
     }
   } catch (e) {}
   try {
@@ -5214,7 +5310,6 @@ function listenForIncomingCalls(myEmail) {
       snap.forEach(function(doc) {
         var d = Object.assign({ id: doc.id }, doc.data() || {});
         var dCaller = (d.callerEmail || "").toLowerCase().trim();
-        // Allow up to 15 minutes window so late-accepting users never miss an active call
         var isFresh = !d.createdAt || (nowTs - Number(d.createdAt) < 900000);
         var parts = Array.isArray(d.participants) ? d.participants : [];
         var isInParts = parts.some(function(p) {
@@ -5227,7 +5322,6 @@ function listenForIncomingCalls(myEmail) {
         var isDirectMatch = (dCallee && dCallee === em) || (!dCallee && dCalleeName && myNameNow && (dCalleeName === myNameNow || dCalleeName.indexOf(myNameNow) !== -1 || myNameNow.indexOf(dCalleeName) !== -1));
         var isInvitedToMe = isInParts || isDirectMatch;
 
-        // If I already accepted this conference call, keep it active & sync new participants
         if (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallDocId === d.id) {
           chaupalSocialState.activeCallSession.participants = parts;
           var pMap = chaupalSocialState.peerStatusMap || {};
@@ -5237,20 +5331,18 @@ function listenForIncomingCalls(myEmail) {
               if (p.status) pMap[pEm] = p.status;
               else if (!pMap[pEm]) pMap[pEm] = "ringing";
               if (p.status === "accepted" || p.status === "connected") {
-                ensureMeshPeerConnection(d.id, pEm, p.name || pEm, "member", pEm > em);
+                ensureMeshPeerConnection(d.id, pEm, p.name || pEm, "member", em > pEm);
               }
             }
           });
-          renderChaupalSocial();
-          setTimeout(attachMediaToDom, 60);
           if (d.status === "ended") {
             cleanupWebRtcCall(true);
-            showToast("कॉन्फ्रेंस कॉल समाप्त हो गई");
+            renderChaupalSocial();
+            showToast("कॉल सत्र समाप्त हो गया");
           }
           return;
         }
 
-        // Show incoming overlay even if another participant already connected (status ringing OR connected, as long as not ended)
         var isCallOpen = (d.status === "ringing" || d.status === "connected");
         if (isInvitedToMe && isFresh && isCallOpen && dCaller !== em) {
           var myEntry = parts.find(function(p) { return (p.email || "").toLowerCase().trim() === em; });
@@ -5268,11 +5360,13 @@ function listenForIncomingCalls(myEmail) {
         try { dismissSplash(true); } catch (e) {}
         startIncomingRingTone();
         triggerSystemIncomingCallAlert(ringing);
-      } else if (!nextId) {
+        renderGlobalIncomingCallOverlay();
+        if (state.activeTab === "social") renderChaupalSocial();
+      } else if (!nextId && prevId) {
         stopIncomingRingTone();
+        renderGlobalIncomingCallOverlay();
+        if (state.activeTab === "social") renderChaupalSocial();
       }
-      renderGlobalIncomingCallOverlay();
-      renderChaupalSocial();
     }, function() {});
 }
 
@@ -5284,12 +5378,21 @@ function subscribeToActiveCallDoc(callId, isCaller) {
   var ref = getCallDocRef(callId);
   if (!ref) return;
   chaupalSocialState.processedCandidatesMap = {};
+  chaupalSocialState.pendingIceQueue = {};
+  chaupalSocialState.lastAppliedOfferTs = {};
+  chaupalSocialState.lastAppliedAnswerTs = {};
+
   chaupalSocialState.callUnsubscribe = ref.onSnapshot(function(snap) {
     if (!snap.exists) return;
     var data = snap.data() || {};
     var me = getCurrentMemberIdentity();
     var myEm = (me && me.email) || "";
     var parts = Array.isArray(data.participants) ? data.participants : [];
+    var prevPartsSig = chaupalSocialState.activeCallSession
+      ? JSON.stringify((chaupalSocialState.activeCallSession.participants || []).map(function(x) { return x.email + ":" + x.status; }))
+      : "";
+    var nextPartsSig = JSON.stringify(parts.map(function(x) { return x.email + ":" + x.status; }));
+
     if (chaupalSocialState.activeCallSession) {
       chaupalSocialState.activeCallSession.participants = parts;
       chaupalSocialState.activeCallSession.status = data.status || chaupalSocialState.activeCallSession.status;
@@ -5300,7 +5403,7 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       var pEm = (p.email || "").toLowerCase().trim();
       if (pEm && pEm !== myEm) {
         if (p.status) pMap[pEm] = p.status;
-        if ((p.status === "accepted" || p.status === "connected") && chaupalSocialState.localStream) {
+        if (p.status === "accepted" || p.status === "connected") {
           ensureMeshPeerConnection(callId, pEm, p.name || pEm, isCaller ? "caller" : "callee", myEm > pEm);
         }
       }
@@ -5321,11 +5424,16 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       else if (sig.toEmail === myEm) otherEm = sig.fromEmail;
       if (!otherEm) return;
 
-      var pc = ensureMeshPeerConnection(callId, otherEm, otherEm, isCaller ? "caller" : "callee", false);
+      var otherPart = parts.find(function(x) { return (x.email || "").toLowerCase().trim() === otherEm; });
+      var otherName = (otherPart && otherPart.name) || otherEm;
+      var pc = ensureMeshPeerConnection(callId, otherEm, otherName, isCaller ? "caller" : "callee", false);
       if (!pc) return;
 
-      if (sig.toEmail === myEm && sig.offer && !pc.currentRemoteDescription) {
+      var offerTs = Number(sig.offerTs || sig.updatedAt || 1);
+      if (sig.toEmail === myEm && sig.offer && chaupalSocialState.lastAppliedOfferTs[lk] !== offerTs) {
+        chaupalSocialState.lastAppliedOfferTs[lk] = offerTs;
         pc.setRemoteDescription(new RTCSessionDescription(sig.offer)).then(function() {
+          flushQueuedIceCandidates(otherEm, pc);
           return pc.createAnswer();
         }).then(function(ans) {
           return pc.setLocalDescription(ans).then(function() {
@@ -5336,14 +5444,22 @@ function subscribeToActiveCallDoc(callId, isCaller) {
             });
             return ref.set({ meshSignals: ansUpdate }, { merge: true });
           });
-        }).catch(function() {});
-      } else if (sig.fromEmail === myEm && sig.answer && pc.signalingState === "have-local-offer" && !pc.currentRemoteDescription) {
+        }).catch(function() {
+          chaupalSocialState.lastAppliedOfferTs[lk] = 0;
+        });
+      }
+
+      var ansTs = Number(sig.answeredAt || 0);
+      if (sig.fromEmail === myEm && sig.answer && ansTs && chaupalSocialState.lastAppliedAnswerTs[lk] !== ansTs && pc.signalingState === "have-local-offer") {
+        chaupalSocialState.lastAppliedAnswerTs[lk] = ansTs;
         pc.setRemoteDescription(new RTCSessionDescription(sig.answer)).then(function() {
+          flushQueuedIceCandidates(otherEm, pc);
           pMap[otherEm] = "connected";
           stopOutgoingRingTone();
-          renderChaupalSocial();
-          setTimeout(attachMediaToDom, 60);
-        }).catch(function() {});
+          attachMediaToDom();
+        }).catch(function() {
+          chaupalSocialState.lastAppliedAnswerTs[lk] = 0;
+        });
       }
     });
 
@@ -5352,15 +5468,21 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       if (!c || c.toEmail !== myEm || !c.fromEmail) return;
       var cid = c.id || (c.candidate + "_" + c.sdpMLineIndex);
       if (chaupalSocialState.processedCandidatesMap[cid]) return;
+      chaupalSocialState.processedCandidatesMap[cid] = true;
       var pc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[c.fromEmail];
       if (pc && pc.remoteDescription) {
-        chaupalSocialState.processedCandidatesMap[cid] = true;
         pc.addIceCandidate(new RTCIceCandidate(c)).catch(function() {});
+      } else {
+        if (!chaupalSocialState.pendingIceQueue) chaupalSocialState.pendingIceQueue = {};
+        if (!chaupalSocialState.pendingIceQueue[c.fromEmail]) chaupalSocialState.pendingIceQueue[c.fromEmail] = [];
+        chaupalSocialState.pendingIceQueue[c.fromEmail].push(c);
       }
     });
 
-    renderChaupalSocial();
-    setTimeout(attachMediaToDom, 60);
+    if (prevPartsSig !== nextPartsSig) {
+      renderChaupalSocial();
+    }
+    setTimeout(attachMediaToDom, 40);
 
     if (data.status === "ended") {
       cleanupWebRtcCall(true);
@@ -5387,7 +5509,7 @@ function inviteMemberToActiveCall(targetEmailArg, targetNameArg) {
   var tType = (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallSession.type) || chaupalSocialState.callType || "video";
 
   if (!callId || !chaupalSocialState.activeCallSession) {
-    startChaupalCallSession(tType, tName + " के साथ कॉन्फ्रेंस कॉल", tEmail, tName);
+    startChaupalCallSession(tType, tName + " के साथ कॉल", tEmail, tName);
     return;
   }
 
@@ -5421,10 +5543,9 @@ function inviteMemberToActiveCall(targetEmailArg, targetNameArg) {
     tEmail
   );
   startOutgoingRingTone();
-  if (chaupalSocialState.localStream) {
-    ensureMeshPeerConnection(callId, tEmail, tName, "caller", true);
-  }
+  ensureMeshPeerConnection(callId, tEmail, tName, "caller", true);
   renderChaupalSocial();
+  setTimeout(attachMediaToDom, 40);
   showToast(tName + " को कॉल में रिंग भेजा गया ✓");
 }
 
@@ -5493,7 +5614,7 @@ function startChaupalCallSession(modeType, targetLabel, calleeEmailArg, calleeNa
   if (tEmail) {
     pushNotification(
       (tType === "audio" ? "📞 ऑडियो कॉल रिंग हो रही है: " : "🎥 वीडियो कॉल रिंग हो रही है: ") + me.name,
-      "‘चौपाल सोशल > कॉल’ से कॉल स्वीकार करें या अस्वीकार करें।",
+      "कॉल स्क्रीन से कॉल स्वीकार करें।",
       "info",
       callId,
       tEmail
@@ -5517,7 +5638,7 @@ function startChaupalCallSession(modeType, targetLabel, calleeEmailArg, calleeNa
         ensureMeshPeerConnection(callId, pEm, p.name || pEm, "caller", true);
       }
     });
-    setTimeout(attachMediaToDom, 60);
+    setTimeout(attachMediaToDom, 50);
   });
 }
 
@@ -5534,8 +5655,6 @@ function acceptIncomingCall(explicitCallId) {
   stopIncomingRingTone();
   stopOutgoingRingTone();
   try { dismissSplash(true); } catch (e) {}
-
-  // Close any open modals so the conference screen is immediately visible
   document.querySelectorAll(".modal-overlay.open").forEach(function(m) { m.classList.remove("open"); });
 
   var tType = (inc && inc.callType) || "video";
@@ -5573,7 +5692,7 @@ function acceptIncomingCall(explicitCallId) {
   chaupalSocialState.activeCallSession = {
     id: callId,
     type: tType,
-    target: (inc && inc.targetLabel) || (((inc && (inc.callerName || inc.callerEmail)) || "सदस्य") + " के साथ कॉन्फ्रेंस"),
+    target: (inc && inc.targetLabel) || (((inc && (inc.callerName || inc.callerEmail)) || "सदस्य") + " के साथ कॉल"),
     callerEmail: (inc && inc.callerEmail) || "",
     participants: initParts,
     status: "connected",
@@ -5589,7 +5708,6 @@ function acceptIncomingCall(explicitCallId) {
   var ref = getCallDocRef(callId);
   if (!ref) return;
 
-  // Fetch the latest Firestore state first so late-accepted calls see current participants and offers
   ref.get().then(function(snap) {
     var latest = (snap && snap.exists && snap.data()) || {};
     if (latest.status === "ended") {
@@ -5646,10 +5764,11 @@ function acceptIncomingCall(explicitCallId) {
         var existingSig = meshSig[lk];
 
         if (existingSig && existingSig.toEmail === me.email && existingSig.offer) {
-          // Caller already sent an offer earlier -> answer it immediately!
           var pcAns = ensureMeshPeerConnection(callId, pEm, p.name || pEm, "callee", false);
           if (pcAns && !pcAns.currentRemoteDescription) {
+            chaupalSocialState.lastAppliedOfferTs[lk] = Number(existingSig.offerTs || existingSig.updatedAt || 1);
             pcAns.setRemoteDescription(new RTCSessionDescription(existingSig.offer)).then(function() {
+              flushQueuedIceCandidates(pEm, pcAns);
               return pcAns.createAnswer();
             }).then(function(ans) {
               return pcAns.setLocalDescription(ans).then(function() {
@@ -5663,26 +5782,27 @@ function acceptIncomingCall(explicitCallId) {
             }).catch(function() {});
           }
         } else {
-          // Create a fresh offer directly from our side so late join always connects immediately!
           ensureMeshPeerConnection(callId, pEm, p.name || pEm, "callee", true);
         }
       });
 
-      // Also apply any ICE candidates that arrived before media stream was ready
       var cands = Array.isArray(latest.meshCandidates) ? latest.meshCandidates : [];
       cands.forEach(function(c) {
         if (!c || c.toEmail !== me.email || !c.fromEmail) return;
         var cid = c.id || (c.candidate + "_" + c.sdpMLineIndex);
         if (chaupalSocialState.processedCandidatesMap[cid]) return;
+        chaupalSocialState.processedCandidatesMap[cid] = true;
         var pc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[c.fromEmail];
         if (pc && pc.remoteDescription) {
-          chaupalSocialState.processedCandidatesMap[cid] = true;
           pc.addIceCandidate(new RTCIceCandidate(c)).catch(function() {});
+        } else {
+          if (!chaupalSocialState.pendingIceQueue) chaupalSocialState.pendingIceQueue = {};
+          if (!chaupalSocialState.pendingIceQueue[c.fromEmail]) chaupalSocialState.pendingIceQueue[c.fromEmail] = [];
+          chaupalSocialState.pendingIceQueue[c.fromEmail].push(c);
         }
       });
 
-      renderChaupalSocial();
-      setTimeout(attachMediaToDom, 60);
+      setTimeout(attachMediaToDom, 50);
     });
   }).catch(function() {
     subscribeToActiveCallDoc(callId, false);
@@ -5747,6 +5867,7 @@ function cleanupWebRtcCall(skipRemoteUpdate) {
   chaupalSocialState.remoteStreamsMap = {};
   chaupalSocialState.peerStatusMap = {};
   chaupalSocialState.processedCandidatesMap = {};
+  chaupalSocialState.pendingIceQueue = {};
   if (chaupalSocialState.localStream) {
     try { chaupalSocialState.localStream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
     chaupalSocialState.localStream = null;
@@ -5761,6 +5882,7 @@ function cleanupWebRtcCall(skipRemoteUpdate) {
 
 function stopChaupalCallSession() {
   cleanupWebRtcCall(false);
+  renderGlobalIncomingCallOverlay();
   renderChaupalSocial();
   showToast("कॉल सत्र समाप्त हुआ");
 }
@@ -6094,7 +6216,12 @@ function renderChaupalSocial() {
       });
       remVideoTilesHtml = "<div class=\"conf-grid\" style=\"margin-bottom:10px;\">" + tiles.join("") + "</div>";
     } else {
-      remVideoTilesHtml = "<div style=\"padding:14px; border-radius:14px; background:rgba(247,220,139,0.1); border:1px dashed var(--gold); font-size:13px; color:#FCE49C; margin-bottom:8px;\">📶 ऑडियो/स्मूद कॉन्फ्रेंस मोड: " + (activeParts.length || 1) + " प्रतिभागी कक्ष में हैं।</div>";
+      var audioElementsHtml = remotePeers.map(function(rp) {
+        var rpEm = (rp.email || "").toLowerCase().trim();
+        var safeId = "soc-rem-vid-" + rpEm.replace(/[^a-zA-Z0-9]/g, "_");
+        return "<audio id=\"" + safeId + "\" autoplay playsinline style=\"display:none;\"></audio>";
+      }).join("");
+      remVideoTilesHtml = "<div style=\"padding:14px; border-radius:14px; background:rgba(247,220,139,0.1); border:1px dashed var(--gold); font-size:13px; color:#FCE49C; margin-bottom:8px;\">📶 ऑडियो कॉन्फ्रेंस मोड: " + (activeParts.length || 1) + " प्रतिभागी कक्ष में हैं।" + audioElementsHtml + "</div>";
     }
 
     var addMoreSelectHtml =
@@ -6284,6 +6411,9 @@ function renderChaupalSocial() {
     subNavHtml +
     callStageHtml +
     paneHtml;
+  if (chaupalSocialState.activeCallSession) {
+    setTimeout(attachMediaToDom, 30);
+  }
 }
 
 function selectAllCallMembers(checkBool) {
