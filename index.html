@@ -3849,30 +3849,6 @@ function showBirthdayCardPreview() {
   showToast("शुभकामना भाव-चित्र तैयार है 🎨");
 }
 
-function renderGlobalIncomingCallBanner() {
-  var host = document.getElementById("global-incoming-call-host");
-  if (!host) {
-    host = document.createElement("div");
-    host.id = "global-incoming-call-host";
-    host.style.cssText = "position:fixed; left:12px; right:12px; bottom:84px; z-index:9900; max-width:520px; margin:0 auto;";
-    document.body.appendChild(host);
-  }
-  var inc = chaupalSocialState.incomingCallDoc;
-  if (!inc || inc.status !== "ringing") {
-    host.innerHTML = "";
-    return;
-  }
-  host.innerHTML =
-    "<div class=\"call-stage-card\" style=\"margin:0; border-color:#4ADE80; background:linear-gradient(155deg, #14532D 0%, #052E16 100%); box-shadow:0 18px 42px rgba(0,0,0,0.65);\">" +
-      "<div style=\"font-size:12px; color:#86EFAC; font-weight:700;\">📞 आने वाली " + (inc.callType === "audio" ? "ऑडियो कॉल" : "वीडियो कॉल") + "</div>" +
-      "<h4 class=\"font-royal\" style=\"font-size:19px; color:#FFFDF7; margin:4px 0 8px;\">" + esc(inc.callerName || inc.callerEmail || "रचनाकार") + " कॉल कर रहे हैं</h4>" +
-      "<div style=\"display:flex; gap:10px; flex-wrap:wrap;\">" +
-        "<button type=\"button\" class=\"btn-approve\" onclick=\"switchTab('social'); chaupalSocialState.subTab='call'; acceptIncomingCall()\">✅ कॉल स्वीकार करें</button>" +
-        "<button type=\"button\" class=\"btn-reject\" onclick=\"declineIncomingCall()\">❌ अस्वीकार करें</button>" +
-      "</div>" +
-    "</div>";
-}
-
 function renderAll() {
   var hdrTitle = document.getElementById("hdr-title");
   if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";
@@ -3909,7 +3885,6 @@ function renderAll() {
   }
 
   renderTopAccountBar();
-  renderGlobalIncomingCallBanner();
   renderBrandLogo();
   renderSpotlight();
   renderDailyRiddle();
@@ -4153,88 +4128,50 @@ function renderPoetsDirectory() {
   }).join("");
 }
 
-function ensurePoetViewDomReady() {
-  var sec = document.getElementById("tab-poets");
-  if (!sec) return;
-  if (!document.getElementById("poets-list-view")) {
-    var lv = document.createElement("div");
-    lv.id = "poets-list-view";
-    lv.innerHTML = "<div class=\"cards-grid two-col\" id=\"poets-dir-grid\"></div>";
-    sec.appendChild(lv);
-  }
-  if (!document.getElementById("poet-detail-view")) {
-    var dv = document.createElement("div");
-    dv.id = "poet-detail-view";
-    sec.appendChild(dv);
-  }
-}
-
 function openPoetProfile(poetName) {
   var nm = (poetName || "").trim();
   if (!nm) return;
-  try {
+  try { recordPoetView(nm); } catch (e) {}
+  try { closeModal("reader-modal", true); } catch (e) {
     var rm = document.getElementById("reader-modal");
     if (rm) rm.classList.remove("open");
-    stopTeleprompter();
-    stopMehfilMusic();
-  } catch (e) {}
-
+  }
   try { pushAppView("poet"); } catch (e) {}
   state.activeTab = "poets";
   state.activePoetName = nm;
-  poetDetailSubView = "poems";
-
   document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
   var tPoets = document.getElementById("tab-poets");
   if (tPoets) tPoets.classList.add("active");
-
-  document.querySelectorAll(".nav-btn").forEach(function(b) {
-    b.classList.toggle("active", b.dataset.tab === "poets");
-  });
-
-  ensurePoetViewDomReady();
+  document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === "poets"); });
   var listV = document.getElementById("poets-list-view");
   var detV = document.getElementById("poet-detail-view");
   if (listV) listV.style.display = "none";
   if (detV) detV.style.display = "block";
-
-  renderPoetDetail(nm);
-  try { recordPoetView(nm); } catch (e) {}
+  try { renderPoetDetail(nm); } catch (e) {}
   try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
 }
-
-function closePoetDetail(fromPop) {
-  state.activePoetName = null;
-  ensurePoetViewDomReady();
-  var detV = document.getElementById("poet-detail-view");
-  var listV = document.getElementById("poet-list-view");
-  if (detV) detV.style.display = "none";
-  if (listV) listV.style.display = "block";
-  if (!fromPop) syncBackAfterUiClose();
-}
+function closePoetDetail(fromPop) { state.activePoetName = null; document.getElementById("poet-detail-view").style.display = "none"; document.getElementById("poets-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 
 function renderStructuredBioCard(person, titleText, allowPrivateMobile) {
   var items = [];
-  if (person.birth && String(person.birth).trim()) items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });
-  if (person.death && String(person.death).trim()) items.push({ ic: "🕯️", lbl: "स्मृति / मृत्यु", val: esc(person.death), full: false });
-  if (person.birthPlace && String(person.birthPlace).trim()) items.push({ ic: "🏡", lbl: "जन्म स्थान", val: esc(person.birthPlace), full: false });
-  if (person.city && String(person.city).trim()) items.push({ ic: "📍", lbl: "वर्तमान स्थान", val: esc(person.city), full: false });
-  if (person.education && String(person.education).trim()) items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });
-  if (person.occupation && String(person.occupation).trim()) items.push({ ic: "💼", lbl: "भूमिका / सम्प्रति", val: esc(person.occupation), full: false });
-  if (allowPrivateMobile && person.mobile && String(person.mobile).trim()) {
+  if (person.birth && person.birth.trim()) items.push({ ic: "🎂", lbl: "जन्म", val: esc(person.birth), full: false });
+  if (person.death && person.death.trim()) items.push({ ic: "🕯️", lbl: "स्मृति / मृत्यु", val: esc(person.death), full: false });
+  if (person.birthPlace && person.birthPlace.trim()) items.push({ ic: "🏡", lbl: "जन्म स्थान", val: esc(person.birthPlace), full: false });
+  if (person.city && person.city.trim()) items.push({ ic: "📍", lbl: "वर्तमान स्थान", val: esc(person.city), full: false });
+  if (person.education && person.education.trim()) items.push({ ic: "🎓", lbl: "शिक्षा", val: esc(person.education), full: false });
+  if (person.occupation && person.occupation.trim()) items.push({ ic: "💼", lbl: "भूमिका / सम्प्रति", val: esc(person.occupation), full: false });
+  if (allowPrivateMobile && person.mobile && person.mobile.trim()) {
     items.push({ ic: "🔒", lbl: "मोबाइल (केवल एडमिन/निजी)", val: esc(person.mobile), full: false });
   }
-  if (person.mainGenres && String(person.mainGenres).trim()) {
-    var pills = String(person.mainGenres).split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
+  if (person.mainGenres && person.mainGenres.trim()) {
+    var pills = person.mainGenres.split(/[,،、|]/).map(function(s) { return s.trim(); }).filter(Boolean);
     items.push({ ic: "✒️", lbl: "मुख्य विधाएँ", val: "<div class=\"vidha-pills-row\">" + pills.map(function(g) { return "<span class=\"mini-badge\">❖ " + esc(g) + "</span>"; }).join("") + "</div>", full: true });
   }
-  if (person.publications && String(person.publications).trim()) items.push({ ic: "📚", lbl: "प्रकाशित कृतियाँ", val: esc(person.publications), full: true });
-  if (person.awards && String(person.awards).trim()) items.push({ ic: "🏆", lbl: "प्रमुख सम्मान", val: esc(person.awards), full: true });
-  if (person.special && String(person.special).trim()) items.push({ ic: "✨", lbl: "विशेष", val: esc(person.special), full: true });
-  if (person.bio && String(person.bio).trim()) items.push({ ic: "📜", lbl: "संक्षिप्त परिचय", val: esc(person.bio), full: true });
-  if (!items.length) {
-    items.push({ ic: "✒️", lbl: "परिचय", val: esc((person.name || "रचनाकार") + " काव्य चौपाल साहित्य मंच के सम्मानित सदस्य एवं रचनाकार हैं।"), full: true });
-  }
+  if (person.publications && person.publications.trim()) items.push({ ic: "📚", lbl: "प्रकाशित कृतियाँ", val: esc(person.publications), full: true });
+  if (person.awards && person.awards.trim()) items.push({ ic: "🏆", lbl: "प्रमुख सम्मान", val: esc(person.awards), full: true });
+  if (person.special && person.special.trim()) items.push({ ic: "✨", lbl: "विशेष", val: esc(person.special), full: true });
+  if (person.bio && person.bio.trim()) items.push({ ic: "📜", lbl: "संक्षिप्त परिचय", val: esc(person.bio), full: true });
+  if (!items.length) return "";
   return "<div class=\"bio-card\"><h3 class=\"section-title\" style=\"margin:0;\">📜 " + (titleText || "साहित्यिक परिचय") + "</h3><div class=\"bio-grid\">" + items.map(function(it) { return "<div class=\"bio-item " + (it.full ? "full" : "") + "\"><div class=\"bio-ic\">" + it.ic + "</div><div style=\"min-width:0; flex:1;\"><div class=\"bio-lbl\">" + it.lbl + "</div><div class=\"bio-val\">" + it.val + "</div></div></div>"; }).join("") + "</div></div>";
 }
 
@@ -4244,21 +4181,59 @@ function setPoetDetailSubView(v, poetName) {
   renderPoetDetail(poetName);
 }
 
+
+function buildProfileChatCallButtonsHTML(person) {
+  try {
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var pName = (person && person.name) ? String(person.name) : "रचनाकार";
+    var pEmail = ((person && person.ownerEmail) || "").toLowerCase().trim();
+    if (!pEmail && pName.indexOf("राहुल") !== -1) pEmail = "ashmitdwivedi01@gmail.com";
+    if (me && pEmail && pEmail === me.email) return "";
+    return "<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-top:9px;\">" +
+      "<button type=\"button\" class=\"action-btn primary\" style=\"padding:6px 12px; font-size:12px; border-radius:99px;\" onclick=\"event.stopPropagation(); openDirectChatWithPerson(dec(\'" + arg(pEmail) + "\'), dec(\'" + arg(pName) + "\'))\">💬 चैट खोलें</button>" +
+      "<button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px; border-radius:99px;\" onclick=\"event.stopPropagation(); startDirectCallWithPerson(\'audio\', dec(\'" + arg(pEmail) + "\'), dec(\'" + arg(pName) + "\'))\">🎙️ ऑडियो कॉल</button>" +
+      "<button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px; border-radius:99px;\" onclick=\"event.stopPropagation(); startDirectCallWithPerson(\'video\', dec(\'" + arg(pEmail) + "\'), dec(\'" + arg(pName) + "\'))\">🎥 वीडियो कॉल</button>" +
+    "</div>";
+  } catch (e) {
+    return "";
+  }
+}
+
+function openDirectChatWithPerson(peerEmail, peerName) {
+  var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+  if (!me) {
+    showToast("चैट के लिए कृपया पहले लॉगिन करें 🔐");
+    if (typeof openSubmitModal === "function") openSubmitModal("poet");
+    return;
+  }
+  var tEm = (peerEmail || "").toLowerCase().trim();
+  if (typeof ensureChaupalSocialCollections === "function") ensureChaupalSocialCollections();
+  if (tEm) chaupalSocialState.selectedPeerEmail = tEm;
+  chaupalSocialState.subTab = "chat";
+  switchTab("social");
+  if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+}
+
+function startDirectCallWithPerson(callMode, peerEmail, peerName) {
+  var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+  if (!me) {
+    showToast("कॉल के लिए कृपया पहले लॉगिन करें 🔐");
+    if (typeof openSubmitModal === "function") openSubmitModal("poet");
+    return;
+  }
+  var tEm = (peerEmail || "").toLowerCase().trim();
+  if (tEm) chaupalSocialState.selectedPeerEmail = tEm;
+  switchTab("social");
+  chaupalSocialState.subTab = "call";
+  if (typeof startChaupalCallSession === "function") {
+    startChaupalCallSession(callMode || "video", (peerName || tEm || "सदस्य") + " के साथ कॉल", tEm);
+  }
+}
+
 function renderPoetDetail(poetName) {
-  ensurePoetViewDomReady();
-  var container = document.getElementById("poet-detail-view");
-  if (!container) return;
-  var targetName = (poetName || state.activePoetName || "").trim();
-  var pt = getAllPoetObjects().find(function(p) { return (p.name || "").trim() === targetName; }) || {
-    id: "auto_" + targetName,
-    name: targetName,
-    city: "काव्य चौपाल परिवार",
-    occupation: "रचनाकार",
-    bio: "काव्य चौपाल मंच के सम्मानित रचनाकार।",
-    photo: "",
-    ownerEmail: ""
-  };
-  var allPoems = state.poems.filter(function(p) { return (p.poet || "").trim() === targetName; });
+  var container = document.getElementById("poet-detail-view"); if (!container) return;
+  var pt = getAllPoetObjects().find(function(p) { return p.name === poetName; }) || { name: poetName, city: "", bio: "", photo: "" };
+  var allPoems = state.poems.filter(function(p) { return p.poet === poetName; });
   var followersList = getFollowersForPoet(pt);
   var followingList = getFollowingForPoet(pt);
   var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
@@ -4274,7 +4249,7 @@ function renderPoetDetail(poetName) {
         var fName = (fPt && fPt.name) || f.followerName || "रचनाकार";
         var fId = (fPt && fPt.id) || f.followerPoetId || "";
         var fAv = (fPt && fPt.photo) ? ("<img src=\"" + fPt.photo + "\">") : esc(initials(fName));
-        return "<div class=\"person-card\" onclick=\"openPoetProfile(dec('" + arg(fName) + "'))\"><div class=\"avatar-md\">" + fAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(fName) + "</div><div class=\"person-meta\">" + esc((fPt && fPt.city) || "काव्य चौपाल सदस्य") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(fName, fId, "padding:4px 10px; font-size:11.5px; border-radius:99px;") + "</div></div></div>";
+        return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(fName) + "\'))\"><div class=\"avatar-md\">" + fAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(fName) + "</div><div class=\"person-meta\">" + esc((fPt && fPt.city) || "काव्य चौपाल सदस्य") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(fName, fId, "padding:4px 10px; font-size:11.5px; border-radius:99px;") + "</div></div></div>";
       }).join("") + "</div>") : "<div class=\"empty-box\">अभी कोई फ़ॉलोअर नहीं है। पहले फ़ॉलोअर बनें!</div>");
   } else if (poetDetailSubView === "following") {
     bottomContentHtml = "<h3 class=\"section-title\">✨ फ़ॉलोइंग (" + followingList.length + ")</h3>" +
@@ -4283,35 +4258,34 @@ function renderPoetDetail(poetName) {
         var tName = (tPt && tPt.name) || f.targetPoetName || "रचनाकार";
         var tId = (tPt && tPt.id) || f.targetPoetId || "";
         var tAv = (tPt && tPt.photo) ? ("<img src=\"" + tPt.photo + "\">") : esc(initials(tName));
-        return "<div class=\"person-card\" onclick=\"openPoetProfile(dec('" + arg(tName) + "'))\"><div class=\"avatar-md\">" + tAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(tName) + "</div><div class=\"person-meta\">" + esc((tPt && tPt.city) || "काव्य चौपाल रचनाकार") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(tName, tId, "padding:4px 10px; font-size:11.5px; border-radius:99px;") + "</div></div></div>";
+        return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(tName) + "\'))\"><div class=\"avatar-md\">" + tAv + "</div><div class=\"person-info\"><div class=\"person-name\">" + esc(tName) + "</div><div class=\"person-meta\">" + esc((tPt && tPt.city) || "काव्य चौपाल रचनाकार") + "</div><div style=\"margin-top:6px;\">" + buildFollowActionBtnHTML(tName, tId, "padding:4px 10px; font-size:11.5px; border-radius:99px;") + "</div></div></div>";
       }).join("") + "</div>") : "<div class=\"empty-box\">अभी किसी को फ़ॉलो नहीं किया गया है।</div>");
   } else {
     bottomContentHtml = "<h3 class=\"section-title\">✦ इनकी रचनाएँ (" + allPoems.length + ")</h3>" +
-      (allPoems.length
-        ? ("<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>")
-        : "<div class=\"empty-box\">इस रचनाकार की प्रकाशित रचनाएँ शीघ्र जोड़ी जाएँगी।</div>");
+      "<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>";
   }
 
   container.innerHTML =
     "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
     "<div class=\"profile-hero\">" +
-      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "भारत") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + buildProfileChatCallButtonsHTML(pt) + "</div></div>" +
+      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + buildProfileChatCallButtonsHTML(pt) + "</div></div>" +
       "<div class=\"corner-stats-grid\">" +
-        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView('poems', dec('" + arg(pt.name) + "'))\"><div class=\"corner-stat-num\">" + allPoems.length + "</div><div class=\"corner-stat-lbl\">रचनाएँ</div></div>" +
-        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView('followers', dec('" + arg(pt.name) + "'))\"><div class=\"corner-stat-num\">" + followersList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोअर्स</div></div>" +
-        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView('following', dec('" + arg(pt.name) + "'))\"><div class=\"corner-stat-num\">" + followingList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोइंग</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'poems\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + allPoems.length + "</div><div class=\"corner-stat-lbl\">रचनाएँ</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'followers\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followersList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोअर्स</div></div>" +
+        "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'following\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followingList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोइंग</div></div>" +
       "</div>" +
       (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") +
     "</div>" +
     renderStructuredBioCard(pt, "कवि परिचय", canSeePrivate) +
     "<div class=\"admin-tabs\" style=\"justify-content:center;\">" +
-      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "poems" ? "active" : "") + "\" onclick=\"setPoetDetailSubView('poems', dec('" + arg(pt.name) + "'))\">📜 रचनाएँ (" + allPoems.length + ")</button>" +
-      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "followers" ? "active" : "") + "\" onclick=\"setPoetDetailSubView('followers', dec('" + arg(pt.name) + "'))\">👥 फ़ॉलोअर्स (" + followersList.length + ")</button>" +
-      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "following" ? "active" : "") + "\" onclick=\"setPoetDetailSubView('following', dec('" + arg(pt.name) + "'))\">✨ फ़ॉलोइंग (" + followingList.length + ")</button>" +
+      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "poems" ? "active" : "") + "\" onclick=\"setPoetDetailSubView(\'poems\', dec(\'" + arg(pt.name) + "\'))\">📜 रचनाएँ (" + allPoems.length + ")</button>" +
+      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "followers" ? "active" : "") + "\" onclick=\"setPoetDetailSubView(\'followers\', dec(\'" + arg(pt.name) + "\'))\">👥 फ़ॉलोअर्स (" + followersList.length + ")</button>" +
+      "<button type=\"button\" class=\"admin-tab-btn " + (poetDetailSubView === "following" ? "active" : "") + "\" onclick=\"setPoetDetailSubView(\'following\', dec(\'" + arg(pt.name) + "\'))\">✨ फ़ॉलोइंग (" + followingList.length + ")</button>" +
     "</div>" +
     bottomContentHtml;
 }
 
+/* ================= MEMBER PERSONAL CORNER (हर सदस्य का निजी कॉर्नर + एडमिन संदेश) ================= */
 function setCornerSubTab(st) {
   state.cornerSubTab = st;
   renderMyCorner();
@@ -4814,13 +4788,11 @@ function listenForIncomingCalls(myEmail) {
   chaupalSocialState.incomingUnsubscribe = db.collection(ROOT_COL).doc("social_calls").collection("items")
     .onSnapshot(function(snap) {
       var ringing = null;
-      var nowTs = Date.now();
       snap.forEach(function(doc) {
         var d = Object.assign({ id: doc.id }, doc.data() || {});
         var dCallee = (d.calleeEmail || "").toLowerCase().trim();
-        var isForMe = (dCallee && dCallee === em) || (!dCallee && d.callerEmail && (d.callerEmail || "").toLowerCase().trim() !== em);
-        var ageOk = !d.createdAt || (nowTs - Number(d.createdAt) < 180000);
-        if (isForMe && ageOk && d.status === "ringing" && (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== d.id)) {
+        var dCaller = (d.callerEmail || "").toLowerCase().trim();
+        if (dCallee === em && d.status === "ringing" && dCaller !== em && (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== d.id)) {
           ringing = d;
         }
         if (chaupalSocialState.activeCallDocId === d.id && (d.status === "ended" || d.status === "declined" || d.status === "missed")) {
