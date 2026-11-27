@@ -2848,6 +2848,7 @@ if (cached) {
   if (Array.isArray(cached.socialPermissions)) state.socialPermissions = cached.socialPermissions;
   if (Array.isArray(cached.socialUsers)) state.socialUsers = cached.socialUsers;
   if (Array.isArray(cached.notifications) && cached.notifications.length) state.notifications = cached.notifications;
+  if (cached.currentUser && cached.currentUser.email) state.currentUser = cached.currentUser;
 }
 
 function saveLocalCache() {
@@ -2907,12 +2908,17 @@ function initFirebaseSync() {
       }
     });
     auth.onAuthStateChanged(function(user) {
-      state.currentUser = user ? {
-        uid: user.uid,
-        email: (user.email || "").toLowerCase().trim(),
-        displayName: user.displayName || "",
-        photoURL: user.photoURL || ""
-      } : null;
+      if (user) {
+        state.currentUser = {
+          uid: user.uid,
+          email: (user.email || "").toLowerCase().trim(),
+          displayName: user.displayName || "",
+          photoURL: user.photoURL || ""
+        };
+        saveLocalCache();
+      } else if (!state.currentUser || !state.currentUser.email) {
+        state.currentUser = null;
+      }
       if (state.currentUser && state.currentUser.email) {
         syncLinkedProfilesForCurrentUser(state.currentUser);
         listenForIncomingCalls(state.currentUser.email);
@@ -5385,10 +5391,12 @@ function listenForIncomingCalls(myEmail) {
       var myNameNow = (meNow && meNow.name) ? meNow.name.trim() : "";
       var nowTs = Date.now();
       var ringing = null;
+      var ongoingConference = null;
+
       snap.forEach(function(doc) {
         var d = Object.assign({ id: doc.id }, doc.data() || {});
         var dCaller = (d.callerEmail || "").toLowerCase().trim();
-        var isFresh = !d.createdAt || (nowTs - Number(d.createdAt) < 900000);
+        var isFresh = !d.createdAt || (nowTs - Number(d.createdAt) < 1800000);
         var parts = Array.isArray(d.participants) ? d.participants : [];
         var isInParts = parts.some(function(p) {
           var pEm = (p.email || "").toLowerCase().trim();
@@ -5399,6 +5407,15 @@ function listenForIncomingCalls(myEmail) {
         var dCalleeName = (d.calleeName || "").trim();
         var isDirectMatch = (dCallee && dCallee === em) || (!dCallee && dCalleeName && myNameNow && (dCalleeName === myNameNow || dCalleeName.indexOf(myNameNow) !== -1 || myNameNow.indexOf(dCalleeName) !== -1));
         var isInvitedToMe = isInParts || isDirectMatch;
+
+        if (isFresh && d.status !== "ended" && (dCaller === em || isInvitedToMe)) {
+          var activeCount = parts.filter(function(p) { return p.status === "connected" || p.status === "accepted"; }).length;
+          if (d.status === "connected" || activeCount >= 1) {
+            if (!ongoingConference || Number(d.createdAt || 0) > Number(ongoingConference.createdAt || 0)) {
+              ongoingConference = d;
+            }
+          }
+        }
 
         if (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallDocId === d.id) {
           chaupalSocialState.activeCallSession.participants = parts;
@@ -5431,6 +5448,18 @@ function listenForIncomingCalls(myEmail) {
           }
         }
       });
+
+      chaupalSocialState.ongoingConferenceDoc = ongoingConference;
+
+      if (!chaupalSocialState.activeCallSession && ongoingConference) {
+        var myP = (Array.isArray(ongoingConference.participants) ? ongoingConference.participants : []).find(function(p) {
+          return (p.email || "").toLowerCase().trim() === em;
+        });
+        if (myP && myP.status === "connected") {
+          rejoinConferenceCall(ongoingConference.id, true);
+        }
+      }
+
       var prevId = chaupalSocialState.incomingCallDoc ? chaupalSocialState.incomingCallDoc.id : null;
       var nextId = ringing ? ringing.id : null;
       chaupalSocialState.incomingCallDoc = ringing;
@@ -5444,8 +5473,117 @@ function listenForIncomingCalls(myEmail) {
         stopIncomingRingTone();
         renderGlobalIncomingCallOverlay();
         if (state.activeTab === "social") renderChaupalSocial();
+      } else if (state.activeTab === "social" && chaupalSocialState.subTab === "call") {
+        renderChaupalSocial();
       }
     }, function() {});
+}
+
+function leaveConferenceCall() {
+  var callId = chaupalSocialState.activeCallDocId;
+  var me = getCurrentMemberIdentity();
+  if (!callId || !me) {
+    cleanupWebRtcCall(true);
+    renderChaupalSocial();
+    return;
+  }
+  var ref = getCallDocRef(callId);
+  var curParts = (chaupalSocialState.activeCallSession && Array.isArray(chaupalSocialState.activeCallSession.participants))
+    ? chaupalSocialState.activeCallSession.participants.slice()
+    : [];
+  var updatedParts = curParts.map(function(p) {
+    if ((p.email || "").toLowerCase().trim() === me.email) {
+      return Object.assign({}, p, { status: "left", leftAt: Date.now() });
+    }
+    return p;
+  });
+  var remainingActive = updatedParts.filter(function(p) {
+    return p.status === "connected" || p.status === "accepted";
+  });
+
+  if (ref) {
+    if (remainingActive.length === 0) {
+      ref.set({ participants: updatedParts, status: "ended", endedAt: Date.now() }, { merge: true }).catch(function() {});
+    } else {
+      ref.set({ participants: updatedParts }, { merge: true }).catch(function() {});
+    }
+  }
+  cleanupWebRtcCall(true);
+  chaupalSocialState.subTab = "call";
+  switchTab("social");
+  renderChaupalSocial();
+  showToast("आप कॉल से बाहर आ गए — अन्य सदस्यों की कॉल जारी है");
+}
+
+function rejoinConferenceCall(callId, silentAuto) {
+  var me = getCurrentMemberIdentity();
+  if (!me || !callId) return;
+  var ref = getCallDocRef(callId);
+  if (!ref) return;
+
+  ref.get().then(function(snap) {
+    var d = (snap && snap.exists && snap.data()) || {};
+    if (!d.id || d.status === "ended") {
+      if (!silentAuto) showToast("यह कॉन्फ्रेंस कॉल समाप्त हो चुकी है");
+      return;
+    }
+    var parts = Array.isArray(d.participants) ? d.participants.slice() : [];
+    var found = false;
+    parts = parts.map(function(p) {
+      if ((p.email || "").toLowerCase().trim() === me.email) {
+        found = true;
+        return Object.assign({}, p, { status: "connected", rejoinedAt: Date.now() });
+      }
+      return p;
+    });
+    if (!found) {
+      parts.push({ email: me.email, name: me.name, status: "connected", rejoinedAt: Date.now() });
+    }
+    var tType = d.callType || "video";
+    chaupalSocialState.callType = tType;
+    chaupalSocialState.activeCallDocId = callId;
+    chaupalSocialState.incomingCallDoc = null;
+    chaupalSocialState.isMuted = false;
+    chaupalSocialState.isCamOff = false;
+    chaupalSocialState.peerConnectionsMap = {};
+    chaupalSocialState.remoteStreamsMap = {};
+    chaupalSocialState.peerStatusMap = {};
+    parts.forEach(function(p) {
+      var pEm = (p.email || "").toLowerCase().trim();
+      if (pEm && pEm !== me.email) chaupalSocialState.peerStatusMap[pEm] = p.status || "connected";
+    });
+    chaupalSocialState.activeCallSession = {
+      id: callId,
+      type: tType,
+      target: d.targetLabel || "सक्रिय कॉन्फ्रेंस कॉल",
+      callerEmail: d.callerEmail || "",
+      participants: parts,
+      status: "connected",
+      startedAt: d.startedAt || Date.now()
+    };
+
+    ref.set({ participants: parts, status: "connected" }, { merge: true }).catch(function() {});
+    subscribeToActiveCallDoc(callId, false);
+    chaupalSocialState.subTab = "call";
+    switchTab("social");
+    renderChaupalSocial();
+    if (!silentAuto) showToast("कॉन्फ्रेंस कॉल में पुनः जुड़ रहे हैं ✓");
+
+    acquireCallMediaStream(tType).then(function(stream) {
+      if (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== callId) {
+        if (stream) { try { stream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {} }
+        return;
+      }
+      chaupalSocialState.localStream = stream;
+      parts.forEach(function(p) {
+        var pEm = (p.email || "").toLowerCase().trim();
+        if (pEm && pEm !== me.email) {
+          ensureMeshPeerConnection(callId, pEm, p.name || pEm, "member", true);
+        }
+      });
+      setTimeout(attachMediaToDom, 50);
+    });
+  }).catch(function() {});
 }
 
 function subscribeToActiveCallDoc(callId, isCaller) {
@@ -6349,7 +6487,10 @@ function renderChaupalSocial() {
           "</div>" +
           "<button type=\"button\" class=\"action-btn " + (chaupalSocialState.isLiveActive ? "danger" : "gold") + "\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"toggleSocialLiveBroadcast()\">" + (chaupalSocialState.isLiveActive ? "⏹️ लाइव रोकें" : "🔴 सोशल लाइव शुरू करें") + "</button>" +
         "</div>" +
-        "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalCallSession()\">📞 कॉल समाप्त करें</button>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;\">" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"leaveConferenceCall()\">🚪 कॉल से बाहर निकलें (Leave Call)</button>" +
+          "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalCallSession()\">📞 सभी के लिए कॉल समाप्त करें</button>" +
+        "</div>" +
       "</div>";
   }
 
@@ -6447,7 +6588,21 @@ function renderChaupalSocial() {
         "</div>")
       : "<div style=\"font-size:12.5px; color:var(--text-muted);\">अन्य लॉगिन सदस्यों के जुड़ते ही वे यहाँ दिखेंगे।</div>";
 
-    paneHtml =
+        var ongoingCardHtml = "";
+    if (!chaupalSocialState.activeCallSession && chaupalSocialState.ongoingConferenceDoc && chaupalSocialState.ongoingConferenceDoc.status !== "ended") {
+      var oc = chaupalSocialState.ongoingConferenceDoc;
+      var ocParts = Array.isArray(oc.participants) ? oc.participants : [];
+      var ocConnectedNames = ocParts.filter(function(p) { return p.status === "connected" || p.status === "accepted"; }).map(function(p) { return p.name || p.email; });
+      ongoingCardHtml =
+        "<div class=\"call-stage-card\" style=\"border-color:#4ADE80; background:linear-gradient(155deg, #1E3A2A 0%, #111D16 100%);\">" +
+          "<div style=\"font-size:11.5px; color:#86EFAC; font-weight:700;\">🟢 सक्रिय कॉन्फ्रेंस चल रही है (आप बाहर हैं या दोबारा जुड़ सकते हैं)</div>" +
+          "<h4 class=\"font-royal\" style=\"font-size:19px; color:#F7DC8B; margin:6px 0 4px;\">" + esc(oc.targetLabel || "काव्य चौपाल कॉन्फ्रेंस") + "</h4>" +
+          "<div style=\"font-size:12.5px; color:#FFF8EA; margin-bottom:10px;\">वर्तमान में जुड़े सदस्य (" + ocConnectedNames.length + "): <strong>" + esc(ocConnectedNames.join(", ") || "सदस्य") + "</strong></div>" +
+          "<button type=\"button\" class=\"btn-approve\" style=\"padding:10px 18px; font-size:14px;\" onclick=\"rejoinConferenceCall(dec(\'" + arg(oc.id) + "\'), false)\">🔄 कॉन्फ्रेंस कॉल में दोबारा जुड़ें (Rejoin)</button>" +
+        "</div>";
+    }
+
+    paneHtml = ongoingCardHtml +
       "<div class=\"form-box\">" +
         "<h4 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">📞 कॉन्फ्रेंस में किन सदस्यों को जोड़ना है? (2 या कितने भी सदस्य)</h4>" +
         "<div class=\"field\"><label>एक या अधिक सदस्यों पर टिक करें</label>" + checkboxesHtml + "</div>" +
