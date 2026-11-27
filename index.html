@@ -5479,11 +5479,21 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
         chaupalSocialState.peerStatusMap[pEm] = "connected";
         stopOutgoingRingTone();
         attachMediaToDom();
-      } else if (st === "failed" || st === "disconnected") {
-        if (st === "failed") {
-          try { pc.restartIce(); } catch (e) {}
-        }
+      } else if (st === "failed") {
+        try { pc.restartIce(); } catch (e) {}
+        setTimeout(function() {
+          if (pc.iceConnectionState === "failed" && pc.signalingState === "stable") {
+            ensureMeshPeerConnection(callId, pEm, peerName, roleSide, true);
+          }
+        }, 500);
         attachMediaToDom();
+      } else if (st === "disconnected") {
+        attachMediaToDom();
+        setTimeout(function() {
+          if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
+            try { pc.restartIce(); } catch (e) {}
+          }
+        }, 1400);
       } else {
         attachMediaToDom();
       }
@@ -5639,23 +5649,31 @@ function attachMediaToDom() {
       dbgEl.textContent = "🔊 ऑडियो:" + aCnt + " | 📹 वीडियो:" + vCnt + " | ICE:" + iceSt;
     }
     if (el && st && st.getTracks && st.getTracks().length > 0) {
-      st.getTracks().forEach(function(tr) { tr.enabled = true; });
+      var hasLiveVideo = st.getVideoTracks().some(function(vt) {
+        vt.enabled = true;
+        return vt.readyState === "live" && !vt.muted;
+      });
+      st.getAudioTracks().forEach(function(at) { at.enabled = true; });
       if (el.srcObject !== st) {
         el.srcObject = st;
       }
-      el.muted = false;
-      el.volume = 1.0;
-      try {
-        var p = el.play();
-        if (p && p.catch) {
-          p.catch(function() {
-            el.muted = true;
-            el.play().then(function() {
-              setTimeout(function() { el.muted = false; }, 120);
-            }).catch(function() {});
-          });
-        }
-      } catch (e) {}
+      el.playsInline = true;
+      el.autoplay = true;
+      if (el.paused || (el.tagName === "VIDEO" && el.videoWidth === 0 && hasLiveVideo)) {
+        try {
+          var p = el.play();
+          if (p && p.catch) {
+            p.catch(function() {
+              el.muted = true;
+              el.play().then(function() {
+                setTimeout(function() {
+                  try { el.muted = false; el.volume = 1.0; } catch (e) {}
+                }, 200);
+              }).catch(function() {});
+            });
+          }
+        } catch (e) {}
+      }
     }
   });
 }
