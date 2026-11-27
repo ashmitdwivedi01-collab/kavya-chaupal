@@ -3546,6 +3546,11 @@ function syncLinkedProfilesForCurrentUser(userObj) {
   }
   registerCurrentUserInSocialDirectory(userObj, matchedPoet);
   listenForIncomingCalls(em);
+  try {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(function() {});
+    }
+  } catch (e) {}
 }
 
 function registerCurrentUserInSocialDirectory(userObj, matchedPoet) {
@@ -5264,30 +5269,103 @@ function acquireCallMediaStream(modeType) {
   });
 }
 
+var chaupalSwRegistration = null;
+var pendingIncomingRingCall = null;
+
+(function registerChaupalServiceWorker() {
+  if (!("serviceWorker" in navigator) || !window.Blob || !window.URL) return;
+  try {
+    var swCode = [
+      "self.addEventListener('install', function(e) { self.skipWaiting(); });",
+      "self.addEventListener('activate', function(e) { e.waitUntil(self.clients.claim()); });",
+      "self.addEventListener('notificationclick', function(event) {",
+      "  event.notification.close();",
+      "  var callId = (event.notification && event.notification.data && event.notification.data.callId) || '';",
+      "  event.waitUntil(",
+      "    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {",
+      "      for (var i = 0; i < clientList.length; i++) {",
+      "        var c = clientList[i];",
+      "        if ('focus' in c) {",
+      "          c.postMessage({ type: 'INCOMING_CALL_CLICK', callId: callId });",
+      "          return c.focus();",
+      "        }",
+      "      }",
+      "      if (self.clients.openWindow) return self.clients.openWindow('./');",
+      "    })",
+      "  );",
+      "});"
+    ].join("\n");
+    var blob = new Blob([swCode], { type: "application/javascript" });
+    var swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).then(function(reg) {
+      chaupalSwRegistration = reg;
+    }).catch(function() {});
+    navigator.serviceWorker.addEventListener("message", function(ev) {
+      if (ev && ev.data && ev.data.type === "INCOMING_CALL_CLICK") {
+        try { dismissSplash(true); } catch (e) {}
+        if (chaupalSocialState.incomingCallDoc) {
+          startIncomingRingTone();
+          renderGlobalIncomingCallOverlay();
+        }
+      }
+    });
+  } catch (e) {}
+})();
+
+document.addEventListener("visibilitychange", function() {
+  if (!document.hidden && chaupalSocialState.incomingCallDoc) {
+    try { dismissSplash(true); } catch (e) {}
+    startIncomingRingTone();
+    renderGlobalIncomingCallOverlay();
+  }
+});
+
 function triggerSystemIncomingCallAlert(callDoc) {
+  pendingIncomingRingCall = callDoc;
   try {
     if (navigator.vibrate) {
-      navigator.vibrate([500, 200, 500, 200, 700]);
+      navigator.vibrate([600, 200, 600, 200, 800, 200, 600]);
     }
   } catch (e) {}
+
+  var titleTxt = (callDoc.callType === "audio" ? "📞 ऑडियो कॉल: " : "🎥 वीडियो कॉल: ") + (callDoc.callerName || "काव्य चौपाल");
+  var bodyTxt = (callDoc.targetLabel || "कॉल स्वीकार करने के लिए यहाँ क्लिक करें");
+  var notifOptions = {
+    body: bodyTxt,
+    tag: "kavya_call_" + callDoc.id,
+    requireInteraction: true,
+    silent: false,
+    vibrate: [600, 200, 600, 200, 800],
+    data: { callId: callDoc.id }
+  };
+  if (state.settings && state.settings.logo) {
+    notifOptions.icon = state.settings.logo;
+    notifOptions.badge = state.settings.logo;
+  }
+
+  var fireNotification = function() {
+    if (chaupalSwRegistration && chaupalSwRegistration.showNotification) {
+      chaupalSwRegistration.showNotification(titleTxt, notifOptions).catch(function() {
+        try {
+          var nFallback = new Notification(titleTxt, notifOptions);
+          nFallback.onclick = function() { try { window.focus(); } catch (e) {} nFallback.close(); };
+        } catch (e2) {}
+      });
+    } else if ("Notification" in window) {
+      try {
+        var n = new Notification(titleTxt, notifOptions);
+        n.onclick = function() { try { window.focus(); } catch (e) {} n.close(); };
+      } catch (e) {}
+    }
+  };
+
   try {
     if ("Notification" in window) {
-      var showSysNotif = function() {
-        var n = new Notification((callDoc.callType === "audio" ? "📞 ऑडियो कॉल: " : "🎥 वीडियो कॉल: ") + (callDoc.callerName || "काव्य चौपाल"), {
-          body: (callDoc.targetLabel || "कॉल स्वीकार करने के लिए यहाँ क्लिक करें"),
-          tag: "kavya_call_" + callDoc.id,
-          requireInteraction: true
-        });
-        n.onclick = function() {
-          try { window.focus(); } catch (e) {}
-          n.close();
-        };
-      };
       if (Notification.permission === "granted") {
-        showSysNotif();
+        fireNotification();
       } else if (Notification.permission !== "denied") {
         Notification.requestPermission().then(function(perm) {
-          if (perm === "granted") showSysNotif();
+          if (perm === "granted") fireNotification();
         }).catch(function() {});
       }
     }
