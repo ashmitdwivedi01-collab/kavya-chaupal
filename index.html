@@ -4633,17 +4633,34 @@ function renderFavorites() {
 function renderAdminsDirectory() {
   var qEl = document.getElementById("admin-search");
   var q = (qEl ? qEl.value : "").trim().toLowerCase();
-  var list = state.admins.filter(function(a) { return !q || (a.name + " " + (a.designation || "") + " " + (a.city || "")).toLowerCase().indexOf(q) !== -1; });
+  var list = state.admins.map(getEffectiveAdminProfile).filter(function(a) {
+    if (!a) return false;
+    return !q || (a.name + " " + (a.designation || "") + " " + (a.city || "") + " " + (a.occupation || "") + " " + (a.mainGenres || "")).toLowerCase().indexOf(q) !== -1;
+  });
+  var cntEl = document.getElementById("admins-dir-count"); if (cntEl) cntEl.textContent = list.length + " सदस्य";
   var grid = document.getElementById("admins-dir-grid"); if (!grid) return;
   grid.innerHTML = list.map(function(a) {
-    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec(\'" + arg(a.id) + "\'))\"><div class=\"avatar-md\">" + (a.photo ? ("<img src=\"" + a.photo + "\">") : esc(initials(a.name))) + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(a.name) + "</h3><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || "") + "</span></div></div></div>";
+    var av = a.photo ? ("<img src=\"" + a.photo + "\" alt=\"" + esc(a.name) + "\">") : esc(initials(a.name));
+    var linkedPoet = findMatchingPoetForAdmin(a);
+    var poetBtn = linkedPoet ? (" <button type=\"button\" class=\"sm-btn\" style=\"padding:3px 9px; font-size:11px;\" onclick=\"event.stopPropagation(); openPoetProfile(dec(\'" + arg(linkedPoet.name) + "\'))\">✒️ कवि प्रोफ़ाइल</button>") : "";
+    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec(\'" + arg(a.id) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(a.name) + "</h3><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || "भारत") + "</span>" + (a.mainGenres ? ("<span class=\"mini-badge\">❖ " + esc(a.mainGenres) + "</span>") : "") + "</div>" + (poetBtn ? ("<div style=\"margin-top:6px;\">" + poetBtn + "</div>") : "") + "</div></div>";
   }).join("");
 }
 function openAdminDetail(id) { pushAppView("admin"); state.activeAdminId = id; document.getElementById("admins-list-view").style.display = "none"; document.getElementById("admin-detail-view").style.display = "block"; renderAdminDetail(id); }
 function closeAdminDetail(fromPop) { state.activeAdminId = null; document.getElementById("admin-detail-view").style.display = "none"; document.getElementById("admins-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 function renderAdminDetail(id) {
-  var a = state.admins.find(function(x) { return x.id === id; }); var c = document.getElementById("admin-detail-view"); if (!a || !c) return;
-  c.innerHTML = "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button><div class=\"profile-hero\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div></div>" + renderStructuredBioCard(a, "परिचय", false);
+  var rawAdm = state.admins.find(function(x) { return x.id === id; }); var c = document.getElementById("admin-detail-view"); if (!rawAdm || !c) return;
+  var a = getEffectiveAdminProfile(rawAdm) || rawAdm;
+  var av = a.photo ? ("<img src=\"" + a.photo + "\" alt=\"" + esc(a.name) + "\">") : esc(initials(a.name));
+  var linkedPoet = findMatchingPoetForAdmin(rawAdm);
+  var poetPoems = linkedPoet ? state.poems.filter(function(p) { return p.poet === linkedPoet.name; }) : [];
+  c.innerHTML =
+    "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button>" +
+    "<div class=\"profile-hero\">" +
+      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div>" + (linkedPoet ? ("<div style=\"margin-top:8px;\"><button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"openPoetProfile(dec(\'" + arg(linkedPoet.name) + "\'))\">✒️ कवि प्रोफ़ाइल देखें (" + poetPoems.length + " रचनाएँ)</button></div>") : "") + "</div></div>" +
+      (a.quote ? ("<div class=\"profile-quote\">“" + esc(a.quote) + "”</div>") : "") +
+    "</div>" +
+    renderStructuredBioCard(a, "परिचय (कवि प्रोफ़ाइल से स्वचालित सिंक)", false);
 }
 function renderSocialLinks() {
   var s = state.settings.socials || DEFAULT_SETTINGS.socials;
@@ -5308,6 +5325,43 @@ function savePoemForm() {
 function editPoem(id) { state.editingPoemId = id; renderAdminStudio(); }
 function deletePoem(id) { if (!confirm("हटाएं?")) return; state.poems = state.poems.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("poems", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
+function findMatchingPoetForAdmin(adm) {
+  if (!adm) return null;
+  var admEmail = (adm.ownerEmail || "").toLowerCase().trim();
+  var admName = (adm.name || "").trim();
+  var admLinkedId = (adm.linkedPoetId || "").trim();
+  return (state.poets || []).find(function(pt) {
+    if (admLinkedId && pt.id === admLinkedId) return true;
+    if (admEmail && pt.ownerEmail && pt.ownerEmail.toLowerCase().trim() === admEmail) return true;
+    if (admName && (pt.name || "").trim() === admName) return true;
+    return false;
+  }) || null;
+}
+
+function getEffectiveAdminProfile(adm) {
+  if (!adm) return null;
+  var pt = findMatchingPoetForAdmin(adm);
+  if (!pt) return adm;
+  return Object.assign({}, adm, {
+    name: (pt.name && pt.name.trim()) ? pt.name.trim() : adm.name,
+    photo: (pt.photo && pt.photo.trim()) ? pt.photo : (adm.photo || ""),
+    city: (pt.city && pt.city.trim()) ? pt.city : (adm.city || ""),
+    birthPlace: (pt.birthPlace && pt.birthPlace.trim()) ? pt.birthPlace : (adm.birthPlace || ""),
+    birth: (pt.birth && pt.birth.trim()) ? pt.birth : (adm.birth || ""),
+    death: (pt.death && pt.death.trim()) ? pt.death : (adm.death || ""),
+    education: (pt.education && pt.education.trim()) ? pt.education : (adm.education || ""),
+    occupation: (pt.occupation && pt.occupation.trim()) ? pt.occupation : (adm.occupation || ""),
+    mainGenres: (pt.mainGenres && pt.mainGenres.trim()) ? pt.mainGenres : (adm.mainGenres || ""),
+    publications: (pt.publications && pt.publications.trim()) ? pt.publications : (adm.publications || ""),
+    awards: (pt.awards && pt.awards.trim()) ? pt.awards : (adm.awards || ""),
+    special: (pt.special && pt.special.trim()) ? pt.special : (adm.special || ""),
+    quote: (pt.quote && pt.quote.trim()) ? pt.quote : (adm.quote || ""),
+    bio: (pt.bio && pt.bio.trim()) ? pt.bio : (adm.bio || ""),
+    ownerEmail: (pt.ownerEmail && pt.ownerEmail.trim()) ? pt.ownerEmail : (adm.ownerEmail || ""),
+    linkedPoetId: pt.id
+  });
+}
+
 function syncPoetToLinkedAdmin(poetObj) {
   if (!poetObj) return;
   var pName = (poetObj.name || "").trim();
@@ -5328,6 +5382,16 @@ function syncPoetToLinkedAdmin(poetObj) {
       adm.city = poetObj.city || adm.city || "";
       if (poetObj.photo) adm.photo = poetObj.photo;
       if (bioSummary) adm.bio = bioSummary;
+      if (poetObj.birth) adm.birth = poetObj.birth;
+      if (poetObj.death) adm.death = poetObj.death;
+      if (poetObj.birthPlace) adm.birthPlace = poetObj.birthPlace;
+      if (poetObj.education) adm.education = poetObj.education;
+      if (poetObj.occupation) adm.occupation = poetObj.occupation;
+      if (poetObj.mainGenres) adm.mainGenres = poetObj.mainGenres;
+      if (poetObj.publications) adm.publications = poetObj.publications;
+      if (poetObj.awards) adm.awards = poetObj.awards;
+      if (poetObj.special) adm.special = poetObj.special;
+      if (poetObj.quote) adm.quote = poetObj.quote;
       if (pEmail) adm.ownerEmail = pEmail;
       adm.linkedPoetId = poetObj.id;
       cloudSaveDoc("admins", adm.id, adm);
