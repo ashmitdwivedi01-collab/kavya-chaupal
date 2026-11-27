@@ -1751,6 +1751,99 @@
     @media (min-width: 540px) {
       .top-account-btns { width: auto; justify-content: flex-end; }
     }
+
+    /* ================= ROYAL POLISH & TYPOGRAPHY ENHANCEMENTS ================= */
+    .poem-card {
+      transition: transform 0.2s ease, box-shadow 0.22s ease, border-color 0.2s ease;
+    }
+    .poem-card:hover {
+      border-color: var(--gold);
+      box-shadow: var(--shadow-strong);
+    }
+    .poem-card-title {
+      font-family: 'Yatra One', 'Khand', serif;
+      letter-spacing: 0.2px;
+    }
+    .poem-card-excerpt, .reader-text, .spotlight-quote, .jayanti-quote {
+      font-family: 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif;
+      text-rendering: optimizeLegibility;
+    }
+    .reader-text {
+      line-height: 2.02;
+      letter-spacing: 0.15px;
+    }
+    .droptap-item {
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      border-radius: 15px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .droptap-head {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      padding: 13px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .droptap-title {
+      font-family: 'Yatra One', serif;
+      font-size: 16.5px;
+      color: var(--primary);
+    }
+    .droptap-arrow {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold);
+      flex-shrink: 0;
+    }
+    .droptap-panel {
+      display: none;
+      padding: 0 15px 14px;
+      border-top: 1px dashed var(--border);
+    }
+    .droptap-item.open .droptap-panel {
+      display: block;
+    }
+    .chhand-subnav {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .chhand-subnav::-webkit-scrollbar { display: none; }
+    .chhand-subbtn {
+      flex-shrink: 0;
+      padding: 8px 13px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .chhand-subbtn.active {
+      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
+      color: #F7DC8B;
+      border-color: var(--gold);
+    }
+    [data-theme="night"] .chhand-subbtn.active {
+      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
+      color: #160D06;
+    }
+
   </style>
 </head>
 <body>
