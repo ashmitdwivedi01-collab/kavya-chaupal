@@ -5477,23 +5477,30 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
       var st = pc.iceConnectionState;
       if (st === "connected" || st === "completed") {
         chaupalSocialState.peerStatusMap[pEm] = "connected";
+        chaupalSocialState._iceBadSinceMap = chaupalSocialState._iceBadSinceMap || {};
+        delete chaupalSocialState._iceBadSinceMap[pEm];
         stopOutgoingRingTone();
         attachMediaToDom();
-      } else if (st === "failed") {
-        try { pc.restartIce(); } catch (e) {}
+      } else if (st === "failed" || st === "disconnected") {
+        chaupalSocialState._iceBadSinceMap = chaupalSocialState._iceBadSinceMap || {};
+        if (!chaupalSocialState._iceBadSinceMap[pEm]) {
+          chaupalSocialState._iceBadSinceMap[pEm] = Date.now();
+        }
+        try { if (typeof pc.restartIce === "function") pc.restartIce(); } catch (err) {
+          console.warn("ICE restart error:", err);
+        }
+        var waitMs = (st === "failed") ? 600 : 1800;
         setTimeout(function() {
-          if (pc.iceConnectionState === "failed" && pc.signalingState === "stable") {
-            ensureMeshPeerConnection(callId, pEm, peerName, roleSide, true);
+          if (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== callId) return;
+          if ((pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") && pc.signalingState === "stable") {
+            var shouldOffer = (roleSide === "caller") || (myEm > pEm);
+            if (shouldOffer && chaupalSocialState._sentOfferLegs) {
+              delete chaupalSocialState._sentOfferLegs[legKey];
+            }
+            ensureMeshPeerConnection(callId, pEm, peerName, roleSide, shouldOffer);
           }
-        }, 500);
+        }, waitMs);
         attachMediaToDom();
-      } else if (st === "disconnected") {
-        attachMediaToDom();
-        setTimeout(function() {
-          if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed") {
-            try { pc.restartIce(); } catch (e) {}
-          }
-        }, 1400);
       } else {
         attachMediaToDom();
       }
@@ -5754,17 +5761,29 @@ function applyVideoSenderBitrateCap(pc) {
 
 function triggerChaupalIceRecovery() {
   if (!chaupalSocialState.activeCallSession) return;
+  var meR = getCurrentMemberIdentity();
+  var myEmR = (meR && meR.email) || "";
+  var callIdR = chaupalSocialState.activeCallDocId;
   var map = chaupalSocialState.peerConnectionsMap || {};
   Object.keys(map).forEach(function(peerKey) {
     var pc = map[peerKey];
     if (!pc) return;
     applyVideoSenderBitrateCap(pc);
-    if (typeof pc.restartIce === "function" && (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed")) {
-      try { pc.restartIce(); } catch (err) {
+    if (pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed" || pc.iceConnectionState === "new") {
+      try { if (typeof pc.restartIce === "function") pc.restartIce(); } catch (err) {
         console.warn("ICE restart skipped:", err);
+      }
+      if (callIdR && myEmR && pc.signalingState === "stable") {
+        var canOfferR = (myEmR > peerKey) || ((chaupalSocialState.activeCallSession.callerEmail || "").toLowerCase().trim() === myEmR);
+        if (canOfferR) {
+          var lkR = getLegKey(myEmR, peerKey);
+          if (chaupalSocialState._sentOfferLegs) delete chaupalSocialState._sentOfferLegs[lkR];
+          ensureMeshPeerConnection(callIdR, peerKey, peerKey, "caller", true);
+        }
       }
     }
   });
+  setTimeout(attachMediaToDom, 120);
 }
 
 if (typeof window !== "undefined") {
@@ -6388,7 +6407,7 @@ function subscribeToActiveCallDoc(callId, isCaller) {
     }
   }, function() {});
 
-  // 4. Self-healing watchdog: keeps media attached & retries offer if ICE stays 'new' after 3s
+  // 4. Self-healing watchdog: keeps media attached & recovers stuck/disconnected ICE every 3s
   chaupalSocialState.mediaWatchdogTimer = setInterval(function() {
     if (!chaupalSocialState.activeCallSession || chaupalSocialState.activeCallDocId !== callId) {
       clearInterval(chaupalSocialState.mediaWatchdogTimer);
@@ -6404,8 +6423,15 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       if (!pEm || pEm === myEmW) return;
       if (p.status !== "connected" && p.status !== "accepted") return;
       var pc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm];
-      if (!pc || (pc.iceConnectionState === "new" && pc.signalingState === "stable" && myEmW > pEm)) {
-        ensureMeshPeerConnection(callId, pEm, p.name || pEm, "caller", true);
+      var isStuckState = !pc || pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed" || (pc.iceConnectionState === "new" && pc.signalingState === "stable");
+      if (isStuckState && (!pc || pc.signalingState === "stable")) {
+        try { if (pc && typeof pc.restartIce === "function") pc.restartIce(); } catch (e) {}
+        var canOfferW = (myEmW > pEm) || ((chaupalSocialState.activeCallSession.callerEmail || "").toLowerCase().trim() === myEmW);
+        if (canOfferW) {
+          var lkW = getLegKey(myEmW, pEm);
+          if (chaupalSocialState._sentOfferLegs) delete chaupalSocialState._sentOfferLegs[lkW];
+          ensureMeshPeerConnection(callId, pEm, p.name || pEm, "caller", true);
+        }
       }
     });
   }, 3000);
