@@ -4938,13 +4938,19 @@ var chaupalSocialState = {
 };
 
 var RTC_ICE_CONFIG = {
-  iceCandidatePoolSize: 12,
+  iceCandidatePoolSize: 16,
+  iceTransportPolicy: "all",
+  bundlePolicy: "max-bundle",
+  rtcpMuxPolicy: "require",
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun2.l.google.com:19302" },
     { urls: "stun:stun3.l.google.com:19302" },
     { urls: "stun:stun4.l.google.com:19302" },
+    { urls: "stun:stun.cloudflare.com:3478" },
+    { urls: "stun:stun.stunprotocol.org:3478" },
+    { urls: "stun:stun.services.mozilla.com:3478" },
     { urls: "stun:stun.relay.metered.ca:80" },
     {
       urls: "turn:global.relay.metered.ca:80",
@@ -5789,11 +5795,20 @@ function getChaupalNetworkProfile(participantCount) {
   };
 }
 
-function getEffectiveRtcIceConfig() {
+function getEffectiveRtcIceConfig(forceRelayOnly) {
   var base = (typeof RTC_ICE_CONFIG !== "undefined" && RTC_ICE_CONFIG) ? RTC_ICE_CONFIG : { iceServers: [] };
   var extraTurn = Array.isArray(CHAUPAL_CONFERENCE_CONFIG.turnServers) ? CHAUPAL_CONFERENCE_CONFIG.turnServers.filter(Boolean) : [];
-  var servers = (base.iceServers || []).concat(extraTurn);
-  return Object.assign({}, base, { iceServers: servers });
+  var servers = extraTurn.concat(base.iceServers || []);
+  return Object.assign({}, base, {
+    iceServers: servers,
+    iceTransportPolicy: forceRelayOnly ? "relay" : (base.iceTransportPolicy || "all")
+  });
+}
+
+function autoTuneChaupalCallSession() {
+  if (!chaupalSocialState || !chaupalSocialState.activeCallSession) return;
+  syncChaupalMediaQualityAcrossPeers();
+  if (typeof attachMediaToDom === "function") attachMediaToDom();
 }
 
 function syncChaupalMediaQualityAcrossPeers() {
@@ -5916,6 +5931,11 @@ function triggerChaupalIceRecovery() {
 }
 
 if (typeof window !== "undefined") {
+  if (navigator && navigator.connection && typeof navigator.connection.addEventListener === "function") {
+    navigator.connection.addEventListener("change", function() {
+      autoTuneChaupalCallSession();
+    });
+  }
   window.addEventListener("online", function() {
     if (chaupalSocialState.activeCallSession) {
       triggerChaupalIceRecovery();
