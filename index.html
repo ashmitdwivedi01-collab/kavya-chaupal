@@ -1668,14 +1668,17 @@
     .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .admin-list-item {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 11px 13px; background: var(--bg-elevated); border: 1px solid var(--border);
-      border-radius: 13px; margin-bottom: 8px;
+      display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+      padding: 13px 14px; background: var(--bg-elevated); border: 1.5px solid var(--border);
+      border-radius: 14px; margin-bottom: 10px; box-shadow: var(--shadow);
+    }
+    @media (min-width: 600px) {
+      .admin-list-item { flex-direction: row; align-items: center; justify-content: space-between; }
     }
     .admin-item-info { min-width: 0; flex: 1; }
-    .admin-item-title { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .admin-item-sub { font-size: 12px; color: var(--text-muted); }
-    .admin-item-btns { display: flex; gap: 6px; flex-shrink: 0; }
+    .admin-item-title { font-weight: 700; font-size: 15px; color: var(--text); line-height: 1.4; white-space: normal; word-break: break-word; }
+    .admin-item-sub { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 3px; white-space: normal; word-break: break-word; }
+    .admin-item-btns { display: flex; gap: 7px; flex-wrap: wrap; }
     .sm-btn { padding: 6px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-soft); color: var(--text); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
     .sm-btn.del { color: #D9264E; border-color: rgba(217, 38, 78, 0.35); }
 
@@ -2055,7 +2058,7 @@
   </nav>
 
   <!-- ================= ADMIN SUBMISSION PREVIEW MODAL ================= -->
-  <div class="modal-overlay" id="admin-preview-modal" onclick="closeModalOnBg(event, 'admin-preview-modal')">
+  <div class="modal-overlay" id="admin-preview-modal" style="z-index:460;" onclick="closeModalOnBg(event, 'admin-preview-modal')">
     <div class="modal-sheet">
       <div class="modal-head">
         <div style="display:flex; align-items:center; gap:9px; min-width:0;">
@@ -3058,6 +3061,39 @@ function getAllPoetObjects() {
   return Array.from(map.values());
 }
 
+function isViewsHiddenForPoetName(poetName) {
+  var nm = (poetName || "").trim();
+  if (!nm) return false;
+  var pt = state.poets.find(function(x) { return (x.name || "").trim() === nm; });
+  return !!(pt && pt.hideViews);
+}
+
+function recordPoemView(poemId) {
+  var p = state.poems.find(function(x) { return x.id === poemId; });
+  if (!p) return;
+  p.views = Number(p.views || 0) + 1;
+  saveLocalCache();
+  if (db) {
+    db.collection(ROOT_COL).doc("poems").collection("items").doc(poemId).set({
+      views: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true }).catch(function() {});
+  }
+}
+
+function recordPoetView(poetName) {
+  var nm = (poetName || "").trim();
+  if (!nm) return;
+  var pt = state.poets.find(function(x) { return (x.name || "").trim() === nm; });
+  if (!pt) return;
+  pt.views = Number(pt.views || 0) + 1;
+  saveLocalCache();
+  if (db && pt.id && pt.id.indexOf("auto_") !== 0) {
+    db.collection(ROOT_COL).doc("poets").collection("items").doc(pt.id).set({
+      views: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true }).catch(function() {});
+  }
+}
+
 function getPoetByEmail(email, fallbackName) {
   var em = (email || "").toLowerCase().trim();
   if (!em) return null;
@@ -3657,20 +3693,23 @@ function poemCardHTML(p) {
   var liked = state.favorites.indexOf(p.id) !== -1;
   var dCnt = getTotalDaad(p);
   var cCnt = state.comments.filter(function(c) { return c.poemId === p.id; }).length;
-  return "<article class=\"poem-card\" onclick=\"openReader(dec(\'" + arg(p.id) + "\'))\">" +
+      var vHiddenP = isViewsHiddenForPoetName(p.poet);
+      var vCntP = Number(p.views || 0);
+      return "<article class=\"poem-card\" onclick=\"openReader(dec(\'" + arg(p.id) + "\'))\">" +
     "<div class=\"poem-card-top\">" +
       "<div style=\"display:flex; gap:5px; flex-wrap:wrap;\">" +
         "<span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" +
         (p.mood ? ("<span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") +
+        (!isViewsHiddenForPoetName(p.poet) ? ("<span class=\"mood-tag\">👁️ " + Number(p.views || 0) + " बार देखा गया</span>") : "") +
       "</div>" +
-      "<button class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec(\'" + arg(p.id) + "\'))\">" + (liked ? "♥" : "♡") + "</button>" +
+      "<button type=\"button\" class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec(\'" + arg(p.id) + "\'))\">" + (liked ? "♥" : "♡") + "</button>" +
     "</div>" +
     (p.bhavImage ? ("<img class=\"poem-bhav-banner\" src=\"" + p.bhavImage + "\" alt=\"भाव चित्र\" />") : "") +
     "<h3 class=\"poem-card-title\">" + esc(p.title) + "</h3>" +
     "<p class=\"poem-card-excerpt\">" + esc(p.content) + "</p>" +
     "<div class=\"poem-card-foot\">" +
       "<span class=\"poem-author-link\" onclick=\"event.stopPropagation(); openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</span>" +
-      "<span class=\"read-more-link\">" + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + (cCnt > 0 ? ("💬 " + cCnt + " • ") : "") + "पढ़ें →</span>" +
+      "<span class=\"read-more-link\">" + (!vHiddenP ? ("👁️ " + vCntP + " • ") : "") + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + (cCnt > 0 ? ("💬 " + cCnt + " • ") : "") + "पढ़ें →</span>" +
     "</div>" +
   "</article>";
 }
@@ -3709,12 +3748,13 @@ function renderPoetsDirectory() {
   grid.innerHTML = poets.map(function(pt) {
     var poems = state.poems.filter(function(p) { return p.poet === pt.name; });
     var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
-    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(pt.name) + "</h3>" + (pt.occupation ? ("<div class=\"person-role\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span></div></div></div>";
+    var vBadgePt = !pt.hideViews ? ("<span class=\"mini-badge\">👁️ " + Number(pt.views || 0) + " बार देखा गया</span>") : "";
+    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(pt.name) + "</h3>" + (pt.occupation ? ("<div class=\"person-role\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span>" + vBadgePt + "</div></div></div>";
   }).join("");
 }
 
 function openPoetProfile(poetName) {
-  closeModal("reader-modal", true); pushAppView("poet"); state.activeTab = "poets"; state.activePoetName = poetName;
+  recordPoetView(poetName); closeModal("reader-modal", true); pushAppView("poet"); state.activeTab = "poets"; state.activePoetName = poetName;
   document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
   document.getElementById("tab-poets").classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === "poets"); });
@@ -3756,7 +3796,7 @@ function renderPoetDetail(poetName) {
   var canSeePrivate = isOwner || !!state.adminUnlocked;
   container.innerHTML =
     "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
-    "<div class=\"profile-hero\"><div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + "</div></div></div>" + (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") + "</div>" +
+    "<div class=\"profile-hero\"><div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div></div></div>" + (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") + "</div>" +
     renderStructuredBioCard(pt, "कवि परिचय", canSeePrivate) +
     "<h3 class=\"section-title\">✦ इनकी रचनाएँ (" + allPoems.length + ")</h3>" +
     "<div class=\"cards-grid two-col\" style=\"margin-top:8px;\">" + allPoems.map(poemCardHTML).join("") + "</div>";
@@ -4331,7 +4371,7 @@ function toggleMehfilMusic() {
 function openReader(poemId) {
   var p = state.poems.find(function(x) { return x.id === poemId; });
   if (p && !document.getElementById("reader-modal").classList.contains("open")) pushAppView("reader");
-  if (!p) return; stopTeleprompter(); state.currentReaderPoemId = poemId;
+  if (!p) return; recordPoemView(poemId); stopTeleprompter(); state.currentReaderPoemId = poemId;
   var liked = state.favorites.indexOf(p.id) !== -1; var d = getDaadCounts(p);
   var poemComments = state.comments.filter(function(c) { return c.poemId === p.id; });
   var defaultCommenter = "";
@@ -4694,7 +4734,8 @@ function renderAdminStudio() {
       "<div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div>" +
       "<div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div>" +
       "<div class=\"field\"><label>कवि चित्र (Photo)</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempPoetPhoto', 'poet-photo-prev', 320)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div><span style=\"font-size:12px; color:var(--text-muted);\">प्रोफ़ाइल के लिए स्पष्ट कवि चित्र चुनें</span></div></div>" +
-      "<button class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
+      "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);\"><input type=\"checkbox\" id=\"f-poet-hide-views\" " + ((ept && ept.hideViews) ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>👁️ मेरी कविता व प्रोफ़ाइल की ‘देखे जाने की संख्या’ (Views) छिपाएँ</span></label></div>" +
+      "<button type=\"button\" class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
       var linkedAdm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
       var promoFormHtml = (state.promotingPoetId === pt.id) ? (
         "<div class=\"form-box\" style=\"margin-top:6px; margin-bottom:10px; border-color:var(--gold);\">" +
@@ -4866,7 +4907,7 @@ function savePoetForm() {
     awards: (document.getElementById("f-poet-awards") || { value: "" }).value.trim(),
     quote: (document.getElementById("f-poet-quote") || { value: "" }).value.trim(),
     special: (document.getElementById("f-poet-special") || { value: "" }).value.trim(),
-    photo: state.tempPoetPhoto || ex.photo || "", bio: ""
+    photo: state.tempPoetPhoto || ex.photo || "", bio: "", views: Number(ex.views || 0), hideViews: !!((document.getElementById("f-poet-hide-views") || { checked: false }).checked)
   };
   var existed = state.poets.some(function(x) { return x.id === id; });
   if (existed) state.poets = state.poets.map(function(x) { return x.id === id ? item : x; }); else state.poets.push(item);
@@ -5300,7 +5341,8 @@ function renderSubmitModal() {
         "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"sub-poet-awards\" value=\"" + esc(activePoetObj ? (activePoetObj.awards || "") : "") + "\" /></div>" +
         "<div class=\"field\"><label>काव्य-मुद्रा / चुनिंदा पंक्तियाँ</label><textarea id=\"sub-poet-quote\" style=\"min-height:58px;\">" + esc(activePoetObj ? (activePoetObj.quote || "") : "") + "</textarea></div>" +
         "<div class=\"field\"><label>विशेष / संक्षिप्त परिचय</label><textarea id=\"sub-poet-special\" style=\"min-height:64px;\">" + esc(activePoetObj ? (activePoetObj.special || activePoetObj.bio || "") : "") + "</textarea></div>" +
-        "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">💾 प्रोफ़ाइल व कवि चित्र सहेजें</button>" +
+        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);\"><input type=\"checkbox\" id=\"sub-poet-hide-views\" " + ((activePoetObj && activePoetObj.hideViews) ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>👁️ मेरी कविता व प्रोफ़ाइल की ‘देखे जाने की संख्या’ (Views) छिपाएँ</span></label></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoet()\">💾 प्रोफ़ाइल व कवि चित्र सहेजें</button>" +
       "</div>";
   }
   body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab('poem')\">📜 रचना लिखें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab('poet')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल व चित्र" : "प्रोफ़ाइल बनाएँ / लिंक करें") + "</button></div>" + formHtml;
@@ -5373,7 +5415,9 @@ function submitPublicPoet() {
     quote: (document.getElementById("sub-poet-quote") || { value: "" }).value.trim(),
     special: (document.getElementById("sub-poet-special") || { value: "" }).value.trim(),
     photo: finalPhoto,
-    bio: ""
+    bio: "",
+    views: Number((existingPub && existingPub.views) || 0),
+    hideViews: !!((document.getElementById("sub-poet-hide-views") || { checked: false }).checked)
   };
   var existingPend = getPendingPoetByEmail(userEmail);
   var pendId = existingPend ? existingPend.id : ("pend_poet_" + Date.now());
@@ -5546,7 +5590,9 @@ function approvePendingPoet(id) {
     quote: pt.quote || (existing && existing.quote) || "",
     special: pt.special || (existing && existing.special) || "",
     photo: pt.photo || (existing && existing.photo) || "",
-    bio: ""
+    bio: "",
+    views: Number((existing && existing.views) || pt.views || 0),
+    hideViews: !!(pt.hideViews !== undefined ? pt.hideViews : (existing && existing.hideViews))
   };
   if (existing) state.poets = state.poets.map(function(x) { return x.id === tid ? pub : x; }); else state.poets.push(pub);
   state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
