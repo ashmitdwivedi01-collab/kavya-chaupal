@@ -2634,6 +2634,7 @@ var state = {
   adminUnlocked: false,
   adminTab: "poems",
   editingPoemId: null,
+  editingMyPoemId: null,
   editingPoetId: null,
   editingAdminId: null,
   tempPoetPhoto: "",
@@ -3071,12 +3072,35 @@ function isViewsHiddenForPoetName(poetName) {
 function recordPoemView(poemId) {
   var p = state.poems.find(function(x) { return x.id === poemId; });
   if (!p) return;
-  p.views = Number(p.views || 0) + 1;
+  var nextVal = Number(p.views || 0) + 1;
+  p.views = nextVal;
   saveLocalCache();
+  var vBadge = document.getElementById("reader-views-badge");
+  if (vBadge && !isViewsHiddenForPoetName(p.poet)) {
+    vBadge.textContent = "👁️ " + nextVal + " बार देखा गया";
+  }
+  renderPoemsGrid();
   if (db) {
-    db.collection(ROOT_COL).doc("poems").collection("items").doc(poemId).set({
-      views: firebase.firestore.FieldValue.increment(1)
-    }, { merge: true }).catch(function() {});
+    var docRef = db.collection(ROOT_COL).doc("poems").collection("items").doc(poemId);
+    docRef.runTransaction(function(tx) {
+      return tx.get(docRef).then(function(snap) {
+        var cur = (snap.exists && Number((snap.data() || {}).views || 0)) || 0;
+        var updated = Math.max(cur + 1, nextVal);
+        tx.set(docRef, { views: updated }, { merge: true });
+        return updated;
+      });
+    }).then(function(finalCnt) {
+      if (typeof finalCnt === "number" && finalCnt > Number(p.views || 0)) {
+        p.views = finalCnt;
+        saveLocalCache();
+        if (vBadge && !isViewsHiddenForPoetName(p.poet)) {
+          vBadge.textContent = "👁️ " + finalCnt + " बार देखा गया";
+        }
+        renderPoemsGrid();
+      }
+    }).catch(function() {
+      docRef.set({ views: firebase.firestore.FieldValue.increment(1) }, { merge: true }).catch(function() {});
+    });
   }
 }
 
@@ -3085,12 +3109,28 @@ function recordPoetView(poetName) {
   if (!nm) return;
   var pt = state.poets.find(function(x) { return (x.name || "").trim() === nm; });
   if (!pt) return;
-  pt.views = Number(pt.views || 0) + 1;
+  var nextVal = Number(pt.views || 0) + 1;
+  pt.views = nextVal;
   saveLocalCache();
+  renderPoetsDirectory();
   if (db && pt.id && pt.id.indexOf("auto_") !== 0) {
-    db.collection(ROOT_COL).doc("poets").collection("items").doc(pt.id).set({
-      views: firebase.firestore.FieldValue.increment(1)
-    }, { merge: true }).catch(function() {});
+    var docRef = db.collection(ROOT_COL).doc("poets").collection("items").doc(pt.id);
+    docRef.runTransaction(function(tx) {
+      return tx.get(docRef).then(function(snap) {
+        var cur = (snap.exists && Number((snap.data() || {}).views || 0)) || 0;
+        var updated = Math.max(cur + 1, nextVal);
+        tx.set(docRef, { views: updated }, { merge: true });
+        return updated;
+      });
+    }).then(function(finalCnt) {
+      if (typeof finalCnt === "number" && finalCnt > Number(pt.views || 0)) {
+        pt.views = finalCnt;
+        saveLocalCache();
+        renderPoetsDirectory();
+      }
+    }).catch(function() {
+      docRef.set({ views: firebase.firestore.FieldValue.increment(1) }, { merge: true }).catch(function() {});
+    });
   }
 }
 
@@ -3836,7 +3876,12 @@ function renderMyCorner() {
 
   var subHtml = "";
   if (state.cornerSubTab === "poems") {
-    var pubCards = myPublishedPoems.length ? ("<div class=\"cards-grid two-col\">" + myPublishedPoems.map(poemCardHTML).join("") + "</div>") : "<div class=\"empty-box\">आपकी कोई प्रकाशित रचना अभी नहीं है। ऊपर ‘नई रचना लिखें’ पर क्लिक कर अपनी पहली रचना पोस्ट करें।</div>";
+    var pubCards = myPublishedPoems.length ? ("<div class=\"cards-grid two-col\">" + myPublishedPoems.map(function(pm) {
+      return "<div>" + poemCardHTML(pm) +
+        "<div style=\"margin-top:6px; display:flex; justify-content:flex-end; gap:6px;\">" +
+          "<button type=\"button\" class=\"sm-btn\" onclick=\"event.stopPropagation(); editMyOwnPoem(dec(\'" + arg(pm.id) + "\'))\">✏️ अपनी रचना संपादित करें (अप्रूवल हेतु)</button>" +
+        "</div></div>";
+    }).join("") + "</div>") : "<div class=\"empty-box\">आपकी कोई प्रकाशित रचना अभी नहीं है। ऊपर ‘नई रचना लिखें’ पर क्लिक कर अपनी पहली रचना पोस्ट करें।</div>";
     var pendCards = myPendingPoems.length ? ("<h4 class=\"section-title\" style=\"margin-top:16px;\">⏳ समीक्षाधीन रचनाएँ (" + myPendingPoems.length + ")</h4>" + myPendingPoems.map(function(p) {
       return "<div class=\"pending-card\"><span class=\"genre-tag\">" + esc(p.genre) + "</span>" + (p.mood ? (" <span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") + "<div class=\"font-royal\" style=\"font-size:18px; color:var(--primary); margin-top:5px;\">" + esc(p.title) + "</div>" + (p.bhavImage ? ("<img src=\"" + p.bhavImage + "\" style=\"width:120px; border-radius:10px; border:1px solid var(--gold); margin-top:6px;\" />") : "") + "<div class=\"pending-poem-preview\">" + esc(p.content) + "</div></div>";
     }).join("")) : "";
@@ -4387,6 +4432,7 @@ function openReader(poemId) {
       "<div style=\"display:flex; justify-content:center; gap:6px; flex-wrap:wrap;\">" +
         "<span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" +
         (p.mood ? ("<span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") +
+        (!isViewsHiddenForPoetName(p.poet) ? ("<span id=\"reader-views-badge\" class=\"mood-tag\">👁️ " + Number(p.views || 0) + " बार देखा गया</span>") : "") +
       "</div>" +
       "<h2 class=\"reader-poem-title\">" + esc(p.title) + "</h2>" +
       "<button class=\"reader-poet-btn\" onclick=\"openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</button>" +
@@ -4884,6 +4930,33 @@ function savePoemForm() {
 function editPoem(id) { state.editingPoemId = id; renderAdminStudio(); }
 function deletePoem(id) { if (!confirm("हटाएं?")) return; state.poems = state.poems.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("poems", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
+function syncPoetToLinkedAdmin(poetObj) {
+  if (!poetObj) return;
+  var pName = (poetObj.name || "").trim();
+  var pEmail = (poetObj.ownerEmail || "").toLowerCase().trim();
+  var bioSummary = [
+    poetObj.occupation ? ("भूमिका: " + poetObj.occupation) : "",
+    poetObj.mainGenres ? ("मुख्य विधा: " + poetObj.mainGenres) : "",
+    poetObj.special || poetObj.bio || ""
+  ].filter(Boolean).join(" • ");
+
+  state.admins.forEach(function(adm) {
+    var admEmail = (adm.ownerEmail || "").toLowerCase().trim();
+    var isMatch = (adm.linkedPoetId && adm.linkedPoetId === poetObj.id) ||
+      (pEmail && admEmail && admEmail === pEmail) ||
+      (pName && (adm.name || "").trim() === pName);
+    if (isMatch) {
+      adm.name = pName || adm.name;
+      adm.city = poetObj.city || adm.city || "";
+      if (poetObj.photo) adm.photo = poetObj.photo;
+      if (bioSummary) adm.bio = bioSummary;
+      if (pEmail) adm.ownerEmail = pEmail;
+      adm.linkedPoetId = poetObj.id;
+      cloudSaveDoc("admins", adm.id, adm);
+    }
+  });
+}
+
 function savePoetForm() {
   var nEl = document.getElementById("f-poet-name");
   var name = nEl ? nEl.value.trim() : ""; if (!name) { showToast("कवि का नाम लिखें"); return; }
@@ -4911,7 +4984,7 @@ function savePoetForm() {
   };
   var existed = state.poets.some(function(x) { return x.id === id; });
   if (existed) state.poets = state.poets.map(function(x) { return x.id === id ? item : x; }); else state.poets.push(item);
-  cloudSaveDoc("poets", id, item).then(function() { state.editingPoetId = null; state.tempPoetPhoto = ""; renderAll(); renderAdminStudio(); showToast("कवि परिचय व चित्र सहेजे गए ✨"); });
+  syncPoetToLinkedAdmin(item); cloudSaveDoc("poets", id, item).then(function() { state.editingPoetId = null; state.tempPoetPhoto = ""; renderAll(); renderAdminStudio(); showToast("कवि परिचय व चित्र (व संबद्ध एडमिन प्रोफ़ाइल) सहेजे गए ✨"); });
 }
 function editPoet(id) { state.editingPoetId = id; state.tempPoetPhoto = ""; renderAdminStudio(); }
 function deletePoet(id) { if (!confirm("हटाएं?")) return; state.poets = state.poets.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("poets", id).then(function() { renderAll(); renderAdminStudio(); }); }
@@ -5283,17 +5356,18 @@ function renderSubmitModal() {
     if (!activePoetObj) {
       formHtml = "<div class=\"my-profile-card\" style=\"text-align:center;\"><p style=\"margin:0 0 10px;\">रचना पोस्ट करने से पहले अपनी सदस्य प्रोफ़ाइल व कवि चित्र बनाएँ।</p><button class=\"action-btn primary\" onclick=\"setSubmitTab(\'poet\')\">✒️ प्रोफ़ाइल बनाएँ →</button></div>";
     } else {
+      var editingOwnObj = state.editingMyPoemId ? state.poems.find(function(x) { return x.id === state.editingMyPoemId; }) : null;
       formHtml =
         "<div class=\"form-box\">" +
-          "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">📜 नई रचना पोस्ट करें (" + esc(activePoetObj.name) + ")</h4>" +
-          "<div class=\"field\"><label>रचना का शीर्षक *</label><input id=\"sub-poem-title\" placeholder=\"जैसे: साँझ का दीपक\" /></div>" +
+          "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">" + (editingOwnObj ? ("✏️ अपनी रचना संपादित करें (“" + esc(editingOwnObj.title) + "”)") : ("📜 नई रचना पोस्ट करें (" + esc(activePoetObj.name) + ")")) + "</h4>" +
+          "<div class=\"field\"><label>रचना का शीर्षक *</label><input id=\"sub-poem-title\" value=\"" + esc(editingOwnObj ? editingOwnObj.title : "") + "\" placeholder=\"जैसे: साँझ का दीपक\" /></div>" +
           "<div class=\"two-fields\">" +
-            "<div class=\"field\"><label>विधा चुनें (ड्रॉप-डाउन) *</label><select id=\"sub-poem-genre\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
-            "<div class=\"field\"><label>मुख्य भाव चुनें (स्वतः भाव चित्र हेतु) *</label><select id=\"sub-poem-mood\">" + MOOD_OPTIONS.map(function(m) { return "<option value=\"" + esc(m.id) + "\">" + esc(m.label) + "</option>"; }).join("") + "</select></div>" +
+            "<div class=\"field\"><label>विधा चुनें (ड्रॉप-डाउन) *</label><select id=\"sub-poem-genre\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\" " + ((editingOwnObj && editingOwnObj.genre === g) ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
+            "<div class=\"field\"><label>मुख्य भाव चुनें (स्वतः भाव चित्र हेतु) *</label><select id=\"sub-poem-mood\">" + MOOD_OPTIONS.map(function(m) { return "<option value=\"" + esc(m.id) + "\" " + ((editingOwnObj && editingOwnObj.mood === m.id) ? "selected" : "") + ">" + esc(m.label) + "</option>"; }).join("") + "</select></div>" +
           "</div>" +
-          "<div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:135px;\" placeholder=\"अपनी कविता, गीत, ग़ज़ल या दोहा यहाँ लिखें...\"></textarea></div>" +
-          "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:10px;\">✨ रचना पोस्ट होते ही आपके चुने हुए भाव के अनुसार AI द्वारा सुंदर <strong>भाव चित्र</strong> स्वतः निर्मित होकर आपकी रचना के साथ जुड़ जाएगा।</div>" +
-          "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoem()\">✨ रचना पोस्ट करें व भाव चित्र बनाएँ</button>" +
+          "<div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:135px;\" placeholder=\"अपनी कविता, गीत, ग़ज़ल या दोहा यहाँ लिखें...\">" + esc(editingOwnObj ? editingOwnObj.content : "") + "</textarea></div>" +
+          "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:10px;\">✨ " + (editingOwnObj ? "संपादित रचना एडमिन स्वीकृति के बाद प्रकाशित होगी; पूर्व प्रकाशित संस्करण एडमिन अप्रूवल तक सुरक्षित रहेगा।" : "रचना पोस्ट होते ही आपके चुने हुए भाव के अनुसार AI द्वारा सुंदर <strong>भाव चित्र</strong> स्वतः निर्मित होकर आपकी रचना के साथ जुड़ जाएगा।") + "</div>" +
+          "<button type=\"button\" class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoem()\">" + (editingOwnObj ? "⏳ संपादन एडमिन स्वीकृति हेतु भेजें" : "✨ रचना पोस्ट करें व भाव चित्र बनाएँ") + "</button>" +
         "</div>";
     }
   } else {
@@ -5348,6 +5422,25 @@ function renderSubmitModal() {
   body.innerHTML = hdrHtml + "<div class=\"admin-tabs\" style=\"justify-content:center;\"><button class=\"admin-tab-btn " + (state.submitTab === "poem" ? "active" : "") + "\" onclick=\"setSubmitTab('poem')\">📜 रचना लिखें</button><button class=\"admin-tab-btn " + (state.submitTab === "poet" ? "active" : "") + "\" onclick=\"setSubmitTab('poet')\">✒️ " + (activePoetObj ? "प्रोफ़ाइल व चित्र" : "प्रोफ़ाइल बनाएँ / लिंक करें") + "</button></div>" + formHtml;
 }
 
+function editMyOwnPoem(poemId) {
+  var pm = state.poems.find(function(x) { return x.id === poemId; });
+  if (!pm) { showToast("रचना नहीं मिली"); return; }
+  var em = (state.currentUser && state.currentUser.email || "").toLowerCase().trim();
+  var prof = getPoetByEmail(em) || getPendingPoetByEmail(em);
+  var isMine = (pm.ownerEmail && pm.ownerEmail.toLowerCase().trim() === em) || (prof && (pm.poet || "").trim() === (prof.name || "").trim());
+  if (!isMine && !state.adminUnlocked) {
+    showToast("आप केवल अपनी स्वयं की रचना संपादित कर सकते हैं");
+    return;
+  }
+  state.editingMyPoemId = poemId;
+  state.submitTab = "poem";
+  state.submitSuccessMsg = "";
+  var sm = document.getElementById("submit-modal");
+  if (sm && !sm.classList.contains("open")) pushAppView("submit");
+  if (sm) sm.classList.add("open");
+  renderSubmitModal();
+}
+
 function submitPublicPoem() {
   var userEmail = state.currentUser && state.currentUser.email;
   var poetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail);
@@ -5358,10 +5451,13 @@ function submitPublicPoem() {
   var content = (document.getElementById("sub-poem-content") || { value: "" }).value.trim();
   if (!title || !content) { showToast("शीर्षक और रचना भरें"); return; }
 
+  var targetPubId = state.editingMyPoemId || "";
+  var existingPubPoem = targetPubId ? state.poems.find(function(x) { return x.id === targetPubId; }) : null;
   var id = "poem_" + Date.now();
   var autoImg = generateAutoBhavImage({ id: id, title: title, poet: poetObj.name, genre: genre, mood: mood, content: content });
   var item = {
     id: id,
+    targetPublishedId: existingPubPoem ? existingPubPoem.id : "",
     title: title,
     poet: poetObj.name,
     genre: genre,
@@ -5376,9 +5472,18 @@ function submitPublicPoem() {
   var pendItem = Object.assign({}, item, { id: pendId, submittedAt: Date.now() });
   state.pendingPoems.unshift(pendItem);
   state.lastPublishedPoemId = "";
+  state.editingMyPoemId = null;
   cloudSaveDoc("pending_poems", pendId, pendItem).then(function() {
-    pushNotification("नई रचना स्वीकृति हेतु प्राप्त: “" + title + "”", poetObj.name + " • " + genre + " (" + mood + ")", "approval", pendId, "");
-    state.submitSuccessMsg = "आपकी रचना “" + title + "” और स्वतः निर्मित भाव-चित्र एडमिन मण्डल के पास प्रिव्यू एवं स्वीकृति हेतु भेज दिए गए हैं।";
+    pushNotification(
+      existingPubPoem ? ("रचना संपादन स्वीकृति हेतु प्राप्त: “" + title + "”") : ("नई रचना स्वीकृति हेतु प्राप्त: “" + title + "”"),
+      poetObj.name + " • " + genre + " (" + mood + ")",
+      "approval",
+      pendId,
+      ""
+    );
+    state.submitSuccessMsg = existingPubPoem
+      ? ("आपकी संपादित रचना “" + title + "” एडमिन स्वीकृति के लिए भेज दी गई है। स्वीकृति मिलते ही यह प्रकाशित हो जाएगी।")
+      : ("आपकी रचना “" + title + "” और स्वतः निर्मित भाव-चित्र एडमिन मण्डल के पास प्रिव्यू एवं स्वीकृति हेतु भेज दिए गए हैं।");
     renderAll();
     renderSubmitModal();
     showToast("रचना स्वीकृति हेतु भेजी गई ⏳");
@@ -5553,10 +5658,28 @@ function savePreviewPendingPoet(id, andApprove) {
 
 function approvePendingPoem(id) {
   var p = state.pendingPoems.find(function(x) { return x.id === id; }); if (!p) return;
-  var newId = "poem_" + Date.now();
+  var exPub = p.targetPublishedId ? state.poems.find(function(x) { return x.id === p.targetPublishedId; }) : null;
+  var newId = exPub ? exPub.id : ("poem_" + Date.now());
   var autoImg = p.bhavImage || generateAutoBhavImage(p);
-  var pub = { id: newId, title: p.title, poet: p.poet, genre: p.genre || "कविता", mood: p.mood || detectPoemMood(p.content), bhavImage: autoImg, content: p.content, ownerEmail: p.ownerEmail || "", createdAt: Date.now() };
-  state.poems.unshift(pub); state.pendingPoems = state.pendingPoems.filter(function(x) { return x.id !== id; });
+  var pub = {
+    id: newId,
+    title: p.title,
+    poet: p.poet,
+    genre: p.genre || "कविता",
+    mood: p.mood || detectPoemMood(p.content),
+    bhavImage: autoImg,
+    content: p.content,
+    ownerEmail: p.ownerEmail || (exPub && exPub.ownerEmail) || "",
+    views: Number((exPub && exPub.views) || 0),
+    daad: (exPub && exPub.daad) || {},
+    createdAt: exPub ? exPub.createdAt : Date.now()
+  };
+  if (exPub) {
+    state.poems = state.poems.map(function(x) { return x.id === newId ? pub : x; });
+  } else {
+    state.poems.unshift(pub);
+  }
+  state.pendingPoems = state.pendingPoems.filter(function(x) { return x.id !== id; });
   Promise.all([cloudSaveDoc("poems", newId, pub), cloudDeleteDoc("pending_poems", id)]).then(function() {
     pushNotification("रचना स्वीकृत व प्रकाशित: “" + pub.title + "”", pub.poet, "poem", newId, pub.ownerEmail || "");
     renderAll(); renderAdminStudio(); showToast("रचना प्रकाशित हुई ✅");
@@ -5596,7 +5719,7 @@ function approvePendingPoet(id) {
   };
   if (existing) state.poets = state.poets.map(function(x) { return x.id === tid ? pub : x; }); else state.poets.push(pub);
   state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
-  Promise.all([cloudSaveDoc("poets", tid, pub), cloudDeleteDoc("pending_poets", id)]).then(function() { renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅"); });
+  syncPoetToLinkedAdmin(pub); Promise.all([cloudSaveDoc("poets", tid, pub), cloudDeleteDoc("pending_poets", id)]).then(function() { renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅"); });
 }
 function rejectPendingPoet(id) {
   state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
