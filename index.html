@@ -5723,6 +5723,134 @@ function forceRefreshRemoteMedia() {
   showToast("ऑडियो व वीडियो स्ट्रीम रीफ्रेश की गई 🔊");
 }
 
+
+var CHAUPAL_CONFERENCE_CONFIG = {
+  sfuEnabled: false,
+  sfuProvider: "auto-sfu-mesh",
+  sfuEndpoint: "",
+  sfuApiKey: "",
+  maxLowNetParticipants: 15,
+  maxUhdParticipants: 6,
+  audioFallbackThreshold: 3,
+  turnServers: []
+};
+
+function getChaupalNetworkProfile(participantCount) {
+  var pCount = Math.max(1, Number(participantCount || 1));
+  var mode = (chaupalSocialState && chaupalSocialState.networkMode) || "auto";
+  var conn = (typeof navigator !== "undefined") ? (navigator.connection || navigator.mozConnection || navigator.webkitConnection) : null;
+  var eff = (conn && conn.effectiveType) ? String(conn.effectiveType).toLowerCase() : "";
+  var saveData = Boolean(conn && conn.saveData);
+  var downlink = (conn && typeof conn.downlink === "number" && conn.downlink > 0) ? conn.downlink : 5;
+
+  var isLowNet = saveData || eff === "slow-2g" || eff === "2g" || eff === "3g" || downlink < 1.2 || mode === "low_data";
+  var isHighNet = !isLowNet && (mode === "uhd" || (eff === "4g" && downlink >= 4));
+
+  if (mode === "low_data" || isLowNet) {
+    return {
+      tier: "low",
+      label: "कमज़ोर नेटवर्क (ऑडियो-प्राथमिकता व स्मूद)",
+      audioBitrate: 24000,
+      videoBitrate: (pCount > 4) ? 0 : 120000,
+      width: 256,
+      height: 144,
+      fps: 10,
+      disableVideoForAudioPriority: (pCount > 2 || eff === "slow-2g" || eff === "2g" || saveData)
+    };
+  }
+
+  if (mode === "uhd" && isHighNet && pCount <= CHAUPAL_CONFERENCE_CONFIG.maxUhdParticipants) {
+    return {
+      tier: "uhd",
+      label: "Ultra HD (720p–1080p • तेज़ नेटवर्क)",
+      audioBitrate: 96000,
+      videoBitrate: (pCount <= 2) ? 2200000 : 1100000,
+      width: (pCount <= 2) ? 1920 : 1280,
+      height: (pCount <= 2) ? 1080 : 720,
+      fps: 30,
+      disableVideoForAudioPriority: false
+    };
+  }
+
+  // Balanced / auto for countrywide mixed networks
+  var scaledBitrate = (pCount >= 8) ? 200000 : ((pCount >= 4) ? 350000 : 650000);
+  var scaledW = (pCount >= 8) ? 320 : ((pCount >= 4) ? 480 : 854);
+  var scaledH = (pCount >= 8) ? 180 : ((pCount >= 4) ? 270 : 480);
+  var scaledFps = (pCount >= 8) ? 12 : ((pCount >= 4) ? 15 : 24);
+  return {
+    tier: "auto",
+    label: "ऑटो-अडैप्टिव (" + pCount + " सदस्य • संतुलित)",
+    audioBitrate: 48000,
+    videoBitrate: scaledBitrate,
+    width: scaledW,
+    height: scaledH,
+    fps: scaledFps,
+    disableVideoForAudioPriority: false
+  };
+}
+
+function getEffectiveRtcIceConfig() {
+  var base = (typeof RTC_ICE_CONFIG !== "undefined" && RTC_ICE_CONFIG) ? RTC_ICE_CONFIG : { iceServers: [] };
+  var extraTurn = Array.isArray(CHAUPAL_CONFERENCE_CONFIG.turnServers) ? CHAUPAL_CONFERENCE_CONFIG.turnServers.filter(Boolean) : [];
+  var servers = (base.iceServers || []).concat(extraTurn);
+  return Object.assign({}, base, { iceServers: servers });
+}
+
+function syncChaupalMediaQualityAcrossPeers() {
+  var cs = chaupalSocialState && chaupalSocialState.activeCallSession;
+  if (!cs) return;
+  var pCount = Array.isArray(cs.participants) ? cs.participants.length : 1;
+  var prof = getChaupalNetworkProfile(pCount);
+  chaupalSocialState.activeNetworkProfile = prof;
+
+  if (chaupalSocialState.localStream && chaupalSocialState.localStream.getVideoTracks) {
+    chaupalSocialState.localStream.getVideoTracks().forEach(function(vtr) {
+      if (prof.disableVideoForAudioPriority && !chaupalSocialState.isCamOff) {
+        vtr.enabled = false;
+      } else if (!chaupalSocialState.isCamOff) {
+        vtr.enabled = true;
+      }
+      if (vtr.applyConstraints && !prof.disableVideoForAudioPriority) {
+        vtr.applyConstraints({
+          width: { ideal: prof.width, max: prof.width },
+          height: { ideal: prof.height, max: prof.height },
+          frameRate: { ideal: prof.fps, max: prof.fps }
+        }).catch(function(err) {
+          console.warn("Video constraint adjustment skipped:", err);
+        });
+      }
+    });
+  }
+
+  var map = chaupalSocialState.peerConnectionsMap || {};
+  Object.keys(map).forEach(function(k) {
+    var pc = map[k];
+    if (!pc || !pc.getSenders) return;
+    try {
+      pc.getSenders().forEach(function(sender) {
+        if (!sender || !sender.track || !sender.getParameters || !sender.setParameters) return;
+        var params = sender.getParameters();
+        if (!params.encodings || !params.encodings.length) params.encodings = [{}];
+        if (sender.track.kind === "video") {
+          params.encodings[0].maxBitrate = prof.videoBitrate > 0 ? prof.videoBitrate : 80000;
+          params.encodings[0].maxFramerate = prof.fps;
+          params.degradationPreference = (prof.tier === "low") ? "maintain-framerate" : "balanced";
+          sender.setParameters(params).catch(function(err) {
+            console.warn("Sender bitrate update skipped:", err);
+          });
+        } else if (sender.track.kind === "audio") {
+          params.encodings[0].maxBitrate = prof.audioBitrate;
+          sender.setParameters(params).catch(function(err) {
+            console.warn("Audio bitrate update skipped:", err);
+          });
+        }
+      });
+    } catch (err) {
+      console.warn("Peer quality sync error:", err);
+    }
+  });
+}
+
 function applyVideoSenderBitrateCap(pc) {
   if (!pc || !pc.getSenders) return;
   var net = chaupalSocialState.networkMode || "auto";
@@ -5783,6 +5911,7 @@ function triggerChaupalIceRecovery() {
       }
     }
   });
+  syncChaupalMediaQualityAcrossPeers();
   setTimeout(attachMediaToDom, 120);
 }
 
