@@ -4084,6 +4084,25 @@ function isMemberCurrentlyActive(u) {
   return (Date.now() - lastTs) <= 95000;
 }
 
+function isPersonCurrentlyActive(personObj) {
+  if (!personObj) return false;
+  if (personObj.online === true) return true;
+  var em = (personObj.ownerEmail || personObj.email || "").toLowerCase().trim();
+  var nm = normalizePersonMatchKey(personObj.name);
+  var actList = getCurrentlyActiveMembers("");
+  return actList.some(function(m) {
+    var mEm = (m.email || "").toLowerCase().trim();
+    var mNm = normalizePersonMatchKey(m.name);
+    return (em && mEm && em === mEm) || (nm && mNm && (nm === mNm || nm.indexOf(mNm) === 0 || mNm.indexOf(nm) === 0));
+  });
+}
+
+function activeBlueDotHTML(isAct, labelText) {
+  if (!isAct) return "";
+  var txt = labelText ? (" " + labelText) : "";
+  return "<span title="अभी ऐप पर सक्रिय (Active)" style="display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border-radius:999px; background:rgba(37,99,235,0.14); border:1px solid rgba(59,130,246,0.55); color:#1D4ED8; font-size:11px; font-weight:700; line-height:1.2;"><span style="width:8px; height:8px; border-radius:50%; background:#2563EB; box-shadow:0 0 7px #2563EB; display:inline-block;"></span>" + esc(txt) + "</span>";
+}
+
 function getCurrentlyActiveMembers(excludeEmail) {
   var ex = (excludeEmail || "").toLowerCase().trim();
   return getAllCallableMembers(ex).filter(function(m) { return !!m.online; });
@@ -4097,7 +4116,7 @@ function notifyActiveMembersUpdate(prevList, nextList) {
     if (!em || prevMap[em]) return;
     if (_chaupalPresenceAlertedMap[em]) return;
     _chaupalPresenceAlertedMap[em] = true;
-    showToast("🟢 " + (m.name || em) + " अभी ऐप पर सक्रिय हैं");
+    showToast("🔵 " + (m.name || em) + " अभी ऐप पर सक्रिय हैं");
   });
 }
 
@@ -4308,7 +4327,7 @@ function renderActivePresenceBar() {
   if (!activeList.length) {
     el.innerHTML =
       "<div style=\"padding:8px 12px; border-radius:13px; background:var(--bg-elevated); border:1px solid var(--border); font-size:12px; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;\">" +
-        "<span>🟢 <strong>सक्रिय सदस्य:</strong> अभी आपके अतिरिक्त अन्य कोई सदस्य ऑनलाइन नहीं है (आप सक्रिय हैं)।</span>" +
+        "<span>🔵 <strong>सक्रिय सदस्य:</strong> अभी आपके अतिरिक्त अन्य कोई सदस्य ऑनलाइन नहीं है (आप सक्रिय हैं)।</span>" +
         "<button type=\"button\" class=\"sm-btn\" onclick=\"sendMemberPresenceHeartbeat(false); renderActivePresenceBar()\">↻ रिफ्रेश</button>" +
       "</div>";
     return;
@@ -4322,7 +4341,7 @@ function renderActivePresenceBar() {
       "<div style=\"display:flex; gap:7px; flex-wrap:wrap;\">" +
         activeList.map(function(m) {
           return "<div style=\"display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:999px; background:var(--bg); border:1px solid var(--border); font-size:12px;\">" +
-            "<span style=\"width:8px; height:8px; border-radius:50%; background:#22C55E; display:inline-block;\"></span>" +
+            "<span style=\"width:8px; height:8px; border-radius:50%; background:#2563EB; box-shadow:0 0 7px #2563EB; display:inline-block;\"></span>" +
             "<strong style=\"cursor:pointer;\" onclick=\"openDirectChatWithPerson(dec('" + arg(m.email) + "'), dec('" + arg(m.name) + "'))\">" + esc(m.name) + "</strong>" +
             "<button type=\"button\" class=\"sm-btn\" style=\"padding:2px 7px; font-size:11px;\" onclick=\"startDirectCallWithPerson('audio', dec('" + arg(m.email) + "'), dec('" + arg(m.name) + "'))\">🎙️</button>" +
             "<button type=\"button\" class=\"sm-btn\" style=\"padding:2px 7px; font-size:11px;\" onclick=\"startDirectCallWithPerson('video', dec('" + arg(m.email) + "'), dec('" + arg(m.name) + "'))\">🎥</button>" +
@@ -4402,6 +4421,7 @@ function renderTopAccountBar() {
 function switchTab(tabName, fromPop) {
   if (!fromPop && state.activeTab !== tabName) pushAppView("tab-" + tabName);
   state.activeTab = tabName;
+  persistCurrentViewState();
   document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
   var target = document.getElementById("tab-" + tabName);
   if (target) target.classList.add("active");
@@ -4428,6 +4448,7 @@ function openMyCorner(subTab) {
 
 function openManchSub(sub) {
   state.manchSub = sub;
+  persistCurrentViewState();
   switchTab("manch");
   setManchSub(sub);
 }
@@ -4646,6 +4667,7 @@ function showBirthdayCardPreview() {
 }
 
 function renderAll() {
+  reconcileAllPoetAdminLinks();
   var hdrTitle = document.getElementById("hdr-title");
   if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";
   var spName = document.getElementById("splash-app-name");
@@ -4834,8 +4856,9 @@ function renderPoetFilterStrip() {
     var totalByPoet = state.poems.filter(function(p) { return p.poet === pt.name; }).length;
     if (totalByPoet === 0) return;
     var active = state.selectedPoetFilter === pt.name ? "active" : "";
+    var isActPt = isPersonCurrentlyActive(pt);
     var avatar = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
-    html += "<button class=\"poet-chip " + active + "\" onclick=\"selectPoetFilter(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-sm\">" + avatar + "</div><div><div class=\"poet-chip-name\">" + esc(pt.name) + "</div><div class=\"poet-chip-sub\">" + c + " रचनाएँ</div></div></button>";
+    html += "<button class=\"poet-chip " + active + "\" onclick=\"selectPoetFilter(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-sm\" style=\"position:relative;\">" + avatar + (isActPt ? "<span style=\\"position:absolute; right:-2px; bottom:-2px; width:10px; height:10px; border-radius:50%; background:#2563EB; border:1.5px solid #fff; box-shadow:0 0 6px #2563EB;\\"></span>" : "") + "</div><div><div class=\"poet-chip-name\">" + esc(pt.name) + (isActPt ? " <span title=\\"सक्रिय\\" style=\\"color:#2563EB; font-size:12px;\\">●</span>" : "") + "</div><div class=\"poet-chip-sub\">" + c + " रचनाएँ</div></div></button>";
   });
   el.innerHTML = html;
 }
@@ -4919,8 +4942,9 @@ function renderPoetsDirectory() {
     var av = pt.photo ? ("<img src=\"" + pt.photo + "\" alt=\"" + esc(pt.name) + "\">") : esc(initials(pt.name));
     var vBadgePt = !pt.hideViews ? ("<span class=\"mini-badge\">👁️ " + Number(pt.views || 0) + "</span>") : "";
     var flwrsCnt = getFollowersForPoet(pt).length;
+    var isActDirPt = isPersonCurrentlyActive(pt);
     var flwBtnHtml = buildFollowActionBtnHTML(pt.name, pt.id, "padding:4px 10px; font-size:11.5px; border-radius:99px;");
-    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\">" + av + "</div><div class=\"person-info\"><div style=\"display:flex; justify-content:space-between; align-items:flex-start; gap:6px; flex-wrap:wrap;\"><h3 class=\"person-name\">" + esc(pt.name) + "</h3>" + flwBtnHtml + "</div>" + (pt.occupation ? ("<div class=\"person-role\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span><span class=\"mini-badge\">👥 " + flwrsCnt + " फ़ॉलोअर्स</span>" + vBadgePt + "</div></div></div>";
+    return "<div class=\"person-card\" onclick=\"openPoetProfile(dec(\'" + arg(pt.name) + "\'))\"><div class=\"avatar-md\" style=\"position:relative;\">" + av + (isActDirPt ? "<span title=\\"सक्रिय\\" style=\\"position:absolute; right:-3px; bottom:-3px; width:13px; height:13px; border-radius:50%; background:#2563EB; border:2px solid #fff; box-shadow:0 0 8px #2563EB;\\"></span>" : "") + "</div><div class=\"person-info\"><div style=\"display:flex; justify-content:space-between; align-items:flex-start; gap:6px; flex-wrap:wrap;\"><div style=\"display:flex; align-items:center; gap:6px; flex-wrap:wrap;\"><h3 class=\"person-name\" style=\"margin:0;\">" + esc(pt.name) + "</h3>" + activeBlueDotHTML(isActDirPt, "सक्रिय") + "</div>" + flwBtnHtml + "</div>" + (pt.occupation ? ("<div class=\"person-role\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"person-meta\"><span>📍 " + esc(pt.city || "भारत") + "</span></div><div class=\"person-meta\" style=\"margin-top:6px;\"><span class=\"mini-badge\">" + poems.length + " रचनाएँ</span><span class=\"mini-badge\">👥 " + flwrsCnt + " फ़ॉलोअर्स</span>" + vBadgePt + "</div></div></div>";
   }).join("");
 }
 
@@ -4935,6 +4959,7 @@ function openPoetProfile(poetName) {
   try { pushAppView("poet"); } catch (e) {}
   state.activeTab = "poets";
   state.activePoetName = nm;
+  persistCurrentViewState();
   document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
   var tPoets = document.getElementById("tab-poets");
   if (tPoets) tPoets.classList.add("active");
@@ -5063,12 +5088,20 @@ function renderPoetDetail(poetName) {
   container.innerHTML =
     "<button class=\"back-bar\" onclick=\"closePoetDetail()\">← सभी कवि</button>" +
     "<div class=\"profile-hero\">" +
-      "<div class=\"profile-top\"><div class=\"avatar-lg\">" + av + "</div><div style=\"flex:1; min-width:0;\"><h2 class=\"profile-name\">" + esc(pt.name) + "</h2>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + buildProfileChatCallButtonsHTML(pt) + "</div></div>" +
+      "<div class=\"profile-top\"><div class=\"avatar-lg\" style=\"position:relative;\">" + av + (isPersonCurrentlyActive(pt) ? "<span title=\\"सक्रिय\\" style=\\"position:absolute; right:-4px; bottom:-4px; width:15px; height:15px; border-radius:50%; background:#2563EB; border:2px solid #fff; box-shadow:0 0 9px #2563EB;\\"></span>" : "") + "</div><div style=\"flex:1; min-width:0;\"><div style=\"display:flex; align-items:center; gap:8px; flex-wrap:wrap;\"><h2 class=\"profile-name\" style=\"margin:0;\">" + esc(pt.name) + "</h2>" + (isPersonCurrentlyActive(pt) ? "<span style=\\"display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:999px; background:rgba(37,99,235,0.25); border:1px solid #93C5FD; color:#DBEAFE; font-size:11.5px; font-weight:700;\\"><span style=\\"width:8px; height:8px; border-radius:50%; background:#3B82F6; box-shadow:0 0 8px #60A5FA; display:inline-block;\\"></span>सक्रिय</span>" : "") + "</div>" + (pt.occupation ? ("<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:600;\">" + esc(pt.occupation) + "</div>") : "") + "<div class=\"profile-sub\">📍 " + esc(pt.city || "") + (!pt.hideViews ? (" • 👁️ " + Number(pt.views || 0) + " बार देखा गया") : "") + "</div>" + (flwActionBtn ? ("<div style=\"margin-top:9px;\">" + flwActionBtn + "</div>") : "") + buildProfileChatCallButtonsHTML(pt) + "</div></div>" +
       "<div class=\"corner-stats-grid\">" +
         "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'poems\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + allPoems.length + "</div><div class=\"corner-stat-lbl\">रचनाएँ</div></div>" +
         "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'followers\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followersList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोअर्स</div></div>" +
         "<div class=\"corner-stat-box\" style=\"cursor:pointer;\" onclick=\"setPoetDetailSubView(\'following\', dec(\'" + arg(pt.name) + "\'))\"><div class=\"corner-stat-num\">" + followingList.length + "</div><div class=\"corner-stat-lbl\">फ़ॉलोइंग</div></div>" +
       "</div>" +
+      (function() {
+        var lkAdm = getLinkedAdminForPoet(pt);
+        if (!lkAdm) return "";
+        return "<div style=\"margin-top:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;\">" +
+          "<span class=\"mini-badge\" style=\"background:rgba(252,226,154,0.22); color:#FCE49C; border:1px solid rgba(252,226,154,0.45);\">👑 एडमिन पद: " + esc(lkAdm.designation || "प्रबन्धकीय मण्डल") + "</span>" +
+          "<button type=\"button\" class=\"spot-mini-btn\" onclick=\"openAdminDetail(dec('" + arg(lkAdm.id) + "')); switchTab('admins')\">👑 एडमिन प्रोफ़ाइल देखें →</button>" +
+        "</div>";
+      })() +
       (pt.quote ? ("<div class=\"profile-quote\">“" + esc(pt.quote) + "”</div>") : "") +
     "</div>" +
     renderStructuredBioCard(pt, "कवि परिचय", canSeePrivate) +
@@ -7863,7 +7896,8 @@ function renderChaupalSocial() {
             members.map(function(pt) {
               var pem = (pt.email || pt.ownerEmail || "").toLowerCase().trim();
               var alreadyIn = activeParts.some(function(x) { return (x.email || "").toLowerCase().trim() === pem; });
-              return "<option value=\"" + esc(pem) + "\">" + esc(pt.name) + (alreadyIn ? " (कक्ष में)" : "") + "</option>";
+              var actTag = isPersonCurrentlyActive(pt) ? "🔵 सक्रिय • " : "";
+              return "<option value=\"" + esc(pem) + "\">" + actTag + esc(pt.name) + (alreadyIn ? " (कक्ष में)" : "") + "</option>";
             }).join("") +
           "</select>" +
           "<button type=\"button\" class=\"action-btn gold\" style=\"padding:8px 13px; font-size:12px;\" onclick=\"inviteMemberToActiveCall()\">📲 कॉल में जोड़ें</button>" +
@@ -7995,9 +8029,10 @@ function renderChaupalSocial() {
           members.map(function(pt) {
             var pem = (pt.email || pt.ownerEmail || "").toLowerCase().trim();
             var checked = (pem === activePeerEm);
+            var isActCb = isPersonCurrentlyActive(pt);
             return "<label style=\"display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text); margin:0;\">" +
               "<input type=\"checkbox\" class=\"soc-multi-call-cb\" value=\"" + esc(pem) + "\" data-name=\"" + esc(pt.name || pem) + "\" " + (checked ? "checked" : "") + " style=\"width:auto; margin:0;\" />" +
-              "<span><strong>" + esc(pt.name) + "</strong>" + (pt.city ? (" • <span style=\"color:var(--text-muted);\">" + esc(pt.city) + "</span>") : "") + "</span>" +
+              "<span style=\"display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap;\">" + (isActCb ? "<span title=\\"सक्रिय\\" style=\\"width:9px; height:9px; border-radius:50%; background:#2563EB; box-shadow:0 0 7px #2563EB; display:inline-block;\\"></span>" : "") + "<strong>" + esc(pt.name) + "</strong>" + (isActCb ? "<span style=\\"color:#2563EB; font-size:11px; font-weight:700;\\">(सक्रिय)</span>" : "") + (pt.city ? (" • <span style=\"color:var(--text-muted);\">" + esc(pt.city) + "</span>") : "") + "</span>" +
             "</label>";
           }).join("") +
         "</div>")
@@ -8247,14 +8282,37 @@ function startGroupConferenceCall(modeType, groupId) {
   });
 }
 
+function normalizePersonMatchKey(str) {
+  return String(str || "")
+    .replace(/['‘’"]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 function getLinkedPoetForAdmin(a) {
   if (!a) return null;
-  var aName = (a.name || "").trim();
+  var aNameKey = normalizePersonMatchKey(a.name);
   var aEmail = (a.ownerEmail || "").toLowerCase().trim();
   return state.poets.find(function(pt) {
-    return (a.linkedPoetId && pt.id === a.linkedPoetId) ||
-      (aEmail && (pt.ownerEmail || "").toLowerCase().trim() === aEmail) ||
-      (aName && (pt.name || "").trim() === aName);
+    if (a.linkedPoetId && pt.id === a.linkedPoetId) return true;
+    if (aEmail && (pt.ownerEmail || "").toLowerCase().trim() === aEmail) return true;
+    var pKey = normalizePersonMatchKey(pt.name);
+    if (aNameKey && pKey && (pKey === aNameKey || pKey.indexOf(aNameKey) === 0 || aNameKey.indexOf(pKey) === 0)) return true;
+    return false;
+  }) || null;
+}
+
+function getLinkedAdminForPoet(pt) {
+  if (!pt) return null;
+  var pNameKey = normalizePersonMatchKey(pt.name);
+  var pEmail = (pt.ownerEmail || "").toLowerCase().trim();
+  return state.admins.find(function(a) {
+    if (a.linkedPoetId && a.linkedPoetId === pt.id) return true;
+    if (pEmail && (a.ownerEmail || "").toLowerCase().trim() === pEmail) return true;
+    var aKey = normalizePersonMatchKey(a.name);
+    if (aKey && pNameKey && (aKey === pNameKey || aKey.indexOf(pNameKey) === 0 || pNameKey.indexOf(aKey) === 0)) return true;
+    return false;
   }) || null;
 }
 
@@ -8268,10 +8326,12 @@ function syncAdminToLinkedPoet(admObj) {
     if (admObj.city) matchedPoet.city = admObj.city;
     if (admObj.photo) matchedPoet.photo = admObj.photo;
     if (aEmail) matchedPoet.ownerEmail = aEmail;
-    if (!matchedPoet.occupation && admObj.designation) matchedPoet.occupation = admObj.designation;
-    if (!matchedPoet.special && (admObj.role || admObj.bio)) matchedPoet.special = admObj.role || admObj.bio;
+    if (admObj.designation) matchedPoet.occupation = admObj.designation;
+    if (admObj.role || admObj.bio) matchedPoet.special = admObj.role || admObj.bio;
+    if (admObj.bio) matchedPoet.bio = admObj.bio;
     admObj.linkedPoetId = matchedPoet.id;
     cloudSaveDoc("poets", matchedPoet.id, matchedPoet);
+    cloudSaveDoc("admins", admObj.id, admObj);
   } else if (aName) {
     var newPoetId = "poet_" + Date.now();
     var newPoet = {
@@ -8295,7 +8355,40 @@ function syncAdminToLinkedPoet(admObj) {
     state.poets.push(newPoet);
     admObj.linkedPoetId = newPoetId;
     cloudSaveDoc("poets", newPoetId, newPoet);
+    cloudSaveDoc("admins", admObj.id, admObj);
   }
+}
+
+function syncPoetToLinkedAdmin(ptObj) {
+  if (!ptObj) return;
+  var linkedAdm = getLinkedAdminForPoet(ptObj);
+  if (!linkedAdm) return;
+  var changed = false;
+  if (ptObj.photo && !linkedAdm.photo) { linkedAdm.photo = ptObj.photo; changed = true; }
+  if (ptObj.city && !linkedAdm.city) { linkedAdm.city = ptObj.city; changed = true; }
+  if (ptObj.ownerEmail && !linkedAdm.ownerEmail) { linkedAdm.ownerEmail = ptObj.ownerEmail; changed = true; }
+  if (!linkedAdm.linkedPoetId && ptObj.id && ptObj.id.indexOf("auto_") !== 0) {
+    linkedAdm.linkedPoetId = ptObj.id;
+    changed = true;
+  }
+  if (changed) {
+    cloudSaveDoc("admins", linkedAdm.id, linkedAdm);
+  }
+}
+
+function reconcileAllPoetAdminLinks() {
+  (state.admins || []).forEach(function(a) {
+    var pt = getLinkedPoetForAdmin(a);
+    if (pt) {
+      if (!a.linkedPoetId && pt.id && pt.id.indexOf("auto_") !== 0) a.linkedPoetId = pt.id;
+      if (pt.photo && !a.photo) a.photo = pt.photo;
+      if (a.photo && !pt.photo) pt.photo = a.photo;
+      if (pt.ownerEmail && !a.ownerEmail) a.ownerEmail = pt.ownerEmail;
+      if (a.ownerEmail && !pt.ownerEmail) pt.ownerEmail = a.ownerEmail;
+      if (pt.city && !a.city) a.city = pt.city;
+      if (a.city && !pt.city) pt.city = a.city;
+    }
+  });
 }
 
 function renderAdminsDirectory() {
@@ -8307,7 +8400,8 @@ function renderAdminsDirectory() {
   grid.innerHTML = list.map(function(a) {
     var lPt = getLinkedPoetForAdmin(a);
     var photoSrc = a.photo || (lPt && lPt.photo) || "";
-    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec('" + arg(a.id) + "'))\"><div class=\"avatar-md\">" + (photoSrc ? ("<img src=\"" + photoSrc + "\">") : esc(initials(a.name))) + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(a.name) + "</h3><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || (lPt && lPt.city) || "") + "</span></div></div></div>";
+    var isActAdm = isPersonCurrentlyActive(a) || (lPt && isPersonCurrentlyActive(lPt));
+    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec('" + arg(a.id) + "'))\"><div class=\"avatar-md\" style=\"position:relative;\">" + (photoSrc ? ("<img src=\"" + photoSrc + "\">") : esc(initials(a.name))) + (isActAdm ? "<span title=\\"सक्रिय\\" style=\\"position:absolute; right:-3px; bottom:-3px; width:13px; height:13px; border-radius:50%; background:#2563EB; border:2px solid #fff; box-shadow:0 0 8px #2563EB;\\"></span>" : "") + "</div><div class=\"person-info\"><div style=\"display:flex; align-items:center; gap:6px; flex-wrap:wrap;\"><h3 class=\"person-name\" style=\"margin:0;\">" + esc(a.name) + "</h3>" + activeBlueDotHTML(isActAdm, "सक्रिय") + "</div><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || (lPt && lPt.city) || "") + "</span></div></div></div>";
   }).join("");
 }
 function openAdminDetail(id) { pushAppView("admin"); state.activeAdminId = id; document.getElementById("admins-list-view").style.display = "none"; document.getElementById("admin-detail-view").style.display = "block"; renderAdminDetail(id); }
@@ -8315,6 +8409,7 @@ function closeAdminDetail(fromPop) { state.activeAdminId = null; document.getEle
 function renderAdminDetail(id) {
   var a = state.admins.find(function(x) { return x.id === id; }); var c = document.getElementById("admin-detail-view"); if (!a || !c) return;
   var linkedPt = getLinkedPoetForAdmin(a);
+  if (linkedPt) syncPoetToLinkedAdmin(linkedPt);
   var merged = Object.assign({}, linkedPt || {}, a, {
     photo: a.photo || (linkedPt && linkedPt.photo) || "",
     city: a.city || (linkedPt && linkedPt.city) || "",
@@ -11679,13 +11774,88 @@ state.poems.forEach(function(p) {
   }
 });
 
+var KC_VIEW_STATE_KEY = "kavya_chaupal_view_state_v1";
+var KC_SPLASH_SEEN_KEY = "kavya_chaupal_splash_seen_v1";
+
+function persistCurrentViewState() {
+  try {
+    sessionStorage.setItem(KC_VIEW_STATE_KEY, JSON.stringify({
+      activeTab: state.activeTab,
+      manchSub: state.manchSub,
+      cornerSubTab: state.cornerSubTab,
+      activePoetName: state.activePoetName,
+      activeAdminId: state.activeAdminId
+    }));
+  } catch (e) {}
+}
+
+function restoreCurrentViewStateOnRefresh() {
+  try {
+    var raw = sessionStorage.getItem(KC_VIEW_STATE_KEY);
+    if (!raw) return false;
+    var v = JSON.parse(raw);
+    if (!v) return false;
+    if (v.activeTab) state.activeTab = v.activeTab;
+    if (v.manchSub) state.manchSub = v.manchSub;
+    if (v.cornerSubTab) state.cornerSubTab = v.cornerSubTab;
+    if (v.activePoetName) state.activePoetName = v.activePoetName;
+    if (v.activeAdminId) state.activeAdminId = v.activeAdminId;
+
+    document.querySelectorAll(".tab-view").forEach(function(sec) { sec.classList.remove("active"); });
+    var targetSec = document.getElementById("tab-" + state.activeTab);
+    if (targetSec) targetSec.classList.add("active");
+    document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === state.activeTab); });
+
+    if (state.activeTab === "poets") {
+      var pList = document.getElementById("poets-list-view");
+      var pDet = document.getElementById("poet-detail-view");
+      if (state.activePoetName) {
+        if (pList) pList.style.display = "none";
+        if (pDet) pDet.style.display = "block";
+      } else {
+        if (pList) pList.style.display = "block";
+        if (pDet) pDet.style.display = "none";
+      }
+    }
+    if (state.activeTab === "admins") {
+      var aList = document.getElementById("admins-list-view");
+      var aDet = document.getElementById("admin-detail-view");
+      if (state.activeAdminId) {
+        if (aList) aList.style.display = "none";
+        if (aDet) aDet.style.display = "block";
+      } else {
+        if (aList) aList.style.display = "block";
+        if (aDet) aDet.style.display = "none";
+      }
+    }
+    if (state.activeTab === "manch") {
+      setManchSub(state.manchSub || "events");
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 applyTheme(localStorage.getItem(THEME_KEY) || "light");
-initSplashParticles();
-startSplashTimer();
+var hadSessionSplash = false;
+try { hadSessionSplash = (sessionStorage.getItem(KC_SPLASH_SEEN_KEY) === "1"); } catch (e) {}
+var restoredView = restoreCurrentViewStateOnRefresh();
+if (hadSessionSplash || restoredView) {
+  var spEl = document.getElementById("splash-screen");
+  if (spEl) spEl.classList.add("hide");
+} else {
+  try { sessionStorage.setItem(KC_SPLASH_SEEN_KEY, "1"); } catch (e) {}
+  initSplashParticles();
+  startSplashTimer();
+}
 injectPWAManifest();
 renderAll();
 initFirebaseSync();
 initSmartBackNavigation();
+window.addEventListener("beforeunload", function() {
+  persistCurrentViewState();
+});
   </script>
 </body>
 </html>
