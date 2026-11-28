@@ -5639,22 +5639,26 @@ function openVideoPlayer(id) {
         "<video id=\"viewer-local-stage-video\" autoplay playsinline controls style=\"width:100%; height:100%; object-fit:cover;\"></video>" +
       "</div>";
   } else if (v.isLive) {
-    var rel = window.chaupalLiveRelayState || {};
-    var hasRelayFrame = !!(rel.active && rel.frameData);
     playerHtml =
-      "<div style=\"padding:14px; border-radius:16px; background:linear-gradient(145deg, #4B0D14 0%, #24130C 100%); border:1.5px solid #F7DC8B; color:#FFF9EC; margin-bottom:12px; text-align:center;\">" +
-        "<div style=\"display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:999px; background:rgba(239,68,68,0.22); border:1px solid #FCA5A5; color:#FCA5A5; font-size:12px; font-weight:800; margin-bottom:10px;\"><span style=\"width:9px; height:9px; border-radius:50%; background:#EF4444; display:inline-block;\"></span>काव्य चौपाल ऐप • सजीव वीडियो प्रसारण</div>" +
-        "<div style=\"position:relative; width:100%; aspect-ratio:4/3; border-radius:14px; overflow:hidden; background:#11090C; border:1.5px solid #F7DC8B; margin-bottom:12px; display:flex; align-items:center; justify-content:center;\">" +
-          "<img id=\"viewer-live-relay-img\" src=\"" + (hasRelayFrame ? rel.frameData : "") + "\" alt=\"सजीव प्रसारण वीडियो\" style=\"width:100%; height:100%; object-fit:cover; display:" + (hasRelayFrame ? "block" : "none") + ";\" />" +
-          "<div id=\"viewer-live-relay-placeholder\" style=\"padding:16px; font-size:13px; color:#FCE49C; display:" + (hasRelayFrame ? "none" : "block") + ";\">📡 सजीव वीडियो फ़ीड जुड़ रहा है…</div>" +
+      "<div style=\"padding:14px; border-radius:18px; background:linear-gradient(155deg, #2B070D 0%, #140B08 100%); border:2px solid #F7DC8B; color:#FFF9EC; margin-bottom:12px; text-align:center;\">" +
+        "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
+          "<span style=\"display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:999px; background:rgba(239,68,68,0.24); border:1px solid #FCA5A5; color:#FCA5A5; font-size:12px; font-weight:800;\"><span style=\"width:9px; height:9px; border-radius:50%; background:#EF4444; display:inline-block;\"></span>सजीव प्रसारण सक्रिय</span>" +
+          "<span id=\"viewer-live-stream-quality\" style=\"font-size:11.5px; padding:3px 10px; border-radius:999px; background:rgba(247,220,139,0.16); border:1px solid rgba(247,220,139,0.5); color:#FCE49C; font-weight:700;\">⚡ Real-Time WebRTC जुड़ रहा है…</span>" +
+        "</div>" +
+        "<div style=\"position:relative; width:100%; aspect-ratio:16/9; min-height:220px; border-radius:14px; overflow:hidden; background:#090607; border:1.5px solid #F7DC8B; margin-bottom:12px; display:flex; align-items:center; justify-content:center;\">" +
+          "<video id=\"viewer-live-rtc-video\" autoplay playsinline controls style=\"width:100%; height:100%; object-fit:contain; background:#090607; display:none;\"></video>" +
+          "<div id=\"viewer-live-rtc-placeholder\" style=\"padding:16px; font-size:13px; color:#FCE49C; line-height:1.55;\">📡 होस्ट के कैमरे व माइक से Real-Time Ultra-HD स्ट्रीम जुड़ रहा है…<br/><span style=\"font-size:11.5px; color:rgba(255,249,236,0.75);\">(सुनिश्चित करें कि होस्ट फ़ोन पर कैमरा व माइक की अनुमति चालू हो)</span></div>" +
         "</div>" +
         "<div class=\"font-royal\" style=\"font-size:19px; color:#F7DC8B; margin-bottom:6px;\">" + esc(v.title || "सजीव काव्य प्रसारण") + "</div>" +
         "<div style=\"font-size:12.5px; color:rgba(255,249,236,0.88); margin-bottom:12px; line-height:1.5;\">" + esc(v.description || "काव्य चौपाल मंच पर सजीव सत्र जारी है।") + "</div>" +
         "<div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">" +
-          "<button type=\"button\" class=\"action-btn gold\" onclick=\"closeVideoModal(); if(typeof chaupalSocialState!=='undefined'){chaupalSocialState.subTab='call';} if(typeof switchTab==='function')switchTab('social');\">🎙️ लाइव कॉन्फ्रेंस कक्ष खोलें</button>" +
-          "<button type=\"button\" class=\"action-btn primary\" onclick=\"closeVideoModal(); if(typeof openManchSub==='function')openManchSub('studio');\">🎛️ चौपाल स्टूडियो</button>" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"joinViewerWebRtcBroadcast()\">🔄 स्ट्रीम पुनः जोड़ें</button>" +
+          "<button type=\"button\" class=\"action-btn primary\" onclick=\"closeVideoModal(); if(typeof chaupalSocialState!=='undefined'){chaupalSocialState.subTab='call';} if(typeof switchTab==='function')switchTab('social');\">🎙️ लाइव कॉन्फ्रेंस कक्ष</button>" +
         "</div>" +
       "</div>";
+    setTimeout(function() {
+      if (typeof joinViewerWebRtcBroadcast === "function") joinViewerWebRtcBroadcast();
+    }, 80);
   } else {
     playerHtml =
       "<div style=\"padding:18px; border-radius:16px; background:var(--bg-elevated); border:1.5px solid var(--gold); margin-bottom:12px; text-align:center;\">" +
@@ -15541,66 +15545,304 @@ window.addEventListener("beforeunload", function() {
   };
 
   
-  function startLiveFrameRelay(camStream) {
+  
+  var _kcRtcBroadcast = {
+    role: null,
+    sessionId: "",
+    viewerId: "",
+    pcs: {},
+    unsubs: [],
+    queuedIce: {},
+    remoteStream: null,
+    isActive: false
+  };
+
+  function getBroadcastRtcConfig() {
+    if (typeof RTC_ICE_CONFIG !== "undefined" && RTC_ICE_CONFIG && Array.isArray(RTC_ICE_CONFIG.iceServers)) {
+      return Object.assign({}, RTC_ICE_CONFIG, { iceCandidatePoolSize: 20 });
+    }
+    return {
+      iceCandidatePoolSize: 20,
+      iceTransportPolicy: "all",
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+        { urls: "stun:stun2.l.google.com:19302" },
+        { urls: "stun:stun.services.mozilla.com" }
+      ]
+    };
+  }
+
+  function boostSdpBitrate(sdp, maxKbps) {
+    if (!sdp || typeof sdp !== "string") return sdp;
+    var kbps = maxKbps || 6500;
     try {
-      stopLiveFrameRelay();
-      if (!camStream || typeof document === "undefined" || typeof db === "undefined" || !db) return;
-      var vTracks = camStream.getVideoTracks ? camStream.getVideoTracks() : [];
-      if (!vTracks || !vTracks.length) return;
-      var vid = document.createElement("video");
-      vid.muted = true;
-      vid.playsInline = true;
-      vid.srcObject = camStream;
-      vid.play().catch(function() {});
+      return sdp.replace(/(m=video[^
+]*
+)/g, function(match) {
+        return match + "b=AS:" + kbps + "\r\n";
+      });
+    } catch (e) {
+      return sdp;
+    }
+  }
 
-      var cvs = document.createElement("canvas");
-      cvs.width = 480;
-      cvs.height = 360;
-      var cctx = cvs.getContext("2d");
+  function tuneVideoSenderUltraHd(pc) {
+    if (!pc || !pc.getSenders) return;
+    try {
+      pc.getSenders().forEach(function(sender) {
+        if (sender && sender.track && sender.track.kind === "video" && sender.getParameters && sender.setParameters) {
+          var params = sender.getParameters();
+          if (!params.encodings || !params.encodings.length) params.encodings = [{}];
+          params.encodings[0].maxBitrate = 6500000;
+          params.encodings[0].maxFramerate = 60;
+          params.encodings[0].scaleResolutionDownBy = 1.0;
+          params.degradationPreference = "maintain-resolution";
+          sender.setParameters(params).catch(function() {});
+        }
+      });
+    } catch (e) {}
+  }
 
-      window._kcLiveRelayTimer = setInterval(function() {
-        var st = window.chaupalStudioState;
-        if (!st || !st.isLiveOnApp || !st.cameraStream) {
-          stopLiveFrameRelay();
+  function attachRemoteStreamToViewerElements(stream) {
+    if (!stream) return;
+    _kcRtcBroadcast.remoteStream = stream;
+    var vEl = document.getElementById("viewer-live-rtc-video");
+    var phEl = document.getElementById("viewer-live-rtc-placeholder");
+    var stBadge = document.getElementById("viewer-live-stream-quality");
+    if (vEl) {
+      if (vEl.srcObject !== stream) {
+        vEl.srcObject = stream;
+      }
+      vEl.muted = false;
+      vEl.volume = 1.0;
+      vEl.style.display = "block";
+      vEl.play().catch(function() {
+        // Fallback: autoplay with sound if blocked until tap
+        vEl.muted = false;
+      });
+    }
+    if (phEl) phEl.style.display = "none";
+    if (stBadge) stBadge.textContent = "⚡ Real-Time WebRTC • HD/Ultra-HD Audio+Video";
+  }
+
+  function stopRealTimeBroadcastRtc() {
+    _kcRtcBroadcast.isActive = false;
+    _kcRtcBroadcast.role = null;
+    try {
+      (_kcRtcBroadcast.unsubs || []).forEach(function(u) { try { if (typeof u === "function") u(); } catch (e) {} });
+    } catch (e) {}
+    _kcRtcBroadcast.unsubs = [];
+    try {
+      var map = _kcRtcBroadcast.pcs || {};
+      Object.keys(map).forEach(function(k) {
+        try { if (map[k]) map[k].close(); } catch (e) {}
+      });
+    } catch (e) {}
+    _kcRtcBroadcast.pcs = {};
+    _kcRtcBroadcast.queuedIce = {};
+    _kcRtcBroadcast.remoteStream = null;
+  }
+
+  function startHostWebRtcBroadcast(camStream, sessionId) {
+    stopRealTimeBroadcastRtc();
+    if (!camStream || typeof db === "undefined" || !db || !window.RTCPeerConnection) return;
+    _kcRtcBroadcast.role = "host";
+    _kcRtcBroadcast.sessionId = sessionId || "live_broadcast_current";
+    _kcRtcBroadcast.isActive = true;
+
+    var roomRef = db.collection(ROOT_COL).doc("live_rtc_room");
+    var viewersCol = roomRef.collection("viewers");
+
+    roomRef.set({
+      active: true,
+      sessionId: _kcRtcBroadcast.sessionId,
+      startedAt: Date.now()
+    }).catch(function() {});
+
+    var unsubViewers = viewersCol.onSnapshot(function(snap) {
+      if (!_kcRtcBroadcast.isActive || !window.chaupalStudioState || !window.chaupalStudioState.isLiveOnApp) return;
+      snap.docChanges().forEach(function(chg) {
+        if (chg.type === "removed") {
+          var remId = chg.doc.id;
+          if (_kcRtcBroadcast.pcs[remId]) {
+            try { _kcRtcBroadcast.pcs[remId].close(); } catch (e) {}
+            delete _kcRtcBroadcast.pcs[remId];
+          }
           return;
         }
+        var vData = chg.doc.data() || {};
+        var viewerId = chg.doc.id;
+        if (!vData.wantStream || vData.answer) return;
+        if (_kcRtcBroadcast.pcs[viewerId]) return;
+
+        var pc = new RTCPeerConnection(getBroadcastRtcConfig());
+        _kcRtcBroadcast.pcs[viewerId] = pc;
+        _kcRtcBroadcast.queuedIce[viewerId] = [];
+
         try {
-          if (vid.readyState >= 2 && cctx) {
-            cctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
-            var frameUrl = cvs.toDataURL("image/jpeg", 0.52);
-            if (frameUrl && frameUrl.length > 200 && frameUrl.length < 750000) {
-              db.collection(ROOT_COL).doc("live_relay").set({
-                active: true,
-                title: st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण",
-                poet: st.lowerThirdPoet || "राहुल द्विवेदी 'स्मित' (लखनऊ)",
-                city: st.lowerThirdCity || "",
-                poem: st.lowerThirdPoem || "सजीव काव्य पाठ",
-                guest: st.guestPoetName || "",
-                frameData: frameUrl,
-                updatedAt: Date.now()
-              }).catch(function() {});
+          camStream.getTracks().forEach(function(tr) {
+            if (tr && tr.readyState === "live") {
+              pc.addTrack(tr, camStream);
             }
-          }
+          });
         } catch (e) {}
-      }, 950);
-    } catch (e) {}
+        tuneVideoSenderUltraHd(pc);
+
+        var hostCandCol = viewersCol.doc(viewerId).collection("hostCandidates");
+        var viewerCandCol = viewersCol.doc(viewerId).collection("viewerCandidates");
+
+        pc.onicecandidate = function(ev) {
+          if (ev && ev.candidate) {
+            hostCandCol.add({
+              candidate: ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate,
+              createdAt: Date.now()
+            }).catch(function() {});
+          }
+        };
+
+        var unsubCand = viewerCandCol.onSnapshot(function(cSnap) {
+          cSnap.docChanges().forEach(function(cChg) {
+            if (cChg.type !== "added") return;
+            var cd = cChg.doc.data() || {};
+            if (!cd.candidate) return;
+            var iceObj = cd.candidate;
+            if (pc.remoteDescription && pc.remoteDescription.type) {
+              pc.addIceCandidate(new RTCIceCandidate(iceObj)).catch(function() {});
+            } else {
+              _kcRtcBroadcast.queuedIce[viewerId].push(iceObj);
+            }
+          });
+        });
+        _kcRtcBroadcast.unsubs.push(unsubCand);
+
+        var unsubAns = viewersCol.doc(viewerId).onSnapshot(function(vDoc) {
+          if (!vDoc.exists) return;
+          var vd = vDoc.data() || {};
+          if (vd.answer && vd.answer.sdp && (!pc.currentRemoteDescription || !pc.currentRemoteDescription.type)) {
+            pc.setRemoteDescription(new RTCSessionDescription(vd.answer)).then(function() {
+              var q = _kcRtcBroadcast.queuedIce[viewerId] || [];
+              _kcRtcBroadcast.queuedIce[viewerId] = [];
+              q.forEach(function(ic) {
+                pc.addIceCandidate(new RTCIceCandidate(ic)).catch(function() {});
+              });
+            }).catch(function() {});
+          }
+        });
+        _kcRtcBroadcast.unsubs.push(unsubAns);
+
+        pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false }).then(function(offer) {
+          var tunedOffer = Object.assign({}, offer, { sdp: boostSdpBitrate(offer.sdp, 6500) });
+          return pc.setLocalDescription(tunedOffer).then(function() {
+            return viewersCol.doc(viewerId).set({
+              offer: { type: tunedOffer.type, sdp: tunedOffer.sdp },
+              hostUpdatedAt: Date.now()
+            }, { merge: true });
+          });
+        }).catch(function() {});
+      });
+    });
+
+    _kcRtcBroadcast.unsubs.push(unsubViewers);
   }
 
-  function stopLiveFrameRelay() {
-    if (window._kcLiveRelayTimer) {
-      clearInterval(window._kcLiveRelayTimer);
-      window._kcLiveRelayTimer = null;
+  function joinViewerWebRtcBroadcast() {
+    if (typeof db === "undefined" || !db || !window.RTCPeerConnection) return;
+    if (window.chaupalStudioState && window.chaupalStudioState.isLiveOnApp && window.chaupalStudioState.cameraStream) {
+      attachRemoteStreamToViewerElements(window.chaupalStudioState.cameraStream);
+      return;
     }
+    if (_kcRtcBroadcast.role === "viewer" && _kcRtcBroadcast.remoteStream) {
+      attachRemoteStreamToViewerElements(_kcRtcBroadcast.remoteStream);
+      return;
+    }
+    stopRealTimeBroadcastRtc();
+    _kcRtcBroadcast.role = "viewer";
+    _kcRtcBroadcast.isActive = true;
+
+    var viewerId = "v_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+    _kcRtcBroadcast.viewerId = viewerId;
+    var roomRef = db.collection(ROOT_COL).doc("live_rtc_room");
+    var vDocRef = roomRef.collection("viewers").doc(viewerId);
+    var hostCandCol = vDocRef.collection("hostCandidates");
+    var viewerCandCol = vDocRef.collection("viewerCandidates");
+
+    var pc = new RTCPeerConnection(getBroadcastRtcConfig());
+    _kcRtcBroadcast.pcs[viewerId] = pc;
+    _kcRtcBroadcast.queuedIce[viewerId] = [];
+
     try {
-      if (typeof db !== "undefined" && db) {
-        db.collection(ROOT_COL).doc("live_relay").set({
-          active: false,
-          frameData: "",
-          updatedAt: Date.now()
-        }, { merge: true }).catch(function() {});
-      }
+      pc.addTransceiver("video", { direction: "recvonly" });
+      pc.addTransceiver("audio", { direction: "recvonly" });
     } catch (e) {}
+
+    var inboundStream = new MediaStream();
+    pc.ontrack = function(ev) {
+      if (ev && ev.track) {
+        inboundStream.addTrack(ev.track);
+      } else if (ev && ev.streams && ev.streams[0]) {
+        ev.streams[0].getTracks().forEach(function(t) { inboundStream.addTrack(t); });
+      }
+      attachRemoteStreamToViewerElements(inboundStream);
+    };
+
+    pc.onicecandidate = function(ev) {
+      if (ev && ev.candidate) {
+        viewerCandCol.add({
+          candidate: ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate,
+          createdAt: Date.now()
+        }).catch(function() {});
+      }
+    };
+
+    var unsubHostCand = hostCandCol.onSnapshot(function(cSnap) {
+      cSnap.docChanges().forEach(function(cChg) {
+        if (cChg.type !== "added") return;
+        var cd = cChg.doc.data() || {};
+        if (!cd.candidate) return;
+        var iceObj = cd.candidate;
+        if (pc.remoteDescription && pc.remoteDescription.type) {
+          pc.addIceCandidate(new RTCIceCandidate(iceObj)).catch(function() {});
+        } else {
+          _kcRtcBroadcast.queuedIce[viewerId].push(iceObj);
+        }
+      });
+    });
+    _kcRtcBroadcast.unsubs.push(unsubHostCand);
+
+    vDocRef.set({
+      wantStream: true,
+      createdAt: Date.now()
+    }).then(function() {
+      var unsubOffer = vDocRef.onSnapshot(function(docSnap) {
+        if (!docSnap.exists) return;
+        var d = docSnap.data() || {};
+        if (d.offer && d.offer.sdp && (!pc.currentRemoteDescription || !pc.currentRemoteDescription.type)) {
+          pc.setRemoteDescription(new RTCSessionDescription(d.offer)).then(function() {
+            var q = _kcRtcBroadcast.queuedIce[viewerId] || [];
+            _kcRtcBroadcast.queuedIce[viewerId] = [];
+            q.forEach(function(ic) {
+              pc.addIceCandidate(new RTCIceCandidate(ic)).catch(function() {});
+            });
+            return pc.createAnswer();
+          }).then(function(ans) {
+            if (!ans) return;
+            var tunedAns = Object.assign({}, ans, { sdp: boostSdpBitrate(ans.sdp, 6500) });
+            return pc.setLocalDescription(tunedAns).then(function() {
+              return vDocRef.set({
+                answer: { type: tunedAns.type, sdp: tunedAns.sdp },
+                answeredAt: Date.now()
+              }, { merge: true });
+            });
+          }).catch(function() {});
+        }
+      });
+      _kcRtcBroadcast.unsubs.push(unsubOffer);
+    }).catch(function() {});
   }
+  window.joinViewerWebRtcBroadcast = joinViewerWebRtcBroadcast;
 
   window.startChaupalStudioLive = function(includeConfCall) {
     var st = window.chaupalStudioState;
@@ -15649,10 +15891,20 @@ window.addEventListener("beforeunload", function() {
         return;
       }
       var constraints = {
-        video: { facingMode: st.facingMode || "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: { echoCancellation: true, noiseSuppression: true }
+        video: {
+          facingMode: st.facingMode || "user",
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          frameRate: { ideal: 60, min: 30 }
+        },
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 2, sampleRate: 48000 }
       };
       navigator.mediaDevices.getUserMedia(constraints).catch(function() {
+        return navigator.mediaDevices.getUserMedia({
+          video: { facingMode: st.facingMode || "user", width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+          audio: { echoCancellation: true, noiseSuppression: true }
+        });
+      }).catch(function() {
         return navigator.mediaDevices.getUserMedia({ video: { facingMode: st.facingMode || "user" }, audio: true });
       }).catch(function() {
         return navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -15669,7 +15921,7 @@ window.addEventListener("beforeunload", function() {
         var sb = document.getElementById("studio-live-media-status");
         if (sb) sb.textContent = st.mediaStatusText;
         attachStreamToPreviewVideo(camStream);
-        startLiveFrameRelay(camStream);
+        startHostWebRtcBroadcast(camStream, st.liveStartedAt || Date.now());
         startContinuousMediaRecorder(camStream);
       }).catch(function() {
         st.mediaStatusText = "⚠️ कैमरा/माइक अनुमति जांचें — लाइव टाइमर व प्रसारण सक्रिय";
@@ -15709,7 +15961,7 @@ window.addEventListener("beforeunload", function() {
       if (st.cameraStream && st.cameraStream.getTracks) {
         try { st.cameraStream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
         st.cameraStream = null;
-      stopLiveFrameRelay();
+      stopRealTimeBroadcastRtc();
       }
       if (shouldSave) {
         var blobUrl = "";
