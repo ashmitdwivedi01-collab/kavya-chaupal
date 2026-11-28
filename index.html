@@ -12910,5 +12910,244 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  // 1. Boost WebRTC audio sender priority/bitrate so voice is loud, clear, and never low
+  window.boostCallAudioQuality = function(pc) {
+    if (!pc || !pc.getSenders) return;
+    pc.getSenders().forEach(function(sender) {
+      if (!sender || !sender.track || sender.track.kind !== "audio") return;
+      try {
+        var params = sender.getParameters ? sender.getParameters() : {};
+        if (!params.encodings || !params.encodings.length) {
+          params.encodings = [{}];
+        }
+        params.encodings[0].priority = "high";
+        params.encodings[0].networkPriority = "high";
+        params.encodings[0].maxBitrate = 96000; // crisp voice clarity
+        params.encodings[0].dtx = false; // keep audio stream continuous without voice-chop delay
+        sender.setParameters(params).catch(function() {});
+      } catch (e) {}
+    });
+  };
+
+  // Ensure remote audio/video elements have full volume (1.0) when not muted and never freeze video
+  window.ensureSmoothAudioAndUnfrozenVideo = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    var mutedMap = chaupalSocialState.mutedPeersMap || {};
+    var remMap = chaupalSocialState.remoteStreamsMap || {};
+
+    Object.keys(remMap).forEach(function(pEm) {
+      var isMutedPeer = !!mutedMap[pEm];
+      var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+      var el = document.getElementById(safeId);
+      var entry = remMap[pEm];
+      var st = entry && entry.stream;
+
+      if (st) {
+        // Audio track enabled/disabled cleanly
+        if (st.getAudioTracks) {
+          st.getAudioTracks().forEach(function(at) {
+            at.enabled = !isMutedPeer;
+          });
+        }
+        // Video track stays active unless camera itself is off
+        if (st.getVideoTracks) {
+          st.getVideoTracks().forEach(function(vt) {
+            if (!chaupalSocialState.isCamOff && vt.readyState === "live") {
+              vt.enabled = true;
+            }
+          });
+        }
+      }
+
+      if (el) {
+        if (st && el.srcObject !== st) {
+          try { el.srcObject = st; } catch (e) {}
+        }
+        if (el.tagName === "AUDIO" || el.tagName === "VIDEO") {
+          el.muted = isMutedPeer;
+          if (!isMutedPeer) {
+            try { el.volume = 1.0; } catch (e) {}
+          }
+          if (el.paused) {
+            try { el.play().catch(function() {}); } catch (e) {}
+          }
+        }
+      }
+    });
+
+    // Keep local video smooth and unfrozen
+    var locVid = document.getElementById("soc-local-video");
+    if (locVid && chaupalSocialState.localStream) {
+      chaupalSocialState.localStream.getVideoTracks().forEach(function(vt) {
+        if (!chaupalSocialState.isCamOff && vt.readyState === "live") vt.enabled = true;
+      });
+      if (locVid.srcObject !== chaupalSocialState.localStream) {
+        try { locVid.srcObject = chaupalSocialState.localStream; } catch (e) {}
+      }
+      if (locVid.paused) {
+        try { locVid.play().catch(function() {}); } catch (e) {}
+      }
+    }
+  };
+
+  // 2. Non-freezing local mic mute toggle (never touches video elements or video tracks)
+  window.toggleCallMute = function() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    var nextMuted = !chaupalSocialState.isMuted;
+    if (typeof window.applyLocalMicMuteState === "function") {
+      window.applyLocalMicMuteState(nextMuted);
+    } else {
+      chaupalSocialState.isMuted = nextMuted;
+      if (chaupalSocialState.localStream && chaupalSocialState.localStream.getAudioTracks) {
+        chaupalSocialState.localStream.getAudioTracks().forEach(function(tr) {
+          tr.enabled = !nextMuted;
+        });
+      }
+    }
+    // Re-tune audio senders without touching video
+    if (chaupalSocialState.peerConnectionsMap) {
+      Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+        var pc = chaupalSocialState.peerConnectionsMap[k];
+        if (pc && pc.getSenders) {
+          pc.getSenders().forEach(function(s) {
+            if (s && s.track && s.track.kind === "audio") {
+              s.track.enabled = !nextMuted;
+            }
+          });
+        }
+        window.boostCallAudioQuality(pc);
+      });
+    }
+    window.ensureSmoothAudioAndUnfrozenVideo();
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "🔇 माइक बंद (वीडियो सुचारु)" : "🎤 माइक चालू (स्पष्ट ऑडियो)");
+    }
+    if (typeof scheduleSmoothSocialRender === "function") {
+      scheduleSmoothSocialRender();
+    } else if (typeof renderChaupalSocial === "function") {
+      renderChaupalSocial();
+    }
+  };
+
+  // 3. Facebook account link & go-live directly from call screen
+  window.saveAndGoLiveOnFacebook = function() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) {
+      if (typeof showToast === "function") showToast("पहले कॉल या कॉन्फ्रेंस शुरू करें");
+      return;
+    }
+    var accInp = document.getElementById("soc-fb-account-in");
+    var keyInp = document.getElementById("soc-live-key-in");
+    var platSel = document.getElementById("soc-live-plat-sel");
+    var fbAcc = accInp ? accInp.value.trim() : (chaupalSocialState.fbAccountUrl || "");
+    var streamKey = keyInp ? keyInp.value.trim() : (chaupalSocialState.liveStreamKey || "");
+    var plat = platSel ? platSel.value : "Facebook Live";
+
+    chaupalSocialState.fbAccountUrl = fbAcc;
+    chaupalSocialState.liveStreamKey = streamKey;
+    chaupalSocialState.livePlatform = plat;
+    chaupalSocialState.isLiveActive = true;
+
+    if (typeof state !== "undefined" && state.settings) {
+      state.settings.socials = Object.assign({}, state.settings.socials || {});
+      if (fbAcc) {
+        state.settings.socials.facebook = fbAcc;
+      }
+      if (streamKey) {
+        state.settings.fbLiveStreamKey = streamKey;
+      }
+      if (typeof saveLocalCache === "function") saveLocalCache();
+      if (typeof cloudSaveDoc === "function") {
+        cloudSaveDoc("settings", "settings", state.settings).catch(function() {});
+      }
+    }
+
+    var cs = chaupalSocialState.activeCallSession;
+    if (typeof pushNotification === "function") {
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      pushNotification(
+        "🔴 कॉल " + plat + " पर लाइव प्रसारित हो रही है",
+        (me ? (me.name + " — ") : "") + (cs.target || "काव्य चौपाल कॉल"),
+        "info",
+        chaupalSocialState.activeCallDocId || ""
+      );
+    }
+
+    if (plat === "Facebook Live") {
+      var targetUrl = (fbAcc && fbAcc.indexOf("http") === 0) ? fbAcc : "https://www.facebook.com/live/producer";
+      try {
+        window.open(targetUrl, "_blank", "noopener,noreferrer");
+      } catch (e) {}
+    }
+
+    if (typeof showToast === "function") {
+      showToast("🔴 " + plat + " लाइव ब्रिज सक्रिय व खाता लिंक सहेजा गया!");
+    }
+    if (typeof scheduleSmoothSocialRender === "function") {
+      scheduleSmoothSocialRender();
+    } else if (typeof renderChaupalSocial === "function") {
+      renderChaupalSocial();
+    }
+  };
+
+  // Inject Facebook Account Connector + Fast Live Bridge into the call stage & keep audio/video smooth
+  var origRenderSocialFb = window.renderChaupalSocial;
+  if (typeof origRenderSocialFb === "function") {
+    window.renderChaupalSocial = function() {
+      var res = origRenderSocialFb.apply(this, arguments);
+      var stage = document.getElementById("soc-call-stage-card");
+      if (!stage || typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return res;
+
+      var fbBoxId = "soc-fb-live-bridge-panel";
+      if (!document.getElementById(fbBoxId)) {
+        var defaultFbUrl = (typeof state !== "undefined" && state.settings && state.settings.socials && state.settings.socials.facebook) || "https://www.facebook.com/KavyaChaupal";
+        var savedKey = (typeof state !== "undefined" && state.settings && state.settings.fbLiveStreamKey) || chaupalSocialState.liveStreamKey || "";
+        var curFbVal = chaupalSocialState.fbAccountUrl || defaultFbUrl;
+
+        var panel = document.createElement("div");
+        panel.id = fbBoxId;
+        panel.style.cssText = "margin-top:10px; padding:12px; border-radius:14px; background:rgba(24,119,242,0.14); border:1.5px solid rgba(247,220,139,0.55);";
+        panel.innerHTML =
+          "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">" +
+            "<span style="font-size:12.5px; font-weight:700; color:#F7DC8B;">📘 फ़ेसबुक खाता जोड़ें व कॉल को लाइव करें</span>" +
+            "<span style="font-size:11px; color:" + (chaupalSocialState.isLiveActive ? "#86EFAC" : "#FCE49C") + "; font-weight:700;">" + (chaupalSocialState.isLiveActive ? "🔴 फ़ेसबुक लाइव सक्रिय" : "तैयार") + "</span>" +
+          "</div>" +
+          "<div style="display:grid; grid-template-columns:1fr; gap:7px; margin-bottom:8px;">" +
+            "<input id="soc-fb-account-in" type="text" value="" + curFbVal.replace(/"/g, "&quot;") + "" placeholder="फ़ेसबुक पेज या प्रोफ़ाइल लिंक (जैसे: https://www.facebook.com/KavyaChaupal)" style="padding:8px 10px; border-radius:10px; border:1px solid rgba(247,220,139,0.5); background:#180B0E; color:#FFF8EA; font-size:12.5px; width:100%;" />" +
+            "<input id="soc-live-key-in" type="password" value="" + savedKey.replace(/"/g, "&quot;") + "" placeholder="फ़ेसबुक लाइव स्ट्रीम की (Stream Key - वैकल्पिक)" style="padding:8px 10px; border-radius:10px; border:1px solid rgba(247,220,139,0.5); background:#180B0E; color:#FFF8EA; font-size:12.5px; width:100%;" />" +
+          "</div>" +
+          "<div style="display:flex; gap:7px; flex-wrap:wrap;">" +
+            "<button type="button" class="action-btn gold" style="padding:7px 12px; font-size:12px;" onclick="saveAndGoLiveOnFacebook()">" + (chaupalSocialState.isLiveActive ? "🔴 फ़ेसबुक लाइव अपडेट / खोलें" : "📘 खाता जोड़ें व फ़ेसबुक लाइव करें") + "</button>" +
+            (chaupalSocialState.isLiveActive ? "<button type="button" class="action-btn danger" style="padding:7px 12px; font-size:12px;" onclick="chaupalSocialState.isLiveActive=false; if(typeof scheduleSmoothSocialRender==='function')scheduleSmoothSocialRender();">⏹ लाइव रोकें</button>" : "") +
+          "</div>";
+        stage.appendChild(panel);
+      }
+
+      // Boost audio quality on active peer connections & keep audio/video unfrozen
+      if (chaupalSocialState.peerConnectionsMap) {
+        Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+          window.boostCallAudioQuality(chaupalSocialState.peerConnectionsMap[k]);
+        });
+      }
+      window.ensureSmoothAudioAndUnfrozenVideo();
+      return res;
+    };
+  }
+
+  // Run smooth audio & video check every 1.2s during active call so nothing freezes or drops volume
+  setInterval(function() {
+    if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallSession) {
+      window.ensureSmoothAudioAndUnfrozenVideo();
+    }
+  }, 1200);
+})();
+</script>
+
 </body>
 </html>
