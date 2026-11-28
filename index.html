@@ -13118,6 +13118,1034 @@ window.addEventListener("beforeunload", function() {
     var hasYtKey = !!(chaupalSocialState.ytStreamKey && chaupalSocialState.ytStreamKey.trim());
 
     var html = "<div style=\"padding:10px 12px; border-radius:12px; background:rgba(22,163,74,0.2); border:1.5px solid #4ADE80; color:#ECFDF5; font-size:12px; line-height:1.55;\">";
+    html += "<div style=\"font-weight:700; color:#86EFAC; margin-bottom:4px;\">🔴 ऐप के अंदर लाइव प्रसारण सक्रिय (" + String(plat).replace(/</g, "&lt;") + ") — " + String(chaupalSocialState.liveBroadcastTitle || "काव्य चौपाल").replace(/</g, "&lt;") + "</div>";
+    html += "<div style=\"font-size:11.5px; color:#D1FAE5; margin-bottom:6px;\">यह लाइव सत्र इसी ऐप के मंच पर चल रहा है और जुड़े सदस्यों व सूचनाओं में सिंक हो गया है। बाहर जाने की ज़रूरत नहीं है।</div>";
+    html += "<div style=\"display:flex; gap:7px; flex-wrap:wrap;\">";
+    if (hasFbKey) {
+      html += "<button type=\"button\" class=\"sm-btn\" onclick=\"copyDirectText(chaupalSocialState.fbStreamKey,'Facebook Stream Key')\">📋 FB Key कॉपी</button>";
+    }
+    if (hasYtKey) {
+      html += "<button type=\"button\" class=\"sm-btn\" onclick=\"copyDirectText(chaupalSocialState.ytStreamKey,'YouTube Stream Key')\">📋 YT Key कॉपी</button>";
+    }
+    if (plat === "Facebook + YouTube" || plat === "Facebook Live") {
+      html += "<a href=\"" + fbHref.replace(/"/g, "&quot;") + "\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"padding:5px 10px; border-radius:8px; background:rgba(24,119,242,0.75); color:#fff; font-weight:700; text-decoration:none; font-size:11.5px;\">↗ FB पेज (वैकल्पिक)</a>";
+    }
+    if (plat === "Facebook + YouTube" || plat === "YouTube Live") {
+      html += "<a href=\"" + ytHref.replace(/"/g, "&quot;") + "\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"padding:5px 10px; border-radius:8px; background:rgba(220,38,38,0.75); color:#fff; font-weight:700; text-decoration:none; font-size:11.5px;\">↗ YT चैनल (वैकल्पिक)</a>";
+    }
+    html += "</div></div>";
+    return html;
+  };
+
+  window.startMultiPlatformLive = function(ev) {
+    try {
+      if (ev && typeof ev.stopPropagation === "function") ev.stopPropagation();
+      if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
+    } catch (e) {}
+
+    if (typeof window.chaupalSocialState === "undefined") {
+      window.chaupalSocialState = {};
+    }
+    if (!chaupalSocialState.activeCallSession) {
+      chaupalSocialState.activeCallSession = {
+        type: "video",
+        target: "काव्य चौपाल सजीव प्रसारण",
+        startedAt: Date.now(),
+        participants: []
+      };
+    }
+
+    var platSel = document.getElementById("soc-live-plat-sel");
+    var titleInp = document.getElementById("soc-live-title-in");
+    var fbInp = document.getElementById("soc-fb-account-in");
+    var ytInp = document.getElementById("soc-yt-account-in");
+    var fbKeyInp = document.getElementById("soc-fb-key-in");
+    var ytKeyInp = document.getElementById("soc-yt-key-in");
+    var relayInp = document.getElementById("soc-rtmp-relay-in");
+
+    var plat = platSel ? platSel.value : (chaupalSocialState.livePlatform || "Facebook + YouTube");
+    var bTitle = (titleInp && titleInp.value.trim()) ? titleInp.value.trim() : "काव्य चौपाल — सजीव प्रसारण";
+    var fbAcc = (fbInp && fbInp.value.trim()) ? fbInp.value.trim() : "https://www.facebook.com/KavyaChaupal";
+    var ytAcc = (ytInp && ytInp.value.trim()) ? ytInp.value.trim() : "https://youtube.com/@kavyachaupal";
+    var fbKey = fbKeyInp ? fbKeyInp.value.trim() : (chaupalSocialState.fbStreamKey || "");
+    var ytKey = ytKeyInp ? ytKeyInp.value.trim() : (chaupalSocialState.ytStreamKey || "");
+    var relayUrl = relayInp ? relayInp.value.trim() : (chaupalSocialState.rtmpRelayUrl || "");
+
+    chaupalSocialState.livePlatform = plat;
+    chaupalSocialState.liveBroadcastTitle = bTitle;
+    chaupalSocialState.fbAccountUrl = fbAcc;
+    chaupalSocialState.ytAccountUrl = ytAcc;
+    chaupalSocialState.fbStreamKey = fbKey;
+    chaupalSocialState.ytStreamKey = ytKey;
+    chaupalSocialState.rtmpRelayUrl = relayUrl;
+    chaupalSocialState.isLiveActive = true;
+
+    // Persist settings locally & in Firestore
+    try {
+      if (typeof state !== "undefined") {
+        state.settings = Object.assign({}, state.settings || {}, {
+          socials: Object.assign({}, (state.settings && state.settings.socials) || {}, {
+            facebook: fbAcc,
+            youtube: ytAcc
+          }),
+          fbLiveStreamKey: fbKey,
+          ytLiveStreamKey: ytKey,
+          rtmpRelayUrl: relayUrl
+        });
+        if (typeof saveLocalCache === "function") saveLocalCache();
+        if (typeof cloudSaveDoc === "function") {
+          cloudSaveDoc("settings", "settings", state.settings).catch(function() {});
+        }
+      }
+    } catch (e) {}
+
+    // If a WebSocket-to-RTMP relay URL is provided, start pushing the mixed stage stream directly!
+    if (relayUrl && (relayUrl.indexOf("ws://") === 0 || relayUrl.indexOf("wss://") === 0)) {
+      window.startWebSocketRtmpStreamPush(relayUrl, fbKey, ytKey);
+    }
+
+    // Update UI status immediately
+    var pill = document.getElementById("soc-live-status-pill");
+    if (pill) {
+      pill.style.color = "#86EFAC";
+      pill.textContent = "🔴 लाइव सक्रिय: " + plat;
+    }
+    var note = document.getElementById("soc-fb-live-status-note");
+    if (note) {
+      note.innerHTML = window.buildLiveActiveSummaryHtml();
+    }
+
+    // Start in-app mixed stage stream & mark call/broadcast live right inside the app (no forced external tab jump)
+    try {
+      if (typeof window.createMixedBroadcastStream === "function") {
+        window.createMixedBroadcastStream();
+      }
+      if (typeof db !== "undefined" && db && typeof ROOT_COL !== "undefined" && chaupalSocialState.activeCallDocId) {
+        db.collection(ROOT_COL).doc("active_calls").collection("items").doc(chaupalSocialState.activeCallDocId).set({
+          liveBroadcastActive: true,
+          livePlatform: plat,
+          liveBroadcastTitle: bTitle,
+          fbAccountUrl: fbAcc,
+          ytAccountUrl: ytAcc,
+          liveUpdatedAt: Date.now()
+        }, { merge: true }).catch(function() {});
+      }
+      if (typeof renderChaupalSocial === "function") {
+        renderChaupalSocial();
+      }
+    } catch (e) {}
+
+    if (typeof pushNotification === "function") {
+      pushNotification("🔔 कॉल रिकनेक्ट / रिंग: " + me.name, "आपको सक्रिय कॉल में रिकनेक्ट करने के लिए रिंग भेजी गई है।", "info", callId, pEm);
+    }
+    resetPeerLegForFreshMedia(callId, pEm, peerName || pEm, true);
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    if (typeof showToast === "function") showToast("🔔 " + (peerName || pEm) + " को रिकनेक्ट रिंग भेजी गई");
+  };
+
+  // Wrap startChaupalCallSession to enforce follow/hold/master rules and prompt phone ring permission
+  var origStartCall = window.startChaupalCallSession;
+  if (typeof origStartCall === "function") {
+    window.startChaupalCallSession = function(modeType, targetLabel, calleeEmailArg, calleeNameArg) {
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      var tEm = (typeof resolveTargetEmailForPerson === "function")
+        ? resolveTargetEmailForPerson(calleeEmailArg || (chaupalSocialState && chaupalSocialState.selectedPeerEmail) || "", calleeNameArg || "")
+        : normEm(calleeEmailArg);
+      if (me && tEm && normEm(tEm) !== normEm(me.email)) {
+        if (!canMemberInitiateCallTo(tEm, calleeNameArg || "", false)) {
+          return;
+        }
+      }
+      promptPhoneRingPermissionPopup();
+      return origStartCall.apply(this, arguments);
+    };
+  }
+
+  // Wrap renderChaupalSocial to add:
+  // 1) "🔄 दोबारा कॉल से जुड़ें" button when user previously left an active conference
+  // 2) "🔔 रिकनेक्ट" button for left participants on call tiles
+  // 3) "⏸️ होल्ड" toggle button & phone ring permission prompt
+  var origRenderSocial = window.renderChaupalSocial;
+  if (typeof origRenderSocial === "function") {
+    window.renderChaupalSocial = function() {
+      var res = origRenderSocial.apply(this, arguments);
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      var body = document.getElementById("chaupal-social-body");
+      if (!me || !body) return res;
+
+      if ("Notification" in window && Notification.permission !== "granted" && !document.getElementById("kc-inline-ring-bar")) {
+        var ringBar = document.createElement("div");
+        ringBar.id = "kc-inline-ring-bar";
+        ringBar.style.cssText = "margin-bottom:10px; padding:10px 13px; border-radius:14px; background:var(--gold-soft); border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;";
+        ringBar.innerHTML =
+          "<span style='font-size:12.5px; font-weight:700;'>🔔 फ़ोन पर सीधे रिंग व कॉल अलर्ट पाने के लिए नोटिफिकेशन चालू करें</span>" +
+          "<button type='button' class='action-btn gold' style='padding:6px 12px; font-size:12px;' onclick='if(typeof enableDevicePushNotifications==="function")enableDevicePushNotifications();'>🔔 ऑन करें</button>";
+        body.insertBefore(ringBar, body.firstChild);
+      }
+
+      // If not in active call session, check if there is an ongoing call where user left and can click "दोबारा कॉल से जुड़ें"
+      if (!chaupalSocialState.activeCallSession && chaupalSocialState.ongoingConferenceDoc && !document.getElementById("kc-rejoin-left-card")) {
+        var og = chaupalSocialState.ongoingConferenceDoc;
+        var myP = Array.isArray(og.participants) ? og.participants.find(function(p) { return normEm(p.email) === normEm(me.email); }) : null;
+        if (myP && myP.status === "left") {
+          var rejoinDiv = document.createElement("div");
+          rejoinDiv.id = "kc-rejoin-left-card";
+          rejoinDiv.style.cssText = "margin-bottom:12px; padding:13px 15px; border-radius:16px; background:var(--bg-elevated); border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;";
+          rejoinDiv.innerHTML =
+            "<div><div style='font-weight:700; font-size:14px;'>आप इस कॉल से लेफ्ट हुए थे</div><div style='font-size:12px; color:var(--text-muted);'>" + (og.targetLabel || "सक्रिय कॉन्फ्रेंस कॉल") + "</div></div>" +
+            "<button type='button' class='action-btn primary' style='padding:8px 14px; font-size:12.5px;' onclick='if(typeof rejoinConferenceCall==="function")rejoinConferenceCall("" + og.id + "", false)'>🔄 दोबारा कॉल से जुड़ें</button>";
+          body.insertBefore(rejoinDiv, body.firstChild);
+        }
+      }
+
+      // Add "🔔 रिकनेक्ट" button on any tile where peer status is 'left'
+      var cs = chaupalSocialState.activeCallSession;
+      if (cs && Array.isArray(cs.participants)) {
+        cs.participants.forEach(function(rp) {
+          var pEm = normEm(rp.email);
+          if (!pEm || pEm === normEm(me.email)) return;
+          if (rp.status === "left") {
+            var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+            var wrapEl = document.getElementById("tile-wrap-" + safeId);
+            if (wrapEl && !wrapEl.querySelector(".kc-reconnect-btn")) {
+              var btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "action-btn gold kc-reconnect-btn";
+              btn.style.cssText = "width:100%; margin-top:6px; padding:6px 10px; font-size:12px;";
+              btn.textContent = "🔔 रिकनेक्ट / रिंग भेजें";
+              btn.onclick = function(ev) {
+                if (ev && ev.stopPropagation) ev.stopPropagation();
+                reconnectLeftParticipantInCall(pEm, rp.name || pEm);
+              };
+              wrapEl.appendChild(btn);
+            }
+          }
+        });
+      }
+      return res;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function() {
+  function applyAdaptiveConferenceLayout() {
+    var stage = document.getElementById("soc-call-stage-card");
+    if (!stage) return;
+    var isFs = stage.classList.contains("fullscreen-stage");
+    var grid = stage.querySelector(".conf-grid");
+    if (!grid) return;
+
+    var tiles = Array.prototype.slice.call(grid.children || []);
+    var count = tiles.length || 1;
+
+    // Choose optimal column count based on participant count and screen/fullscreen mode
+    var cols = 2;
+    if (count === 1) {
+      cols = 1;
+    } else if (count === 2) {
+      cols = isFs ? (window.innerWidth >= 640 ? 2 : 1) : 2;
+    } else if (count <= 4) {
+      cols = 2;
+    } else if (count <= 6) {
+      cols = window.innerWidth >= 520 ? 3 : 2;
+    } else {
+      cols = window.innerWidth >= 700 ? 4 : (window.innerWidth >= 480 ? 3 : 2);
+    }
+
+    var rows = Math.max(1, Math.ceil(count / cols));
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, 1fr))";
+    grid.style.gap = count >= 5 ? "6px" : "8px";
+    grid.style.alignContent = "stretch";
+
+    // In fullscreen mode, scale video height dynamically so all rows remain visible and balanced
+    if (isFs) {
+      var availH = Math.max(360, window.innerHeight - 230);
+      var perRowH = Math.floor(availH / rows) - 44;
+      var vidH = Math.max(82, Math.min(260, perRowH));
+      grid.style.maxHeight = (window.innerHeight - 175) + "px";
+      grid.style.overflowY = "auto";
+      tiles.forEach(function(tl) {
+        tl.style.minWidth = "0";
+        tl.style.padding = count >= 5 ? "4px" : "6px";
+        var v = tl.querySelector("video");
+        if (v) {
+          v.style.height = vidH + "px";
+          v.style.width = "100%";
+          v.style.objectFit = "cover";
+        }
+      });
+    } else {
+      grid.style.maxHeight = "";
+      grid.style.overflowY = "";
+      var normalH = count <= 2 ? 175 : (count <= 4 ? 145 : 112);
+      tiles.forEach(function(tl) {
+        tl.style.minWidth = "0";
+        var v = tl.querySelector("video");
+        if (v) {
+          v.style.height = normalH + "px";
+          v.style.width = "100%";
+          v.style.objectFit = "cover";
+        }
+      });
+    }
+  }
+
+  window.applyAdaptiveConferenceLayout = applyAdaptiveConferenceLayout;
+
+  var origRenderSocial2 = window.renderChaupalSocial;
+  if (typeof origRenderSocial2 === "function") {
+    window.renderChaupalSocial = function() {
+      var out = origRenderSocial2.apply(this, arguments);
+      setTimeout(applyAdaptiveConferenceLayout, 0);
+      return out;
+    };
+  }
+
+  var origToggleFs = window.toggleCallFullScreen;
+  if (typeof origToggleFs === "function") {
+    window.toggleCallFullScreen = function() {
+      var out = origToggleFs.apply(this, arguments);
+      setTimeout(applyAdaptiveConferenceLayout, 20);
+      return out;
+    };
+  }
+
+  window.addEventListener("resize", function() {
+    applyAdaptiveConferenceLayout();
+  });
+
+  // Also observe DOM mutations inside call stage so newly added tiles adjust immediately
+  var obs = new MutationObserver(function() {
+    applyAdaptiveConferenceLayout();
+  });
+  document.addEventListener("DOMContentLoaded", function() {
+    obs.observe(document.body, { childList: true, subtree: true });
+    applyAdaptiveConferenceLayout();
+  });
+})();
+</script>
+
+
+<script>
+(function() {
+  var _disconnectTimers = {};
+  var _bitrateWatchTimer = null;
+
+  function normEmail(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  function safeTileIdForEmail(em) {
+    return "soc-rem-vid-" + normEmail(em).replace(/[^a-zA-Z0-9]/g, "_");
+  }
+
+  // Tune WebRTC video senders for low/fluctuating bandwidth so audio & video stay smooth
+  function tuneSendersForSmoothBandwidth(pc) {
+    if (!pc || !pc.getSenders) return;
+    var net = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.networkMode) || "auto";
+    var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    var isSlow = !!(conn && (conn.saveData || /2g|3g/.test(String(conn.effectiveType || ""))));
+    var maxBitrateBps = (net === "uhd" && !isSlow) ? 900000 : ((net === "low_data" || isSlow) ? 160000 : 320000);
+    var maxFramerate = (net === "uhd" && !isSlow) ? 24 : ((net === "low_data" || isSlow) ? 12 : 15);
+    var scaleDown = (net === "uhd" && !isSlow) ? 1.0 : ((net === "low_data" || isSlow) ? 2.5 : 1.75);
+
+    pc.getSenders().forEach(function(sender) {
+      if (!sender || !sender.track || sender.track.kind !== "video" || !sender.getParameters || !sender.setParameters) return;
+      try {
+        var params = sender.getParameters();
+        if (!params.encodings || !params.encodings.length) {
+          params.encodings = [{}];
+        }
+        params.encodings[0].maxBitrate = maxBitrateBps;
+        params.encodings[0].maxFramerate = maxFramerate;
+        params.encodings[0].scaleResolutionDownBy = scaleDown;
+        params.degradationPreference = "maintain-framerate";
+        sender.setParameters(params).catch(function() {});
+      } catch (e) {}
+    });
+  }
+
+  // Hide disconnected participant tile cleanly, and restore it when they reconnect
+  function syncDisconnectedTilesVisibility() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    var cs = chaupalSocialState.activeCallSession;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEmail(me.email) : "";
+    var parts = Array.isArray(cs.participants) ? cs.participants : [];
+
+    parts.forEach(function(p) {
+      var pEm = normEmail(p.email);
+      if (!pEm || pEm === myEm) return;
+      var tileId = safeTileIdForEmail(pEm);
+      var tileWrap = document.getElementById("tile-wrap-" + tileId);
+      var pc = (chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm]) || null;
+      var iceSt = pc ? pc.iceConnectionState : "";
+      var connSt = pc ? pc.connectionState : "";
+      var peerStatus = (chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[pEm]) || p.status || "";
+
+      var isHardDisconnected = (
+        peerStatus === "left" ||
+        peerStatus === "declined" ||
+        iceSt === "failed" ||
+        iceSt === "closed" ||
+        connSt === "failed" ||
+        connSt === "closed"
+      );
+
+      if (isHardDisconnected) {
+        if (!_disconnectTimers[pEm]) {
+          _disconnectTimers[pEm] = setTimeout(function() {
+            var curPc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm];
+            var curIce = curPc ? curPc.iceConnectionState : "";
+            var curConn = curPc ? curPc.connectionState : "";
+            var curSt = (chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[pEm]) || "";
+            var stillGone = (
+              curSt === "left" ||
+              curSt === "declined" ||
+              curIce === "failed" ||
+              curIce === "closed" ||
+              curConn === "failed" ||
+              curConn === "closed"
+            );
+            var w = document.getElementById("tile-wrap-" + tileId);
+            if (stillGone && w) {
+              w.style.display = "none";
+            }
+          }, 1500);
+        }
+      } else {
+        if (_disconnectTimers[pEm]) {
+          clearTimeout(_disconnectTimers[pEm]);
+          delete _disconnectTimers[pEm];
+        }
+        var wShow = document.getElementById("tile-wrap-" + tileId);
+        if (wShow && wShow.style.display === "none") {
+          wShow.style.display = "";
+        }
+      }
+    });
+
+    if (typeof window.applyAdaptiveConferenceLayout === "function") {
+      setTimeout(window.applyAdaptiveConferenceLayout, 30);
+    }
+  }
+
+  // Monitor peer connections every 2.5s to apply bandwidth tuning, recover frozen tracks, and sync tiles
+  function startSmoothCallGuardian() {
+    if (_bitrateWatchTimer) clearInterval(_bitrateWatchTimer);
+    _bitrateWatchTimer = setInterval(function() {
+      if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+      var pcMap = chaupalSocialState.peerConnectionsMap || {};
+      var remMap = chaupalSocialState.remoteStreamsMap || {};
+      Object.keys(pcMap).forEach(function(pEm) {
+        var pc = pcMap[pEm];
+        if (!pc) return;
+        tuneSendersForSmoothBandwidth(pc);
+
+        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          try { if (typeof pc.restartIce === "function") pc.restartIce(); } catch (e) {}
+        }
+
+        // Ensure remote tracks stay enabled and attached to DOM element
+        var entry = remMap[pEm];
+        var safeId = safeTileIdForEmail(pEm);
+        var vidEl = document.getElementById(safeId);
+        if (entry && entry.stream) {
+          entry.stream.getTracks().forEach(function(tr) {
+            if (tr.readyState === "live") tr.enabled = true;
+          });
+          if (vidEl && vidEl.srcObject !== entry.stream) {
+            vidEl.srcObject = entry.stream;
+            vidEl.muted = false;
+            vidEl.volume = 1.0;
+            try { vidEl.play().catch(function() {}); } catch (e) {}
+          }
+        }
+      });
+      syncDisconnectedTilesVisibility();
+    }, 2500);
+  }
+
+  var origAttach = window.attachMediaToDom;
+  if (typeof origAttach === "function") {
+    window.attachMediaToDom = function() {
+      var r = origAttach.apply(this, arguments);
+      var pcMap = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.peerConnectionsMap) || {};
+      Object.keys(pcMap).forEach(function(pEm) {
+        tuneSendersForSmoothBandwidth(pcMap[pEm]);
+      });
+      syncDisconnectedTilesVisibility();
+      return r;
+    };
+  }
+
+  startSmoothCallGuardian();
+})();
+</script>
+
+
+<script>
+(function() {
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  function isParticipantActivelyJoined(p, myEm) {
+    if (!p) return false;
+    var pEm = normEm(p.email);
+    if (!pEm) return false;
+    if (pEm === myEm) return true;
+    if (p.removed === true || p.status === "left" || p.status === "declined" || p.status === "removed") return false;
+    var livePeerSt = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[pEm]) || "";
+    var pc = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm]) || null;
+    var iceSt = pc ? pc.iceConnectionState : "";
+    var connSt = pc ? pc.connectionState : "";
+    if (iceSt === "failed" || iceSt === "closed" || connSt === "failed" || connSt === "closed") return false;
+    // Show ONLY participants who have actually joined (connected/accepted or WebRTC connected)
+    return (
+      p.status === "connected" ||
+      p.status === "accepted" ||
+      livePeerSt === "connected" ||
+      livePeerSt === "accepted" ||
+      iceSt === "connected" ||
+      iceSt === "completed" ||
+      connSt === "connected"
+    );
+  }
+
+  function isCurrentUserCallCaller() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return false;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEm(me.email) : "";
+    var cs = chaupalSocialState.activeCallSession;
+    if (cs.callerEmail && normEm(cs.callerEmail) === myEm) return true;
+    var parts = Array.isArray(cs.participants) ? cs.participants : [];
+    var firstPart = parts[0];
+    return !!(firstPart && normEm(firstPart.email) === myEm);
+  }
+
+  window.togglePeerMuteControl = function(peerEmail) {
+    var pEm = normEm(peerEmail);
+    if (!pEm || typeof chaupalSocialState === "undefined") return;
+    if (!chaupalSocialState.mutedPeersMap) chaupalSocialState.mutedPeersMap = {};
+    var nextMuted = !chaupalSocialState.mutedPeersMap[pEm];
+    chaupalSocialState.mutedPeersMap[pEm] = nextMuted;
+
+    var remEntry = chaupalSocialState.remoteStreamsMap && chaupalSocialState.remoteStreamsMap[pEm];
+    if (remEntry && remEntry.stream) {
+      remEntry.stream.getAudioTracks().forEach(function(at) {
+        at.enabled = !nextMuted;
+      });
+    }
+    var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+    var el = document.getElementById(safeId);
+    if (el) {
+      el.muted = nextMuted;
+    }
+
+    // Broadcast mute/unmute signal so the peer also sees/syncs mute state
+    var callId = chaupalSocialState.activeCallDocId;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    if (callId && me && typeof getCallSignalsColRef === "function") {
+      var sigCol = getCallSignalsColRef(callId);
+      if (sigCol) {
+        var sigId = "mute_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+        sigCol.doc(sigId).set({
+          id: sigId,
+          type: "peer_mute",
+          fromEmail: me.email,
+          toEmail: pEm,
+          muted: nextMuted,
+          ts: Date.now()
+        }).catch(function() {});
+      }
+    }
+
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "सदस्य का ऑडियो म्यूट किया गया 🔇" : "सदस्य का ऑडियो अनम्यूट किया गया 🔊");
+    }
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    if (typeof attachMediaToDom === "function") setTimeout(attachMediaToDom, 40);
+  };
+
+  window.removeParticipantFromActiveCall = function(peerEmail) {
+    var pEm = normEm(peerEmail);
+    if (!pEm || typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    if (!isCurrentUserCallCaller()) {
+      if (typeof showToast === "function") showToast("केवल कॉल शुरू करने वाला सदस्य ही किसी को हटा सकता है");
+      return;
+    }
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEm(me.email) : "";
+    if (pEm === myEm) return;
+
+    var cs = chaupalSocialState.activeCallSession;
+    var callId = chaupalSocialState.activeCallDocId;
+    var parts = Array.isArray(cs.participants) ? cs.participants.slice() : [];
+    var targetObj = parts.find(function(x) { return normEm(x.email) === pEm; });
+    var tName = (targetObj && targetObj.name) || pEm;
+
+    parts = parts.filter(function(x) { return normEm(x.email) !== pEm; });
+    cs.participants = parts;
+    if (chaupalSocialState.peerStatusMap) delete chaupalSocialState.peerStatusMap[pEm];
+
+    if (typeof closeSinglePeerConnection === "function") {
+      closeSinglePeerConnection(pEm);
+    }
+
+    var tileId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+    var tileWrap = document.getElementById("tile-wrap-" + tileId);
+    if (tileWrap && tileWrap.parentNode) tileWrap.parentNode.removeChild(tileWrap);
+
+    if (callId && typeof getCallDocRef === "function") {
+      var ref = getCallDocRef(callId);
+      if (ref) {
+        var removedList = Array.isArray(cs.removedEmails) ? cs.removedEmails.slice() : [];
+        if (removedList.indexOf(pEm) === -1) removedList.push(pEm);
+        cs.removedEmails = removedList;
+        ref.set({ participants: parts, removedEmails: removedList }, { merge: true }).catch(function() {});
+      }
+      if (me && typeof getCallSignalsColRef === "function") {
+        var sigCol = getCallSignalsColRef(callId);
+        if (sigCol) {
+          var sigId = "kick_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+          sigCol.doc(sigId).set({
+            id: sigId,
+            type: "kicked",
+            fromEmail: me.email,
+            toEmail: pEm,
+            ts: Date.now()
+          }).catch(function() {});
+        }
+      }
+    }
+
+    if (typeof showToast === "function") showToast(tName + " को कॉल से हटा दिया गया");
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    if (typeof applyAdaptiveConferenceLayout === "function") setTimeout(applyAdaptiveConferenceLayout, 40);
+  };
+
+  // Enforce joined-only filter, mutual mute buttons, and caller add/remove controls on renderChaupalSocial
+  var origRenderSocial = window.renderChaupalSocial;
+  if (typeof origRenderSocial === "function") {
+    window.renderChaupalSocial = function() {
+      var res = origRenderSocial.apply(this, arguments);
+      var stage = document.getElementById("soc-call-stage-card");
+      if (!stage || typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return res;
+
+      var cs = chaupalSocialState.activeCallSession;
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      var myEm = me ? normEm(me.email) : "";
+      var isCallerHost = isCurrentUserCallCaller();
+      var allParts = Array.isArray(cs.participants) ? cs.participants : [];
+
+      // Filter out any unjoined / ringing / non-connected remote tiles from the grid
+      var grid = stage.querySelector(".conf-grid");
+      if (grid) {
+        Array.prototype.slice.call(grid.children || []).forEach(function(tileEl) {
+          var tid = tileEl.id || "";
+          if (tid.indexOf("tile-wrap-soc-rem-vid-") === 0) {
+            var matchedPart = allParts.find(function(p) {
+              var pEm = normEm(p.email);
+              var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+              return ("tile-wrap-" + safeId) === tid;
+            });
+            if (!matchedPart || !isParticipantActivelyJoined(matchedPart, myEm)) {
+              if (tileEl.parentNode) tileEl.parentNode.removeChild(tileEl);
+            } else {
+              // Add per-tile Mute & Host Remove buttons cleanly once
+              var pEm = normEm(matchedPart.email);
+              var isMutedPeer = !!(chaupalSocialState.mutedPeersMap && chaupalSocialState.mutedPeersMap[pEm]);
+              var ctrlBarId = "peer-ctrl-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+              var existingBar = document.getElementById(ctrlBarId);
+              if (!existingBar) {
+                existingBar = document.createElement("div");
+                existingBar.id = ctrlBarId;
+                existingBar.style.cssText = "display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:6px;";
+                tileEl.appendChild(existingBar);
+              }
+              var muteBtnHtml = "<button type=\"button\" class=\"sm-btn\" style=\"padding:3px 8px; font-size:11px;\" onclick=\"event.stopPropagation(); togglePeerMuteControl('" + pEm.replace(/'/g, "") + "')\">" + (isMutedPeer ? "🔇 अनम्यूट" : "🎤 म्यूट करें") + "</button>";
+              var kickBtnHtml = isCallerHost ? ("<button type=\"button\" class=\"sm-btn del\" style=\"padding:3px 8px; font-size:11px;\" onclick=\"event.stopPropagation(); removeParticipantFromActiveCall('" + pEm.replace(/'/g, "") + "')\">✕ हटाएँ</button>") : "";
+              existingBar.innerHTML = muteBtnHtml + kickBtnHtml;
+            }
+          }
+        });
+      }
+
+      // Update displayed participant count to reflect only actively joined members
+      var joinedCount = allParts.filter(function(p) { return isParticipantActivelyJoined(p, myEm); }).length || 1;
+      stage.querySelectorAll("div, span").forEach(function(n) {
+        if (n.children.length === 0 && n.textContent && n.textContent.indexOf("कुल सदस्य:") !== -1) {
+          n.innerHTML = "जुड़े हुए सदस्य: <strong>" + joinedCount + "</strong> • स्थिति: <strong>🟢 कॉन्फ्रेंस सक्रिय</strong>" + (isCallerHost ? " • 👑 कॉल होस्ट" : "");
+        }
+      });
+
+      if (typeof applyAdaptiveConferenceLayout === "function") {
+        setTimeout(applyAdaptiveConferenceLayout, 25);
+      }
+      return res;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function() {
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  // Force-apply mute/unmute on local mic tracks & WebRTC audio senders
+  window.applyLocalMicMuteState = function(shouldMute) {
+    if (typeof chaupalSocialState === "undefined") return;
+    chaupalSocialState.isMuted = !!shouldMute;
+    if (chaupalSocialState.localStream && chaupalSocialState.localStream.getAudioTracks) {
+      chaupalSocialState.localStream.getAudioTracks().forEach(function(tr) {
+        tr.enabled = !shouldMute;
+      });
+    }
+    if (chaupalSocialState.peerConnectionsMap) {
+      Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+        var pc = chaupalSocialState.peerConnectionsMap[k];
+        if (pc && pc.getSenders) {
+          pc.getSenders().forEach(function(s) {
+            if (s && s.track && s.track.kind === "audio") {
+              s.track.enabled = !shouldMute;
+            }
+          });
+        }
+      });
+    }
+  };
+
+  // Force-apply remote peer mute state to <audio>/<video> elements and incoming tracks
+  window.enforceAllPeerMuteStates = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    var mutedMap = chaupalSocialState.mutedPeersMap || {};
+    var remMap = chaupalSocialState.remoteStreamsMap || {};
+    Object.keys(mutedMap).forEach(function(pEm) {
+      var isM = !!mutedMap[pEm];
+      var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+      var el = document.getElementById(safeId);
+      if (el) {
+        el.muted = isM;
+      }
+      var entry = remMap[pEm];
+      if (entry && entry.stream && entry.stream.getAudioTracks) {
+        entry.stream.getAudioTracks().forEach(function(at) {
+          at.enabled = !isM;
+        });
+      }
+    });
+  };
+
+  // Override togglePeerMuteControl so muting a peer mutes them locally AND signals their device to mute their mic
+  window.togglePeerMuteControl = function(peerEmail) {
+    var pEm = normEm(peerEmail);
+    if (!pEm || typeof chaupalSocialState === "undefined") return;
+    if (!chaupalSocialState.mutedPeersMap) chaupalSocialState.mutedPeersMap = {};
+    var nextMuted = !chaupalSocialState.mutedPeersMap[pEm];
+    chaupalSocialState.mutedPeersMap[pEm] = nextMuted;
+
+    enforceAllPeerMuteStates();
+
+    var callId = chaupalSocialState.activeCallDocId;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    if (callId && me && typeof getCallSignalsColRef === "function") {
+      var sigCol = getCallSignalsColRef(callId);
+      if (sigCol) {
+        var sigId = "mute_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+        sigCol.doc(sigId).set({
+          id: sigId,
+          type: "peer_mute",
+          fromEmail: me.email,
+          toEmail: pEm,
+          muted: nextMuted,
+          ts: Date.now()
+        }).catch(function() {});
+      }
+    }
+
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "सदस्य का ऑडियो म्यूट किया गया 🔇" : "सदस्य का ऑडियो अनम्यूट किया गया 🔊");
+    }
+    scheduleSmoothSocialRender();
+  };
+
+  // Intercept handleIncomingSignalDoc to handle peer_mute and kicked signals directly
+  var origHandleSig = window.handleIncomingSignalDoc;
+  if (typeof origHandleSig === "function") {
+    window.handleIncomingSignalDoc = function(callId, sig, isCaller) {
+      if (sig && sig.type === "peer_mute") {
+        var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm = me ? normEm(me.email) : "";
+        var toEm = normEm(sig.toEmail);
+        var fromEm = normEm(sig.fromEmail);
+        var sigTs = Number(sig.ts || 0);
+        if (!chaupalSocialState._appliedMuteTs) chaupalSocialState._appliedMuteTs = {};
+        var mKey = (sig.id || (fromEm + "_" + toEm + "_" + sigTs));
+        if (!chaupalSocialState._appliedMuteTs[mKey]) {
+          chaupalSocialState._appliedMuteTs[mKey] = true;
+          var isM = !!sig.muted;
+          if (toEm && myEm && toEm === myEm) {
+            applyLocalMicMuteState(isM);
+            if (typeof showToast === "function") {
+              showToast(isM ? "🔇 कॉल में आपका ऑडियो म्यूट किया गया है" : "🔊 कॉल में आपका ऑडियो अनम्यूट किया गया है");
+            }
+            scheduleSmoothSocialRender();
+          } else if (fromEm && fromEm !== myEm) {
+            if (!chaupalSocialState.mutedPeersMap) chaupalSocialState.mutedPeersMap = {};
+            chaupalSocialState.mutedPeersMap[fromEm] = isM;
+            enforceAllPeerMuteStates();
+            scheduleSmoothSocialRender();
+          }
+        }
+        return;
+      }
+
+      if (sig && sig.type === "kicked") {
+        var me2 = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm2 = me2 ? normEm(me2.email) : "";
+        var toEm2 = normEm(sig.toEmail);
+        if (toEm2 && myEm2 && toEm2 === myEm2) {
+          if (typeof cleanupWebRtcCall === "function") cleanupWebRtcCall(false);
+          if (typeof showToast === "function") showToast("आपको कॉल से हटा दिया गया है");
+          scheduleSmoothSocialRender();
+          return;
+        }
+      }
+
+      return origHandleSig.apply(this, arguments);
+    };
+  }
+
+  // Smooth debounced render so rapid ICE/signal events don't cause UI stutter
+  var _renderDebounceTimer = null;
+  window.scheduleSmoothSocialRender = function() {
+    if (_renderDebounceTimer) clearTimeout(_renderDebounceTimer);
+    _renderDebounceTimer = setTimeout(function() {
+      _renderDebounceTimer = null;
+      if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+      if (typeof attachMediaToDom === "function") attachMediaToDom();
+      enforceAllPeerMuteStates();
+    }, 90);
+  };
+
+  // Ensure attachMediaToDom always enforces peer mute states smoothly without unnecessary restarts
+  var origAttach2 = window.attachMediaToDom;
+  if (typeof origAttach2 === "function") {
+    window.attachMediaToDom = function() {
+      var res = origAttach2.apply(this, arguments);
+      enforceAllPeerMuteStates();
+      return res;
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function() {
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  // 1. Boost WebRTC audio sender priority/bitrate so voice is loud, clear, and never low
+  window.boostCallAudioQuality = function(pc) {
+    if (!pc || !pc.getSenders) return;
+    pc.getSenders().forEach(function(sender) {
+      if (!sender || !sender.track || sender.track.kind !== "audio") return;
+      try {
+        var params = sender.getParameters ? sender.getParameters() : {};
+        if (!params.encodings || !params.encodings.length) {
+          params.encodings = [{}];
+        }
+        params.encodings[0].priority = "high";
+        params.encodings[0].networkPriority = "high";
+        params.encodings[0].maxBitrate = 96000; // crisp voice clarity
+        params.encodings[0].dtx = false; // keep audio stream continuous without voice-chop delay
+        sender.setParameters(params).catch(function() {});
+      } catch (e) {}
+    });
+  };
+
+  // Ensure remote audio/video elements have full volume (1.0) when not muted and never freeze video
+  window.ensureSmoothAudioAndUnfrozenVideo = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    var mutedMap = chaupalSocialState.mutedPeersMap || {};
+    var remMap = chaupalSocialState.remoteStreamsMap || {};
+
+    Object.keys(remMap).forEach(function(pEm) {
+      var isMutedPeer = !!mutedMap[pEm];
+      var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+      var el = document.getElementById(safeId);
+      var entry = remMap[pEm];
+      var st = entry && entry.stream;
+
+      if (st) {
+        // Audio track enabled/disabled cleanly
+        if (st.getAudioTracks) {
+          st.getAudioTracks().forEach(function(at) {
+            at.enabled = !isMutedPeer;
+          });
+        }
+        // Video track stays active unless camera itself is off
+        if (st.getVideoTracks) {
+          st.getVideoTracks().forEach(function(vt) {
+            if (!chaupalSocialState.isCamOff && vt.readyState === "live") {
+              vt.enabled = true;
+            }
+          });
+        }
+      }
+
+      if (el) {
+        if (st && el.srcObject !== st) {
+          try { el.srcObject = st; } catch (e) {}
+        }
+        if (el.tagName === "AUDIO" || el.tagName === "VIDEO") {
+          el.muted = isMutedPeer;
+          if (!isMutedPeer) {
+            try { el.volume = 1.0; } catch (e) {}
+          }
+          if (el.paused) {
+            try { el.play().catch(function() {}); } catch (e) {}
+          }
+        }
+      }
+    });
+
+    // Keep local video smooth and unfrozen
+    var locVid = document.getElementById("soc-local-video");
+    if (locVid && chaupalSocialState.localStream) {
+      chaupalSocialState.localStream.getVideoTracks().forEach(function(vt) {
+        if (!chaupalSocialState.isCamOff && vt.readyState === "live") vt.enabled = true;
+      });
+      if (locVid.srcObject !== chaupalSocialState.localStream) {
+        try { locVid.srcObject = chaupalSocialState.localStream; } catch (e) {}
+      }
+      if (locVid.paused) {
+        try { locVid.play().catch(function() {}); } catch (e) {}
+      }
+    }
+  };
+
+  // 2. Non-freezing local mic mute toggle (never touches video elements or video tracks)
+  window.toggleCallMute = function() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    var nextMuted = !chaupalSocialState.isMuted;
+    if (typeof window.applyLocalMicMuteState === "function") {
+      window.applyLocalMicMuteState(nextMuted);
+    } else {
+      chaupalSocialState.isMuted = nextMuted;
+      if (chaupalSocialState.localStream && chaupalSocialState.localStream.getAudioTracks) {
+        chaupalSocialState.localStream.getAudioTracks().forEach(function(tr) {
+          tr.enabled = !nextMuted;
+        });
+      }
+    }
+    // Re-tune audio senders without touching video
+    if (chaupalSocialState.peerConnectionsMap) {
+      Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+        var pc = chaupalSocialState.peerConnectionsMap[k];
+        if (pc && pc.getSenders) {
+          pc.getSenders().forEach(function(s) {
+            if (s && s.track && s.track.kind === "audio") {
+              s.track.enabled = !nextMuted;
+            }
+          });
+        }
+        window.boostCallAudioQuality(pc);
+      });
+    }
+    window.ensureSmoothAudioAndUnfrozenVideo();
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "🔇 माइक बंद (वीडियो सुचारु)" : "🎤 माइक चालू (स्पष्ट ऑडियो)");
+    }
+    if (typeof scheduleSmoothSocialRender === "function") {
+      scheduleSmoothSocialRender();
+    } else if (typeof renderChaupalSocial === "function") {
+      renderChaupalSocial();
+    }
+  };
+
+  // 3. Complete Multi-Platform Live Studio Engine (Facebook Live + YouTube Live + Stream Keys + Clean Stage Broadcast + HD Recorder)
+  window.toggleLiveKeysDrawer = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    chaupalSocialState.showLiveKeysDrawer = !chaupalSocialState.showLiveKeysDrawer;
+    var wrap = document.getElementById("soc-live-key-wrap");
+    var arrow = document.getElementById("soc-keys-drawer-arrow");
+    if (wrap) wrap.style.display = chaupalSocialState.showLiveKeysDrawer ? "block" : "none";
+    if (arrow) arrow.textContent = chaupalSocialState.showLiveKeysDrawer ? "▲" : "▼";
+  };
+
+  window.onLiveBridgePlatformChange = function(val) {
+    if (typeof chaupalSocialState !== "undefined") {
+      chaupalSocialState.livePlatform = val || "Facebook + YouTube";
+    }
+    var pill = document.getElementById("soc-live-status-pill");
+    if (pill && typeof chaupalSocialState !== "undefined" && chaupalSocialState.isLiveActive) {
+      pill.textContent = "🔴 लाइव सक्रिय: " + (val || "Facebook + YouTube");
+    }
+  };
+
+  window.copyDirectText = function(txt, label) {
+    if (!txt) {
+      if (typeof showToast === "function") showToast((label || "मान") + " खाली है");
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function() {
+        if (typeof showToast === "function") showToast("📋 " + (label || "लिंक") + " कॉपी हो गया!");
+      }).catch(function() {
+        if (typeof showToast === "function") showToast("कॉपी: " + txt);
+      });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      if (typeof showToast === "function") showToast("📋 " + (label || "लिंक") + " कॉपी हो गया!");
+    }
+  };
+
+  window.copyLiveFieldVal = function(elId, label) {
+    var el = document.getElementById(elId);
+    var v = el ? el.value.trim() : "";
+    window.copyDirectText(v, label);
+  };
+
+  window.normalizeFbLiveUrl = function(raw) {
+    var s = String(raw || "").trim();
+    if (!s) return "https://www.facebook.com/live/producer";
+    if (s.indexOf("http://") === 0 || s.indexOf("https://") === 0) return s;
+    return "https://www.facebook.com/" + s.replace(/^@/, "").replace(/^\/+/, "");
+  };
+
+  window.normalizeYtLiveUrl = function(raw) {
+    var s = String(raw || "").trim();
+    if (!s) return "https://studio.youtube.com/channel/UC/livestreaming";
+    if (s.indexOf("http://") === 0 || s.indexOf("https://") === 0) return s;
+    if (s.indexOf("@") === 0) return "https://www.youtube.com/" + s + "/live";
+    return "https://www.youtube.com/@" + s.replace(/^\/+/, "") + "/live";
+  };
+
+  window.buildLiveActiveSummaryHtml = function() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.isLiveActive) return "";
+    var plat = chaupalSocialState.livePlatform || "Facebook + YouTube";
+    var fbHref = window.normalizeFbLiveUrl(chaupalSocialState.fbAccountUrl);
+    var ytHref = window.normalizeYtLiveUrl(chaupalSocialState.ytAccountUrl);
+    var hasFbKey = !!(chaupalSocialState.fbStreamKey && chaupalSocialState.fbStreamKey.trim());
+    var hasYtKey = !!(chaupalSocialState.ytStreamKey && chaupalSocialState.ytStreamKey.trim());
+
+    var html = "<div style=\"padding:10px 12px; border-radius:12px; background:rgba(22,163,74,0.2); border:1.5px solid #4ADE80; color:#ECFDF5; font-size:12px; line-height:1.55;\">";
     html += "<div style=\"font-weight:700; color:#86EFAC; margin-bottom:5px;\">✅ प्रसारण सेटअप सक्रिय (" + String(plat).replace(/</g, "&lt;") + ")</div>";
     html += "<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-top:6px;\">";
     if (plat === "Facebook + YouTube" || plat === "Facebook Live") {
