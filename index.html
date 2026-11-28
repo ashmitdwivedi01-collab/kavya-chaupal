@@ -5583,15 +5583,17 @@ function openVideoPlayer(id) {
   var isFb = lowerUrl.indexOf("facebook.com/") !== -1 || lowerUrl.indexOf("fb.watch/") !== -1;
   var isDirectMedia = rawUrl.indexOf("blob:") === 0 || rawUrl.indexOf("data:video/") === 0 || /\.(mp4|webm|ogg|m3u8)(\?|$)/i.test(rawUrl);
 
+  var ltPoet = v.lowerThirdPoet || st.lowerThirdPoet || "";
+  var ltCity = v.lowerThirdCity || st.lowerThirdCity || "";
+  var ltPoem = v.lowerThirdPoem || st.lowerThirdPoem || "";
+  var ltGuest = v.guestPoetName || st.guestPoetName || "";
+
   var ltHtml = "";
-  if (v.lowerThirdPoet || v.lowerThirdPoem || (st.isLiveOnApp && st.lowerThirdPoet)) {
-    var pNm = v.lowerThirdPoet || st.lowerThirdPoet || "काव्य चौपाल";
-    var pCt = v.lowerThirdCity || st.lowerThirdCity || "";
-    var pPm = v.lowerThirdPoem || st.lowerThirdPoem || "सजीव काव्य पाठ";
+  if (ltPoet || ltPoem || ltGuest) {
     ltHtml =
       "<div style=\"padding:10px 14px; border-radius:14px; margin-bottom:12px; background:linear-gradient(90deg, rgba(91,17,24,0.95), rgba(142,75,10,0.92)); border:1.5px solid #F7DC8B; color:#FFF9EC;\">" +
-        "<div style=\"font-size:15px; font-weight:800; color:#F7DC8B;\">✒️ " + esc(pNm) + (pCt ? (" <span style='font-size:12px; color:#FFFDF7;'>(" + esc(pCt) + ")</span>") : "") + "</div>" +
-        "<div style=\"font-size:12.5px; color:#FCE49C;\">📜 " + esc(pPm) + "</div>" +
+        "<div style=\"font-size:15px; font-weight:800; color:#F7DC8B;\">✒️ " + esc(ltPoet || "काव्य चौपाल") + (ltCity ? (" <span style='font-size:12px; color:#FFFDF7;'>(" + esc(ltCity) + ")</span>") : "") + "</div>" +
+        "<div style=\"font-size:12.5px; color:#FCE49C;\">📜 " + esc(ltPoem || "सजीव काव्य पाठ") + (ltGuest ? (" • 🤝 सह-कवि: " + esc(ltGuest)) : "") + "</div>" +
       "</div>";
   }
 
@@ -5608,15 +5610,23 @@ function openVideoPlayer(id) {
       "<div class=\"yt-embed-box\" style=\"background:#11090C; display:flex; flex-direction:column; align-items:center; justify-content:center;\">" +
         "<video id=\"viewer-local-stage-video\" autoplay playsinline controls style=\"width:100%; height:100%; object-fit:cover;\"></video>" +
       "</div>";
+  } else if (v.isLive) {
+    playerHtml =
+      "<div style=\"padding:18px; border-radius:16px; background:linear-gradient(145deg, #4B0D14 0%, #24130C 100%); border:1.5px solid #F7DC8B; color:#FFF9EC; margin-bottom:12px; text-align:center;\">" +
+        "<div style=\"display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:999px; background:rgba(239,68,68,0.22); border:1px solid #FCA5A5; color:#FCA5A5; font-size:12px; font-weight:800; margin-bottom:8px;\"><span style=\"width:9px; height:9px; border-radius:50%; background:#EF4444; display:inline-block;\"></span>काव्य चौपाल ऐप • सजीव प्रसारण सक्रिय</div>" +
+        "<div class=\"font-royal\" style=\"font-size:20px; color:#F7DC8B; margin-bottom:6px;\">" + esc(v.title || "सजीव काव्य प्रसारण") + "</div>" +
+        "<div style=\"font-size:13px; color:rgba(255,249,236,0.88); margin-bottom:14px; line-height:1.55;\">" + esc(v.description || "काव्य चौपाल मंच पर सजीव सत्र जारी है। आप नीचे दाद दे सकते हैं या लाइव कॉन्फ्रेंस कक्ष से जुड़ सकते हैं।") + "</div>" +
+        "<div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"closeVideoModal(); if(typeof chaupalSocialState!=='undefined'){chaupalSocialState.subTab='call';} if(typeof switchTab==='function')switchTab('social');\">🎙️ लाइव कॉन्फ्रेंस कक्ष खोलें</button>" +
+          "<button type=\"button\" class=\"action-btn primary\" onclick=\"closeVideoModal(); if(typeof openManchSub==='function')openManchSub('studio');\">🎛️ चौपाल स्टूडियो</button>" +
+        "</div>" +
+      "</div>";
   } else {
     playerHtml =
       "<div style=\"padding:18px; border-radius:16px; background:var(--bg-elevated); border:1.5px solid var(--gold); margin-bottom:12px; text-align:center;\">" +
-        "<div style=\"font-size:15px; font-weight:700; color:var(--primary); margin-bottom:6px;\">" + (v.isLive ? "🔴 सजीव प्रसारण सक्रिय है" : "🎬 प्रसारण विवरण") + "</div>" +
-        "<div style=\"font-size:13px; color:var(--text-muted); margin-bottom:12px;\">" + (rawUrl ? ("लिंक: " + esc(rawUrl)) : "होस्ट ने अभी कोई YouTube/Facebook लिंक नहीं डाला है — कृपया होस्ट का लाइव लिंक यहाँ डालें या YouTube/Facebook चैनल खोलें।") + "</div>" +
-        "<div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">" +
-          (rawUrl ? ("<a class=\"action-btn gold\" href=\"" + esc(rawUrl) + "\" target=\"_blank\" rel=\"noopener noreferrer\">📺 प्रसारण लिंक खोलें ↗</a>") : "") +
-          "<a class=\"action-btn primary\" href=\"https://youtube.com/@kavyachaupal\" target=\"_blank\" rel=\"noopener noreferrer\">▶ YouTube चैनल खोलें</a>" +
-        "</div>" +
+        "<div style=\"font-size:15px; font-weight:700; color:var(--primary); margin-bottom:6px;\">🎬 प्रसारण विवरण</div>" +
+        "<div style=\"font-size:13px; color:var(--text-muted); margin-bottom:12px;\">" + (rawUrl ? ("लिंक: " + esc(rawUrl)) : "इस प्रसारण का लिंक उपलब्ध नहीं है।") + "</div>" +
+        (rawUrl ? ("<a class=\"action-btn gold\" href=\"" + esc(rawUrl) + "\" target=\"_blank\" rel=\"noopener noreferrer\">प्रसारण खोलें ↗</a>") : "") +
       "</div>";
   }
 
