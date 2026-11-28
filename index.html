@@ -4726,6 +4726,61 @@ function isUserTypingInForm() {
   return !!ae.isContentEditable;
 }
 
+
+function getActiveLiveBroadcast() {
+  var stLive = (typeof window.chaupalStudioState !== "undefined" && window.chaupalStudioState && window.chaupalStudioState.isLiveOnApp)
+    ? {
+        id: "live_broadcast_current",
+        title: window.chaupalStudioState.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण",
+        platform: window.chaupalStudioState.platform || "काव्य चौपाल ऐप लाइव",
+        url: window.chaupalStudioState.liveStreamUrl || ((state.settings && state.settings.socials && state.settings.socials.youtube) || "https://youtube.com/@kavyachaupal"),
+        isLive: true
+      }
+    : null;
+  if (stLive) return stLive;
+  var vids = Array.isArray(state.videos) ? state.videos : [];
+  var now = Date.now();
+  return vids.find(function(v) {
+    return v && v.isLive === true && (!v.createdAt || (now - Number(v.createdAt) < 6 * 3600 * 1000));
+  }) || null;
+}
+
+function renderActiveLiveBroadcastBanner() {
+  var liveObj = getActiveLiveBroadcast();
+  var targets = ["spotlight-wrap", "manch-events"];
+  targets.forEach(function(id) {
+    var host = document.getElementById(id);
+    if (!host) return;
+    var existing = host.querySelector(".kc-global-live-banner");
+    if (!liveObj) {
+      if (existing) existing.remove();
+      return;
+    }
+    var html =
+      "<div class=\"kc-global-live-banner\" style=\"margin-bottom:14px; padding:14px 16px; border-radius:20px; background:radial-gradient(circle at 85% 20%, rgba(254,202,202,0.22), transparent 50%), linear-gradient(135deg, #7F1D1D 0%, #450A0A 58%, #1E060A 100%); color:#FFFDF7; border:2px solid #F7DC8B; box-shadow:0 16px 38px rgba(127,29,29,0.28);\">" +
+        "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;\">" +
+          "<div style=\"display:flex; align-items:center; gap:8px;\">" +
+            "<span style=\"width:11px; height:11px; border-radius:50%; background:#EF4444; box-shadow:0 0 12px #EF4444; animation:livePulse 1.2s infinite; display:inline-block;\"></span>" +
+            "<span style=\"font-size:12px; font-weight:800; letter-spacing:1px; color:#FCA5A5;\">LIVE BROADCAST • अभी सजीव प्रसारण जारी</span>" +
+          "</div>" +
+          "<span style=\"font-size:11.5px; padding:3px 10px; border-radius:999px; background:rgba(247,220,139,0.18); border:1px solid rgba(247,220,139,0.55); color:#FCE49C; font-weight:700;\">" + esc(liveObj.category || liveObj.platform || "काव्य चौपाल लाइव") + "</span>" +
+        "</div>" +
+        "<div class=\"font-royal\" style=\"font-size:21px; color:#F7DC8B; margin:8px 0 4px;\">" + esc(liveObj.title) + "</div>" +
+        "<div style=\"font-size:12.5px; color:rgba(255,253,247,0.88); margin-bottom:12px;\">काव्य चौपाल मंच से सजीव प्रसारण चल रहा है — कहीं से भी जुड़े दर्शक लाइव विवरण व प्रसारण देख सकते हैं।</div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+          "<button type=\"button\" class=\"action-btn gold\" style=\"padding:8px 14px; font-size:12.5px; font-weight:800;\" onclick=\"openVideoModal(dec('" + arg(liveObj.id || "live_broadcast_current") + "'))\">🔴 लाइव प्रसारण देखें</button>" +
+          (liveObj.url ? ("<a class=\"action-btn primary\" style=\"padding:8px 14px; font-size:12.5px;\" href=\"" + esc(liveObj.url) + "\" target=\"_blank\" rel=\"noopener\">📺 बाहरी लाइव स्ट्रीम खोलें ↗</a>") : "") +
+          "<button type=\"button\" class=\"action-btn\" style=\"padding:8px 13px; font-size:12.5px; background:rgba(255,255,255,0.12); color:#FFFDF7; border-color:rgba(247,220,139,0.45);\" onclick=\"openManchSub('studio')\">🎙️ स्टूडियो कक्ष</button>" +
+        "</div>" +
+      "</div>";
+    if (existing) {
+      existing.outerHTML = html;
+    } else {
+      host.insertAdjacentHTML("afterbegin", html);
+    }
+  });
+}
+
 function renderAll() {
   if (isUserTypingInForm()) return;
   reconcileAllPoetAdminLinks();
@@ -4765,6 +4820,7 @@ function renderAll() {
   renderTopAccountBar();
   renderBrandLogo();
   renderSpotlight();
+  renderActiveLiveBroadcastBanner();
   renderDailyRiddle();
   renderDailyJayantiCorner();
   renderHomeDropdowns();
@@ -15520,6 +15576,16 @@ window.addEventListener("beforeunload", function() {
 
     var finalize = function() {
       st.isLiveOnApp = false;
+      try {
+        if (typeof state !== 'undefined' && Array.isArray(state.videos)) {
+          state.videos = state.videos.map(function(v) {
+            if (v && v.id === 'live_broadcast_current') return Object.assign({}, v, { isLive: false, date: 'प्रसारण समाप्त • ' + new Date().toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' }) });
+            return v;
+          });
+          var endCard = state.videos.find(function(v) { return v && v.id === 'live_broadcast_current'; });
+          if (endCard && typeof cloudSaveDoc === 'function') cloudSaveDoc('videos', 'live_broadcast_current', endCard);
+        }
+      } catch (e) {}
       st.liveStartedAt = 0;
       if (window._kcStudioDrawTimer) {
         clearInterval(window._kcStudioDrawTimer);
