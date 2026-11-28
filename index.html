@@ -5136,6 +5136,9 @@ function renderPoemsGrid() {
   var grid = document.getElementById("poems-grid"); if (!grid) return;
   var bar = document.getElementById("active-filter-bar"); var barText = document.getElementById("active-filter-text");
   var sahityaIds = Array.isArray(state.chaupalSahityaIds) ? state.chaupalSahityaIds : [];
+  var validSahityaIds = sahityaIds.filter(function(id) {
+    return (state.poems || []).some(function(p) { return p.id === id; });
+  });
   var hasFilter = state.selectedGenre !== "सभी" || state.selectedMoodFilter !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch;
 
   if (bar) bar.classList.toggle("show", hasFilter);
@@ -5148,42 +5151,37 @@ function renderPoemsGrid() {
     barText.innerHTML = parts.join(" • ");
   }
 
-  // On Home, show ONLY curated 'चौपाल साहित्य' poems in the main grid (or matching curated poems when filtered)
-  var curatedPool = state.poems.filter(function(p) {
-    if (!hasFilter && sahityaIds.length) {
-      return sahityaIds.indexOf(p.id) !== -1;
-    }
+  var matchingAll = state.poems.filter(function(p) {
     if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return false;
     if (state.selectedMoodFilter !== "सभी" && (p.mood || detectPoemMood(p.content)) !== state.selectedMoodFilter) return false;
     if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return false;
     if (state.poemSearch && (p.title + " " + p.poet + " " + p.genre + " " + (p.mood || "") + " " + p.content).toLowerCase().indexOf(state.poemSearch) === -1) return false;
-    if (sahityaIds.length) return sahityaIds.indexOf(p.id) !== -1;
     return true;
   });
 
-  // Other poems not in main grid go into the horizontal 'बाएं से दाएं' brief Bhav-Chitra strip
-  var otherPoems = state.poems.filter(function(p) {
-    return curatedPool.indexOf(p) === -1;
-  });
+  var curatedPool = matchingAll;
+  if (!hasFilter && validSahityaIds.length) {
+    var pickedOnly = matchingAll.filter(function(p) { return validSahityaIds.indexOf(p.id) !== -1; });
+    if (pickedOnly.length) curatedPool = pickedOnly;
+  }
+
+  var otherPoems = hasFilter
+    ? []
+    : state.poems.filter(function(p) { return curatedPool.indexOf(p) === -1; });
 
   var lbl = document.getElementById("poems-count-label");
-  if (lbl) lbl.textContent = curatedPool.length + " चुनिंदा रचनाएँ";
+  if (lbl) lbl.textContent = curatedPool.length + " रचनाएँ";
 
   if (!curatedPool.length) {
-    grid.innerHTML =
-      "<div class=\"empty-box\" style=\"grid-column:1/-1;\">" +
-        "<div style=\"font-weight:700; color:var(--primary); margin-bottom:6px;\">📖 अभी ‘चौपाल साहित्य’ में कोई रचना चुनी नहीं गई है।</div>" +
-        "<div style=\"font-size:12.5px; margin-bottom:10px;\">एडमिन नीचे या ‘चौपाल साहित्य’ कॉर्नर से एक क्लिक में रचनाएँ चुन सकते हैं।</div>" +
-        "<button type=\"button\" class=\"action-btn gold\" onclick=\"openChaupalSahityaCorner()\">📖 चौपाल साहित्य खोलें</button>" +
-      "</div>";
+    grid.innerHTML = "<div class="empty-box" style="grid-column:1/-1;">कोई रचना उपलब्ध नहीं है।</div>";
   } else {
     grid.innerHTML = curatedPool.map(function(p) {
       var baseHtml = poemCardHTML(p);
       if (!state.adminUnlocked) return baseHtml;
-      var isPicked = sahityaIds.indexOf(p.id) !== -1;
+      var isPicked = validSahityaIds.indexOf(p.id) !== -1;
       var admBtn =
-        "<div style=\"margin-top:8px; display:flex; justify-content:flex-end;\">" +
-          "<button type=\"button\" class=\"" + (isPicked ? "sm-btn del" : "btn-approve") + "\" onclick=\"event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(p.id) + "'))\">" +
+        "<div style="margin-top:8px; display:flex; justify-content:flex-end;">" +
+          "<button type="button" class="" + (isPicked ? "sm-btn del" : "btn-approve") + "" onclick="event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(p.id) + "'))">" +
             (isPicked ? "✓ चौपाल साहित्य में (हटाएँ)" : "+ चौपाल साहित्य में जोड़ें") +
           "</button>" +
         "</div>";
@@ -5191,7 +5189,6 @@ function renderPoemsGrid() {
     }).join("");
   }
 
-  // Render horizontal 'बाएं से दाएं' strip for remaining poems with compact Bhav-Chitra
   var stripId = "kc-other-poems-hstrip";
   var stripWrap = document.getElementById(stripId);
   if (!stripWrap) {
@@ -5205,24 +5202,25 @@ function renderPoemsGrid() {
   }
 
   stripWrap.innerHTML =
-    "<div class=\"section-head\" style=\"margin-top:18px;\">" +
-      "<h3 class=\"section-title\">🖼️ अन्य रचनाएँ — संक्षिप्त भाव चित्र</h3>" +
-      "<span class=\"section-hint\">बाएं से दाएं • " + otherPoems.length + "</span>" +
+    "<div class="section-head" style="margin-top:18px;">" +
+      "<h3 class="section-title">🖼️ अन्य रचनाएँ — संक्षिप्त भाव चित्र</h3>" +
+      "<span class="section-hint">बाएं से दाएं • " + otherPoems.length + "</span>" +
     "</div>" +
-    "<div class=\"h-scroll\">" +
+    "<div class="h-scroll">" +
       otherPoems.map(function(op) {
         var imgSrc = op.bhavImage || generateAutoBhavImage(op) || "";
-        var briefLine = String(op.content || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean).slice(0, 1).join(" ");
-        var isPicked = sahityaIds.indexOf(op.id) !== -1;
-        return "<div style=\"flex-shrink:0; width:210px; background:var(--bg-elevated); border:1.5px solid var(--border); border-radius:16px; padding:10px; box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column; justify-content:space-between;\" onclick=\"openReader(dec('" + arg(op.id) + "'))\">" +
+        var briefLine = String(op.content || "").split("
+").map(function(l) { return l.trim(); }).filter(Boolean).slice(0, 1).join(" ");
+        var isPicked = validSahityaIds.indexOf(op.id) !== -1;
+        return "<div style="flex-shrink:0; width:210px; background:var(--bg-elevated); border:1.5px solid var(--border); border-radius:16px; padding:10px; box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column; justify-content:space-between;" onclick="openReader(dec('" + arg(op.id) + "'))">" +
           "<div>" +
-            (imgSrc ? ("<img src=\"" + imgSrc + "\" alt=\"" + esc(op.title) + "\" style=\"width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:12px; border:1px solid var(--gold); margin-bottom:8px; display:block;\" />") : "") +
-            "<div style=\"font-family:'Yatra One',serif; font-size:15px; color:var(--text); line-height:1.25; margin-bottom:3px;\">" + esc(op.title) + "</div>" +
-            "<div style=\"font-size:11.5px; color:var(--primary); font-weight:700; margin-bottom:4px;\">✒️ " + esc(op.poet) + "</div>" +
-            "<div style=\"font-family:'Noto Serif Devanagari',serif; font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;\">" + esc(briefLine) + "</div>" +
+            (imgSrc ? ("<img src="" + imgSrc + "" alt="" + esc(op.title) + "" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:12px; border:1px solid var(--gold); margin-bottom:8px; display:block;" />") : "") +
+            "<div style="font-family:'Yatra One',serif; font-size:15px; color:var(--text); line-height:1.25; margin-bottom:3px;">" + esc(op.title) + "</div>" +
+            "<div style="font-size:11.5px; color:var(--primary); font-weight:700; margin-bottom:4px;">✒️ " + esc(op.poet) + "</div>" +
+            "<div style="font-family:'Noto Serif Devanagari',serif; font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">" + esc(briefLine) + "</div>" +
           "</div>" +
           (state.adminUnlocked
-            ? ("<div style=\"margin-top:8px;\"><button type=\"button\" class=\"" + (isPicked ? "sm-btn del" : "btn-approve") + "\" style=\"width:100%; font-size:11px; padding:5px 8px;\" onclick=\"event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(op.id) + "'))\">" + (isPicked ? "✓ चयनित (हटाएँ)" : "+ चौपाल साहित्य में जोड़ें") + "</button></div>")
+            ? ("<div style="margin-top:8px;"><button type="button" class="" + (isPicked ? "sm-btn del" : "btn-approve") + "" style="width:100%; font-size:11px; padding:5px 8px;" onclick="event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(op.id) + "'))">" + (isPicked ? "✓ चयनित (हटाएँ)" : "+ चौपाल साहित्य में जोड़ें") + "</button></div>")
             : "") +
         "</div>";
       }).join("") +
