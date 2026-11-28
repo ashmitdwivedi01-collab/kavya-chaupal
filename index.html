@@ -15379,18 +15379,45 @@ window.addEventListener("beforeunload", function() {
 
   window.renderStudioPane = function() {
     var box = document.getElementById("manch-studio");
-    if (!box) return;
-    var st = window.chaupalStudioState;
+    if (!box) {
+      var tm = document.getElementById("tab-manch");
+      if (!tm) return;
+      box = document.createElement("div");
+      box.id = "manch-studio";
+      box.className = "manch-pane";
+      tm.appendChild(box);
+    }
+    var st = window.chaupalStudioState || {
+      subMode: "live",
+      isLiveOnApp: false,
+      liveTitle: "",
+      livePlatform: "YouTube Live",
+      liveStreamUrl: "",
+      liveStreamKey: "",
+      liveDurationSec: 0,
+      savedLives: [],
+      customVideos: [],
+      reels: []
+    };
+    window.chaupalStudioState = st;
     var mode = st.subMode || "live";
-    var e = (typeof esc === "function") ? esc : function(s) { return String(s || ""); };
+    var e = function(s) {
+      return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    };
+    var encArg = function(s) {
+      return encodeURIComponent(String(s || "")).replace(/'/g, "%27");
+    };
+
+    var backBarHtml =
+      "<div style=\"margin-bottom:10px;\"><button type=\"button\" class=\"back-bar\" style=\"margin-bottom:0;\" onclick=\"if(typeof window.restoreManchGridAndTabs==='function'){window.restoreManchGridAndTabs();} if(typeof setManchSub==='function'){setManchSub('events');}\">← मंच के विकल्प (कार्यक्रम / वीडियो / प्रतियोगिता)</button></div>";
 
     var navHtml =
-      "<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">" +
-        "<button type="button" class="social-subbtn " + (mode === "live" ? "active" : "") + "" onclick="setChaupalStudioMode('live')">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
-        "<button type="button" class="social-subbtn " + (mode === "conf_live" ? "active" : "") + "" onclick="setChaupalStudioMode('conf_live')">📞 कॉन्फ्रेंस कॉल लाइव</button>" +
-        "<button type="button" class="social-subbtn " + (mode === "video" ? "active" : "") + "" onclick="setChaupalStudioMode('video')">🎬 वीडियो डालें</button>" +
-        "<button type="button" class="social-subbtn " + (mode === "reel" ? "active" : "") + "" onclick="setChaupalStudioMode('reel')">✨ रील बनाएँ</button>" +
-        "<button type="button" class="social-subbtn " + (mode === "archive" ? "active" : "") + "" onclick="setChaupalStudioMode('archive')">💾 लाइव रिकॉर्डिंग व डिलीट (" + (st.savedLives ? st.savedLives.length : 0) + ")</button>" +
+      "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;\">" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "live" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('live')\">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "conf_live" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('conf_live')\">📞 कॉन्फ्रेंस कॉल लाइव</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "video" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('video')\">🎬 वीडियो डालें</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "reel" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('reel')\">✨ रील बनाएँ</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "archive" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('archive')\">💾 लाइव रिकॉर्डिंग व डिलीट (" + (st.savedLives ? st.savedLives.length : 0) + ")</button>" +
       "</div>";
 
     var bodyHtml = "";
@@ -15399,109 +15426,96 @@ window.addEventListener("beforeunload", function() {
       var isConf = (mode === "conf_live");
       var hasActiveCall = (typeof chaupalSocialState !== "undefined" && !!chaupalSocialState.activeCallSession);
       bodyHtml =
-        "<div class="form-box" style="border:1.5px solid var(--gold);">" +
-          "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;">" +
-            "<h3 class="section-title" style="margin:0;">" + (isConf ? "📞 कॉन्फ्रेंस कॉल को सीधे लाइव करें" : "🔴 चौपाल स्टूडियो — उच्च गुणवत्ता लाइव प्रसारण") + "</h3>" +
-            "<span style="font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--text-muted)") + ";">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी" : "● स्टूडियो तैयार") + "</span>" +
+        "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
+          "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
+            "<h3 class=\"section-title\" style=\"margin:0;\">" + (isConf ? "📞 कॉन्फ्रेंस कॉल को सीधे लाइव करें" : "🔴 चौपाल स्टूडियो — उच्च गुणवत्ता लाइव प्रसारण") + "</h3>" +
+            "<span style=\"font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--text-muted)") + ";\">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी" : "● स्टूडियो तैयार") + "</span>" +
           "</div>" +
-          (isConf ? ("<div style="margin-bottom:10px; padding:9px 12px; border-radius:12px; background:var(--gold-soft); border:1px solid var(--border); font-size:12.5px;">" +
+          (isConf ? ("<div style=\"margin-bottom:10px; padding:9px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border); font-size:12.5px;\">" +
             (hasActiveCall
-              ? ("✓ सक्रिय कॉन्फ्रेंस कॉल जुड़ी हुई है: <strong>" + e(chaupalSocialState.activeCallSession.target || "काव्य चौपाल कॉल") + "</strong>")
-              : "💡 कोई कॉन्फ्रेंस कॉल सक्रिय नहीं है — आप यहाँ से सीधे स्टूडियो लाइव शुरू कर सकते हैं या ‘चौपाल सोशल > कॉल’ से कॉल शुरू कर सकते हैं।") +
+              ? ("🟢 सक्रिय कॉन्फ्रेंस कॉल मिल गई है: <strong>" + e(chaupalSocialState.activeCallSession.target) + "</strong> — यह कॉल सीधे लाइव स्टूडियो में जुड़ जाएगी।")
+              : "⚠️ अभी कोई सक्रिय कॉन्फ्रेंस कॉल नहीं चल रही है। पहले ‘चौपाल सोशल > कॉल’ से कॉल शुरू करें, या यहाँ से भी लाइव शुरू किया जा सकता है।") +
           "</div>") : "") +
-          "<div class="two-fields">" +
-            "<div class="field"><label>लाइव शीर्षक</label><input id="studio-live-title-in" type="text" value="" + e(st.liveTitle) + "" /></div>" +
-            "<div class="field"><label>प्रसारण प्लेटफ़ॉर्म</label><select id="studio-live-plat-sel">" +
-              "<option value="App + Facebook + YouTube" " + (st.platform === "App + Facebook + YouTube" ? "selected" : "") + ">🌐 App + Facebook + YouTube</option>" +
-              "<option value="केवल काव्य चौपाल ऐप" " + (st.platform === "केवल काव्य चौपाल ऐप" ? "selected" : "") + ">🪔 केवल काव्य चौपाल ऐप</option>" +
-              "<option value="Facebook Live" " + (st.platform === "Facebook Live" ? "selected" : "") + ">📘 Facebook Live</option>" +
-              "<option value="YouTube Live" " + (st.platform === "YouTube Live" ? "selected" : "") + ">▶️ YouTube Live</option>" +
+          "<div class=\"field\"><label>लाइव प्रसारण शीर्षक</label><input id=\"studio-live-title\" value=\"" + e(st.liveTitle || "") + "\" placeholder=\"जैसे: काव्य चौपाल — विशेष सजीव काव्य गोष्ठी\" /></div>" +
+          "<div class=\"two-fields\">" +
+            "<div class=\"field\"><label>लाइव प्लेटफ़ॉर्म</label><select id=\"studio-live-platform\">" +
+              "<option value=\"YouTube Live\" " + ((st.livePlatform === "YouTube Live") ? "selected" : "") + ">YouTube Live</option>" +
+              "<option value=\"Facebook Live\" " + ((st.livePlatform === "Facebook Live") ? "selected" : "") + ">Facebook Live</option>" +
+              "<option value=\"Custom RTMP\" " + ((st.livePlatform === "Custom RTMP") ? "selected" : "") + ">Custom RTMP</option>" +
+              "<option value=\"काव्य चौपाल ऐप लाइव\" " + ((st.livePlatform === "काव्य चौपाल ऐप लाइव") ? "selected" : "") + ">काव्य चौपाल ऐप लाइव</option>" +
             "</select></div>" +
+            "<div class=\"field\"><label>Facebook / YouTube / RTMP लिंक (वैकल्पिक)</label><input id=\"studio-live-url\" value=\"" + e(st.liveStreamUrl || "") + "\" placeholder=\"https://... या rtmp://...\" /></div>" +
           "</div>" +
-          "<div class="two-fields">" +
-            "<div class="field"><label>📘 फ़ेसबुक खाता / पेज लिंक</label><input id="studio-fb-acc-in" type="text" value="" + e(st.fbAccount) + "" placeholder="https://www.facebook.com/KavyaChaupal" /></div>" +
-            "<div class="field"><label>▶️ यूट्यूब चैनल लिंक</label><input id="studio-yt-acc-in" type="text" value="" + e(st.ytAccount) + "" placeholder="https://youtube.com/@kavyachaupal" /></div>" +
-          "</div>" +
-          "<div class="two-fields">" +
-            "<div class="field"><label>🔑 Facebook Stream Key</label><input id="studio-fb-key-in" type="password" value="" + e(st.fbStreamKey) + "" placeholder="FB Stream Key (वैकल्पिक)" /></div>" +
-            "<div class="field"><label>🔑 YouTube Stream Key</label><input id="studio-yt-key-in" type="password" value="" + e(st.ytStreamKey) + "" placeholder="YT Stream Key (वैकल्पिक)" /></div>" +
-          "</div>" +
-          "<div class="field"><label>📡 RTMP रिले सर्वर URL (वैकल्पिक)</label><input id="studio-rtmp-relay-in" type="text" value="" + e(st.rtmpRelayUrl) + "" placeholder="wss://... (यदि रिले सर्वर उपलब्ध हो)" /></div>" +
-          "<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">" +
-            (!st.isLiveOnApp
-              ? ("<button type="button" class="action-btn gold" onclick="startChaupalStudioLive(" + (isConf ? "true" : "false") + ")">🔴 अभी लाइव शुरू करें</button>")
-              : ("<button type="button" class="action-btn primary" onclick="stopAndSaveChaupalStudioLive(true)">💾 लाइव सहेजें व रोकें</button>" +
-                 "<button type="button" class="action-btn danger" onclick="stopAndSaveChaupalStudioLive(false)">⏹ बिना सहेजे रोकें</button>")) +
-            (typeof window.openCleanBroadcastStagePopup === "function"
-              ? "<button type="button" class="action-btn" onclick="openCleanBroadcastStagePopup()">📺 16:9 क्लीन स्टेज विंडो</button>"
-              : "") +
-          "</div>" +
+          "<div class=\"field\"><label>Stream Key (यदि FB/YT/RTMP पर प्रसारण करना हो)</label><input id=\"studio-live-key\" type=\"password\" value=\"" + e(st.liveStreamKey || "") + "\" placeholder=\"Stream Key दर्ज करें\" /></div>" +
           (st.isLiveOnApp
-            ? "<div style="margin-top:12px; border-radius:14px; overflow:hidden; border:2px solid #EF4444; background:#120608;"><video id="studio-live-preview-video" autoplay playsinline muted style="width:100%; max-height:280px; display:block; object-fit:contain;"></video></div>"
-            : "") +
+            ? ("<div style=\"margin-bottom:12px;\"><video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"width:100%; max-height:240px; border-radius:14px; background:#000; border:1.5px solid var(--gold);\"></video><div style=\"font-size:12px; color:#16A34A; font-weight:700; margin-top:6px;\">⏱️ लाइव समय: <span id=\"studio-live-timer\">" + (st.liveDurationSec || 0) + "</span> सेकंड</div></div>" +
+               "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+                 "<button type=\"button\" class=\"action-btn gold\" onclick=\"stopChaupalStudioLive(true)\">💾 लाइव सहेजें व रोकें</button>" +
+                 "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalStudioLive(false)\">⏹️ बिना सहेजे लाइव रोकें</button>" +
+               "</div>")
+            : ("<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+                 "<button type=\"button\" class=\"btn-approve\" onclick=\"startChaupalStudioLive(" + (isConf ? "true" : "false") + ")\">" + (isConf ? "📞 कॉन्फ्रेंस कॉल लाइव शुरू करें" : "🔴 ऐप पर लाइव शुरू करें") + "</button>" +
+               "</div>")) +
         "</div>";
     } else if (mode === "video") {
       bodyHtml =
-        "<div class="form-box" style="border:1.5px solid var(--gold);">" +
-          "<h3 class="section-title" style="margin:0 0 10px;">🎬 चौपाल स्टूडियो — नया वीडियो डालें</h3>" +
-          "<div class="two-fields">" +
-            "<div class="field"><label>वीडियो शीर्षक</label><input id="studio-vid-title" type="text" placeholder="जैसे: सावन विशेष काव्य पाठ" /></div>" +
-            "<div class="field"><label>श्रेणी</label><select id="studio-vid-cat"><option>काव्य पाठ</option><option>गोष्ठी / सम्मेलन</option><option>छंद कार्यशाला</option><option>विशेष संवाद</option></select></div>" +
+        "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
+          "<h3 class=\"section-title\" style=\"margin:0 0 10px;\">🎬 चौपाल स्टूडियो — नया वीडियो डालें</h3>" +
+          "<div class=\"field\"><label>वीडियो शीर्षक *</label><input id=\"studio-vid-title\" placeholder=\"वीडियो का शीर्षक लिखें\" /></div>" +
+          "<div class=\"two-fields\">" +
+            "<div class=\"field\"><label>श्रेणी</label><select id=\"studio-vid-cat\"><option value=\"सजीव प्रसारण\">सजीव प्रसारण</option><option value=\"काव्य पाठ\">काव्य पाठ</option><option value=\"कार्यशाला\">कार्यशाला</option><option value=\"रील / शॉर्ट्स\">रील / शॉर्ट्स</option></select></div>" +
+            "<div class=\"field\"><label>YouTube / MP4 लिंक *</label><input id=\"studio-vid-url\" placeholder=\"https://youtu.be/... या .mp4 लिंक\" /></div>" +
           "</div>" +
-          "<div class="field"><label>YouTube / वीडियो लिंक</label><input id="studio-vid-url" type="text" placeholder="https://youtube.com/watch?v=... या चैनल लिंक" /></div>" +
-          "<div class="field"><label>विवरण</label><textarea id="studio-vid-desc" placeholder="वीडियो के बारे में संक्षिप्त जानकारी..."></textarea></div>" +
-          "<button type="button" class="action-btn gold" onclick="publishStudioVideo()">✅ वीडियो प्रकाशित करें</button>" +
+          "<div class=\"field\"><label>विवरण</label><textarea id=\"studio-vid-desc\" placeholder=\"वीडियो के बारे में संक्षिप्त विवरण...\"></textarea></div>" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"publishStudioVideo()\">📤 वीडियो प्रकाशित करें</button>" +
         "</div>" +
-        "<div class="section-head"><h3 class="section-title">📂 स्टूडियो में डाले गए वीडियो (" + (st.uploadedVideos ? st.uploadedVideos.length : 0) + ")</h3></div>" +
-        ((st.uploadedVideos && st.uploadedVideos.length)
-          ? st.uploadedVideos.map(function(v) {
-              return "<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">🎬 " + e(v.title) + "</div><div class="admin-item-sub">" + e(v.category) + " • " + e(v.description || "") + "</div></div><div class="admin-item-btns">" +
-                (v.url ? ("<a class="sm-btn" href="" + e(v.url) + "" target="_blank" rel="noopener noreferrer">↗ देखें</a>") : "") +
-                "<button type="button" class="sm-btn del" onclick="deleteStudioVideo(dec('" + encodeURIComponent(v.id) + "'))">🗑️ डिलीट</button>" +
-              "</div></div>";
+        "<div class=\"section-head\"><h3 class=\"section-title\">🎞️ स्टूडियो व मंच के वीडियो</h3><span class=\"section-hint\">" + ((st.customVideos ? st.customVideos.length : 0) + (typeof state !== "undefined" && state.videos ? state.videos.length : 0)) + "</span></div>" +
+        (((st.customVideos && st.customVideos.length)
+          ? st.customVideos.map(function(v) {
+              return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">🎬 " + e(v.title) + "</div><div class=\"admin-item-sub\">" + e(v.category || "") + " • " + e(v.url || "") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"sm-btn del\" onclick=\"deleteStudioVideo(decodeURIComponent('" + encArg(v.id) + "'))\">🗑️ डिलीट</button></div></div>";
             }).join("")
-          : "<div class="empty-box">अभी कोई नया वीडियो नहीं डाला गया है।</div>");
+          : "<div class=\"empty-box\">स्टूडियो से डाला गया अतिरिक्त वीडियो यहाँ दिखेगा।</div>"));
     } else if (mode === "reel") {
       bodyHtml =
-        "<div class="form-box" style="border:1.5px solid var(--gold);">" +
-          "<h3 class="section-title" style="margin:0 0 10px;">✨ चौपाल स्टूडियो — त्वरित रील बनाएँ</h3>" +
-          "<div class="two-fields">" +
-            "<div class="field"><label>रील अवधि</label><select id="studio-reel-dur"><option value="15s">15 सेकंड रील</option><option value="30s" selected>30 सेकंड रील</option><option value="60s">60 सेकंड रील</option></select></div>" +
-            "<div class="field"><label>शाही पृष्ठभूमि</label><select id="studio-reel-bg"><option value="royal_crimson">शाही मरून व स्वर्ण</option><option value="saffron_gold">केसरिया ओज</option><option value="midnight_mehfil">रात्रि महफ़िल</option><option value="emerald_garden">प्रकृति हरितिमा</option></select></div>" +
+        "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
+          "<h3 class=\"section-title\" style=\"margin:0 0 10px;\">✨ चौपाल स्टूडियो — काव्य रील बनाएँ</h3>" +
+          "<div class=\"two-fields\">" +
+            "<div class=\"field\"><label>रील अवधि</label><select id=\"studio-reel-dur\"><option value=\"15s\">15 सेकंड रील</option><option value=\"30s\" selected>30 सेकंड रील</option><option value=\"60s\">60 सेकंड रील</option></select></div>" +
+            "<div class=\"field\"><label>रंग / थीम</label><select id=\"studio-reel-theme\"><option value=\"royal\">शाही मरून व स्वर्ण</option><option value=\"night\">रात्रि महफ़िल</option><option value=\"saffron\">केसरिया उत्सव</option></select></div>" +
           "</div>" +
-          "<div class="field"><label>रील की काव्य पंक्तियाँ / संदेश</label><textarea id="studio-reel-caption" placeholder="अपनी रील की 2 से 5 सुंदर पंक्तियाँ लिखें..."></textarea></div>" +
-          "<button type="button" class="action-btn gold" onclick="createStudioReel()">✨ रील कार्ड तैयार करें</button>" +
+          "<div class=\"field\"><label>रील काव्य पंक्तियाँ / शीर्षक *</label><textarea id=\"studio-reel-cap\" placeholder=\"अपनी चुनिंदा काव्य पंक्तियाँ लिखें...\"></textarea></div>" +
+          "<button type=\"button\" class=\"action-btn gold\" onclick=\"createStudioReel()\">✨ रील कार्ड तैयार करें</button>" +
         "</div>" +
-        "<div class="cards-grid two-col">" +
-          ((st.reelsList && st.reelsList.length)
-            ? st.reelsList.map(function(r) {
-                return "<div class="poem-card" style="cursor:default;">" +
-                  (r.posterDataUrl ? ("<img src="" + r.posterDataUrl + "" alt="Reel" style="width:100%; border-radius:12px; border:1.5px solid var(--gold); margin-bottom:10px;" />") : "") +
-                  "<div class="poem-card-title">✨ रील • " + e(r.duration) + "</div>" +
-                  "<p class="font-literary" style="white-space:pre-line; margin:6px 0 10px;">" + e(r.caption) + "</p>" +
-                  "<div style="display:flex; gap:7px; flex-wrap:wrap;">" +
-                    (r.posterDataUrl ? ("<a class="sm-btn" href="" + r.posterDataUrl + "" download="Chaupal-Reel-" + r.id + ".jpg">⬇️ डाउनलोड</a>") : "") +
-                    "<button type="button" class="sm-btn del" onclick="deleteStudioReel(dec('" + encodeURIComponent(r.id) + "'))">🗑️ डिलीट</button>" +
+        "<div class=\"cards-grid two-col\">" +
+          ((st.reels && st.reels.length)
+            ? st.reels.map(function(r) {
+                return "<div class=\"form-box\" style=\"margin-bottom:0;\">" +
+                  (r.imageDataUrl ? ("<img src=\"" + r.imageDataUrl + "\" alt=\"रील\" style=\"width:100%; border-radius:12px; border:1.5px solid var(--gold); margin-bottom:8px;\" />") : "") +
+                  "<div style=\"font-size:12px; font-weight:700; color:var(--primary);\">✨ " + e(r.duration || "30s") + " • " + e(r.author || "") + "</div>" +
+                  "<div style=\"font-family:'Noto Serif Devanagari',serif; font-size:13.5px; white-space:pre-line; margin:6px 0 10px;\">" + e(r.caption || "") + "</div>" +
+                  "<div style=\"display:flex; gap:7px; flex-wrap:wrap;\">" +
+                    (r.imageDataUrl ? ("<a class=\"sm-btn\" href=\"" + r.imageDataUrl + "\" download=\"chaupal-reel-" + e(r.id) + ".jpg\">⬇️ डाउनलोड</a>") : "") +
+                    "<button type=\"button\" class=\"sm-btn del\" onclick=\"deleteStudioReel(decodeURIComponent('" + encArg(r.id) + "'))\">🗑️ डिलीट</button>" +
                   "</div>" +
                 "</div>";
               }).join("")
-            : "<div class="empty-box" style="grid-column:1/-1;">अभी कोई रील नहीं बनाई गई है।</div>") +
+            : "<div class=\"empty-box\" style=\"grid-column:1/-1;\">अभी कोई रील नहीं बनाई गई है।</div>") +
         "</div>";
     } else if (mode === "archive") {
       bodyHtml =
-        "<div class="section-head" style="margin-top:0;"><h3 class="section-title">💾 ऐप पर हुए सहेजे गए लाइव प्रसारण</h3><span class="section-hint">" + (st.savedLives ? st.savedLives.length : 0) + "</span></div>" +
+        "<div class=\"section-head\" style=\"margin-top:0;\"><h3 class=\"section-title\">💾 ऐप पर हुए सहेजे गए लाइव प्रसारण</h3><span class=\"section-hint\">" + (st.savedLives ? st.savedLives.length : 0) + "</span></div>" +
         ((st.savedLives && st.savedLives.length)
           ? st.savedLives.map(function(item) {
               var dtTxt = item.createdAt ? new Date(item.createdAt).toLocaleString("hi-IN") : "";
-              return "<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">🔴 " + e(item.title) + "</div><div class="admin-item-sub">प्लेटफ़ॉर्म: " + e(item.platform) + " • अवधि: " + (item.durationSec || 0) + "s • " + e(dtTxt) + "</div></div><div class="admin-item-btns">" +
-                (item.blobUrl ? ("<a class="sm-btn" href="" + e(item.blobUrl) + "" download="" + e(item.title) + ".webm">⬇️ डाउनलोड</a>") : "") +
-                "<button type="button" class="sm-btn del" onclick="deleteSavedLiveRecord(dec('" + encodeURIComponent(item.id) + "'))">🗑️ डिलीट</button>" +
+              return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">🔴 " + e(item.title) + "</div><div class=\"admin-item-sub\">प्लेटफ़ॉर्म: " + e(item.platform) + " • अवधि: " + (item.durationSec || 0) + "s • " + e(dtTxt) + "</div></div><div class=\"admin-item-btns\">" +
+                (item.blobUrl ? ("<a class=\"sm-btn\" href=\"" + e(item.blobUrl) + "\" download=\"" + e(item.title) + ".webm\">⬇️ डाउनलोड</a>") : "") +
+                "<button type=\"button\" class=\"sm-btn del\" onclick=\"deleteSavedLiveRecord(decodeURIComponent('" + encArg(item.id) + "'))\">🗑️ डिलीट</button>" +
               "</div></div>";
             }).join("")
-          : "<div class="empty-box">अभी कोई लाइव प्रसारण सहेजा नहीं गया है। लाइव रोकते समय ‘💾 लाइव सहेजें व रोकें’ चुनें।</div>");
+          : "<div class=\"empty-box\">अभी कोई लाइव प्रसारण सहेजा नहीं गया है। लाइव रोकते समय ‘💾 लाइव सहेजें व रोकें’ चुनें।</div>");
     }
 
-    box.innerHTML = navHtml + bodyHtml;
+    box.innerHTML = backBarHtml + navHtml + bodyHtml;
   };
 
   setTimeout(function() {
