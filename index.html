@@ -14850,7 +14850,7 @@ window.addEventListener("beforeunload", function() {
   if (!window.chaupalStudioState) {
     window.chaupalStudioState = {
       subMode: "live", // live | video | reel | conf_live | archive
-      liveTitle: "काव्य चौपाल — सजीव काव्य प्रसारण",
+      liveTitle: "",
       platform: "App + Facebook + YouTube",
       fbAccount: "https://www.facebook.com/KavyaChaupal",
       ytAccount: "https://youtube.com/@kavyachaupal",
@@ -15088,128 +15088,164 @@ window.addEventListener("beforeunload", function() {
 
   window.startChaupalStudioLive = function(includeConfCall) {
     var st = window.chaupalStudioState;
-    var titleEl = document.getElementById("studio-live-title-in");
-    var platEl = document.getElementById("studio-live-plat-sel");
-    var fbEl = document.getElementById("studio-fb-acc-in");
-    var ytEl = document.getElementById("studio-yt-acc-in");
-    var fbKeyEl = document.getElementById("studio-fb-key-in");
-    var ytKeyEl = document.getElementById("studio-yt-key-in");
-    var relayEl = document.getElementById("studio-rtmp-relay-in");
+    var titleEl = document.getElementById("studio-live-title") || document.getElementById("studio-live-title-in");
+    var platEl = document.getElementById("studio-live-platform") || document.getElementById("studio-live-plat-sel");
+    var urlEl = document.getElementById("studio-live-url");
+    var keyEl = document.getElementById("studio-live-key");
 
     if (titleEl && titleEl.value.trim()) st.liveTitle = titleEl.value.trim();
+    if (!st.liveTitle) st.liveTitle = "काव्य चौपाल — सजीव काव्य प्रसारण";
     if (platEl && platEl.value) st.platform = platEl.value;
-    if (fbEl) st.fbAccount = fbEl.value.trim();
-    if (ytEl) st.ytAccount = ytEl.value.trim();
-    if (fbKeyEl) st.fbStreamKey = fbKeyEl.value.trim();
-    if (ytKeyEl) st.ytStreamKey = ytKeyEl.value.trim();
-    if (relayEl) st.rtmpRelayUrl = relayEl.value.trim();
+    if (urlEl) st.liveStreamUrl = urlEl.value.trim();
+    if (keyEl) st.liveStreamKey = keyEl.value.trim();
 
-    if (includeConfCall) {
-      st.platform = "कॉन्फ्रेंस कॉल + " + (st.platform || "App + FB + YT");
+    if (includeConfCall && String(st.platform || "").indexOf("कॉन्फ्रेंस") === -1) {
+      st.platform = "कॉन्फ्रेंस कॉल + " + (st.platform || "काव्य चौपाल ऐप लाइव");
     }
 
-    // Also try acquiring local camera/mic if not yet active so host video/audio is ready
-    if (typeof acquireCallMediaStream === "function" && (typeof chaupalSocialState === "undefined" || !chaupalSocialState.localStream)) {
-      acquireCallMediaStream("video").then(function(ls) {
-        if (ls && typeof chaupalSocialState !== "undefined") {
-          chaupalSocialState.localStream = ls;
-          if (typeof attachMediaToDom === "function") attachMediaToDom();
-        }
-      }).catch(function() {});
-    }
+    st.isLiveOnApp = true;
+    st.liveStartedAt = Date.now();
+    st.liveDurationSec = 0;
+    st.liveChunks = [];
+    st.mediaStatusText = "कैमरा व माइक जोड़ा जा रहा है...";
 
     var stream = buildStudioLiveStream(!!includeConfCall);
     st.livePreviewStream = stream;
-    st.isLiveOnApp = true;
-    st.liveStartedAt = Date.now();
-    st.liveChunks = [];
 
-    try {
-      if (typeof MediaRecorder !== "undefined") {
-        var mime = "";
-        if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")) {
-          mime = "video/webm;codecs=vp9,opus";
-        } else if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
-          mime = "video/webm;codecs=vp8,opus";
+    // Request real camera & microphone so actual audio and video are captured
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true }).then(function(camStream) {
+        st.cameraStream = camStream;
+        var hasAudio = camStream.getAudioTracks().length > 0;
+        var hasVideo = camStream.getVideoTracks().length > 0;
+        st.mediaStatusText = (hasVideo ? "📹 कैमरा चालू" : "🖼️ कैनवास दृश्य") + " • " + (hasAudio ? "🎤 माइक ऑडियो चालू" : "🔇 माइक नहीं मिला");
+
+        // Merge real audio track into live stream if available
+        if (hasAudio && stream && stream.addTrack) {
+          camStream.getAudioTracks().forEach(function(at) {
+            try { stream.addTrack(at); } catch (e) {}
+          });
         }
-        var rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
-        rec.ondataavailable = function(e) {
-          if (e && e.data && e.data.size > 0) st.liveChunks.push(e.data);
-        };
-        rec.start(1000);
-        st.liveRecorder = rec;
-      }
-    } catch (e) {
-      st.liveRecorder = null;
+
+        // Attach real camera stream directly to studio preview video element
+        var pv = document.getElementById("studio-live-preview-video");
+        if (pv) {
+          pv.srcObject = camStream;
+          pv.muted = true;
+          pv.play().catch(function() {});
+        }
+
+        // Start MediaRecorder with real audio+video stream
+        try {
+          if (typeof MediaRecorder !== "undefined" && (!st.liveRecorder || st.liveRecorder.state === "inactive")) {
+            var recStream = new MediaStream();
+            if (hasVideo) recStream.addTrack(camStream.getVideoTracks()[0]);
+            else if (stream.getVideoTracks()[0]) recStream.addTrack(stream.getVideoTracks()[0]);
+            if (hasAudio) recStream.addTrack(camStream.getAudioTracks()[0]);
+            st.liveChunks = [];
+            var rec = new MediaRecorder(recStream);
+            rec.ondataavailable = function(e) {
+              if (e && e.data && e.data.size > 0) st.liveChunks.push(e.data);
+            };
+            rec.start(1000);
+            st.liveRecorder = rec;
+          }
+        } catch (eRec) {}
+
+        var stBadge = document.getElementById("studio-live-media-status");
+        if (stBadge) stBadge.textContent = st.mediaStatusText;
+      }).catch(function(err) {
+        st.mediaStatusText = "🖼️ स्टूडियो कैनवास लाइव (कैमरा/माइक अनुमति नहीं मिली या उपलब्ध नहीं है)";
+        var stBadge = document.getElementById("studio-live-media-status");
+        if (stBadge) stBadge.textContent = st.mediaStatusText;
+      });
+    } else {
+      st.mediaStatusText = "🖼️ स्टूडियो कैनवास लाइव";
     }
 
-    // If RTMP relay URL is configured, push stream to relay
-    if (st.rtmpRelayUrl && (st.rtmpRelayUrl.indexOf("ws://") === 0 || st.rtmpRelayUrl.indexOf("wss://") === 0) && typeof window.startWebSocketRtmpStreamPush === "function") {
-      try { window.startWebSocketRtmpStreamPush(st.rtmpRelayUrl, st.fbStreamKey, st.ytStreamKey); } catch (e) {}
+    if (window._kcStudioClockTimer) {
+      clearInterval(window._kcStudioClockTimer);
+      window._kcStudioClockTimer = null;
     }
-
-    // Sync live state to Firestore active call if active
-    try {
-      if (typeof db !== "undefined" && db && typeof ROOT_COL !== "undefined" && typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallDocId) {
-        db.collection(ROOT_COL).doc("active_calls").collection("items").doc(chaupalSocialState.activeCallDocId).set({
-          liveBroadcastActive: true,
-          livePlatform: st.platform,
-          liveBroadcastTitle: st.liveTitle,
-          liveUpdatedAt: Date.now()
-        }, { merge: true }).catch(function() {});
-      }
-    } catch (e) {}
+    window._kcStudioClockTimer = setInterval(function() {
+      if (!st.isLiveOnApp || !st.liveStartedAt) return;
+      var sec = Math.max(0, Math.floor((Date.now() - st.liveStartedAt) / 1000));
+      st.liveDurationSec = sec;
+      var tEl = document.getElementById("studio-live-timer");
+      if (tEl) tEl.textContent = String(sec);
+    }, 1000);
 
     saveStudioStorage();
     window.renderStudioPane();
 
     setTimeout(function() {
       var pv = document.getElementById("studio-live-preview-video");
-      if (pv && st.livePreviewStream) {
-        pv.srcObject = st.livePreviewStream;
-        pv.play().catch(function() {});
+      if (pv) {
+        if (st.cameraStream) {
+          pv.srcObject = st.cameraStream;
+          pv.muted = true;
+          pv.play().catch(function() {});
+        } else if (st.livePreviewStream) {
+          pv.srcObject = st.livePreviewStream;
+          pv.muted = true;
+          pv.play().catch(function() {});
+        }
       }
-    }, 80);
+    }, 120);
 
     if (typeof showToast === "function") {
-      showToast("🔴 चौपाल स्टूडियो पर लाइव प्रसारण शुरू हो गया (" + st.platform + ")");
+      showToast("🔴 चौपाल स्टूडियो पर लाइव शुरू (" + st.platform + ")");
     }
   };
 
   window.testChaupalStudioHardware = function() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      if (typeof showToast === "function") showToast("⚠️ इस ब्राउज़र में मीडिया डिवाइस API उपलब्ध नहीं है");
+      if (typeof showToast === "function") showToast("⚠️ इस ब्राउज़र में कैमरा/माइक API उपलब्ध नहीं है");
       return;
     }
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(stream) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: true }).then(function(stream) {
+      var st = window.chaupalStudioState;
+      st.cameraStream = stream;
+      st.mediaStatusText = "📹 कैमरा चालू • 🎤 माइक ऑडियो चालू";
       var pv = document.getElementById("studio-live-preview-video");
       if (pv) {
         pv.srcObject = stream;
+        pv.muted = true;
         pv.style.display = "block";
         pv.play().catch(function() {});
       }
-      if (typeof showToast === "function") showToast("✅ कैमरा व माइक बिल्कुल सही कार्य कर रहे हैं!");
+      var stBadge = document.getElementById("studio-live-media-status");
+      if (stBadge) stBadge.textContent = st.mediaStatusText;
+      if (typeof showToast === "function") showToast("✅ कैमरा व माइक चालू हो गए हैं!");
     }).catch(function() {
-      if (typeof showToast === "function") showToast("💡 कैमरा/माइक अनुमति दें या कैनवास लाइव मोड का उपयोग करें");
+      if (typeof showToast === "function") showToast("⚠️ कैमरा/माइक अनुमति अस्वीकृत है — ब्राउज़र सेटिंग से अनुमति दें");
     });
   };
 
-  window.stopAndSaveChaupalStudioLive = function(shouldSave) {
+  window.stopChaupalStudioLive = function(shouldSave) {
     var st = window.chaupalStudioState;
-    var elapsedSec = st.liveStartedAt ? Math.max(1, Math.round((Date.now() - st.liveStartedAt) / 1000)) : 0;
+    if (window._kcStudioClockTimer) {
+      clearInterval(window._kcStudioClockTimer);
+      window._kcStudioClockTimer = null;
+    }
+    var elapsedSec = st.liveStartedAt ? Math.max(1, Math.round((Date.now() - st.liveStartedAt) / 1000)) : (st.liveDurationSec || 1);
 
     var finalize = function() {
       st.isLiveOnApp = false;
+      st.liveStartedAt = 0;
       if (window._kcStudioDrawTimer) {
         clearInterval(window._kcStudioDrawTimer);
         window._kcStudioDrawTimer = null;
+      }
+      if (st.cameraStream && st.cameraStream.getTracks) {
+        try { st.cameraStream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
+        st.cameraStream = null;
       }
       if (shouldSave) {
         var blobUrl = "";
         if (st.liveChunks && st.liveChunks.length) {
           var blob = new Blob(st.liveChunks, { type: "video/webm" });
           blobUrl = URL.createObjectURL(blob);
-          // Also trigger instant local download backup so user never loses high-res stream
           try {
             var a = document.createElement("a");
             a.href = blobUrl;
@@ -15222,7 +15258,7 @@ window.addEventListener("beforeunload", function() {
         var recItem = {
           id: "live_" + Date.now() + "_" + Math.floor(Math.random() * 999),
           title: st.liveTitle || "काव्य चौपाल — सजीव प्रसारण",
-          platform: st.platform || "App + Facebook + YouTube",
+          platform: st.platform || "काव्य चौपाल ऐप लाइव",
           durationSec: elapsedSec,
           createdAt: Date.now(),
           blobUrl: blobUrl
@@ -15230,10 +15266,10 @@ window.addEventListener("beforeunload", function() {
         st.savedLives.unshift(recItem);
         saveStudioStorage();
         if (typeof showToast === "function") {
-          showToast("💾 लाइव सत्र सहेजा गया व डाउनलोड शुरू हुआ!");
+          showToast("💾 लाइव सत्र (" + elapsedSec + "s) सहेजा गया!");
         }
       } else if (typeof showToast === "function") {
-        showToast("⏹ लाइव प्रसारण बंद किया गया");
+        showToast("⏹️ लाइव प्रसारण बंद किया गया");
       }
       st.liveRecorder = null;
       st.liveChunks = [];
@@ -15248,6 +15284,8 @@ window.addEventListener("beforeunload", function() {
       finalize();
     }
   };
+
+  window.stopAndSaveChaupalStudioLive = window.stopChaupalStudioLive;
 
   window.deleteSavedLiveRecord = function(liveId) {
     var st = window.chaupalStudioState;
@@ -15377,6 +15415,50 @@ window.addEventListener("beforeunload", function() {
     if (typeof showToast === "function") showToast("🗑️ रील हटाई गई");
   };
 
+  window.toggleStudioMicMute = function() {
+    var st = window.chaupalStudioState || {};
+    var nextMuted = !st.isMicMuted;
+    st.isMicMuted = nextMuted;
+    if (st.cameraStream && st.cameraStream.getAudioTracks) {
+      st.cameraStream.getAudioTracks().forEach(function(t) { t.enabled = !nextMuted; });
+    }
+    if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.localStream && chaupalSocialState.localStream.getAudioTracks) {
+      chaupalSocialState.localStream.getAudioTracks().forEach(function(t) { t.enabled = !nextMuted; });
+    }
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "🔇 फ़ोन माइक म्यूट किया गया" : "🎤 फ़ोन माइक चालू किया गया");
+    }
+    window.renderStudioPane();
+  };
+
+  window.switchStudioCameraFacing = function() {
+    var st = window.chaupalStudioState || {};
+    st.facingMode = (st.facingMode === "environment") ? "user" : "environment";
+    if (st.cameraStream && st.cameraStream.getTracks) {
+      try { st.cameraStream.getTracks().forEach(function(t) { t.stop(); }); } catch (e) {}
+      st.cameraStream = null;
+    }
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: st.facingMode }, audio: true }).then(function(camStream) {
+        st.cameraStream = camStream;
+        st.mediaStatusText = "📱 फ़ोन कैमरा (" + (st.facingMode === "environment" ? "बैक" : "फ्रंट") + ") व माइक चालू";
+        var pv = document.getElementById("studio-live-preview-video");
+        if (pv) {
+          pv.srcObject = camStream;
+          pv.muted = true;
+          pv.style.display = "block";
+          pv.play().catch(function() {});
+        }
+        if (typeof showToast === "function") {
+          showToast(st.facingMode === "environment" ? "📷 बैक कैमरा चालू" : "🤳 फ्रंट कैमरा चालू");
+        }
+        window.renderStudioPane();
+      }).catch(function() {
+        if (typeof showToast === "function") showToast("⚠️ कैमरा बदला नहीं जा सका");
+      });
+    }
+  };
+
   window.renderStudioPane = function() {
     var box = document.getElementById("manch-studio");
     if (!box) {
@@ -15390,11 +15472,14 @@ window.addEventListener("beforeunload", function() {
     var st = window.chaupalStudioState || {
       subMode: "live",
       isLiveOnApp: false,
+      isMicMuted: false,
+      facingMode: "user",
       liveTitle: "",
-      livePlatform: "YouTube Live",
+      livePlatform: "काव्य चौपाल ऐप लाइव",
       liveStreamUrl: "",
       liveStreamKey: "",
       liveDurationSec: 0,
+      mediaStatusText: "फ़ोन के कैमरा व माइक का उपयोग होगा",
       savedLives: [],
       customVideos: [],
       reels: []
@@ -15425,36 +15510,45 @@ window.addEventListener("beforeunload", function() {
     if (mode === "live" || mode === "conf_live") {
       var isConf = (mode === "conf_live");
       var hasActiveCall = (typeof chaupalSocialState !== "undefined" && !!chaupalSocialState.activeCallSession);
+      var callTargetName = hasActiveCall ? (chaupalSocialState.activeCallSession.target || "सक्रिय सदस्य") : "";
       bodyHtml =
         "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
           "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
-            "<h3 class=\"section-title\" style=\"margin:0;\">" + (isConf ? "📞 कॉन्फ्रेंस कॉल को सीधे लाइव करें" : "🔴 चौपाल स्टूडियो — उच्च गुणवत्ता लाइव प्रसारण") + "</h3>" +
-            "<span style=\"font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--text-muted)") + ";\">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी" : "● स्टूडियो तैयार") + "</span>" +
+            "<h3 class=\"section-title\" style=\"margin:0;\">" + (isConf ? "📞 कॉन्फ्रेंस कॉल — ऐप पर लाइव" : "🔴 चौपाल स्टूडियो — फ़ोन ऑडियो/वीडियो लाइव") + "</h3>" +
+            "<span style=\"font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--text-muted)") + ";\">" + (st.isLiveOnApp ? "🔴 LIVE जारी" : "● तैयार") + "</span>" +
           "</div>" +
-          (isConf ? ("<div style=\"margin-bottom:10px; padding:9px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border); font-size:12.5px;\">" +
-            (hasActiveCall
-              ? ("🟢 सक्रिय कॉन्फ्रेंस कॉल मिल गई है: <strong>" + e(chaupalSocialState.activeCallSession.target) + "</strong> — यह कॉल सीधे लाइव स्टूडियो में जुड़ जाएगी।")
-              : "⚠️ अभी कोई सक्रिय कॉन्फ्रेंस कॉल नहीं चल रही है। पहले ‘चौपाल सोशल > कॉल’ से कॉल शुरू करें, या यहाँ से भी लाइव शुरू किया जा सकता है।") +
-          "</div>") : "") +
-          "<div class=\"field\"><label>लाइव प्रसारण शीर्षक</label><input id=\"studio-live-title\" value=\"" + e(st.liveTitle || "") + "\" placeholder=\"जैसे: काव्य चौपाल — विशेष सजीव काव्य गोष्ठी\" /></div>" +
+          "<div style=\"margin-bottom:12px; padding:10px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border); font-size:12.5px; line-height:1.55;\">" +
+            "<div>📱 <strong>ऑडियो / वीडियो:</strong> <span id=\"studio-live-media-status\" style=\"font-weight:700; color:var(--primary);\">" + e(st.mediaStatusText || "फ़ोन के कैमरा व माइक का उपयोग होगा") + "</span></div>" +
+            "<div style=\"margin-top:4px;\">📞 <strong>कॉल स्थिति:</strong> " + (hasActiveCall
+              ? ("<span style=\"color:#15803D; font-weight:700;\">सक्रिय कॉल — " + e(callTargetName) + "</span>")
+              : "कोई बाहरी कॉल नहीं — आपके अपने फ़ोन का कैमरा व माइक सीधे ऐप पर चल रहा है।") + "</div>" +
+          "</div>" +
+          "<div class=\"field\"><label>लाइव प्रसारण शीर्षक</label><input id=\"studio-live-title\" value=\"" + e(st.liveTitle || "") + "\" placeholder=\"लाइव कार्यक्रम का शीर्षक लिखें...\" /></div>" +
           "<div class=\"two-fields\">" +
             "<div class=\"field\"><label>लाइव प्लेटफ़ॉर्म</label><select id=\"studio-live-platform\">" +
+              "<option value=\"काव्य चौपाल ऐप लाइव\" " + ((st.livePlatform === "काव्य चौपाल ऐप लाइव") ? "selected" : "") + ">काव्य चौपाल ऐप लाइव</option>" +
               "<option value=\"YouTube Live\" " + ((st.livePlatform === "YouTube Live") ? "selected" : "") + ">YouTube Live</option>" +
               "<option value=\"Facebook Live\" " + ((st.livePlatform === "Facebook Live") ? "selected" : "") + ">Facebook Live</option>" +
               "<option value=\"Custom RTMP\" " + ((st.livePlatform === "Custom RTMP") ? "selected" : "") + ">Custom RTMP</option>" +
-              "<option value=\"काव्य चौपाल ऐप लाइव\" " + ((st.livePlatform === "काव्य चौपाल ऐप लाइव") ? "selected" : "") + ">काव्य चौपाल ऐप लाइव</option>" +
             "</select></div>" +
-            "<div class=\"field\"><label>Facebook / YouTube / RTMP लिंक (वैकल्पिक)</label><input id=\"studio-live-url\" value=\"" + e(st.liveStreamUrl || "") + "\" placeholder=\"https://... या rtmp://...\" /></div>" +
+            "<div class=\"field\"><label>Facebook / YouTube / RTMP लिंक (वैकल्पिक)</label><input id=\"studio-live-url\" value=\"" + e(st.liveStreamUrl || "") + "\" placeholder=\"लाइव लिंक (वैकल्पिक)\" /></div>" +
           "</div>" +
-          "<div class=\"field\"><label>Stream Key (यदि FB/YT/RTMP पर प्रसारण करना हो)</label><input id=\"studio-live-key\" type=\"password\" value=\"" + e(st.liveStreamKey || "") + "\" placeholder=\"Stream Key दर्ज करें\" /></div>" +
+          "<div class=\"field\"><label>Stream Key (वैकल्पिक)</label><input id=\"studio-live-key\" type=\"password\" value=\"" + e(st.liveStreamKey || "") + "\" placeholder=\"Stream Key (वैकल्पिक)\" /></div>" +
+          "<div style=\"margin-bottom:12px;\">" +
+            "<video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"width:100%; max-height:260px; border-radius:14px; background:#140B0D; border:1.5px solid var(--gold); display:" + (st.isLiveOnApp || st.cameraStream ? "block" : "none") + ";\"></video>" +
+            (st.isLiveOnApp ? ("<div style=\"font-size:12.5px; color:#16A34A; font-weight:700; margin-top:6px;\">⏱️ लाइव समय: <span id=\"studio-live-timer\">" + (st.liveDurationSec || 0) + "</span> सेकंड</div>") : "") +
+          "</div>" +
           (st.isLiveOnApp
-            ? ("<div style=\"margin-bottom:12px;\"><video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"width:100%; max-height:240px; border-radius:14px; background:#000; border:1.5px solid var(--gold);\"></video><div style=\"font-size:12px; color:#16A34A; font-weight:700; margin-top:6px;\">⏱️ लाइव समय: <span id=\"studio-live-timer\">" + (st.liveDurationSec || 0) + "</span> सेकंड</div></div>" +
-               "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+            ? ("<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
                  "<button type=\"button\" class=\"action-btn gold\" onclick=\"stopChaupalStudioLive(true)\">💾 लाइव सहेजें व रोकें</button>" +
                  "<button type=\"button\" class=\"action-btn danger\" onclick=\"stopChaupalStudioLive(false)\">⏹️ बिना सहेजे लाइव रोकें</button>" +
+                 "<button type=\"button\" class=\"sm-btn\" onclick=\"toggleStudioMicMute()\">" + (st.isMicMuted ? "🎤 माइक चालू करें" : "🔇 माइक म्यूट करें") + "</button>" +
+                 "<button type=\"button\" class=\"sm-btn\" onclick=\"switchStudioCameraFacing()\">🔄 कैमरा बदलें</button>" +
                "</div>")
             : ("<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
                  "<button type=\"button\" class=\"btn-approve\" onclick=\"startChaupalStudioLive(" + (isConf ? "true" : "false") + ")\">" + (isConf ? "📞 कॉन्फ्रेंस कॉल लाइव शुरू करें" : "🔴 ऐप पर लाइव शुरू करें") + "</button>" +
+                 "<button type=\"button\" class=\"sm-btn\" onclick=\"testChaupalStudioHardware()\">🎥 फ़ोन कैमरा व माइक चालू करें</button>" +
+                 "<button type=\"button\" class=\"sm-btn\" onclick=\"switchStudioCameraFacing()\">🔄 कैमरा बदलें</button>" +
                "</div>")) +
         "</div>";
     } else if (mode === "video") {
