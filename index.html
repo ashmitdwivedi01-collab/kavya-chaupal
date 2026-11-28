@@ -12391,5 +12391,163 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  var _disconnectTimers = {};
+  var _bitrateWatchTimer = null;
+
+  function normEmail(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  function safeTileIdForEmail(em) {
+    return "soc-rem-vid-" + normEmail(em).replace(/[^a-zA-Z0-9]/g, "_");
+  }
+
+  // Tune WebRTC video senders for low/fluctuating bandwidth so audio & video stay smooth
+  function tuneSendersForSmoothBandwidth(pc) {
+    if (!pc || !pc.getSenders) return;
+    var net = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.networkMode) || "auto";
+    var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    var isSlow = !!(conn && (conn.saveData || /2g|3g/.test(String(conn.effectiveType || ""))));
+    var maxBitrateBps = (net === "uhd" && !isSlow) ? 900000 : ((net === "low_data" || isSlow) ? 160000 : 320000);
+    var maxFramerate = (net === "uhd" && !isSlow) ? 24 : ((net === "low_data" || isSlow) ? 12 : 15);
+    var scaleDown = (net === "uhd" && !isSlow) ? 1.0 : ((net === "low_data" || isSlow) ? 2.5 : 1.75);
+
+    pc.getSenders().forEach(function(sender) {
+      if (!sender || !sender.track || sender.track.kind !== "video" || !sender.getParameters || !sender.setParameters) return;
+      try {
+        var params = sender.getParameters();
+        if (!params.encodings || !params.encodings.length) {
+          params.encodings = [{}];
+        }
+        params.encodings[0].maxBitrate = maxBitrateBps;
+        params.encodings[0].maxFramerate = maxFramerate;
+        params.encodings[0].scaleResolutionDownBy = scaleDown;
+        params.degradationPreference = "maintain-framerate";
+        sender.setParameters(params).catch(function() {});
+      } catch (e) {}
+    });
+  }
+
+  // Hide disconnected participant tile cleanly, and restore it when they reconnect
+  function syncDisconnectedTilesVisibility() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    var cs = chaupalSocialState.activeCallSession;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEmail(me.email) : "";
+    var parts = Array.isArray(cs.participants) ? cs.participants : [];
+
+    parts.forEach(function(p) {
+      var pEm = normEmail(p.email);
+      if (!pEm || pEm === myEm) return;
+      var tileId = safeTileIdForEmail(pEm);
+      var tileWrap = document.getElementById("tile-wrap-" + tileId);
+      var pc = (chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm]) || null;
+      var iceSt = pc ? pc.iceConnectionState : "";
+      var connSt = pc ? pc.connectionState : "";
+      var peerStatus = (chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[pEm]) || p.status || "";
+
+      var isHardDisconnected = (
+        peerStatus === "left" ||
+        peerStatus === "declined" ||
+        iceSt === "failed" ||
+        iceSt === "closed" ||
+        connSt === "failed" ||
+        connSt === "closed"
+      );
+
+      if (isHardDisconnected) {
+        if (!_disconnectTimers[pEm]) {
+          _disconnectTimers[pEm] = setTimeout(function() {
+            var curPc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm];
+            var curIce = curPc ? curPc.iceConnectionState : "";
+            var curConn = curPc ? curPc.connectionState : "";
+            var curSt = (chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[pEm]) || "";
+            var stillGone = (
+              curSt === "left" ||
+              curSt === "declined" ||
+              curIce === "failed" ||
+              curIce === "closed" ||
+              curConn === "failed" ||
+              curConn === "closed"
+            );
+            var w = document.getElementById("tile-wrap-" + tileId);
+            if (stillGone && w) {
+              w.style.display = "none";
+            }
+          }, 1500);
+        }
+      } else {
+        if (_disconnectTimers[pEm]) {
+          clearTimeout(_disconnectTimers[pEm]);
+          delete _disconnectTimers[pEm];
+        }
+        var wShow = document.getElementById("tile-wrap-" + tileId);
+        if (wShow && wShow.style.display === "none") {
+          wShow.style.display = "";
+        }
+      }
+    });
+
+    if (typeof window.applyAdaptiveConferenceLayout === "function") {
+      setTimeout(window.applyAdaptiveConferenceLayout, 30);
+    }
+  }
+
+  // Monitor peer connections every 2.5s to apply bandwidth tuning, recover frozen tracks, and sync tiles
+  function startSmoothCallGuardian() {
+    if (_bitrateWatchTimer) clearInterval(_bitrateWatchTimer);
+    _bitrateWatchTimer = setInterval(function() {
+      if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+      var pcMap = chaupalSocialState.peerConnectionsMap || {};
+      var remMap = chaupalSocialState.remoteStreamsMap || {};
+      Object.keys(pcMap).forEach(function(pEm) {
+        var pc = pcMap[pEm];
+        if (!pc) return;
+        tuneSendersForSmoothBandwidth(pc);
+
+        if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          try { if (typeof pc.restartIce === "function") pc.restartIce(); } catch (e) {}
+        }
+
+        // Ensure remote tracks stay enabled and attached to DOM element
+        var entry = remMap[pEm];
+        var safeId = safeTileIdForEmail(pEm);
+        var vidEl = document.getElementById(safeId);
+        if (entry && entry.stream) {
+          entry.stream.getTracks().forEach(function(tr) {
+            if (tr.readyState === "live") tr.enabled = true;
+          });
+          if (vidEl && vidEl.srcObject !== entry.stream) {
+            vidEl.srcObject = entry.stream;
+            vidEl.muted = false;
+            vidEl.volume = 1.0;
+            try { vidEl.play().catch(function() {}); } catch (e) {}
+          }
+        }
+      });
+      syncDisconnectedTilesVisibility();
+    }, 2500);
+  }
+
+  var origAttach = window.attachMediaToDom;
+  if (typeof origAttach === "function") {
+    window.attachMediaToDom = function() {
+      var r = origAttach.apply(this, arguments);
+      var pcMap = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.peerConnectionsMap) || {};
+      Object.keys(pcMap).forEach(function(pEm) {
+        tuneSendersForSmoothBandwidth(pcMap[pEm]);
+      });
+      syncDisconnectedTilesVisibility();
+      return r;
+    };
+  }
+
+  startSmoothCallGuardian();
+})();
+</script>
+
 </body>
 </html>
