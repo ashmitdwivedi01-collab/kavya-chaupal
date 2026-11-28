@@ -2166,7 +2166,7 @@
         <button class="hub-tab-btn" data-sub="antakshari" onclick="setManchSub('antakshari')">
           <span class="hic">🔤</span><span>अंताक्षरी</span>
         </button>
-        <button class="hub-tab-btn" data-sub="studio" onclick="setManchSub('studio')" style="border:1.5px solid var(--gold);">
+        <button type="button" class="hub-tab-btn" data-sub="studio" onclick="if(typeof window.forceOpenChaupalStudio==='function'){window.forceOpenChaupalStudio({target:this});}else{setManchSub('studio');}" style="border:1.5px solid var(--gold); background:linear-gradient(135deg, #F6DA86 0%, #C6922C 100%); color:#2B080D;">
           <span class="hic">🎙️</span><span>चौपाल स्टूडियो</span>
         </button>
       </div>
@@ -16474,7 +16474,61 @@ window.addEventListener("beforeunload", function() {
       }
     } catch (e) {}
   }
+  window.forceOpenChaupalStudio = forceOpenChaupalStudio;
   document.addEventListener("click", forceOpenChaupalStudio, true);
+
+  // Fallback guarantee in case renderStudioPane didn't populate studioBox
+  var origForce = forceOpenChaupalStudio;
+  window.forceOpenChaupalStudio = function(ev) {
+    origForce(ev);
+    try {
+      var studioBox = document.getElementById("manch-studio");
+      if (studioBox && (!studioBox.innerHTML || studioBox.innerHTML.trim().length < 80)) {
+        var st = window.chaupalStudioState || { orientation: "horizontal", liveTitle: "काव्य चौपाल — सजीव काव्य प्रसारण", platform: "काव्य चौपाल ऐप लाइव" };
+        studioBox.style.display = "block";
+        studioBox.innerHTML =
+          "<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px;\">" +
+            "<button type=\"button\" class=\"back-bar\" style=\"margin-bottom:0;\" onclick=\"restoreManchGridAndTabs(); setManchSub('events');\">← मंच के सभी विकल्प</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('events');\">📅 कार्यक्रम</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('videos');\">🎬 वीडियो</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('competition');\">🏆 प्रतियोगिता</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('ebooks');\">📚 लाइब्रेरी</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('matra');\">⚖️ मात्रा गणक</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('antakshari');\">🔤 अंताक्षरी</button>" +
+          "</div>" +
+          "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
+            "<h3 class=\"section-title\" style=\"margin:0 0 10px;\">🎙️ चौपाल स्टूडियो — लाइव, वर्टिकल व होरिजेंटल मंच</h3>" +
+            "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;\">" +
+              "<button type=\"button\" class=\"social-subbtn active\" onclick=\"if(typeof setStudioOrientation==='function')setStudioOrientation('horizontal')\">🖥️ होरिजेंटल (16:9)</button>" +
+              "<button type=\"button\" class=\"social-subbtn\" onclick=\"if(typeof setStudioOrientation==='function')setStudioOrientation('vertical')\">📱 वर्टिकल (9:16)</button>" +
+              "<button type=\"button\" class=\"sm-btn\" onclick=\"if(typeof toggleStudioLiveFullscreen==='function')toggleStudioLiveFullscreen()\">⛶ पूरी स्क्रीन</button>" +
+            "</div>" +
+            "<div id=\"studio-live-stage-box\" style=\"position:relative; aspect-ratio:16/9; min-height:220px; border-radius:16px; overflow:hidden; background:#090507; border:2px solid var(--gold); margin-bottom:12px;\">" +
+              "<video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"width:100%; height:100%; object-fit:cover; display:none;\"></video>" +
+              "<div id=\"studio-live-daad-layer\" style=\"position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:5px; align-items:flex-end; pointer-events:none; z-index:4;\"></div>" +
+              "<div style=\"position:absolute; left:8px; right:8px; bottom:8px; z-index:5; display:flex; gap:5px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:12px; background:rgba(12,6,8,0.82); border:1px solid rgba(247,220,139,0.55);\">" +
+                "<div style=\"display:flex; gap:5px; flex-wrap:wrap;\">" +
+                  "<button type=\"button\" class=\"action-btn primary\" style=\"padding:6px 10px; font-size:11.5px;\" onclick=\"if(typeof startChaupalStudioLive==='function')startChaupalStudioLive(false)\">🔴 लाइव शुरू करें</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:6px 8px; font-size:11.5px;\" onclick=\"if(typeof toggleStudioMicMute==='function')toggleStudioMicMute()\">🎤 माइक</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:6px 8px; font-size:11.5px;\" onclick=\"if(typeof switchStudioCameraFacing==='function')switchStudioCameraFacing()\">🔄 कैमरा</button>" +
+                "</div>" +
+                "<div style=\"display:flex; gap:4px;\">" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px;\" onclick=\"if(typeof sendStudioStageDaad==='function')sendStudioStageDaad('👏','वाह-वाह')\">👏</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px;\" onclick=\"if(typeof sendStudioStageDaad==='function')sendStudioStageDaad('🌹','अद्भुत')\">🌹</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px;\" onclick=\"if(typeof sendStudioStageDaad==='function')sendStudioStageDaad('🪔','नमन')\">🪔</button>" +
+                "</div>" +
+              "</div>" +
+            "</div>" +
+            "<div class=\"field\"><label>लाइव प्रसारण शीर्षक</label><input id=\"studio-live-title\" value=\"" + String(st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण").replace(/"/g, "&quot;") + "\" /></div>" +
+            "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+              "<button type=\"button\" class=\"action-btn primary\" onclick=\"if(typeof startChaupalStudioLive==='function')startChaupalStudioLive(false)\">🔴 लाइव शुरू करें</button>" +
+              "<button type=\"button\" class=\"action-btn gold\" onclick=\"if(typeof stopChaupalStudioLive==='function')stopChaupalStudioLive(true)\">💾 लाइव सहेजें व रोकें</button>" +
+              "<button type=\"button\" class=\"action-btn danger\" onclick=\"if(typeof stopChaupalStudioLive==='function')stopChaupalStudioLive(false)\">⏹️ लाइव रोकें</button>" +
+            "</div>" +
+          "</div>";
+      }
+    } catch (e) {}
+  };
 })();
 </script>
 
