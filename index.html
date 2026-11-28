@@ -2147,6 +2147,19 @@
 
     <!-- TAB 3: MANCH HUB (कार्यक्रम • वीडियो • प्रतियोगिता • पुस्तक लाइब्रेरी • मात्रा • अंताक्षरी) -->
     <section id="tab-manch" class="tab-view">
+      <div class="form-box" style="margin-bottom:12px; padding:11px 13px; border:1.5px solid var(--gold); background:var(--gold-soft);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+          <strong style="font-size:13.5px; color:var(--primary);">🎙️ चौपाल स्टूडियो — त्वरित विकल्प</strong>
+          <button type="button" class="action-btn gold" style="padding:5px 11px; font-size:11.5px;" onclick="setManchSub('studio'); if(typeof window.renderStudioPane==='function') window.renderStudioPane();">स्टूडियो खोलें →</button>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button type="button" class="sm-btn" onclick="setManchSub('studio'); if(typeof setChaupalStudioMode==='function') setChaupalStudioMode('live');">🔴 ऐप पर लाइव</button>
+          <button type="button" class="sm-btn" onclick="setManchSub('studio'); if(typeof setChaupalStudioMode==='function') setChaupalStudioMode('conf_live');">📞 कॉन्फ्रेंस कॉल लाइव</button>
+          <button type="button" class="sm-btn" onclick="setManchSub('studio'); if(typeof setChaupalStudioMode==='function') setChaupalStudioMode('video');">🎬 वीडियो डालें</button>
+          <button type="button" class="sm-btn" onclick="setManchSub('studio'); if(typeof setChaupalStudioMode==='function') setChaupalStudioMode('reel');">✨ रील बनाएँ</button>
+          <button type="button" class="sm-btn" onclick="setManchSub('studio'); if(typeof setChaupalStudioMode==='function') setChaupalStudioMode('archive');">💾 लाइव रिकॉर्डिंग</button>
+        </div>
+      </div>
       <div class="hub-tabs">
         <button class="hub-tab-btn active" data-sub="events" onclick="setManchSub('events')">
           <span class="hic">📅</span><span>कार्यक्रम</span>
@@ -4537,8 +4550,11 @@ function setManchSub(sub) {
   document.querySelectorAll(".manch-pane").forEach(function(p) { p.style.display = "none"; });
   var target = document.getElementById("manch-" + state.manchSub);
   if (target) target.style.display = "block";
-  if (state.manchSub === "studio" && typeof window.renderStudioPane === "function") {
-    window.renderStudioPane();
+  if (state.manchSub === "studio") {
+    if (target) target.style.display = "block";
+    if (typeof window.renderStudioPane === "function") {
+      try { window.renderStudioPane(); } catch (e) {}
+    }
   }
   renderManchHub();
 }
