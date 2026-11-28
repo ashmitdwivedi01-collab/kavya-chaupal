@@ -435,15 +435,18 @@
     }
     .spotlight-bhav-thumb {
       width: 100%;
-      max-height: 210px;
+      max-width: 320px;
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
       border-radius: 18px;
       border: 2px solid #F7DC8B;
-      object-fit: cover;
+      object-fit: contain;
       box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42);
       cursor: pointer;
+      display: block;
     }
     @media (min-width: 580px) {
-      .spotlight-bhav-thumb { width: 156px; height: 156px; flex-shrink: 0; }
+      .spotlight-bhav-thumb { width: 210px; height: 210px; margin: 0; flex-shrink: 0; }
     }
     .spotlight-quote-box {
       position: relative;
@@ -611,19 +614,21 @@
     .poem-bhav-banner {
       width: 100%;
       aspect-ratio: 1 / 1;
-      max-height: 220px;
-      object-fit: cover;
-      border-radius: 12px;
+      object-fit: contain;
+      border-radius: 14px;
       border: 1.5px solid var(--gold);
-      margin: 6px 0 10px;
+      margin: 8px 0 10px;
       display: block;
+      box-shadow: 0 8px 20px rgba(74, 11, 18, 0.14);
     }
     .reader-bhav-img {
       width: 100%;
-      max-width: 340px;
+      max-width: 380px;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
       margin: 12px auto 14px;
       display: block;
-      border-radius: 16px;
+      border-radius: 18px;
       border: 2px solid var(--gold);
       box-shadow: var(--shadow-strong);
     }
@@ -3022,7 +3027,7 @@ var state = {
   riddleAnswered: null,
   antakshariLetter: "क",
   matraInput: "रहिमन पानी राखिए, बिन पानी सब सून।\nपानी गए न ऊबरै, मोती मानुस चून।।",
-  bhavTheme: "parchment",
+  bhavTheme: "royal_crimson",
   bhavCustomText: "",
   bhavPoemId: null,
   certTitle: "चौपाल गौरव सम्मान-पत्र",
@@ -3383,74 +3388,236 @@ function detectPoemMood(content, explicitMood) {
   return "प्रेरणा व दर्शन";
 }
 
-function generateAutoBhavImage(poem) {
-  var canvas = document.getElementById("auto-bhav-canvas");
+function renderAdaptiveRoyalPosterToCanvas(canvas, opts) {
   if (!canvas) return "";
   var ctx = canvas.getContext("2d");
   var W = 1080, H = 1080;
-  var moodId = detectPoemMood(poem.content, poem.mood);
+  var appName = (state.settings && state.settings.appName) || "काव्य चौपाल";
+  var genre = (opts.genre || "काव्य").trim();
+  var moodId = opts.moodId || detectPoemMood(opts.content || "", "");
   var mObj = MOOD_OPTIONS.find(function(m) { return m.id === moodId; }) || MOOD_OPTIONS[4];
+  var title = (opts.title || "").trim();
+  var poet = (opts.poet || "काव्य चौपाल").trim();
 
-  var grad = ctx.createRadialGradient(W * 0.5, H * 0.35, 90, W * 0.5, H * 0.5, 780);
-  grad.addColorStop(0, mObj.pal1);
-  grad.addColorStop(1, mObj.pal2);
+  var bg1 = opts.bg1 || mObj.pal1;
+  var bg2 = opts.bg2 || mObj.pal2;
+  var accent = opts.accent || mObj.accent || "#F7DC8B";
+  var textColor = opts.textColor || mObj.text || "#FFF9EC";
+  var isLight = !!opts.isLight;
+
+  // 1. Rich Royal Radial + Linear Background
+  var grad = ctx.createRadialGradient(W * 0.5, H * 0.34, 80, W * 0.5, H * 0.5, 820);
+  grad.addColorStop(0, bg1);
+  grad.addColorStop(1, bg2);
   ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Warm ambient corner glow
+  var glow = ctx.createRadialGradient(W * 0.5, H * 0.52, 40, W * 0.5, H * 0.52, 460);
+  glow.addColorStop(0, isLight ? "rgba(198, 146, 44, 0.14)" : "rgba(247, 220, 139, 0.11)");
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = glow;
   ctx.fillRect(0, 0, W, H);
 
   // Subtle decorative lotus / mandala rings
   ctx.save();
-  ctx.strokeStyle = "rgba(247, 220, 139, 0.14)";
+  ctx.strokeStyle = isLight ? "rgba(123, 22, 32, 0.08)" : "rgba(247, 220, 139, 0.12)";
   ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(W / 2, H / 2, 410, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(W / 2, H / 2, 330, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W / 2, H * 0.52, 390, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W / 2, H * 0.52, 305, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
 
-  // Royal double border
-  ctx.strokeStyle = mObj.accent;
+  // 2. Royal Outer & Inner Frames + Ornamental Corner Flourishes
+  ctx.strokeStyle = accent;
   ctx.lineWidth = 7;
-  ctx.strokeRect(34, 34, W - 68, H - 68);
-  ctx.strokeStyle = "rgba(247, 220, 139, 0.45)";
+  ctx.strokeRect(32, 32, W - 64, H - 64);
+
+  ctx.strokeStyle = isLight ? "rgba(123, 22, 32, 0.32)" : "rgba(247, 220, 139, 0.42)";
   ctx.lineWidth = 2;
-  ctx.strokeRect(52, 52, W - 104, H - 104);
+  ctx.strokeRect(50, 50, W - 100, H - 100);
 
-  // Top center branding (काव्य चौपाल)
-  ctx.textAlign = "center";
-  ctx.fillStyle = mObj.accent;
-  ctx.font = "700 44px 'Yatra One', serif";
-  ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 128);
-
-  ctx.font = "600 24px 'Noto Sans Devanagari', sans-serif";
-  ctx.fillStyle = "rgba(255, 248, 234, 0.85)";
-  ctx.fillText("❖ " + (poem.genre || "काव्य") + " • " + moodId + " ❖", W / 2, 174);
-
-  // Mood emblem
-  ctx.font = "56px serif";
-  ctx.fillText(mObj.motif, W / 2, 255);
-
-  // Verses (up to 6 crisp lines)
-  var rawLines = (poem.content || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean).slice(0, 6);
-  ctx.fillStyle = mObj.text;
-  ctx.font = "600 37px 'Noto Serif Devanagari', serif";
-  var startY = rawLines.length <= 2 ? 460 : (rawLines.length <= 4 ? 395 : 345);
-  rawLines.forEach(function(ln, idx) {
-    var clipped = ln.length > 44 ? (ln.slice(0, 43) + "…") : ln;
-    ctx.fillText(clipped, W / 2, startY + idx * 66);
+  // Corner diamonds
+  var corners = [[50, 50], [W - 50, 50], [50, H - 50], [W - 50, H - 50]];
+  ctx.fillStyle = accent;
+  corners.forEach(function(pt) {
+    ctx.save();
+    ctx.translate(pt[0], pt[1]);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-8, -8, 16, 16);
+    ctx.restore();
   });
 
-  // Bottom divider & Poet Name highlighted at bottom center
-  ctx.strokeStyle = mObj.accent;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(W / 2 - 210, H - 170); ctx.lineTo(W / 2 + 210, H - 170); ctx.stroke();
+  // 3. Top Branding Header (काव्य चौपाल + Genre/Mood Pill)
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = accent;
+  ctx.font = "700 46px 'Yatra One', serif";
+  ctx.fillText(appName, W / 2, 118);
 
-  ctx.fillStyle = mObj.accent;
-  ctx.font = "700 42px 'Yatra One', serif";
-  ctx.fillText("— " + (poem.poet || "काव्य चौपाल"), W / 2, H - 102);
+  var pillText = "✦  " + genre + "  •  " + moodId + "  ✦";
+  ctx.font = "600 23px 'Noto Sans Devanagari', sans-serif";
+  var pillW = Math.min(W - 180, ctx.measureText(pillText).width + 52);
+  var pillX = (W - pillW) / 2;
+  var pillY = 138;
+  ctx.fillStyle = isLight ? "rgba(123, 22, 32, 0.08)" : "rgba(255, 248, 234, 0.10)";
+  ctx.strokeStyle = isLight ? "rgba(123, 22, 32, 0.35)" : "rgba(247, 220, 139, 0.45)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(pillX, pillY, pillW, 42, 21);
+  } else {
+    ctx.rect(pillX, pillY, pillW, 42);
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = isLight ? "#7B1620" : "#FCE49C";
+  ctx.fillText(pillText, W / 2, pillY + 28);
+
+  // Optional Poem Title just above the inner verse card
+  var cardTopY = 205;
+  if (title && title !== genre) {
+    ctx.fillStyle = accent;
+    ctx.font = "700 32px 'Yatra One', serif";
+    var dispTitle = title.length > 34 ? (title.slice(0, 33) + "…") : title;
+    ctx.fillText("“" + dispTitle + "”", W / 2, 226);
+    cardTopY = 248;
+  }
+
+  // 4. Prepare & Wrap Lines Intelligently Based on Length & Line Count
+  var rawLines = String(opts.content || "")
+    .split("\n")
+    .map(function(l) { return l.trim(); })
+    .filter(function(l) { return l && l.indexOf("--") !== 0; });
+
+  // For multi-stanza ghazals/poems, select up to 6 lines (or user-provided custom lines up to 8)
+  var maxAllowedLines = opts.maxLines || 6;
+  var chosenLines = rawLines.slice(0, maxAllowedLines);
+  if (!chosenLines.length) chosenLines = ["शब्द जहाँ संवाद बनें, और भाव जहाँ उत्सव…"];
+
+  // Dynamically calibrate fontSize & lineHeight to fit the inner glass card gracefully with generous padding
+  var cardBottomY = H - 175;
+  var cardH = cardBottomY - cardTopY;
+  var cardX = 86;
+  var cardW = W - 172;
+  var innerMaxTextW = cardW - 84;
+
+  var fontSize = chosenLines.length <= 2 ? 44 : (chosenLines.length <= 4 ? 39 : (chosenLines.length <= 6 ? 34 : 30));
+  var wrappedLines = [];
+
+  while (fontSize >= 24) {
+    ctx.font = "600 " + fontSize + "px 'Noto Serif Devanagari', serif";
+    wrappedLines = [];
+    chosenLines.forEach(function(ln) {
+      if (ctx.measureText(ln).width <= innerMaxTextW) {
+        wrappedLines.push(ln);
+      } else {
+        // Wrap cleanly at word boundary
+        var words = ln.split(/\s+/);
+        var cur = "";
+        words.forEach(function(w) {
+          var test = cur ? (cur + " " + w) : w;
+          if (ctx.measureText(test).width <= innerMaxTextW) {
+            cur = test;
+          } else {
+            if (cur) wrappedLines.push(cur);
+            cur = w;
+          }
+        });
+        if (cur) wrappedLines.push(cur);
+      }
+    });
+    var lineHeight = Math.round(fontSize * 1.62);
+    var totalTextBlockH = wrappedLines.length * lineHeight;
+    if (totalTextBlockH <= cardH - 76 && wrappedLines.length <= 10) {
+      break;
+    }
+    fontSize -= 2;
+  }
+
+  // 5. Draw Glassmorphic Inner Verse Panel (just like the Spotlight quote card!)
+  ctx.save();
+  ctx.fillStyle = isLight ? "rgba(255, 253, 247, 0.72)" : "rgba(255, 249, 232, 0.08)";
+  ctx.strokeStyle = isLight ? "rgba(198, 146, 44, 0.55)" : "rgba(247, 220, 139, 0.42)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(cardX, cardTopY, cardW, cardH, 26);
+  } else {
+    ctx.rect(cardX, cardTopY, cardW, cardH);
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  // Left vertical royal accent bar inside the verse panel
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(cardX + 18, cardTopY + 28, 6, cardH - 56, 3);
+  } else {
+    ctx.rect(cardX + 18, cardTopY + 28, 6, cardH - 56);
+  }
+  ctx.fill();
+  ctx.restore();
+
+  // 6. Render Poem / Ghazal Lines Vertically Centered Inside the Panel
+  var lineHeightFinal = Math.round(fontSize * 1.62);
+  var totalH = wrappedLines.length * lineHeightFinal;
+  var firstBaselineY = cardTopY + Math.round((cardH - totalH) / 2) + Math.round(fontSize * 0.85);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = textColor;
+  ctx.font = "600 " + fontSize + "px 'Noto Serif Devanagari', serif";
+
+  wrappedLines.forEach(function(ln, idx) {
+    var displayLine = ln;
+    if (idx === 0 && wrappedLines.length > 1) displayLine = "“" + displayLine;
+    else if (idx === 0 && wrappedLines.length === 1) displayLine = "“" + displayLine + "”";
+    else if (idx === wrappedLines.length - 1) displayLine = displayLine + "”";
+    ctx.fillText(displayLine, W / 2 + 4, firstBaselineY + idx * lineHeightFinal);
+  });
+
+  // 7. Bottom Ornamental Divider & Poet Signature
+  var divY = H - 138;
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - 220, divY);
+  ctx.lineTo(W / 2 - 24, divY);
+  ctx.moveTo(W / 2 + 24, divY);
+  ctx.lineTo(W / 2 + 220, divY);
+  ctx.stroke();
+
+  ctx.fillStyle = accent;
+  ctx.font = "18px serif";
+  ctx.fillText("❖", W / 2, divY + 6);
+
+  ctx.fillStyle = accent;
+  ctx.font = "700 40px 'Yatra One', serif";
+  ctx.fillText("✒️  " + poet, W / 2, H - 82);
 
   try {
-    return canvas.toDataURL("image/jpeg", 0.78);
+    return canvas.toDataURL(opts.mime || "image/jpeg", opts.quality || 0.86);
   } catch (e) {
     return "";
   }
+}
+
+function generateAutoBhavImage(poem) {
+  var canvas = document.getElementById("auto-bhav-canvas");
+  if (!canvas || !poem) return "";
+  var lines = String(poem.content || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
+  var autoPick = lines.length <= 4 ? lines.join("\n") : lines.slice(0, 4).join("\n");
+  return renderAdaptiveRoyalPosterToCanvas(canvas, {
+    title: poem.title || "",
+    poet: poem.poet || "काव्य चौपाल",
+    genre: poem.genre || "काव्य",
+    moodId: detectPoemMood(poem.content, poem.mood),
+    content: autoPick,
+    maxLines: 4,
+    mime: "image/jpeg",
+    quality: 0.84
+  });
 }
 
 var DIYA_SVG = "<svg width=\"48\" height=\"48\" viewBox=\"0 0 64 64\" fill=\"none\"><path d=\"M32 7C36.5 15.5 41 20.5 41 27C41 32 37 36 32 36C27 36 23 32 23 27C23 20.5 27.5 15.5 32 7Z\" fill=\"#F7B733\"/><path d=\"M12 37C12 47.5 21 54 32 54C43 54 52 47.5 52 37H12Z\" fill=\"#C6922C\"/></svg>";
@@ -4433,7 +4600,7 @@ function renderSpotlight(shouldFlash) {
   if (!state.poems.length) { wrap.innerHTML = ""; return; }
   var feat = state.poems[state.spotlightIdx % state.poems.length] || state.poems[0];
   var linesArr = pickCuratedLines(feat.content, spotlightLineMode);
-  var imgUrl = feat.bhavImage || "";
+  var imgUrl = generateAutoBhavImage(feat) || feat.bhavImage || "";
   wrap.innerHTML =
     "<div class=\"spotlight-card\">" +
       "<div class=\"spotlight-crown-crest\">" +
@@ -8285,26 +8452,40 @@ function renderBhavStudio() {
 }
 function drawBhavCardCanvas(triggerDownload) {
   var p = state.poems.find(function(x) { return x.id === state.bhavPoemId; }); if (!p) return;
-  var canvas = document.getElementById("bhav-canvas"); var ctx = canvas.getContext("2d");
-  var W = 1080, H = 1080;
+  var canvas = document.getElementById("bhav-canvas");
   var PAL_MAP = {
-    parchment: { bg1: "#FDF5E4", bg2: "#E8CA96", hd: "#7B1620", tx: "#24120B" },
-    royal_crimson: { bg1: "#68111B", bg2: "#22060D", hd: "#F7DC8B", tx: "#FFF8EA" },
-    night_mehfil: { bg1: "#182142", bg2: "#080B1A", hd: "#FCE29A", tx: "#F6EFE2" },
-    swarna_darbar: { bg1: "#FFFDF6", bg2: "#F2DFB6", hd: "#7B1620", tx: "#26140D" }
+    parchment: { bg1: "#FDF5E4", bg2: "#E8CA96", hd: "#7B1620", tx: "#24120B", light: true },
+    royal_crimson: { bg1: "#68111B", bg2: "#22060D", hd: "#F7DC8B", tx: "#FFF8EA", light: false },
+    night_mehfil: { bg1: "#182142", bg2: "#080B1A", hd: "#FCE29A", tx: "#F6EFE2", light: false },
+    swarna_darbar: { bg1: "#FFFDF6", bg2: "#F2DFB6", hd: "#7B1620", tx: "#26140D", light: true }
   };
-  var PAL = PAL_MAP[state.bhavTheme] || PAL_MAP.parchment;
-  var g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, PAL.bg1); g.addColorStop(1, PAL.bg2);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = "#C6922C"; ctx.lineWidth = 8; ctx.strokeRect(36, 36, W - 72, H - 72);
-  ctx.textAlign = "center"; ctx.fillStyle = PAL.hd; ctx.font = "700 48px 'Yatra One', serif";
-  ctx.fillText(state.settings.appName || "काव्य चौपाल", W / 2, 140);
-  ctx.fillStyle = PAL.tx; ctx.font = "600 38px 'Noto Serif Devanagari', serif";
-  (state.bhavCustomText || p.content || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean).slice(0, 8).forEach(function(l, i) { ctx.fillText(l, W / 2, 340 + i * 62); });
-  ctx.fillStyle = PAL.hd; ctx.font = "700 42px 'Yatra One', serif"; ctx.fillText("— " + p.poet, W / 2, H - 110);
-  var url = canvas.toDataURL("image/png"); var img = document.getElementById("bhav-preview-img"); if (img) img.src = url;
-  if (triggerDownload) { var a = document.createElement("a"); a.download = "kavya-chaupal-bhav-" + p.id + ".png"; a.href = url; a.click(); showToast("भाव कार्ड डाउनलोड हुआ 🖼️"); }
+  var PAL = PAL_MAP[state.bhavTheme] || PAL_MAP.royal_crimson;
+  var url = renderAdaptiveRoyalPosterToCanvas(canvas, {
+    title: p.title || "",
+    poet: p.poet || "काव्य चौपाल",
+    genre: p.genre || "काव्य",
+    moodId: detectPoemMood(p.content, p.mood),
+    content: state.bhavCustomText || p.content || "",
+    maxLines: 8,
+    bg1: PAL.bg1,
+    bg2: PAL.bg2,
+    accent: PAL.hd,
+    textColor: PAL.tx,
+    isLight: PAL.light,
+    mime: "image/png",
+    quality: 0.95
+  });
+  var img = document.getElementById("bhav-preview-img");
+  if (img && url) img.src = url;
+  if (triggerDownload && url) {
+    var a = document.createElement("a");
+    a.download = "kavya-chaupal-bhav-" + p.id + ".png";
+    a.href = url;
+    a.click();
+    showToast("शाही भाव-कार्ड डाउनलोड हुआ 🎨✨");
+  }
 }
+
 
 function openAdminStudio() { if (!document.getElementById("admin-modal").classList.contains("open")) pushAppView("studio"); document.getElementById("admin-modal").classList.add("open"); renderAdminStudio(); }
 function closeModal(id, fromPop) { if (id === "reader-modal") { stopTeleprompter(); stopMehfilMusic(); } var el = document.getElementById(id); var wasOpen = el && el.classList.contains("open"); if (el) el.classList.remove("open"); if (wasOpen && !fromPop) syncBackAfterUiClose(); }
@@ -9589,7 +9770,7 @@ var filterChhandId = "";
 var MATRIK_CHHAND_DATA = [
   { id: "m_doha", name: "दोहा (अर्द्धसम मात्रिक)", sub: "विषम चरण 13, सम चरण 11 मात्राएँ", def: "दोहा अर्द्धसम मात्रिक छंद है। इसके विषम चरणों (प्रथम व तृतीय) में 13-13 और सम चरणों (द्वितीय व चतुर्थ) में 11-11 मात्राएँ होती हैं।", rule: "• विषम चरण (1 व 3): 13-13 मात्राएँ\n• सम चरण (2 व 4): 11-11 मात्राएँ\n• सम चरणों के अंत में प्रायः गुरु-लघु या लघु-गुरु की लय आती है।", workLabel: "मात्रा गणना उदाहरण (13 + 11)", workText: "रहिमन धागा प्रेम का, मत तोरौ चटकाय।\nर(1)हि(1)म(1)न(1) धा(2)गा(2) प्रे(2)म(1) का(2) = 13 • म(1)त(1) तो(2)रौ(2) च(1)ट(1)का(2)य(1) = 11", moreEx: ["बड़ा हुआ तो क्या हुआ, जैसे पेड़ खजूर।\nपंथी को छाया नहीं, फल लागैं अति दूर।।", "बुरा जो देखन मैं चला, बुरा न मिलिया कोय।\nजो दिल खोजा आपना, मुझसे बुरा न कोय।।", "कनक कनक ते सौ गुनी, मादकता अधिकाय।\nउहि खाये बौरात जग, इहि पाये बौराय।।"] },
   { id: "m_soratha", name: "सोरठा (अर्द्धसम मात्रिक)", sub: "विषम चरण 11, सम चरण 13 मात्राएँ", def: "सोरठा अर्द्धसम मात्रिक छंद है जो दोहा का उलटा रूप माना जाता है। इसके विषम चरणों (1 व 3) में 11-11 और सम चरणों (2 व 4) में 13-13 मात्राएँ होती हैं।", rule: "• विषम चरण (1 व 3): 11-11 मात्राएँ\n• सम चरण (2 व 4): 13-13 मात्राएँ\n• प्रायः विषम चरणों (11 मात्रा वाले भाग) के अंत में तुक मिलती है।", workLabel: "मात्रा गणना उदाहरण (11 + 13)", workText: "जो सुमिरत सिधि होइ, गन नायक करिबर बदन।\nजो(2) सु(1)मि(1)र(1)त(1) सि(1)धि(1) हो(2)इ(1) = 11 • ग(1)न(1) ना(2)य(1)क(1) क(1)रि(1)ब(1)र(1) ब(1)द(1)न(1) = 13", moreEx: ["करहु अनुग्रह सोइ, बुद्धि रासि सुभ गुन सदन।", "मूक होइ वाचाल, पंगु चढ़इ गिरिवर गहन।\nजासु कृपा सो दयाल, द्रवहु सकल कलिमल दहन।।", "सुनि केवट के बैन, प्रेम लपेटे अटपटे।"] },
-  { id: "m_chaupai", name: "चौपाई (सम मात्रिक)", sub: "प्रत्येक चरण में 16 मात्राएँ", def: "चौपाई सम मात्रिक छंद है जिसके प्रत्येक चरण में 16-16 मात्राएँ होती हैं और चरणांत में यति होती है।", rule: "• प्रत्येक चरण में 16 मात्राएँ होती हैं।\n• चरण के अंत में दो गुरु (२ २) या जगण (१ २ १) से बचने का विधान प्रायः माना जाता है।", workLabel: "मात्रा गणना उदाहरण (16 मात्रा)", workText: "बंदउँ गुरु पद पदुम परागा।\nबं(2)द(1)उँ(1) गु(1)रु(1) प(1)द(1) प(1)दु(1)म(1) प(1)रा(2)गा(2) = 16", moreEx: ["सुरुचि सुबास सरस अनुरागा।", "मंगल भवन अमंगल हारी। द्रवहु सो दसरथ अजिर बिहारी।।", "जय हनुमान ज्ञान गुन सागर। जय कपीस तिहुँ लोक उजागर।."] },
+  { id: "m_chaupai", name: "चौपाई (सम मात्रिक)", sub: "प्रत्येक चरण में 16 मात्राएँ", def: "चौपाई सम मात्रिक छंद है जिसके प्रत्येक चरण में 16-16 मात्राएँ होती हैं और चरणांत में यति होती है।", rule: "• प्रत्येक चरण में 16 मात्राएँ होती हैं।\n• चरणांत में जगण (१ २ १) या तगण (२ २ १) से बचने का विधान माना जाता है; अंत में गुरु (२) या दो गुरु/सम-लय से लय सधती है।", workLabel: "मात्रा गणना उदाहरण (16 मात्रा)", workText: "बंदउँ गुरु पद पदुम परागा।\nबं(2)द(1)उँ(1) गु(1)रु(1) प(1)द(1) प(1)दु(1)म(1) प(1)रा(2)गा(2) = 16", moreEx: ["सुरुचि सुबास सरस अनुरागा।", "मंगल भवन अमंगल हारी। द्रवहु सो दसरथ अजिर बिहारी।।", "जय हनुमान ज्ञान गुन सागर। जय कपीस तिहुँ लोक उजागर।."] },
   { id: "m_rola", name: "रोला (सम मात्रिक)", sub: "24 मात्राएँ • 11 व 13 पर यति", def: "रोला सम मात्रिक छंद है जिसकी प्रत्येक पंक्ति में 24-24 मात्राएँ होती हैं तथा 11वीं और 13वीं मात्रा पर यति होती है।", rule: "• प्रत्येक पंक्ति में कुल 24 मात्राएँ।\n• 11 और 13 मात्राओं पर यति (विराम)।", workLabel: "मात्रा गणना उदाहरण (11 + 13 = 24)", workText: "नीलांबर परिधान, हरित पट पर सुंदर है।\nनी(2)लां(2)ब(1)र(1) प(1)रि(1)धा(2)न(1) = 11 • ह(1)रि(1)त(1) प(1)ट(1) प(1)र(1) सुं(2)द(1)र(1) है(2) = 13", moreEx: ["सूर्य-चंद्र युग मुकुट, मेखला रत्नाकर है।", "नित नव लीला ललित ठानि गोलोक अजिर में।", "रमत राधिका संग रास रस रंग रुचिर में।।"] },
   { id: "m_gitika", name: "गीतिका (सम मात्रिक)", sub: "26 मात्राएँ • 14 व 12 पर यति", def: "गीतिका सम मात्रिक छंद है जिसमें प्रत्येक चरण में 26 मात्राएँ होती हैं और 14 तथा 12 मात्राओं पर यति होती है।", rule: "• प्रत्येक चरण में 26 मात्राएँ।\n• 14 और 12 मात्राओं पर यति।", workLabel: "मात्रा गणना उदाहरण (14 + 12 = 26)", workText: "हे प्रभो आनंददाता, ज्ञान हमको दीजिए।\nहे(2) प्र(1)भो(2) आ(2)नं(2)द(1)दा(2)ता(2) = 14 • ज्ञा(2)न(1) ह(1)म(1)को(2) दी(2)जि(1)ए(2) = 12", moreEx: ["शीघ्र सारे दुर्गुणों को, दूर हमसे कीजिए।", "लीजिए हमको शरण में, हम सदाचारी बनें।", "साधु भक्तों में सुयोगी संयंमी बढने लगे।"] },
   { id: "m_harigitika", name: "हरिगीतिका (सम मात्रिक)", sub: "28 मात्राएँ • 16 व 12 पर यति", def: "हरिगीतिका सम मात्रिक छंद है जिसके प्रत्येक चरण में 28 मात्राएँ होती हैं और 16 व 12 मात्राओं पर यति होती है।", rule: "• प्रत्येक चरण में 28 मात्राएँ।\n• 16 और 12 मात्राओं पर यति।\n• प्रायः चरण के अंत में लघु-गुरु का प्रयोग होता है।", workLabel: "मात्रा गणना उदाहरण (16 + 12 = 28)", workText: "कहते हुए यूँ उत्तरा के नेत्र जल से भर गए।\n16 मात्रा पर प्रथम यति + 12 मात्रा पर द्वितीय यति = 28 मात्रा", moreEx: ["हरि शरण प्राणी जे भये कहु, है तिन्हे भव भीतिका।", "संसार भव निधि तरण को नहि, और अवसर पाइये।", "संसार भव मानुष जन्म दुर्लभ, राम सीता गाइये।"] },
@@ -9945,20 +10126,20 @@ function buildChhandImprovementSuggestions(linesArr) {
 
     if (targetId === "doha") {
       if (st.charans.length < 2) {
-        tips.push("पंक्ति " + pNo + ": दोहा के दोनों चरण (13 व 11 मात्रा) स्पष्ट करने हेतु बीच में अल्पविराम (,) लगाएँ।");
+        tips.push("पंक्ति " + pNo + ": दोहा के विषम (13) व सम (11) चरण स्पष्ट करने हेतु बीच में अल्पविराम (,) लगाएँ।");
       } else {
         var d1 = st.charans[0] - 13;
         var d2 = st.charans[1] - 11;
         if (d1 !== 0) {
-          tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): 13 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं (" + (d1 > 0 ? (d1 + " मात्रा घटाएँ — किसी गुरु को लघु करें)") : (Math.abs(d1) + " मात्रा बढ़ाएँ — किसी लघु को गुरु करें)")) + "।");
+          tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): 13 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं (" + (d1 > 0 ? (d1 + " मात्रा कम करें") : (Math.abs(d1) + " मात्रा बढ़ाएँ")) + ")।");
         }
         if (d2 !== 0) {
-          tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): 11 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं (" + (d2 > 0 ? (d2 + " मात्रा घटाएँ)") : (Math.abs(d2) + " मात्रा बढ़ाएँ)")) + "।");
+          tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): 11 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं (" + (d2 > 0 ? (d2 + " मात्रा कम करें") : (Math.abs(d2) + " मात्रा बढ़ाएँ")) + ")।");
         }
         var c2Toks = st.charanObjs[1].tokens;
         var c2End = c2Toks.slice(-2).map(function(t) { return t.weight; }).join("");
         if (d1 === 0 && d2 === 0 && c2End !== "21") {
-          tips.push("पंक्ति " + pNo + ": 13 + 11 मात्राएँ बिल्कुल सही हैं! दोहा की शास्त्रीय गेयता हेतु द्वितीय चरण के अंत में गुरु-लघु (२ १, जैसे 'उजियास', 'चटकाय') रखें।");
+          tips.push("पंक्ति " + pNo + ": 13 + 11 मात्राएँ सही हैं; परम्परागत लय हेतु सम चरण के अंत में गुरु-लघु (२ १) का अभ्यास भी देखें।");
         }
       }
     } else if (targetId === "soratha") {
@@ -9967,26 +10148,29 @@ function buildChhandImprovementSuggestions(linesArr) {
       } else {
         var s1 = st.charans[0] - 11;
         var s2 = st.charans[1] - 13;
-        if (s1 !== 0) tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): सोरठा में 11 मात्राएँ चाहिए, अभी " + st.charans[0] + " हैं (" + (s1 > 0 ? (s1 + " घटाएँ") : (Math.abs(s1) + " बढ़ाएँ")) + ")।");
-        if (s2 !== 0) tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): सोरठा में 13 मात्राएँ चाहिए, अभी " + st.charans[1] + " हैं (" + (s2 > 0 ? (s2 + " घटाएँ") : (Math.abs(s2) + " बढ़ाएँ")) + ")।");
+        if (s1 !== 0) tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): सोरठा में 11 मात्राएँ चाहिए, अभी " + st.charans[0] + " हैं (" + (s1 > 0 ? (s1 + " कम करें") : (Math.abs(s1) + " बढ़ाएँ")) + ")।");
+        if (s2 !== 0) tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): सोरठा में 13 मात्राएँ चाहिए, अभी " + st.charans[1] + " हैं (" + (s2 > 0 ? (s2 + " कम करें") : (Math.abs(s2) + " बढ़ाएँ")) + ")।");
       }
     } else if (targetId === "chaupai") {
       var diffC = st.total - 16;
-      if (diffC !== 0) tips.push("पंक्ति " + pNo + ": चौपाई में ठीक 16 मात्राएँ होनी चाहिए, अभी " + st.total + " हैं (" + (diffC > 0 ? (diffC + " मात्रा कम करें") : (Math.abs(diffC) + " मात्रा बढ़ाएँ")) + ")।");
-      if (lastTwo === "22" || lastThree === "121") {
-        tips.push("पंक्ति " + pNo + ": चौपाई के अंत में दो गुरु (२ २) या जगण (१ २ १) वर्जित माना जाता है; अंत में गुरु-लघु (२ १) या लघु-गुरु (१ २) रखें।");
+      if (diffC !== 0) {
+        tips.push("पंक्ति " + pNo + ": चौपाई के प्रत्येक चरण में 16 मात्राएँ होनी चाहिए, अभी " + st.total + " हैं (" + (diffC > 0 ? (diffC + " मात्रा कम करें") : (Math.abs(diffC) + " मात्रा बढ़ाएँ")) + ")।");
+      }
+      // Accurate classical prosody rule for Chaupai: avoid Jagana (1-2-1) or Tagana (2-2-1) at चरणांत
+      if (lastThree === "121" || lastThree === "221") {
+        tips.push("पंक्ति " + pNo + ": चौपाई के चरणांत में जगण (१ २ १) या तगण (२ २ १) से बचें; चरणांत संतुलित रखें।");
       }
     } else if (targetId === "rola") {
       var diffR = st.total - 24;
-      if (diffR !== 0) tips.push("पंक्ति " + pNo + ": रोला में कुल 24 मात्राएँ (11 + 13 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffR > 0 ? (diffR + " घटाएँ") : (Math.abs(diffR) + " बढ़ाएँ")) + ")।");
+      if (diffR !== 0) tips.push("पंक्ति " + pNo + ": रोला में कुल 24 मात्राएँ (11 + 13 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffR > 0 ? (diffR + " कम करें") : (Math.abs(diffR) + " बढ़ाएँ")) + ")।");
     } else if (targetId === "gitika") {
       var diffG = st.total - 26;
-      if (diffG !== 0) tips.push("पंक्ति " + pNo + ": गीतिका में कुल 26 मात्राएँ (14 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffG > 0 ? (diffG + " घटाएँ") : (Math.abs(diffG) + " बढ़ाएँ")) + ")।");
-      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": गीतिका के अंत में लघु-गुरु (१ २) रखने से छंद की लय सटीक बैठती है।");
+      if (diffG !== 0) tips.push("पंक्ति " + pNo + ": गीतिका में कुल 26 मात्राएँ (14 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffG > 0 ? (diffG + " कम करें") : (Math.abs(diffG) + " बढ़ाएँ")) + ")।");
+      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": गीतिका के चरणांत में लघु-गुरु (१ २) रखने से गेयता सुधरती है।");
     } else if (targetId === "harigitika") {
       var diffH = st.total - 28;
-      if (diffH !== 0) tips.push("पंक्ति " + pNo + ": हरिगीतिका में कुल 28 मात्राएँ (16 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffH > 0 ? (diffH + " घटाएँ") : (Math.abs(diffH) + " बढ़ाएँ")) + ")।");
-      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": हरिगीतिका के अंत में लघु-गुरु (१ २) का विधान आवश्यक माना जाता है।");
+      if (diffH !== 0) tips.push("पंक्ति " + pNo + ": हरिगीतिका में कुल 28 मात्राएँ (16 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffH > 0 ? (diffH + " कम करें") : (Math.abs(diffH) + " बढ़ाएँ")) + ")।");
+      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": हरिगीतिका के चरणांत में लघु-गुरु (१ २) का विधान रहता है।");
     } else if (targetId === "barvai") {
       if (st.charans.length < 2) {
         tips.push("पंक्ति " + pNo + ": बरवै में 12 + 7 मात्राओं के बीच अल्पविराम (,) लगाएँ।");
@@ -9997,7 +10181,6 @@ function buildChhandImprovementSuggestions(linesArr) {
     }
   });
 
-  // Check rhyme (तुक) across consecutive pairs
   for (var k = 0; k + 1 < linesArr.length; k += 2) {
     var r1 = getLineRhymeEnding(linesArr[k]);
     var r2 = getLineRhymeEnding(linesArr[k + 1]);
@@ -10040,7 +10223,7 @@ function updateMatraResultsOnly() {
           suggestions.map(function(tip) { return "<li style=\"margin-bottom:4px;\">" + esc(tip) + "</li>"; }).join("") +
         "</ul>" +
       "</div>")
-    : (linesArr.length ? ("<div class=\"chhand-guide-card\" style=\"border-color:#22C55E;\"><div style=\"font-size:13px; color:#15803D; font-weight:700;\">✅ शास्त्रीय दृष्टि से उत्तम! सभी पंक्तियाँ मात्रा-क्रम व छंद-विधान के अनुरूप पूर्णतः शुद्ध हैं।</div></div>") : "");
+    : (linesArr.length ? ("<div class=\"chhand-guide-card\" style=\"border-color:#22C55E;\"><div style=\"font-size:13px; color:#15803D; font-weight:700;\">✅ शास्त्रीय दृष्टि से उत्तम! सभी पंक्तियाँ मात्रा-क्रम व छंद-विधान के अनुरूप शुद्ध हैं।</div></div>") : "");
 
   resBox.innerHTML =
     "<div class=\"chhand-detect-card\"><div class=\"chhand-badge-main\">🎭 " + esc(det.name) + "</div>" + (det.statusLabel ? (" <span class=\"mini-badge\">" + esc(det.statusLabel) + "</span>") : "") + "<div style=\"font-size:13px; margin-top:6px; line-height:1.55; color:var(--text);\">" + esc(det.reason) + "</div>" + (det.caution ? ("<div style=\"font-size:12px; margin-top:6px; color:var(--text-muted); line-height:1.5;\">⚠️ <strong>सतर्कता:</strong> " + esc(det.caution) + "</div>") : "") + "</div>" +
