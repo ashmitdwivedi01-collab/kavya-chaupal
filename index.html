@@ -4481,11 +4481,22 @@ function openManchSub(sub) {
 }
 
 function setManchSub(sub) {
-  state.manchSub = sub;
-  document.querySelectorAll(".hub-tab-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.sub === sub); });
+  state.manchSub = sub || "events";
+  var tabManch = document.getElementById("tab-manch");
+  if (tabManch && state.manchSub === "studio" && !document.getElementById("manch-studio")) {
+    var studioDiv = document.createElement("div");
+    studioDiv.id = "manch-studio";
+    studioDiv.className = "manch-pane";
+    studioDiv.style.display = "none";
+    tabManch.appendChild(studioDiv);
+  }
+  document.querySelectorAll(".hub-tab-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.sub === state.manchSub); });
   document.querySelectorAll(".manch-pane").forEach(function(p) { p.style.display = "none"; });
-  var target = document.getElementById("manch-" + sub);
+  var target = document.getElementById("manch-" + state.manchSub);
   if (target) target.style.display = "block";
+  if (state.manchSub === "studio" && typeof window.renderStudioPane === "function") {
+    window.renderStudioPane();
+  }
   renderManchHub();
 }
 
@@ -15163,6 +15174,24 @@ window.addEventListener("beforeunload", function() {
     if (typeof showToast === "function") {
       showToast("🔴 चौपाल स्टूडियो पर लाइव प्रसारण शुरू हो गया (" + st.platform + ")");
     }
+  };
+
+  window.testChaupalStudioHardware = function() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (typeof showToast === "function") showToast("⚠️ इस ब्राउज़र में मीडिया डिवाइस API उपलब्ध नहीं है");
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(stream) {
+      var pv = document.getElementById("studio-live-preview-video");
+      if (pv) {
+        pv.srcObject = stream;
+        pv.style.display = "block";
+        pv.play().catch(function() {});
+      }
+      if (typeof showToast === "function") showToast("✅ कैमरा व माइक बिल्कुल सही कार्य कर रहे हैं!");
+    }).catch(function() {
+      if (typeof showToast === "function") showToast("💡 कैमरा/माइक अनुमति दें या कैनवास लाइव मोड का उपयोग करें");
+    });
   };
 
   window.stopAndSaveChaupalStudioLive = function(shouldSave) {
