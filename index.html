@@ -3305,7 +3305,35 @@ function initFirebaseSync() {
   syncCollection("social_permissions", "socialPermissions", "createdAt");
   syncCollection("social_users", "socialUsers", "updatedAt");
 
-  rootRef.doc("competition").onSnapshot(function(docSnap) {
+    rootRef.doc("live_relay").onSnapshot(function(docSnap) {
+    try {
+      if (!docSnap.exists) return;
+      var rd = docSnap.data() || {};
+      var isAct = !!(rd.active && rd.frameData && (Date.now() - Number(rd.updatedAt || 0) < 12000));
+      window.chaupalLiveRelayState = {
+        active: isAct,
+        frameData: isAct ? rd.frameData : "",
+        title: rd.title || "",
+        poet: rd.poet || "",
+        city: rd.city || "",
+        poem: rd.poem || "",
+        guest: rd.guest || "",
+        updatedAt: rd.updatedAt || 0
+      };
+      var imgEl = document.getElementById("viewer-live-relay-img");
+      var phEl = document.getElementById("viewer-live-relay-placeholder");
+      if (isAct && imgEl) {
+        imgEl.src = rd.frameData;
+        imgEl.style.display = "block";
+        if (phEl) phEl.style.display = "none";
+      } else if (!isAct && imgEl) {
+        imgEl.style.display = "none";
+        if (phEl) phEl.style.display = "block";
+      }
+    } catch (e) {}
+  });
+
+rootRef.doc("competition").onSnapshot(function(docSnap) {
     if (docSnap.exists) {
       state.competition = Object.assign({}, DEFAULT_COMPETITION, docSnap.data());
       saveLocalCache();
@@ -5611,11 +5639,17 @@ function openVideoPlayer(id) {
         "<video id=\"viewer-local-stage-video\" autoplay playsinline controls style=\"width:100%; height:100%; object-fit:cover;\"></video>" +
       "</div>";
   } else if (v.isLive) {
+    var rel = window.chaupalLiveRelayState || {};
+    var hasRelayFrame = !!(rel.active && rel.frameData);
     playerHtml =
-      "<div style=\"padding:18px; border-radius:16px; background:linear-gradient(145deg, #4B0D14 0%, #24130C 100%); border:1.5px solid #F7DC8B; color:#FFF9EC; margin-bottom:12px; text-align:center;\">" +
-        "<div style=\"display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:999px; background:rgba(239,68,68,0.22); border:1px solid #FCA5A5; color:#FCA5A5; font-size:12px; font-weight:800; margin-bottom:8px;\"><span style=\"width:9px; height:9px; border-radius:50%; background:#EF4444; display:inline-block;\"></span>काव्य चौपाल ऐप • सजीव प्रसारण सक्रिय</div>" +
-        "<div class=\"font-royal\" style=\"font-size:20px; color:#F7DC8B; margin-bottom:6px;\">" + esc(v.title || "सजीव काव्य प्रसारण") + "</div>" +
-        "<div style=\"font-size:13px; color:rgba(255,249,236,0.88); margin-bottom:14px; line-height:1.55;\">" + esc(v.description || "काव्य चौपाल मंच पर सजीव सत्र जारी है। आप नीचे दाद दे सकते हैं या लाइव कॉन्फ्रेंस कक्ष से जुड़ सकते हैं।") + "</div>" +
+      "<div style=\"padding:14px; border-radius:16px; background:linear-gradient(145deg, #4B0D14 0%, #24130C 100%); border:1.5px solid #F7DC8B; color:#FFF9EC; margin-bottom:12px; text-align:center;\">" +
+        "<div style=\"display:inline-flex; align-items:center; gap:7px; padding:4px 12px; border-radius:999px; background:rgba(239,68,68,0.22); border:1px solid #FCA5A5; color:#FCA5A5; font-size:12px; font-weight:800; margin-bottom:10px;\"><span style=\"width:9px; height:9px; border-radius:50%; background:#EF4444; display:inline-block;\"></span>काव्य चौपाल ऐप • सजीव वीडियो प्रसारण</div>" +
+        "<div style=\"position:relative; width:100%; aspect-ratio:4/3; border-radius:14px; overflow:hidden; background:#11090C; border:1.5px solid #F7DC8B; margin-bottom:12px; display:flex; align-items:center; justify-content:center;\">" +
+          "<img id=\"viewer-live-relay-img\" src=\"" + (hasRelayFrame ? rel.frameData : "") + "\" alt=\"सजीव प्रसारण वीडियो\" style=\"width:100%; height:100%; object-fit:cover; display:" + (hasRelayFrame ? "block" : "none") + ";\" />" +
+          "<div id=\"viewer-live-relay-placeholder\" style=\"padding:16px; font-size:13px; color:#FCE49C; display:" + (hasRelayFrame ? "none" : "block") + ";\">📡 सजीव वीडियो फ़ीड जुड़ रहा है…</div>" +
+        "</div>" +
+        "<div class=\"font-royal\" style=\"font-size:19px; color:#F7DC8B; margin-bottom:6px;\">" + esc(v.title || "सजीव काव्य प्रसारण") + "</div>" +
+        "<div style=\"font-size:12.5px; color:rgba(255,249,236,0.88); margin-bottom:12px; line-height:1.5;\">" + esc(v.description || "काव्य चौपाल मंच पर सजीव सत्र जारी है।") + "</div>" +
         "<div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">" +
           "<button type=\"button\" class=\"action-btn gold\" onclick=\"closeVideoModal(); if(typeof chaupalSocialState!=='undefined'){chaupalSocialState.subTab='call';} if(typeof switchTab==='function')switchTab('social');\">🎙️ लाइव कॉन्फ्रेंस कक्ष खोलें</button>" +
           "<button type=\"button\" class=\"action-btn primary\" onclick=\"closeVideoModal(); if(typeof openManchSub==='function')openManchSub('studio');\">🎛️ चौपाल स्टूडियो</button>" +
@@ -15506,6 +15540,68 @@ window.addEventListener("beforeunload", function() {
     window.renderStudioPane();
   };
 
+  
+  function startLiveFrameRelay(camStream) {
+    try {
+      stopLiveFrameRelay();
+      if (!camStream || typeof document === "undefined" || typeof db === "undefined" || !db) return;
+      var vTracks = camStream.getVideoTracks ? camStream.getVideoTracks() : [];
+      if (!vTracks || !vTracks.length) return;
+      var vid = document.createElement("video");
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.srcObject = camStream;
+      vid.play().catch(function() {});
+
+      var cvs = document.createElement("canvas");
+      cvs.width = 480;
+      cvs.height = 360;
+      var cctx = cvs.getContext("2d");
+
+      window._kcLiveRelayTimer = setInterval(function() {
+        var st = window.chaupalStudioState;
+        if (!st || !st.isLiveOnApp || !st.cameraStream) {
+          stopLiveFrameRelay();
+          return;
+        }
+        try {
+          if (vid.readyState >= 2 && cctx) {
+            cctx.drawImage(vid, 0, 0, cvs.width, cvs.height);
+            var frameUrl = cvs.toDataURL("image/jpeg", 0.52);
+            if (frameUrl && frameUrl.length > 200 && frameUrl.length < 750000) {
+              db.collection(ROOT_COL).doc("live_relay").set({
+                active: true,
+                title: st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण",
+                poet: st.lowerThirdPoet || "राहुल द्विवेदी 'स्मित' (लखनऊ)",
+                city: st.lowerThirdCity || "",
+                poem: st.lowerThirdPoem || "सजीव काव्य पाठ",
+                guest: st.guestPoetName || "",
+                frameData: frameUrl,
+                updatedAt: Date.now()
+              }).catch(function() {});
+            }
+          }
+        } catch (e) {}
+      }, 950);
+    } catch (e) {}
+  }
+
+  function stopLiveFrameRelay() {
+    if (window._kcLiveRelayTimer) {
+      clearInterval(window._kcLiveRelayTimer);
+      window._kcLiveRelayTimer = null;
+    }
+    try {
+      if (typeof db !== "undefined" && db) {
+        db.collection(ROOT_COL).doc("live_relay").set({
+          active: false,
+          frameData: "",
+          updatedAt: Date.now()
+        }, { merge: true }).catch(function() {});
+      }
+    } catch (e) {}
+  }
+
   window.startChaupalStudioLive = function(includeConfCall) {
     var st = window.chaupalStudioState;
     var titleEl = document.getElementById("studio-live-title");
@@ -15573,6 +15669,7 @@ window.addEventListener("beforeunload", function() {
         var sb = document.getElementById("studio-live-media-status");
         if (sb) sb.textContent = st.mediaStatusText;
         attachStreamToPreviewVideo(camStream);
+        startLiveFrameRelay(camStream);
         startContinuousMediaRecorder(camStream);
       }).catch(function() {
         st.mediaStatusText = "⚠️ कैमरा/माइक अनुमति जांचें — लाइव टाइमर व प्रसारण सक्रिय";
@@ -15612,6 +15709,7 @@ window.addEventListener("beforeunload", function() {
       if (st.cameraStream && st.cameraStream.getTracks) {
         try { st.cameraStream.getTracks().forEach(function(tr) { tr.stop(); }); } catch (e) {}
         st.cameraStream = null;
+      stopLiveFrameRelay();
       }
       if (shouldSave) {
         var blobUrl = "";
