@@ -2394,45 +2394,244 @@ var ROLE_OPTIONS = [
 
 var LOCATION_TREE = {
   "भारत": {
-    "उत्तर प्रदेश": ["लखनऊ", "अयोध्या", "प्रयागराज", "वाराणसी", "कानपुर", "गोण्डा (मनकापुर)", "आज़मगढ़", "रायबरेली", "बिजनौर", "संभल", "गोरखपुर", "आगरा", "मथुरा", "मेरठ", "झाँसी", "बरेली", "अलीगढ़", "सीतापुर", "बाराबंकी", "सुल्तानपुर", "अन्य शहर"],
-    "नई दिल्ली (दिल्ली)": ["नई दिल्ली", "उत्तरी दिल्ली", "दक्षिणी दिल्ली", "पूर्वी दिल्ली", "पश्चिमी दिल्ली", "अन्य शहर"],
-    "मध्य प्रदेश": ["भोपाल", "इंदौर", "ग्वालियर", "जबलपुर", "उज्जैन", "सागर", "रीवा", "सतना", "अन्य शहर"],
-    "राजस्थान": ["जयपुर", "जोधपुर", "उदयपुर", "कोटा", "अजमेर", "बीकानेर", "अलवर", "भरतपुर", "अन्य शहर"],
-    "बिहार": ["पटना", "गया", "मुजफ्फरपुर", "भागलपुर", "दरभंगा", "पूर्णिया", "आरा", "अन्य शहर"],
-    "उत्तराखंड": ["देहरादून", "हरिद्वार", "नैनीताल", "हल्द्वानी", "ऋषिकेश", "अल्मोड़ा", "अन्य शहर"],
-    "हरियाणा": ["गुरुग्राम", "फरीदाबाद", "पंचकूला", "अंबाला", "करनाल", "रोहतक", "हिसार", "अन्य शहर"],
-    "महाराष्ट्र": ["मुंबई", "पुणे", "नागपुर", "नाशिक", "औरंगाबाद", "ठाणे", "अन्य शहर"],
-    "छत्तीसगढ़": ["रायपुर", "बिलासपुर", "दुर्ग", "भिलाई", "कोरबा", "अन्य शहर"],
-    "झारखंड": ["राँची", "जमशेदपुर", "धनबाद", "बोकारो", "हजारीबाग", "अन्य शहर"],
-    "पश्चिम बंगाल": ["कोलकाता", "हावड़ा", "सिलीगुड़ी", "दुर्गापुर", "आसनसोल", "अन्य शहर"],
-    "गुजरात": ["अहमदाबाद", "सूरत", "वडोदरा", "राजकोट", "गांधीनगर", "अन्य शहर"],
-    "पंजाब": ["चंडीगढ़", "लुधियाना", "अमृतसर", "जालंधर", "पटियाला", "अन्य शहर"],
-    "हिमाचल प्रदेश": ["शिमला", "धर्मशाला", "मंडी", "सोलन", "कुल्लू", "अन्य शहर"],
+    "उत्तर प्रदेश": [
+      "अंबेडकर नगर", "अमेठी", "अमरोहा", "अयोध्या", "अलीगढ़", "आगरा", "आज़मगढ़",
+      "इटावा", "उन्नाव", "एटा", "औरैया", "कन्नौज", "कानपुर देहात", "कानपुर नगर",
+      "कासगंज", "कुशीनगर", "कौशाम्बी", "खीरी (लखीमपुर खीरी)", "गाज़ीपुर", "गाज़ियाबाद",
+      "गोरखपुर", "गोण्डा", "गोण्डा (मनकापुर)", "गौतम बुद्ध नगर (नोएडा)", "चित्रकूट",
+      "चन्दौली", "जालौन", "जौनपुर", "झाँसी", "देवरिया", "पीलीभीत", "प्रतापगढ़",
+      "प्रयागराज", "फ़तेहपुर", "फ़र्रूख़ाबाद", "फ़िरोज़ाबाद", "बदायूँ", "बरेली",
+      "बलरामपुर", "बलिया", "बस्ती", "बहराइच", "बागपत", "बाँदा", "बाराबंकी",
+      "बिजनौर", "बुलन्दशहर", "मऊ", "मथुरा", "महाराजगंज", "महोबा", "मिर्ज़ापुर",
+      "मुज़फ़्फ़रनगर", "मुरादाबाद", "मेरठ", "मैनपुरी", "रामपुर", "रायबरेली",
+      "लखनऊ", "ललितपुर", "वाराणसी", "शामली", "शाहजहाँपुर", "श्रावस्ती",
+      "संभल", "सन्त कबीर नगर", "सन्त रविदास नगर (भदोही)", "सहारनपुर", "सिद्धार्थनगर",
+      "सीतापुर", "सुल्तानपुर", "सोनभद्र", "हमीरपुर", "हरदोई", "हाथरस", "हापुड़", "अन्य शहर"
+    ],
+    "नई दिल्ली (दिल्ली)": [
+      "नई दिल्ली", "उत्तरी दिल्ली", "उत्तर पूर्वी दिल्ली", "उत्तर पश्चिमी दिल्ली",
+      "दक्षिणी दिल्ली", "दक्षिण पूर्वी दिल्ली", "दक्षिण पश्चिमी दिल्ली",
+      "पूर्वी दिल्ली", "पश्चिमी दिल्ली", "मध्य दिल्ली", "शाहदरा", "अन्य शहर"
+    ],
+    "मध्य प्रदेश": [
+      "अशोकनगर", "आगर मालवा", "अलीराजपुर", "अनूपपुर", "इंदौर", "उज्जैन", "उमरिया",
+      "कटनी", "खरगोन", "खण्डवा", "गुना", "ग्वालियर", "छतरपुर", "छिंदवाड़ा",
+      "जबलपुर", "झाबुआ", "टीकमगढ़", "डिंडोरी", "दतिया", "दमोह", "देवास", "धार",
+      "नरसिंहपुर", "नीमच", "निवाड़ी", "पन्ना", "बड़वानी", "बालाघाट", "बुरहानपुर",
+      "बैतूल", "भिण्ड", "भोपाल", "मण्डला", "मंदसौर", "मुरैना", "मैहर", "मऊगंज",
+      "रतलाम", "रायसेन", "राजगढ़", "रीवा", "विदिशा", "शहडोल", "शाजापुर", "शिवपुरी",
+      "श्योपुर", "सतना", "सागर", "सिंगरौली", "सीधी", "सीहोर", "सिवनी", "हरदा",
+      "होशंगाबाद (नर्मदापुरम)", "पांढुर्णा", "अन्य शहर"
+    ],
+    "राजस्थान": [
+      "अजमेर", "अलवर", "अनूपगढ़", "बालोतरा", "बांसवाड़ा", "बाराँ", "बाड़मेर", "ब्यावर",
+      "भरतपुर", "भीलवाड़ा", "बीकानेर", "बूंदी", "चित्तौड़गढ़", "चूरू", "दौसा", "डीग",
+      "डीडवाना-कुचामन", "धौलपुर", "दूदू", "डूंगरपुर", "गंगानगर", "गंगापुर सिटी",
+      "हनुमानगढ़", "जयपुर", "जयपुर ग्रामीण", "जैसलमेर", "जालौर", "झालावाड़", "झुंझुनू",
+      "जोधपुर", "जोधपुर ग्रामीण", "करौली", "केकड़ी", "खैरथल-तिजारा", "कोटा",
+      "कोटपूतली-बहरोड़", "नागौर", "नीम का थाना", "पाली", "फलौदी", "प्रतापगढ़",
+      "राजसमंद", "सलूम्बर", "सांचौर", "सवाई माधोपुर", "शाहपुरा", "सीकर", "सिरोही",
+      "टोंक", "उदयपुर", "अन्य शहर"
+    ],
+    "बिहार": [
+      "अररिया", "अरवल", "औरंगाबाद", "कटिहार", "किशनगंज", "कैमूर (भभुआ)", "खगड़िया",
+      "गया", "गोपालगंज", "जमुई", "जहानाबाद", "दरभंगा", "नवादा", "नालंदा", "पटना",
+      "पश्चिम चंपारण (बेतिया)", "पूर्णिया", "पूर्वी चंपारण (मोतिहारी)", "बक्सर", "बाँका",
+      "बेगूसराय", "भागलपुर", "भोजपुर (आरा)", "मधुबनी", "मधेपुरा", "मुंगेर",
+      "मुजफ्फरपुर", "रोहतास (सासाराम)", "लखीसराय", "वैशाली (हाजीपुर)", "शिवहर",
+      "शेखपुरा", "समस्तीपुर", "सहरसा", "सारण (छपरा)", "सीतामढ़ी", "सीवान", "सुपौल", "अन्य शहर"
+    ],
+    "उत्तराखंड": [
+      "अल्मोड़ा", "उधम सिंह नगर (रुद्रपुर)", "उत्तरकाशी", "चमोली", "चम्पावत",
+      "टिहरी गढ़वाल", "देहरादून", "नैनीताल", "पिथौरागढ़", "पौड़ी गढ़वाल", "बागेश्वर",
+      "रुद्रप्रयाग", "हरिद्वार", "हल्द्वानी", "ऋषिकेश", "अन्य शहर"
+    ],
+    "हरियाणा": [
+      "अंबाला", "कुरुक्षेत्र", "कैथल", "करनाल", "गुरुग्राम", "चरखी दादरी", "जींद",
+      "झज्जर", "नूंह", "पलवल", "पंचकूला", "पानीपत", "फतेहाबाद", "फरीदाबाद",
+      "भिवानी", "महेन्द्रगढ़", "यमुनानगर", "रेवाड़ी", "रोहतक", "सिरसा", "सोनीपत", "हिसार", "अन्य शहर"
+    ],
+    "महाराष्ट्र": [
+      "अकोला", "अमरावती", "अहमदनगर", "उस्मानाबाद (धाराशिव)", "औरंगाबाद (छत्रपति संभाजीनगर)",
+      "कोल्हापुर", "गढ़चिरौली", "गोंदिया", "चंद्रपुर", "जलगाँव", "जालना", "ठाणे",
+      "धुले", "नंदुरबार", "नागपुर", "नांदेड़", "नाशिक", "परभणी", "पालघर", "पुणे",
+      "बीड", "बुलढाणा", "भंडारा", "मुंबई उपनगर", "मुंबई शहर", "यवतमाल", "रत्नागिरी",
+      "रायगढ़", "लातूर", "वर्धा", "वाशिम", "सांगली", "सतारा", "सिंधुदुर्ग", "सोलापुर", "हिंगोली", "अन्य शहर"
+    ],
+    "छत्तीसगढ़": [
+      "अंबिकापुर (सरगुजा)", "कबीरधाम (कवर्धा)", "कांकेर", "कोरबा", "कोरिया", "कोंडागाँव",
+      "खैरागढ़-छुईखदान-गंडई", "गरियाबंद", "गौरेला-पेंड्रा-मरवाही", "जशपुर", "जांजगीर-चांपा",
+      "दंतेवाड़ा", "दुर्ग", "धमतरी", "नारायणपुर", "बलरामपुर", "बलौदाबाजार", "बस्तर (जगदलपुर)",
+      "बालोद", "बिलासपुर", "बेमेतरा", "बीजापुर", "मनेंद्रगढ़-चिरमिरी-भरतपुर", "महासमुंद",
+      "मुंगेली", "मोहला-मानपुर-अंबागढ़ चौकी", "रायगढ़", "रायपुर", "राजनांदगाँव",
+      "सक्ती", "सारंगढ़-बिलाईगढ़", "सुकमा", "सूरजपुर", "भिलाई", "अन्य शहर"
+    ],
+    "झारखंड": [
+      "कोडरमा", "खूंटी", "गढ़वा", "गिरिडीह", "गुमला", "गोड्डा", "चतरा", "जामताड़ा",
+      "दुमका", "देवघर", "धनबाद", "पलामू", "पश्चिमी सिंहभूम (चाईबासा)", "पाकुड़",
+      "पूर्वी सिंहभूम (जमशेदपुर)", "बोकारो", "राँची", "रामगढ़", "लातेहार", "लोहरदगा",
+      "सरायकेला-खरसावाँ", "साहिबगंज", "सिमडेगा", "हजारीबाग", "अन्य शहर"
+    ],
+    "पश्चिम बंगाल": [
+      "अलीपुरद्वार", "उत्तर 24 परगना", "उत्तर दिनाजपुर", "कलिम्पोंग", "कूचबिहार",
+      "कोलकाता", "झाड़ग्राम", "दक्षिण 24 परगना", "दक्षिण दिनाजपुर", "दार्जिलिंग",
+      "नदिया", "पश्चिम बर्धमान (आसनसोल)", "पश्चिम मेदिनीपुर", "पुरुलिया", "पूर्व बर्धमान",
+      "पूर्व मेदिनीपुर", "बाँकुड़ा", "बीरभूम", "मालदा", "मुर्शिदाबाद", "सिलीगुड़ी", "हावड़ा", "हुगली", "अन्य शहर"
+    ],
+    "गुजरात": [
+      "अमरेली", "अरावली", "अहमदाबाद", "आणंद", "कच्छ (भुज)", "खेड़ा", "गांधीनगर",
+      "गिर सोमनाथ", "छोटा उदेपुर", "जामनगर", "जूनागढ़", "डांग", "तापी", "दाहोद",
+      "देवभूमि द्वारका", "नर्मदा", "नवसारी", "पंचमहल", "पाटण", "पोरबंदर", "बनासकांठा",
+      "बोटाद", "भरूच", "भावनगर", "महिसागर", "मेहसाणा", "मोरबी", "राजकोट", "वडोदरा",
+      "वलसाड", "साबरकांठा", "सूरत", "सुरेन्द्रनगर", "अन्य शहर"
+    ],
+    "पंजाब": [
+      "अमृतसर", "कपूरथला", "गुरदासपुर", "चंडीगढ़", "जालंधर", "तरन तारन", "पटियाला",
+      "पठानकोट", "फतेहगढ़ साहिब", "फरीदकोट", "फाजिल्का", "फिरोजपुर", "बरनाला",
+      "बठिंडा", "मलेरकोटला", "मानसा", "मोगा", "रूपनगर", "लुधियाना", "श्री मुक्तसर साहिब",
+      "संगरूर", "एस.ए.एस. नगर (मोहाली)", "शहीद भगत सिंह नगर (नवांशहर)", "होशियारपुर", "अन्य शहर"
+    ],
+    "हिमाचल प्रदेश": [
+      "ऊना", "काँगड़ा (धर्मशाला)", "किन्नौर", "कुल्लू", "चम्बा", "बिलासपुर", "मंडी",
+      "लाहुल और स्पीति", "शिमला", "सिरमौर", "सोलन", "हमीरपुर", "अन्य शहर"
+    ],
+    "जम्मू और कश्मीर": [
+      "अनंतनाग", "उधमपुर", "कठुआ", "किश्तवाड़", "कुलगाम", "कुपवाड़ा", "गांदरबल",
+      "जम्मू", "डोडा", "पुंछ", "पुलवामा", "बडगाम", "बांदीपोरा", "बारामूला",
+      "राजौरी", "रामबन", "रियासी", "श्रीनगर", "शोपियाँ", "सांबा", "अन्य शहर"
+    ],
+    "लद्दाख": ["कारगिल", "लेह", "अन्य शहर"],
+    "ओडिशा": [
+      "अंगुल", "कटक", "कंधमाल", "कालाहांडी", "क्योंझर", "केन्द्रापाड़ा", "कोरापुट",
+      "खुर्दा (भुवनेश्वर)", "गंजाम", "गजपति", "जगतसिंहपुर", "जाजपुर", "झारसुगुड़ा",
+      "ढेंकनाल", "देवगढ़", "नबरंगपुर", "नयागढ़", "नुआपाड़ा", "पुरी", "बरगढ़",
+      "बलांगीर", "बालासोर", "बौध", "भद्रक", "मयूरभंज", "मलकानगिरी", "रायगड़ा",
+      "संबलपुर", "सुंदरगढ़ (राउरकेला)", "सुवर्णपुर", "अन्य शहर"
+    ],
+    "असम": [
+      "उदलगुरी", "कछार (सिलचर)", "करीमगंज", "कामरूप", "कामरूप महानगर (गुवाहाटी)",
+      "कार्बी आंगलोंग", "कोकराझार", "गोलाघाट", "गोवालपारा", "चराइदेव", "चिरांग",
+      "जोरहाट", "डिब्रूगढ़", "डिमा हसाओ", "तिनसुकिया", "दक्षिण सलमारा", "दरंग",
+      "धेमाजी", "धुबरी", "नगांव", "नलबाड़ी", "बक्सा", "बरपेटा", "बोंगाईगांव",
+      "माजुली", "मोरीगांव", "लखीमपुर", "विश्वनाथ", "शिवसागर", "सोनितपुर (तेजपुर)",
+      "हैलाकांडी", "होझाई", "अन्य शहर"
+    ],
+    "कर्नाटक": [
+      "उडुपी", "उत्तर कन्नड़", "कलबुर्गी (गुलबर्गा)", "कोडगु", "कोप्पल", "कोलार",
+      "गदग", "चामराजनगर", "चिक्कबल्लापुर", "चिक्कमगलुरु", "चित्रदुर्ग", "तुमकुरु",
+      "दक्षिण कन्नड़ (मंगलुरु)", "दावणगेरे", "धारवाड़ (हुबली)", "बल्लारी", "बागलकोट",
+      "बीदर", "बेंगलुरु ग्रामीण", "बेंगलुरु शहरी", "बेलगावी", "मंड्या", "मैसूरु",
+      "यादगीर", "रायचूर", "रामनगर", "विजयपुरा", "विजयनगर", "शिवमोग्गा", "हासन", "हावेरी", "अन्य शहर"
+    ],
+    "तमिलनाडु": [
+      "अरियलूर", "इरोड", "कन्याकुमारी", "करूर", "कल्लाकुरिची", "कांचीपुरम", "कृष्णागिरि",
+      "कोयंबटूर", "कुड्डालोर", "चेन्नई", "चेंगलपट्टू", "तंजावुर", "तिरुचिरापल्ली",
+      "तिरुनेलवेली", "तिरुप्पत्तूर", "तिरुप्पुर", "तिरुवन्नामलाई", "तिरुवल्लुर", "तिरुवारूर",
+      "तूतुकुडी", "तेनकासी", "थेनी", "धर्मपुरी", "डिंडीगुल", "नागपट्टिनम", "नामक्कल",
+      "नीलगिरि (ऊटी)", "पुदुक्कोट्टई", "पेरम्बलूर", "मदुरै", "मयिलादुथुराई", "रानीपेट",
+      "रामनाथपुरम", "विरुधुनगर", "विलुप्पुरम", "वेल्लोर", "शिवगंगा", "सेलम", "अन्य शहर"
+    ],
+    "केरल": [
+      "अलप्पुझा", "इदुक्की", "एर्नाकुलम (कोच्चि)", "कन्नूर", "कासरगोड", "कोट्टायम",
+      "कोझिकोड", "कोल्लम", "तिरुवनंतपुरम", "त्रिशूर", "पथनमथिट्टा", "पलक्कड़",
+      "मलप्पुरम", "वायनाड", "अन्य शहर"
+    ],
+    "तेलंगाना": [
+      "अदिलाबाद", "करीमनगर", "कामाारेड्डी", "खम्मम", "जोगुलाम्बा गडवाल", "नलगोंडा",
+      "निज़ामाबाद", "निर्मल", "पेद्दापल्ली", "भद्राद्री कोठागुडेम", "महबूबनगर", "मेडक",
+      "मेडचल-मलकाजगिरि", "रंगारेड्डी", "वारंगल", "संगारेड्डी", "सिद्दीपेट", "सूर्यापेट", "हैदराबाद", "अन्य शहर"
+    ],
+    "आंध्र प्रदेश": [
+      "अनंतपुर", "अल्लूरी सीताराम राजू", "अनाकापल्ली", "एलुरु", "कडप्पा", "काकीनाडा",
+      "कृष्णा", "कुरनूल", "गुंटूर", "चित्तूर", "तिरुपति", "नंद्याल", "नेल्लोर",
+      "प्रकासम", "बापटला", "विजयनगरम", "विशाखापत्तनम", "श्रीकाकुलम", "अन्य शहर"
+    ],
+    "गोवा": ["उत्तरी गोवा (पणजी)", "दक्षिणी गोवा (मडगाँव)", "अन्य शहर"],
+    "त्रिपुरा": ["अगरतला (पश्चिम त्रिपुरा)", "उनाकोटी", "उत्तर त्रिपुरा", "गोमती", "दक्षिण त्रिपुरा", "धलाई", "अन्य शहर"],
+    "मेघालय": ["ईस्ट खासी हिल्स (शिलांग)", "वेस्ट गारो हिल्स (तुरा)", "री-भोई", "अन्य शहर"],
+    "मणिपुर": ["इंफाल पूर्व", "इंफाल पश्चिम", "चूड़ाचांदपुर", "थौबल", "बिष्णुपुर", "सेनापति", "अन्य शहर"],
+    "नागालैंड": ["कोहिमा", "दीमापुर", "मोकोकचुंग", "मोन", "अन्य शहर"],
+    "मिज़ोरम": ["आइज़ोल", "चम्फाई", "लुंगलेई", "अन्य शहर"],
+    "अरुणाचल प्रदेश": ["ईटानगर (पापुम पारे)", "तवांग", "पश्चिम कामेंग", "लोहित", "अन्य शहर"],
+    "सिक्किम": ["गंगटोक", "ग्यालशिंग", "नामची", "मंगन", "अन्य शहर"],
+    "केंद्र शासित प्रदेश (अन्य)": ["अंडमान व निकोबार (पोर्ट ब्लेयर)", "चंडीगढ़", "दादरा व नगर हवेली और दमन व दीव", "पुदुचेरी", "लक्षद्वीप", "अन्य शहर"],
     "अन्य प्रदेश": ["अन्य शहर"]
   },
   "नेपाल": {
-    "बागमती": ["काठमांडू", "ललितपुर", "भक्तपुर", "अन्य शहर"],
-    "लुम्बिनी": ["बुटवल", "भैरहवा", "नेपालगंज", "अन्य शहर"],
-    "मधेश": ["जनकपुर", "बीरगंज", "अन्य शहर"],
+    "बागमती": ["काठमांडू", "ललितपुर", "भक्तपुर", "चितवन", "मकवानपुर", "अन्य शहर"],
+    "लुम्बिनी": ["बुटवल", "भैरहवा (सिद्धार्थनगर)", "नेपालगंज", "दांग", "कपिलवस्तु", "अन्य शहर"],
+    "मधेश": ["जनकपुर", "बीरगंज", "राजबिराज", "गौर", "कलैया", "अन्य शहर"],
+    "कोशी": ["विराटनगर", "धरान", "इटहरी", "झापा", "अन्य शहर"],
+    "गण्डकी": ["पोखरा", "गोरखा", "तनहुँ", "अन्य शहर"],
+    "कर्णाली": ["सुर्खेत", "जुम्ला", "अन्य शहर"],
+    "सुदूरपश्चिम": ["धनगढ़ी", "महेन्द्रनगर", "अन्य शहर"],
     "अन्य प्रदेश": ["अन्य शहर"]
   },
   "संयुक्त राज्य अमेरिका (USA)": {
-    "कैलिफ़ोर्निया": ["सैन फ्रांसिस्को", "लॉस एंजिल्स", "सैन होज़े", "अन्य शहर"],
-    "टेक्सास": ["ह्यूस्टन", "डलास", "ऑस्टिन", "अन्य शहर"],
-    "न्यूयॉर्क": ["न्यूयॉर्क सिटी", "अन्य शहर"],
+    "कैलिफ़ोर्निया": ["सैन फ्रांसिस्को", "लॉस एंजिल्स", "सैन होज़े", "सैन डिएगो", "अन्य शहर"],
+    "टेक्सास": ["ह्यूस्टन", "डलास", "ऑस्टिन", "सैन एंटोनियो", "अन्य शहर"],
+    "न्यूयॉर्क": ["न्यूयॉर्क सिटी", "बफ़ेलो", "अल्बानी", "अन्य शहर"],
+    "न्यू जर्सी": ["जर्सी सिटी", "एडिसन", "नेवार्क", "अन्य शहर"],
+    "इलिनॉय": ["शिकागो", "नेपरविले", "अन्य शहर"],
+    "फ़्लोरिडा": ["मियामी", "ऑरलैंडो", "टैम्पा", "अन्य शहर"],
+    "वाशिंगटन": ["सिएटल", "बेलेव्यू", "अन्य शहर"],
+    "मैसाचुसेट्स": ["बोस्टन", "कैम्ब्रिज", "अन्य शहर"],
     "अन्य प्रदेश": ["अन्य शहर"]
   },
   "यूनाइटेड किंगडम (UK)": {
-    "इंग्लैंड": ["लंदन", "बर्मिंघम", "मैनचेस्टर", "अन्य शहर"],
+    "इंग्लैंड": ["लंदन", "बर्मिंघम", "मैनचेस्टर", "लीड्स", "लीसेस्टर", "अन्य शहर"],
+    "स्कॉटलैंड": ["एडिनबर्ग", "ग्लासगो", "अन्य शहर"],
+    "वेल्स": ["कार्डिफ़", "अन्य शहर"],
+    "उत्तरी आयरलैंड": ["बेलफ़ास्ट", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "कनाडा": {
+    "ओंटारियो": ["टोरंटो", "ओटावा", "ब्रैम्पटन", "मिसिसॉगा", "अन्य शहर"],
+    "ब्रिटिश कोलंबिया": ["वैंकूवर", "सरे", "अन्य शहर"],
+    "अल्बर्टा": ["कैलगरी", "एडमोंटन", "अन्य शहर"],
+    "क्यूबेक": ["मॉन्ट्रियल", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "ऑस्ट्रेलिया": {
+    "न्यू साउथ वेल्स": ["सिडनी", "न्यूकैसल", "अन्य शहर"],
+    "विक्टोरिया": ["मेलबर्न", "अन्य शहर"],
+    "क्वींसलैंड": ["ब्रिस्बेन", "गोल्ड कोस्ट", "अन्य शहर"],
+    "पश्चिमी ऑस्ट्रेलिया": ["पर्थ", "अन्य शहर"],
     "अन्य प्रदेश": ["अन्य शहर"]
   },
   "संयुक्त अरब अमीरात (UAE)": {
     "दुबई": ["दुबई", "अन्य शहर"],
-    "अबू धाबी": ["अबू धाबी", "अन्य शहर"],
+    "अबू धाबी": ["अबू धाबी", "अल ऐन", "अन्य शहर"],
+    "शारजाह": ["शारजाह", "अन्य शहर"],
+    "अजमान": ["अजमान", "अन्य शहर"],
     "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "सिंगापुर": {
+    "सिंगापुर": ["सिंगापुर", "अन्य शहर"]
   },
   "मॉरीशस": {
     "पोर्ट लुइस": ["पोर्ट लुइस", "अन्य शहर"],
+    "प्लायन्स विल्हेम्स": ["क्योरपाइप", "क्वात्रे बोर्नेस", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "फ़िजी": {
+    "मध्य प्रभाग": ["सुवा", "अन्य शहर"],
+    "पश्चिमी प्रभाग": ["नांदी", "लौटोका", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "सूरीनाम": {
+    "पारामारिबो": ["पारामारिबो", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "जापान": {
+    "टोक्यो": ["टोक्यो", "अन्य शहर"],
+    "ओसाका": ["ओसाका", "अन्य शहर"],
+    "अन्य प्रदेश": ["अन्य शहर"]
+  },
+  "जर्मनी": {
+    "बर्लिन": ["बर्लिन", "अन्य शहर"],
+    "बवेरिया": ["म्यूनिख", "अन्य शहर"],
+    "हेस्से": ["फ्रैंकफर्ट", "अन्य शहर"],
     "अन्य प्रदेश": ["अन्य शहर"]
   },
   "अन्य देश": {
@@ -2650,7 +2849,7 @@ var DEFAULT_SETTINGS = {
   customTurnCredential: "",
   forceTurnRelay: false,
   featuredPoemId: "poem_rahul_1",
-  genres: ["गीत", "दोहा", "ग़ज़ल", "मुक्तक", "कविता", "छंद", "नवगीत", "बाल साहित्य"],
+  genres: ["गीत", "दोहा", "ग़ज़ल", "मुक्तक", "कविता", "छंद", "नवगीत", "बाल साहित्य", "कहानी", "लघुकथा", "लेख / निबंध", "संस्मरण", "यात्रा वृत्तांत", "जीवनी", "समीक्षा", "व्यंग्य", "एकांकी / नाटक"],
   socials: {
     facebook: "https://www.facebook.com/KavyaChaupal",
     youtube: "https://youtube.com/@kavyachaupal",
@@ -3000,7 +3199,25 @@ function initFirebaseSync() {
   syncCollection("comments", "comments", "createdAt");
   syncCollection("follows", "follows", "createdAt");
   syncCollection("messages", "messages", "createdAt");
-  syncCollection("notifications", "notifications", "createdAt");
+  rootRef.doc("notifications").collection("items").onSnapshot(function(snap) {
+    if (!snap.empty) {
+      var list = [];
+      snap.forEach(function(d) { list.push(Object.assign({ id: d.id }, d.data())); });
+      list.sort(function(a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+      state.notifications = list;
+      saveLocalCache();
+      renderAll();
+      var nowMs = Date.now();
+      snap.docChanges().forEach(function(chg) {
+        if (chg.type === "added") {
+          var nd = Object.assign({ id: chg.doc.id }, chg.doc.data() || {});
+          if (nd.createdAt && (nowMs - Number(nd.createdAt) < 120000)) {
+            triggerDeviceSystemNotification(nd);
+          }
+        }
+      });
+    }
+  });
   syncCollection("social_chats", "socialChats", "createdAt");
   syncCollection("social_groups", "socialGroups", "createdAt");
   syncCollection("social_call_requests", "socialCallRequests", "createdAt");
@@ -3052,6 +3269,88 @@ function cloudDeleteDoc(section, id) {
   saveLocalCache();
   if (!db) return Promise.resolve(false);
   return db.collection(ROOT_COL).doc(section).collection("items").doc(id).delete().then(function() { return true; }).catch(function() { return false; });
+}
+
+var _notifiedAlertIds = {};
+
+function triggerDeviceSystemNotification(notifItem) {
+  if (!notifItem || !notifItem.id) return;
+  if (_notifiedAlertIds[notifItem.id]) return;
+  if (state.readNotifIds && state.readNotifIds.indexOf(notifItem.id) !== -1) return;
+  var myEmail = (state.currentUser && state.currentUser.email || "").toLowerCase().trim();
+  var tgt = (notifItem.targetEmail || "").toLowerCase().trim();
+  if (tgt && (!myEmail || tgt !== myEmail)) return;
+  if (!tgt && !myEmail) return;
+  _notifiedAlertIds[notifItem.id] = true;
+
+  try {
+    if (navigator.vibrate) navigator.vibrate([220, 100, 220]);
+  } catch (e) {}
+
+  var titleTxt = notifItem.title || "काव्य चौपाल";
+  var opts = {
+    body: notifItem.body || "काव्य चौपाल पर नई सूचना प्राप्त हुई है।",
+    tag: "kc_notif_" + notifItem.id,
+    renotify: true,
+    requireInteraction: (notifItem.type === "approval" || notifItem.type === "reply" || notifItem.type === "poem"),
+    data: { notifId: notifItem.id, targetId: notifItem.targetId || "", type: notifItem.type || "info" }
+  };
+  if (state.settings && state.settings.logo) {
+    opts.icon = state.settings.logo;
+    opts.badge = state.settings.logo;
+  }
+
+  var showSys = function() {
+    if (chaupalSwRegistration && chaupalSwRegistration.showNotification) {
+      chaupalSwRegistration.showNotification(titleTxt, opts).catch(function() {
+        try {
+          var n1 = new Notification(titleTxt, opts);
+          n1.onclick = function() { try { window.focus(); handleNotifClick(notifItem.id); } catch (e) {} n1.close(); };
+        } catch (e2) {}
+      });
+    } else if ("Notification" in window) {
+      try {
+        var n2 = new Notification(titleTxt, opts);
+        n2.onclick = function() { try { window.focus(); handleNotifClick(notifItem.id); } catch (e) {} n2.close(); };
+      } catch (e3) {}
+    }
+  };
+
+  try {
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        showSys();
+      } else if (Notification.permission === "default") {
+        Notification.requestPermission().then(function(perm) {
+          if (perm === "granted") showSys();
+        }).catch(function() {});
+      }
+    }
+  } catch (e) {}
+}
+
+function enableDevicePushNotifications() {
+  if (!("Notification" in window)) {
+    showToast("आपके ब्राउज़र में सिस्टम नोटिफिकेशन समर्थित नहीं है");
+    return;
+  }
+  Notification.requestPermission().then(function(perm) {
+    if (perm === "granted") {
+      showToast("फ़ोन नोटिफिकेशन अनुमति चालू हो गई है 🔔✓");
+      triggerDeviceSystemNotification({
+        id: "test_" + Date.now(),
+        title: "काव्य चौपाल सूचनाएँ सक्रिय 🔔",
+        body: "अब रचना स्वीकृति, कॉल और संदेश की सूचना सीधे आपके फ़ोन पर आएगी।",
+        type: "info",
+        targetEmail: (state.currentUser && state.currentUser.email) || ""
+      });
+    } else {
+      showToast("ब्राउज़र सेटिंग से नोटिफिकेशन अनुमति ‘Allow’ करें");
+    }
+    renderTopAccountBar();
+    var nm = document.getElementById("notif-modal");
+    if (nm && nm.classList.contains("open")) renderNotificationsModal();
+  }).catch(function() {});
 }
 
 function pushNotification(title, body, type, targetId, targetEmail) {
@@ -3247,7 +3546,8 @@ function formatTimeHi(ts) {
 }
 
 function getAllGenres() {
-  var set = new Set(state.settings.genres || []);
+  var set = new Set(DEFAULT_SETTINGS.genres || []);
+  (state.settings.genres || []).forEach(function(g) { if (g) set.add(g.trim()); });
   state.poems.forEach(function(p) { if (p.genre) set.add(p.genre.trim()); });
   return Array.from(set);
 }
@@ -3779,6 +4079,7 @@ function renderTopAccountBar() {
     "<div class=\"top-account-sub\">" + esc(subTxt) + "</div>" +
     "</div></div>" +
     "<div class=\"top-account-btns\">" +
+    (("Notification" in window && Notification.permission !== "granted") ? "<button class=\"sm-btn\" style=\"border-color:var(--gold);\" onclick=\"enableDevicePushNotifications()\">🔔 फ़ोन सूचना चालू करें</button>" : "") +
     "<button class=\"sm-btn\" onclick=\"openMyCorner()\">🏛️ मेरा कॉर्नर</button>" +
     "<button class=\"sm-btn\" onclick=\"openSubmitModal(\'poem\')\">✍️ रचना लिखें</button>" +
     "<button class=\"sm-btn del\" onclick=\"signOutAccount()\">लॉगआउट</button>" +
@@ -4510,7 +4811,7 @@ function renderMyCorner() {
         "</div></div>";
     }).join("") + "</div>") : "<div class=\"empty-box\">आपकी कोई प्रकाशित रचना अभी नहीं है। ऊपर ‘नई रचना लिखें’ पर क्लिक कर अपनी पहली रचना पोस्ट करें।</div>";
     var pendCards = myPendingPoems.length ? ("<h4 class=\"section-title\" style=\"margin-top:16px;\">⏳ समीक्षाधीन रचनाएँ (" + myPendingPoems.length + ")</h4>" + myPendingPoems.map(function(p) {
-      return "<div class=\"pending-card\"><span class=\"genre-tag\">" + esc(p.genre) + "</span>" + (p.mood ? (" <span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") + "<div class=\"font-royal\" style=\"font-size:18px; color:var(--primary); margin-top:5px;\">" + esc(p.title) + "</div>" + (p.bhavImage ? ("<img src=\"" + p.bhavImage + "\" style=\"width:120px; border-radius:10px; border:1px solid var(--gold); margin-top:6px;\" />") : "") + "<div class=\"pending-poem-preview\">" + esc(p.content) + "</div></div>";
+      return "<div class=\"pending-card\"><div style=\"display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;\"><div><span class=\"genre-tag\">" + esc(p.genre) + "</span>" + (p.mood ? (" <span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") + "</div><button type=\"button\" class=\"sm-btn\" onclick=\"event.stopPropagation(); editMyPendingPoem(dec('" + arg(p.id) + "'))\">✏️ समीक्षाधीन रचना संपादित करें</button></div><div class=\"font-royal\" style=\"font-size:18px; color:var(--primary); margin-top:5px;\">" + esc(p.title) + "</div>" + (p.bhavImage ? ("<img src=\"" + p.bhavImage + "\" style=\"width:120px; border-radius:10px; border:1px solid var(--gold); margin-top:6px;\" />") : "") + "<div class=\"pending-poem-preview\">" + esc(p.content) + "</div></div>";
     }).join("")) : "";
     subHtml = "<h3 class=\"section-title\">📜 मेरी प्रकाशित रचनाएँ (" + myPublishedPoems.length + ")</h3>" + pubCards + pendCards;
   } else if (state.cornerSubTab === "bio") {
@@ -7612,20 +7913,109 @@ function startGroupConferenceCall(modeType, groupId) {
   });
 }
 
+function getLinkedPoetForAdmin(a) {
+  if (!a) return null;
+  var aName = (a.name || "").trim();
+  var aEmail = (a.ownerEmail || "").toLowerCase().trim();
+  return state.poets.find(function(pt) {
+    return (a.linkedPoetId && pt.id === a.linkedPoetId) ||
+      (aEmail && (pt.ownerEmail || "").toLowerCase().trim() === aEmail) ||
+      (aName && (pt.name || "").trim() === aName);
+  }) || null;
+}
+
+function syncAdminToLinkedPoet(admObj) {
+  if (!admObj) return;
+  var aName = (admObj.name || "").trim();
+  var aEmail = (admObj.ownerEmail || "").toLowerCase().trim();
+  var matchedPoet = getLinkedPoetForAdmin(admObj);
+  if (matchedPoet) {
+    matchedPoet.name = aName || matchedPoet.name;
+    if (admObj.city) matchedPoet.city = admObj.city;
+    if (admObj.photo) matchedPoet.photo = admObj.photo;
+    if (aEmail) matchedPoet.ownerEmail = aEmail;
+    if (!matchedPoet.occupation && admObj.designation) matchedPoet.occupation = admObj.designation;
+    if (!matchedPoet.special && (admObj.role || admObj.bio)) matchedPoet.special = admObj.role || admObj.bio;
+    admObj.linkedPoetId = matchedPoet.id;
+    cloudSaveDoc("poets", matchedPoet.id, matchedPoet);
+  } else if (aName) {
+    var newPoetId = "poet_" + Date.now();
+    var newPoet = {
+      id: newPoetId,
+      name: aName,
+      ownerEmail: aEmail,
+      mobile: "",
+      birth: "",
+      city: admObj.city || "भारत",
+      education: "",
+      occupation: admObj.designation || "कवि एवं एडमिन मण्डल",
+      mainGenres: "गीत, कविता, छंद",
+      publications: "",
+      awards: "",
+      special: admObj.role || admObj.bio || "",
+      quote: "",
+      socialLink: "",
+      photo: admObj.photo || "",
+      bio: admObj.bio || ""
+    };
+    state.poets.push(newPoet);
+    admObj.linkedPoetId = newPoetId;
+    cloudSaveDoc("poets", newPoetId, newPoet);
+  }
+}
+
 function renderAdminsDirectory() {
   var qEl = document.getElementById("admin-search");
   var q = (qEl ? qEl.value : "").trim().toLowerCase();
   var list = state.admins.filter(function(a) { return !q || (a.name + " " + (a.designation || "") + " " + (a.city || "")).toLowerCase().indexOf(q) !== -1; });
+  var cntEl = document.getElementById("admins-dir-count"); if (cntEl) cntEl.textContent = list.length + " सदस्य";
   var grid = document.getElementById("admins-dir-grid"); if (!grid) return;
   grid.innerHTML = list.map(function(a) {
-    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec(\'" + arg(a.id) + "\'))\"><div class=\"avatar-md\">" + (a.photo ? ("<img src=\"" + a.photo + "\">") : esc(initials(a.name))) + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(a.name) + "</h3><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || "") + "</span></div></div></div>";
+    var lPt = getLinkedPoetForAdmin(a);
+    var photoSrc = a.photo || (lPt && lPt.photo) || "";
+    return "<div class=\"person-card\" onclick=\"openAdminDetail(dec('" + arg(a.id) + "'))\"><div class=\"avatar-md\">" + (photoSrc ? ("<img src=\"" + photoSrc + "\">") : esc(initials(a.name))) + "</div><div class=\"person-info\"><h3 class=\"person-name\">" + esc(a.name) + "</h3><div class=\"person-role\">👑 " + esc(a.designation || "") + "</div><div class=\"person-meta\"><span>📍 " + esc(a.city || (lPt && lPt.city) || "") + "</span></div></div></div>";
   }).join("");
 }
 function openAdminDetail(id) { pushAppView("admin"); state.activeAdminId = id; document.getElementById("admins-list-view").style.display = "none"; document.getElementById("admin-detail-view").style.display = "block"; renderAdminDetail(id); }
 function closeAdminDetail(fromPop) { state.activeAdminId = null; document.getElementById("admin-detail-view").style.display = "none"; document.getElementById("admins-list-view").style.display = "block"; if (!fromPop) syncBackAfterUiClose(); }
 function renderAdminDetail(id) {
   var a = state.admins.find(function(x) { return x.id === id; }); var c = document.getElementById("admin-detail-view"); if (!a || !c) return;
-  c.innerHTML = "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button><div class=\"profile-hero\"><h2 class=\"profile-name\">" + esc(a.name) + "</h2><div class=\"profile-sub\">👑 " + esc(a.designation) + " • 📍 " + esc(a.city || "") + "</div></div>" + renderStructuredBioCard(a, "परिचय", false);
+  var linkedPt = getLinkedPoetForAdmin(a);
+  var merged = Object.assign({}, linkedPt || {}, a, {
+    photo: a.photo || (linkedPt && linkedPt.photo) || "",
+    city: a.city || (linkedPt && linkedPt.city) || "",
+    birth: (linkedPt && linkedPt.birth) || a.birth || "",
+    birthPlace: (linkedPt && linkedPt.birthPlace) || a.birthPlace || "",
+    education: (linkedPt && linkedPt.education) || a.education || "",
+    occupation: a.designation || (linkedPt && linkedPt.occupation) || "",
+    mainGenres: (linkedPt && linkedPt.mainGenres) || a.mainGenres || "",
+    publications: (linkedPt && linkedPt.publications) || a.publications || "",
+    awards: (linkedPt && linkedPt.awards) || a.awards || "",
+    special: a.role || (linkedPt && linkedPt.special) || "",
+    bio: a.bio || (linkedPt && linkedPt.bio) || "",
+    quote: (linkedPt && linkedPt.quote) || a.quote || ""
+  });
+  var av = merged.photo ? ("<img src=\"" + merged.photo + "\" alt=\"" + esc(merged.name) + "\">") : esc(initials(merged.name));
+  var poetPoems = linkedPt ? state.poems.filter(function(p) { return p.poet === linkedPt.name; }) : [];
+  var poetLinkBtn = linkedPt
+    ? ("<button type=\"button\" class=\"action-btn gold\" style=\"padding:7px 13px; font-size:12.5px; border-radius:99px; margin-top:8px;\" onclick=\"openPoetProfile(dec('" + arg(linkedPt.name) + "'))\">✒️ कवि कॉर्नर व रचनाएँ देखें (" + poetPoems.length + ")</button>")
+    : "";
+  c.innerHTML =
+    "<button class=\"back-bar\" onclick=\"closeAdminDetail()\">← वापस</button>" +
+    "<div class=\"profile-hero\">" +
+      "<div class=\"profile-top\">" +
+        "<div class=\"avatar-lg\">" + av + "</div>" +
+        "<div style=\"flex:1; min-width:0;\">" +
+          "<h2 class=\"profile-name\">" + esc(merged.name) + "</h2>" +
+          "<div class=\"profile-sub\" style=\"color:#FCE29A; font-weight:700;\">👑 " + esc(a.designation || "") + "</div>" +
+          "<div class=\"profile-sub\">📍 " + esc(merged.city || "") + "</div>" +
+          poetLinkBtn +
+          buildProfileChatCallButtonsHTML(merged) +
+        "</div>" +
+      "</div>" +
+      (merged.quote ? ("<div class=\"profile-quote\">“" + esc(merged.quote) + "”</div>") : "") +
+    "</div>" +
+    renderStructuredBioCard(merged, "प्रबन्धकीय एवं साहित्यिक परिचय", false);
 }
 function renderSocialLinks() {
   var s = state.settings.socials || DEFAULT_SETTINGS.socials;
@@ -7658,6 +8048,12 @@ function renderNotificationsModal() {
     return !n.targetEmail || n.targetEmail === myEmail;
   });
   body.innerHTML =
+    (("Notification" in window && Notification.permission !== "granted")
+      ? ("<div class=\"my-profile-card\" style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px;\">" +
+          "<div style=\"font-size:12.5px;\"><strong>🔔 फ़ोन अलर्ट बंद हैं:</strong> रचना अप्रूवल, संदेश व कॉल की सूचना सीधे फ़ोन पर पाने हेतु अनुमति दें।</div>" +
+          "<button class=\"action-btn gold\" style=\"padding:6px 12px; font-size:12px;\" onclick=\"enableDevicePushNotifications()\">अनुमति दें ✓</button>" +
+        "</div>")
+      : "") +
     "<div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;\">" +
       "<span style=\"font-size:12.5px; color:var(--text-muted);\">कुल " + list.length + " सूचनाएँ</span>" +
       "<button class=\"sm-btn\" onclick=\"markAllNotifsRead()\">✓ सभी पढ़ी हुई चिह्नित करें</button>" +
@@ -8163,7 +8559,7 @@ function renderAdminStudio() {
   } else if (state.adminTab === "admins") {
     var ea = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
     var curPhotoA = state.tempAdminPhoto || (ea ? ea.photo : "");
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ea ? "✏️ एडमिन संपादित करें" : "➕ नया एडमिन जोड़ें") + "</h4><div class=\"field\"><label>नाम *</label><input id=\"f-adm-name\" value=\"" + esc(ea ? ea.name : "") + "\" /></div><div class=\"field\"><label>पद *</label><input id=\"f-adm-desig\" value=\"" + esc(ea ? ea.designation : "") + "\" /></div><div class=\"field\"><label>स्थान</label><input id=\"f-adm-city\" value=\"" + esc(ea ? (ea.city || "") : "") + "\" /></div><div class=\"field\"><label>दायित्व / परिचय</label><textarea id=\"f-adm-role\" style=\"min-height:60px;\">" + esc(ea ? (ea.role || "") : "") + "</textarea></div><div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, \'tempAdminPhoto\', \'adm-photo-prev\', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"adm-photo-prev\">" + (curPhotoA ? ("<img src=\"" + curPhotoA + "\">") : "👑") + "</div></div></div><button class=\"action-btn primary\" onclick=\"saveAdminMemberForm()\">💾 एडमिन सहेजें</button></div>" + state.admins.map(function(a) {
+    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ea ? "✏️ एडमिन संपादित करें (कवि प्रोफ़ाइल से स्वतः सिंक)" : "➕ नया एडमिन जोड़ें (कवि प्रोफ़ाइल भी स्वतः बनेगी/जुड़ेगी)") + "</h4><div class=\"field\"><label>नाम *</label><input id=\"f-adm-name\" value=\"" + esc(ea ? ea.name : "") + "\" /></div><div class=\"two-fields\"><div class=\"field\"><label>पद *</label><input id=\"f-adm-desig\" value=\"" + esc(ea ? ea.designation : "") + "\" /></div><div class=\"field\"><label>ईमेल (कवि व एडमिन खाता सिंक हेतु)</label><input id=\"f-adm-email\" type=\"email\" value=\"" + esc(ea ? (ea.ownerEmail || "") : "") + "\" placeholder=\"name@gmail.com\" /></div></div><div class=\"field\"><label>स्थान</label><input id=\"f-adm-city\" value=\"" + esc(ea ? (ea.city || "") : "") + "\" /></div><div class=\"field\"><label>दायित्व / परिचय</label><textarea id=\"f-adm-role\" style=\"min-height:60px;\">" + esc(ea ? (ea.role || "") : "") + "</textarea></div><div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempAdminPhoto', 'adm-photo-prev', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"adm-photo-prev\">" + (curPhotoA ? ("<img src=\"" + curPhotoA + "\">") : "👑") + "</div></div></div><button class=\"action-btn primary\" onclick=\"saveAdminMemberForm()\">💾 एडमिन व कवि प्रोफ़ाइल सिंक कर सहेजें</button></div>" + state.admins.map(function(a) {
       return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(a.name) + "</div><div class=\"admin-item-sub\">" + esc(a.designation) + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editAdminMember(dec(\'" + arg(a.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deleteAdminMember(dec(\'" + arg(a.id) + "\'))\">हटाएँ</button></div></div>";
     }).join("");
   } else if (state.adminTab === "events") {
@@ -8383,15 +8779,24 @@ function saveAdminMemberForm() {
   if (!name || !designation) { showToast("नाम और पद लिखें"); return; }
   var id = state.editingAdminId || ("admin_" + Date.now());
   var ex = state.admins.find(function(x) { return x.id === id; }) || {};
+  var linkedPt = getLinkedPoetForAdmin(Object.assign({}, ex, { name: name }));
+  var emailVal = ((document.getElementById("f-adm-email") || { value: "" }).value || ex.ownerEmail || (linkedPt && linkedPt.ownerEmail) || "").trim().toLowerCase();
   var item = {
-    id: id, name: name, designation: designation,
-    city: (document.getElementById("f-adm-city") || { value: "" }).value.trim(),
+    id: id,
+    name: name,
+    designation: designation,
+    ownerEmail: emailVal,
+    linkedPoetId: (linkedPt && linkedPt.id) || ex.linkedPoetId || "",
+    city: (document.getElementById("f-adm-city") || { value: "" }).value.trim() || (linkedPt && linkedPt.city) || "",
     role: (document.getElementById("f-adm-role") || { value: "" }).value.trim(),
-    photo: state.tempAdminPhoto || ex.photo || "", bio: "", order: ex.order || (state.admins.length + 1)
+    photo: state.tempAdminPhoto || ex.photo || (linkedPt && linkedPt.photo) || "",
+    bio: ex.bio || (linkedPt && (linkedPt.special || linkedPt.bio)) || "",
+    order: ex.order || (state.admins.length + 1)
   };
+  syncAdminToLinkedPoet(item);
   var existed = state.admins.some(function(x) { return x.id === id; });
   if (existed) state.admins = state.admins.map(function(x) { return x.id === id ? item : x; }); else state.admins.push(item);
-  cloudSaveDoc("admins", id, item).then(function() { state.editingAdminId = null; state.tempAdminPhoto = ""; renderAll(); renderAdminStudio(); showToast("एडमिन सदस्य सहेजा गया 👑"); });
+  cloudSaveDoc("admins", id, item).then(function() { state.editingAdminId = null; state.tempAdminPhoto = ""; renderAll(); renderAdminStudio(); showToast("एडमिन व कवि प्रोफ़ाइल दोनों सिंक होकर सहेजी गईं 👑"); });
 }
 function editAdminMember(id) { state.editingAdminId = id; state.tempAdminPhoto = ""; renderAdminStudio(); }
 function deleteAdminMember(id) { if (!confirm("हटाएं?")) return; state.admins = state.admins.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("admins", id).then(function() { renderAll(); renderAdminStudio(); }); }
@@ -8745,7 +9150,7 @@ function renderSubmitModal() {
   var userEmail = state.currentUser.email;
   var pubPoet = getPoetByEmail(userEmail);
   var pendPoet = getPendingPoetByEmail(userEmail);
-  var activePoetObj = pubPoet || pendPoet;
+  var activePoetObj = pendPoet || pubPoet;
   var genres = getAllGenres();
   var hdrHtml = "<div class=\"account-chip-bar\"><div class=\"account-user-info\"><span>✅</span><div><div class=\"account-email-txt\">" + esc(userEmail) + "</div><div style=\"font-size:11px; color:var(--text-muted);\">" + (activePoetObj ? ("सदस्य: <strong>" + esc(activePoetObj.name) + "</strong>") : "प्रोफ़ाइल अभी नहीं बनी") + "</div></div></div><div style=\"display:flex; gap:6px;\"><button class=\"sm-btn\" onclick=\"closeModal(\'submit-modal\'); openMyCorner()\">🏛️ मेरा कॉर्नर</button><button class=\"sm-btn del\" onclick=\"signOutAccount()\">लॉगआउट</button></div></div>";
 
@@ -8754,18 +9159,22 @@ function renderSubmitModal() {
     if (!activePoetObj) {
       formHtml = "<div class=\"my-profile-card\" style=\"text-align:center;\"><p style=\"margin:0 0 10px;\">रचना पोस्ट करने से पहले अपनी सदस्य प्रोफ़ाइल व कवि चित्र बनाएँ।</p><button class=\"action-btn primary\" onclick=\"setSubmitTab(\'poet\')\">✒️ प्रोफ़ाइल बनाएँ →</button></div>";
     } else {
-      var editingOwnObj = state.editingMyPoemId ? state.poems.find(function(x) { return x.id === state.editingMyPoemId; }) : null;
+      var editingPendObj = state.editingMyPendingPoemId ? state.pendingPoems.find(function(x) { return x.id === state.editingMyPendingPoemId; }) : null;
+      var editingOwnObj = editingPendObj || (state.editingMyPoemId ? state.poems.find(function(x) { return x.id === state.editingMyPoemId; }) : null);
       formHtml =
         "<div class=\"form-box\">" +
-          "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">" + (editingOwnObj ? ("✏️ अपनी रचना संपादित करें (“" + esc(editingOwnObj.title) + "”)") : ("📜 नई रचना पोस्ट करें (" + esc(activePoetObj.name) + ")")) + "</h4>" +
+          "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">" + (editingPendObj ? ("✏️ समीक्षाधीन रचना संपादित करें (“" + esc(editingPendObj.title) + "”)") : (editingOwnObj ? ("✏️ अपनी रचना संपादित करें (“" + esc(editingOwnObj.title) + "”)") : ("📜 नई रचना पोस्ट करें (" + esc(activePoetObj.name) + ")"))) + "</h4>" +
           "<div class=\"field\"><label>रचना का शीर्षक *</label><input id=\"sub-poem-title\" value=\"" + esc(editingOwnObj ? editingOwnObj.title : "") + "\" placeholder=\"जैसे: साँझ का दीपक\" /></div>" +
           "<div class=\"two-fields\">" +
-            "<div class=\"field\"><label>विधा चुनें (ड्रॉप-डाउन) *</label><select id=\"sub-poem-genre\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\" " + ((editingOwnObj && editingOwnObj.genre === g) ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
+            "<div class=\"field\"><label>विधा चुनें (काव्य एवं गद्य ड्रॉप-डाउन) *</label><select id=\"sub-poem-genre\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\" " + ((editingOwnObj && editingOwnObj.genre === g) ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
             "<div class=\"field\"><label>मुख्य भाव चुनें (स्वतः भाव चित्र हेतु) *</label><select id=\"sub-poem-mood\">" + MOOD_OPTIONS.map(function(m) { return "<option value=\"" + esc(m.id) + "\" " + ((editingOwnObj && editingOwnObj.mood === m.id) ? "selected" : "") + ">" + esc(m.label) + "</option>"; }).join("") + "</select></div>" +
           "</div>" +
-          "<div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:135px;\" placeholder=\"अपनी कविता, गीत, ग़ज़ल या दोहा यहाँ लिखें...\">" + esc(editingOwnObj ? editingOwnObj.content : "") + "</textarea></div>" +
-          "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:10px;\">✨ " + (editingOwnObj ? "संपादित रचना एडमिन स्वीकृति के बाद प्रकाशित होगी; पूर्व प्रकाशित संस्करण एडमिन अप्रूवल तक सुरक्षित रहेगा।" : "रचना पोस्ट होते ही आपके चुने हुए भाव के अनुसार AI द्वारा सुंदर <strong>भाव चित्र</strong> स्वतः निर्मित होकर आपकी रचना के साथ जुड़ जाएगा।") + "</div>" +
-          "<button type=\"button\" class=\"action-btn primary\" style=\"width:100%;\" onclick=\"submitPublicPoem()\">" + (editingOwnObj ? "⏳ संपादन एडमिन स्वीकृति हेतु भेजें" : "✨ रचना पोस्ट करें व भाव चित्र बनाएँ") + "</button>" +
+          "<div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"sub-poem-content\" style=\"min-height:135px;\" placeholder=\"अपनी कविता, गीत, ग़ज़ल, दोहा, कहानी, लेख या संस्मरण यहाँ लिखें...\">" + esc(editingOwnObj ? editingOwnObj.content : "") + "</textarea></div>" +
+          "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:10px;\">✨ " + (editingPendObj ? "समीक्षाधीन प्रविष्टि सीधे अपडेट हो जाएगी और एडमिन के अप्रूवल पैनल में नवीनतम रूप दिखेगा।" : (editingOwnObj ? "संपादित रचना एडमिन स्वीकृति के बाद प्रकाशित होगी; पूर्व प्रकाशित संस्करण एडमिन अप्रूवल तक सुरक्षित रहेगा।" : "रचना पोस्ट होते ही आपके चुने हुए भाव के अनुसार AI द्वारा सुंदर <strong>भाव चित्र</strong> स्वतः निर्मित होकर आपकी रचना के साथ जुड़ जाएगा।")) + "</div>" +
+          "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+            "<button type=\"button\" class=\"action-btn primary\" style=\"flex:1;\" onclick=\"submitPublicPoem()\">" + (editingPendObj ? "💾 समीक्षाधीन रचना अपडेट करें" : (editingOwnObj ? "⏳ संपादन एडमिन स्वीकृति हेतु भेजें" : "✨ रचना पोस्ट करें व भाव चित्र बनाएँ")) + "</button>" +
+            (editingOwnObj ? "<button type=\"button\" class=\"sm-btn\" onclick=\"state.editingMyPoemId=null; state.editingMyPendingPoemId=null; renderSubmitModal()\">रद्द करें</button>" : "") +
+          "</div>" +
         "</div>";
     }
   } else {
@@ -8830,7 +9239,26 @@ function editMyOwnPoem(poemId) {
     showToast("आप केवल अपनी स्वयं की रचना संपादित कर सकते हैं");
     return;
   }
+  state.editingMyPendingPoemId = null;
   state.editingMyPoemId = poemId;
+  state.submitTab = "poem";
+  state.submitSuccessMsg = "";
+  var sm = document.getElementById("submit-modal");
+  if (sm && !sm.classList.contains("open")) pushAppView("submit");
+  if (sm) sm.classList.add("open");
+  renderSubmitModal();
+}
+
+function editMyPendingPoem(pendId) {
+  var pm = state.pendingPoems.find(function(x) { return x.id === pendId; });
+  if (!pm) { showToast("समीक्षाधीन रचना नहीं मिली"); return; }
+  var em = (state.currentUser && state.currentUser.email || "").toLowerCase().trim();
+  if ((pm.ownerEmail || "").toLowerCase().trim() !== em && !state.adminUnlocked) {
+    showToast("आप केवल अपनी समीक्षाधीन रचना संपादित कर सकते हैं");
+    return;
+  }
+  state.editingMyPoemId = null;
+  state.editingMyPendingPoemId = pendId;
   state.submitTab = "poem";
   state.submitSuccessMsg = "";
   var sm = document.getElementById("submit-modal");
@@ -8841,7 +9269,7 @@ function editMyOwnPoem(poemId) {
 
 function submitPublicPoem() {
   var userEmail = state.currentUser && state.currentUser.email;
-  var poetObj = getPoetByEmail(userEmail) || getPendingPoetByEmail(userEmail);
+  var poetObj = getPendingPoetByEmail(userEmail) || getPoetByEmail(userEmail);
   if (!userEmail || !poetObj) { showToast("पहले लॉगिन व प्रोफ़ाइल पूर्ण करें"); return; }
   var title = (document.getElementById("sub-poem-title") || { value: "" }).value.trim();
   var genre = ((document.getElementById("sub-poem-genre") || { value: "" }).value || "").trim() || "कविता";
@@ -8849,7 +9277,8 @@ function submitPublicPoem() {
   var content = (document.getElementById("sub-poem-content") || { value: "" }).value.trim();
   if (!title || !content) { showToast("शीर्षक और रचना भरें"); return; }
 
-  var targetPubId = state.editingMyPoemId || "";
+  var existingPendPoem = state.editingMyPendingPoemId ? state.pendingPoems.find(function(x) { return x.id === state.editingMyPendingPoemId; }) : null;
+  var targetPubId = existingPendPoem ? (existingPendPoem.targetPublishedId || "") : (state.editingMyPoemId || "");
   var existingPubPoem = targetPubId ? state.poems.find(function(x) { return x.id === targetPubId; }) : null;
   var id = "poem_" + Date.now();
   var autoImg = generateAutoBhavImage({ id: id, title: title, poet: poetObj.name, genre: genre, mood: mood, content: content });
@@ -8866,25 +9295,32 @@ function submitPublicPoem() {
     createdAt: Date.now()
   };
 
-  var pendId = "pend_poem_" + Date.now();
+  var pendId = existingPendPoem ? existingPendPoem.id : ("pend_poem_" + Date.now());
   var pendItem = Object.assign({}, item, { id: pendId, submittedAt: Date.now() });
-  state.pendingPoems.unshift(pendItem);
+  if (existingPendPoem) {
+    state.pendingPoems = state.pendingPoems.map(function(x) { return x.id === pendId ? pendItem : x; });
+  } else {
+    state.pendingPoems.unshift(pendItem);
+  }
   state.lastPublishedPoemId = "";
   state.editingMyPoemId = null;
+  state.editingMyPendingPoemId = null;
   cloudSaveDoc("pending_poems", pendId, pendItem).then(function() {
     pushNotification(
-      existingPubPoem ? ("रचना संपादन स्वीकृति हेतु प्राप्त: “" + title + "”") : ("नई रचना स्वीकृति हेतु प्राप्त: “" + title + "”"),
+      existingPendPoem ? ("समीक्षाधीन रचना अपडेट हुई: “" + title + "”") : (existingPubPoem ? ("रचना संपादन स्वीकृति हेतु प्राप्त: “" + title + "”") : ("नई रचना स्वीकृति हेतु प्राप्त: “" + title + "”")),
       poetObj.name + " • " + genre + " (" + mood + ")",
       "approval",
       pendId,
       ""
     );
-    state.submitSuccessMsg = existingPubPoem
-      ? ("आपकी संपादित रचना “" + title + "” एडमिन स्वीकृति के लिए भेज दी गई है। स्वीकृति मिलते ही यह प्रकाशित हो जाएगी।")
-      : ("आपकी रचना “" + title + "” और स्वतः निर्मित भाव-चित्र एडमिन मण्डल के पास प्रिव्यू एवं स्वीकृति हेतु भेज दिए गए हैं।");
+    state.submitSuccessMsg = existingPendPoem
+      ? ("आपकी समीक्षाधीन रचना “" + title + "” सफलतापूर्वक अपडेट कर दी गई है। एडमिन स्वीकृति मिलते ही यह प्रकाशित हो जाएगी।")
+      : (existingPubPoem
+        ? ("आपकी संपादित रचना “" + title + "” एडमिन स्वीकृति के लिए भेज दी गई है। स्वीकृति मिलते ही यह प्रकाशित हो जाएगी।")
+        : ("आपकी रचना “" + title + "” और स्वतः निर्मित भाव-चित्र एडमिन मण्डल के पास प्रिव्यू एवं स्वीकृति हेतु भेज दिए गए हैं।"));
     renderAll();
     renderSubmitModal();
-    showToast("रचना स्वीकृति हेतु भेजी गई ⏳");
+    showToast(existingPendPoem ? "समीक्षाधीन रचना अपडेट हुई ✓" : "रचना स्वीकृति हेतु भेजी गई ⏳");
   });
 }
 
@@ -9117,7 +9553,13 @@ function approvePendingPoet(id) {
   };
   if (existing) state.poets = state.poets.map(function(x) { return x.id === tid ? pub : x; }); else state.poets.push(pub);
   state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
-  syncPoetToLinkedAdmin(pub); Promise.all([cloudSaveDoc("poets", tid, pub), cloudDeleteDoc("pending_poets", id)]).then(function() { renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅"); });
+  syncPoetToLinkedAdmin(pub);
+  Promise.all([cloudSaveDoc("poets", tid, pub), cloudDeleteDoc("pending_poets", id)]).then(function() {
+    if (pub.ownerEmail) {
+      pushNotification("आपकी कवि प्रोफ़ाइल स्वीकृत हुई ✅", pub.name + " जी, आपकी प्रोफ़ाइल व चित्र काव्य चौपाल पर प्रकाशित हो चुके हैं।", "approval", tid, pub.ownerEmail);
+    }
+    renderAll(); renderAdminStudio(); showToast("कवि प्रोफ़ाइल प्रकाशित हुई ✅");
+  });
 }
 function rejectPendingPoet(id) {
   state.pendingPoets = state.pendingPoets.filter(function(x) { return x.id !== id; });
@@ -9274,11 +9716,111 @@ function renderDropTapList(items) {
   return dropdownHtml + cardsHtml;
 }
 
+function buildChhandImprovementSuggestions(linesArr) {
+  if (!linesArr || !linesArr.length) return [];
+  var tips = [];
+  var targetId = (typeof state !== "undefined" && state.matraTargetChhand) ? state.matraTargetChhand : "auto";
+
+  var lineStats = linesArr.map(function(ln) {
+    var an = analyzeHindiLine(ln);
+    var ch = splitCharanMatras(ln);
+    return { text: ln, total: an.total, tokens: an.tokens, charans: ch };
+  });
+
+  if (targetId === "auto") {
+    var avg = lineStats.reduce(function(s, x) { return s + x.total; }, 0) / lineStats.length;
+    var hasComma = lineStats.some(function(x) { return x.charans.length === 2; });
+    if (hasComma && Math.abs(avg - 24) <= 4) {
+      var firstAvg = lineStats.filter(function(x) { return x.charans.length === 2; }).reduce(function(s, x) { return s + x.charans[0]; }, 0) / Math.max(1, lineStats.filter(function(x) { return x.charans.length === 2; }).length);
+      targetId = (firstAvg <= 11.8) ? "soratha" : "doha";
+    } else if (Math.abs(avg - 16) <= 3) {
+      targetId = "chaupai";
+    } else if (Math.abs(avg - 24) <= 3) {
+      targetId = "rola";
+    } else if (Math.abs(avg - 26) <= 3) {
+      targetId = "gitika";
+    } else if (Math.abs(avg - 28) <= 3) {
+      targetId = "harigitika";
+    } else if (hasComma && Math.abs(avg - 19) <= 3) {
+      targetId = "barvai";
+    }
+  }
+
+  lineStats.forEach(function(st, idx) {
+    var pNo = idx + 1;
+    var lastTwo = st.tokens.slice(-2).map(function(t) { return t.weight; }).join("");
+    var lastThree = st.tokens.slice(-3).map(function(t) { return t.weight; }).join("");
+
+    if (targetId === "doha") {
+      if (st.charans.length < 2) {
+        tips.push("पंक्ति " + pNo + ": दोहा में विषम (13) व सम (11) चरण स्पष्ट करने के लिए मध्य में अल्पविराम (,) लगाएँ।");
+      } else {
+        var d1 = st.charans[0] - 13;
+        var d2 = st.charans[1] - 11;
+        if (d1 !== 0) tips.push("पंक्ति " + pNo + " (प्रथम चरण): 13 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं (" + (d1 > 0 ? (d1 + " मात्रा कम करें") : (Math.abs(d1) + " मात्रा बढ़ाएँ")) + ")।");
+        if (d2 !== 0) tips.push("पंक्ति " + pNo + " (द्वितीय चरण): 11 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं (" + (d2 > 0 ? (d2 + " मात्रा कम करें") : (Math.abs(d2) + " मात्रा बढ़ाएँ")) + ")।");
+        if (d1 === 0 && d2 === 0 && lastTwo !== "21") {
+          tips.push("पंक्ति " + pNo + ": मात्राएँ 13+11 सही हैं! और अधिक शास्त्रीय लय के लिए सम चरण के अंत में गुरु-लघु (२ १, जैसे 'चटकाय', 'उजियास') रखें।");
+        }
+      }
+    } else if (targetId === "soratha") {
+      if (st.charans.length < 2) {
+        tips.push("पंक्ति " + pNo + ": सोरठा में प्रथम (11) व द्वितीय (13) चरण अलग करने हेतु अल्पविराम (,) लगाएँ।");
+      } else {
+        var s1 = st.charans[0] - 11;
+        var s2 = st.charans[1] - 13;
+        if (s1 !== 0) tips.push("पंक्ति " + pNo + " (प्रथम चरण): सोरठा में 11 मात्राएँ चाहिए, अभी " + st.charans[0] + " हैं (" + (s1 > 0 ? (s1 + " घटाएँ") : (Math.abs(s1) + " बढ़ाएँ")) + ")।");
+        if (s2 !== 0) tips.push("पंक्ति " + pNo + " (द्वितीय चरण): सोरठा में 13 मात्राएँ चाहिए, अभी " + st.charans[1] + " हैं (" + (s2 > 0 ? (s2 + " घटाएँ") : (Math.abs(s2) + " बढ़ाएँ")) + ")।");
+      }
+    } else if (targetId === "chaupai") {
+      var diffC = st.total - 16;
+      if (diffC !== 0) tips.push("पंक्ति " + pNo + ": चौपाई में 16 मात्राएँ होनी चाहिए, अभी " + st.total + " हैं (" + (diffC > 0 ? (diffC + " मात्रा कम करें") : (Math.abs(diffC) + " मात्रा बढ़ाएँ")) + ")।");
+      if (lastTwo === "22" || lastThree === "121") {
+        tips.push("पंक्ति " + pNo + ": चौपाई के अंत में दो गुरु (२ २) या जगण (१ २ १) से बचें; अंत में गुरु-लघु (२ १) या लघु-गुरु (१ २) रखें।");
+      }
+    } else if (targetId === "rola") {
+      var diffR = st.total - 24;
+      if (diffR !== 0) tips.push("पंक्ति " + pNo + ": रोला में कुल 24 मात्राएँ (11 + 13 पर यति) होनी चाहिए, अभी " + st.total + " हैं।");
+    } else if (targetId === "gitika") {
+      var diffG = st.total - 26;
+      if (diffG !== 0) tips.push("पंक्ति " + pNo + ": गीतिका में कुल 26 मात्राएँ (14 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं।");
+      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": गीतिका के अंत में लघु-गुरु (१ २) रखने से गेयता निखरती है।");
+    } else if (targetId === "harigitika") {
+      var diffH = st.total - 28;
+      if (diffH !== 0) tips.push("पंक्ति " + pNo + ": हरिगीतिका में कुल 28 मात्राएँ (16 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं।");
+      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": हरिगीतिका के अंत में लघु-गुरु (१ २) का विधान उत्तम माना जाता है।");
+    } else if (targetId === "barvai") {
+      if (st.charans.length < 2) {
+        tips.push("पंक्ति " + pNo + ": बरवै में 12 + 7 मात्राओं के बीच अल्पविराम (,) लगाएँ।");
+      } else {
+        if (st.charans[0] !== 12) tips.push("पंक्ति " + pNo + " (प्रथम चरण): बरवै में 12 मात्राएँ होनी चाहिए (अभी " + st.charans[0] + ")।");
+        if (st.charans[1] !== 7) tips.push("पंक्ति " + pNo + " (द्वितीय चरण): बरवै में 7 मात्राएँ होनी चाहिए (अभी " + st.charans[1] + ")।");
+      }
+    }
+  });
+
+  if (linesArr.length >= 2) {
+    var getEndWord = function(s) {
+      var cleaned = String(s || "").replace(/[।॥,.!?;"'‘’“”]+$/g, "").trim();
+      var parts = cleaned.split(/\s+/);
+      return parts[parts.length - 1] || "";
+    };
+    var w1 = getEndWord(linesArr[0]);
+    var w2 = getEndWord(linesArr[1]);
+    if (w1.length >= 2 && w2.length >= 2 && w1.slice(-1) !== w2.slice(-1)) {
+      tips.push("तुक (अंत्यानुप्रास) सुझाव: पंक्ति 1 (“" + w1 + "”) और पंक्ति 2 (“" + w2 + "”) के अंतिम स्वर/व्यंजन में तुक मिलाने से गेयता और मधुर होगी।");
+    }
+  }
+
+  return tips;
+}
+
 function updateMatraResultsOnly() {
   var resBox = document.getElementById("matra-results-container");
   if (!resBox) return;
   var linesArr = (state.matraInput || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
   var det = detectChhandFromLines(linesArr);
+  var suggestions = buildChhandImprovementSuggestions(linesArr);
   var linesHtml = linesArr.map(function(l, idx) {
     var an = analyzeHindiLine(l);
     var charans = splitCharanMatras(l);
@@ -9291,8 +9833,18 @@ function updateMatraResultsOnly() {
     "</div>";
   }).join("");
 
+  var sugHtml = suggestions.length
+    ? ("<div class=\"chhand-guide-card\" style=\"border-color:var(--gold); background:var(--gold-soft);\">" +
+        "<div style=\"font-weight:700; font-size:13.5px; color:var(--primary); margin-bottom:6px;\">💡 छंद-सुधार व अभ्यास सुझाव (नवांकुर कवियों हेतु):</div>" +
+        "<ul style=\"margin:0; padding-left:18px; font-size:13px; line-height:1.65; color:var(--text);\">" +
+          suggestions.map(function(tip) { return "<li style=\"margin-bottom:4px;\">" + esc(tip) + "</li>"; }).join("") +
+        "</ul>" +
+      "</div>")
+    : (linesArr.length ? ("<div class=\"chhand-guide-card\" style=\"border-color:#22C55E;\"><div style=\"font-size:13px; color:#15803D; font-weight:700;\">✅ उत्तम! आपकी पंक्तियाँ चुने हुए छंद-विधान के अनुरूप संतुलित हैं।</div></div>") : "");
+
   resBox.innerHTML =
     "<div class=\"chhand-detect-card\"><div class=\"chhand-badge-main\">🎭 " + esc(det.name) + "</div>" + (det.statusLabel ? (" <span class=\"mini-badge\">" + esc(det.statusLabel) + "</span>") : "") + "<div style=\"font-size:13px; margin-top:6px; line-height:1.55; color:var(--text);\">" + esc(det.reason) + "</div>" + (det.caution ? ("<div style=\"font-size:12px; margin-top:6px; color:var(--text-muted); line-height:1.5;\">⚠️ <strong>सतर्कता:</strong> " + esc(det.caution) + "</div>") : "") + "</div>" +
+    sugHtml +
     linesHtml;
 }
 
@@ -9317,8 +9869,24 @@ function renderMatraPane() {
   var existingTa = document.getElementById("matra-textarea-input");
   var existingRes = document.getElementById("matra-results-container");
   if (!existingTa || !existingRes) {
+    var tgtCh = state.matraTargetChhand || "auto";
     box.innerHTML = navHtml +
-      "<div class=\"form-box\"><h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ छंद एवं मात्रा गणक</h3><textarea id=\"matra-textarea-input\" style=\"width:100%; min-height:96px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" placeholder=\"यहाँ काव्य पंक्तियाँ लिखें...\" oninput=\"state.matraInput=this.value; updateMatraResultsOnly()\">" + esc(state.matraInput) + "</textarea></div>" +
+      "<div class=\"form-box\">" +
+        "<h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ छंद एवं मात्रा गणक (सुधार सुझाव सहित)</h3>" +
+        "<div class=\"field\"><label>अभ्यास हेतु लक्षित छंद चुनें (वैकल्पिक — स्वतः पहचान व सुझाव हेतु)</label>" +
+          "<select onchange=\"state.matraTargetChhand=this.value; updateMatraResultsOnly()\">" +
+            "<option value=\"auto\" " + (tgtCh === "auto" ? "selected" : "") + ">✨ स्वतः छंद पहचान व सुधार सुझाव</option>" +
+            "<option value=\"doha\" " + (tgtCh === "doha" ? "selected" : "") + ">दोहा (13 + 11 मात्राएँ)</option>" +
+            "<option value=\"soratha\" " + (tgtCh === "soratha" ? "selected" : "") + ">सोरठा (11 + 13 मात्राएँ)</option>" +
+            "<option value=\"chaupai\" " + (tgtCh === "chaupai" ? "selected" : "") + ">चौपाई (16 मात्राएँ)</option>" +
+            "<option value=\"rola\" " + (tgtCh === "rola" ? "selected" : "") + ">रोला (24 मात्राएँ • 11+13 यति)</option>" +
+            "<option value=\"gitika\" " + (tgtCh === "gitika" ? "selected" : "") + ">गीतिका (26 मात्राएँ • 14+12 यति)</option>" +
+            "<option value=\"harigitika\" " + (tgtCh === "harigitika" ? "selected" : "") + ">हरिगीतिका (28 मात्राएँ • 16+12 यति)</option>" +
+            "<option value=\"barvai\" " + (tgtCh === "barvai" ? "selected" : "") + ">बरवै (12 + 7 मात्राएँ)</option>" +
+          "</select>" +
+        "</div>" +
+        "<textarea id=\"matra-textarea-input\" style=\"width:100%; min-height:96px; padding:10px; border-radius:11px; border:1.5px solid var(--border); background:var(--bg); color:var(--text);\" placeholder=\"यहाँ काव्य पंक्तियाँ लिखें...\" oninput=\"state.matraInput=this.value; updateMatraResultsOnly()\">" + esc(state.matraInput) + "</textarea>" +
+      "</div>" +
       "<div id=\"matra-results-container\"></div>";
   } else if (existingTa.value !== (state.matraInput || "")) {
     existingTa.value = state.matraInput || "";
