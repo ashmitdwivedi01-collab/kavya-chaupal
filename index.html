@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
   <style>
     :root {
       --bg: #FBF5E8;
@@ -2406,6 +2407,7 @@ var firebaseConfig = {
 
 var db = null;
 var auth = null;
+var storage = null;
 var cloudStatus = "connecting";
 
 try {
@@ -2415,6 +2417,9 @@ try {
     }
     db = firebase.firestore();
     auth = firebase.auth();
+    if (typeof firebase.storage === "function") {
+      storage = firebase.storage();
+    }
   }
 } catch (e) {
   cloudStatus = "offline";
@@ -5527,6 +5532,7 @@ function openPdfReader(id) {
       });
     };
 
+    var remotePdfUrl = (b.pdfUrl || b.link || "").trim();
     if (rawRecord instanceof Blob) {
       var bUrl = URL.createObjectURL(rawRecord);
       setupDownloadLink(bUrl);
@@ -5543,11 +5549,15 @@ function openPdfReader(id) {
     } else if (b.pdfData) {
       setupDownloadLink(b.pdfData);
       loadWithPdfJs(b.pdfData);
-    } else if (b.link) {
-      setupDownloadLink(b.link);
-      loadWithPdfJs(b.link);
+    } else if (remotePdfUrl) {
+      setupDownloadLink(remotePdfUrl);
+      loadWithPdfJs(remotePdfUrl);
     } else {
-      pagesWrap.innerHTML = "<div class=\"empty-box\">यह PDF फ़ाइल इसी डिवाइस में अपलोड की गई थी। कृपया इसे इसी डिवाइस से खोलें या वेब/ड्राइव लिंक जोड़ें।</div>";
+      pagesWrap.innerHTML =
+        "<div class=\"empty-box\">" +
+          "<div style=\"font-size:15px; font-weight:700; color:var(--primary); margin-bottom:6px;\">यह PDF फ़ाइल केवल उसी डिवाइस के लोकल स्टोरेज में सहेजी गई थी</div>" +
+          "<div style=\"font-size:13px; line-height:1.6;\">अन्य फ़ोन या डिवाइस पर हर पुस्तक खोलने के लिए एडमिन स्टूडियो में PDF अपलोड करते समय <strong>Firebase Storage</strong> सक्षम रखें या <strong>वेब / Google Drive PDF लिंक</strong> जोड़ें।</div>" +
+        "</div>";
     }
   });
 }
@@ -9030,7 +9040,7 @@ function renderAdminStudio() {
         "<div class=\"field\"><label>बाहरी PDF / ड्राइव लिंक (वैकल्पिक)</label><input id=\"f-eb-link\" placeholder=\"https://...\" /></div>" +
         "<button class=\"action-btn primary\" onclick=\"saveEbookForm()\">💾 लाइब्रेरी में जोड़ें</button>" +
       "</div>" + state.ebooks.map(function(b) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(b.title) + (b.pdfData ? " 📄" : "") + "</div><div class=\"admin-item-sub\">" + esc(b.author || "") + " • " + esc(b.category || "") + "</div></div><button class=\"sm-btn del\" onclick=\"deleteEbook(dec(\'" + arg(b.id) + "\'))\">हटाएँ</button></div>";
+      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(b.title) + ((b.pdfUrl || b.pdfData || b.link) ? " 📄✓" : " 📱(केवल यह डिवाइस)") + "</div><div class=\"admin-item-sub\">" + esc(b.author || "") + " • " + esc(b.category || "") + "</div></div><button class=\"sm-btn del\" onclick=\"deleteEbook(dec(\'" + arg(b.id) + "\'))\">हटाएँ</button></div>";
     }).join("");
   } else if (state.adminTab === "certificate") {
     contentHtml =
@@ -9270,13 +9280,52 @@ function saveCompetitionForm() {
   cloudSaveDoc("competition", "competition", state.competition).then(function() { renderAll(); showToast("प्रतियोगिता अपडेट हुई 🏆"); });
 }
 
+function dataUrlToBlob(dataUrl) {
+  try {
+    var parts = String(dataUrl || "").split(",");
+    var mimeMatch = (parts[0] || "").match(/:(.*?);/);
+    var mime = (mimeMatch && mimeMatch[1]) || "application/pdf";
+    var raw = atob(parts[1] || "");
+    var arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  } catch (e) {
+    return null;
+  }
+}
+
+function uploadPdfToCloudStorage(id, pdfPayload, fileName) {
+  if (!storage || !pdfPayload) return Promise.resolve("");
+  var blobToUpload = null;
+  if (pdfPayload instanceof Blob) {
+    blobToUpload = pdfPayload;
+  } else if (typeof pdfPayload === "string" && pdfPayload.indexOf("data:") === 0) {
+    blobToUpload = dataUrlToBlob(pdfPayload);
+  }
+  if (!blobToUpload) return Promise.resolve("");
+  try {
+    var safeName = (fileName || (id + ".pdf")).replace(/[^a-zA-Z0-9_.-]/g, "_");
+    var ref = storage.ref().child("kavya_chaupal_pdfs/" + id + "_" + safeName);
+    return ref.put(blobToUpload, { contentType: "application/pdf" }).then(function(snap) {
+      return snap.ref.getDownloadURL();
+    }).catch(function(err) {
+      console.warn("PDF Storage upload fallback:", err);
+      return "";
+    });
+  } catch (e) {
+    return Promise.resolve("");
+  }
+}
+
 function saveEbookForm() {
   var title = (document.getElementById("f-eb-title") || { value: "" }).value.trim();
   var author = (document.getElementById("f-eb-author") || { value: "" }).value.trim();
   var category = (document.getElementById("f-eb-cat") || { value: "साझा काव्य संकलन" }).value;
   var description = (document.getElementById("f-eb-desc") || { value: "" }).value.trim();
   var link = (document.getElementById("f-eb-link") || { value: "" }).value.trim();
-  var hasLocalPdf = !!(state.tempEbookPdfBlob || state.tempEbookPdfData);
+  var pdfSource = state.tempEbookPdfBlob || state.tempEbookPdfData || null;
+  var pdfFileName = state.tempEbookPdfName || "";
+  var hasLocalPdf = !!pdfSource;
   if (!title || !author) { showToast("पुस्तक का नाम और लेखक भरें"); return; }
   if (!hasLocalPdf && !link) { showToast("कृपया PDF फ़ाइल चुनें या PDF लिंक दें"); return; }
   var id = "eb_" + Date.now();
@@ -9288,12 +9337,21 @@ function saveEbookForm() {
     category: category,
     description: description,
     link: link,
+    pdfUrl: "",
     hasLocalPdf: hasLocalPdf,
     pdfSizeKb: sizeKb,
     pdfData: state.tempEbookPdfData || "",
     createdAt: Date.now()
   };
-  var finishSave = function() {
+
+  if (hasLocalPdf) {
+    showToast("PDF क्लाउड पर अपलोड हो रही है, कृपया प्रतीक्षा करें... ⏳");
+  }
+
+  var proceedAfterLocalAndCloud = function(uploadedUrl) {
+    if (uploadedUrl) {
+      item.pdfUrl = uploadedUrl;
+    }
     state.ebooks.unshift(item);
     var cloudItem = Object.assign({}, item);
     if (!cloudItem.pdfData || cloudItem.pdfData.length > 750000) {
@@ -9307,16 +9365,25 @@ function saveEbookForm() {
       pushNotification("पुस्तक लाइब्रेरी में नई पुस्तक जुड़ी 📚", "“" + title + "” — " + author, "info", id, "");
       renderAll();
       renderAdminStudio();
-      showToast("PDF पुस्तक लाइब्रेरी में जुड़ गई 📚");
+      if (hasLocalPdf && !uploadedUrl) {
+        showToast("PDF लोकल में जुड़ी; यदि अन्य डिवाइस पर खोलनी हो तो वेब/ड्राइव लिंक या Storage नियम जाँचें ⚠️");
+      } else {
+        showToast("PDF पुस्तक लाइब्रेरी में जुड़ गई 📚✓");
+      }
     });
   };
-  if (state.tempEbookPdfBlob) {
-    savePdfToIndexedDb(id, state.tempEbookPdfBlob, state.tempEbookPdfName).then(finishSave);
-  } else if (state.tempEbookPdfData) {
-    savePdfToIndexedDb(id, state.tempEbookPdfData, state.tempEbookPdfName).then(finishSave);
-  } else {
-    finishSave();
-  }
+
+  var localPromise = hasLocalPdf
+    ? savePdfToIndexedDb(id, pdfSource, pdfFileName)
+    : Promise.resolve(false);
+
+  var uploadPromise = hasLocalPdf
+    ? uploadPdfToCloudStorage(id, pdfSource, pdfFileName)
+    : Promise.resolve("");
+
+  Promise.all([localPromise, uploadPromise]).then(function(resPair) {
+    proceedAfterLocalAndCloud(resPair[1] || "");
+  });
 }
 function deleteEbook(id) { state.ebooks = state.ebooks.filter(function(x) { return x.id !== id; }); cloudDeleteDoc("ebooks", id).then(function() { renderAll(); renderAdminStudio(); }); }
 
