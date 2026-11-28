@@ -1894,7 +1894,44 @@
     .conf-tile { background: rgba(255, 255, 255, 0.06); border: 1.5px solid rgba(252, 225, 152, 0.35); border-radius: 14px; padding: 12px 10px; text-align: center; }
     .conf-tile.active-speaker { border-color: #FFE599; box-shadow: 0 0 18px rgba(252, 225, 152, 0.28); }
 
-  </style>
+  
+    .chhand-subnav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      background: var(--bg-soft);
+      padding: 6px;
+      border-radius: 15px;
+      border: 1.5px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .chhand-subbtn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 9px 8px;
+      border-radius: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .chhand-subbtn.active {
+      background: linear-gradient(135deg, #7B1620 0%, #4E0D14 100%);
+      color: #F7DC8B;
+      box-shadow: 0 4px 12px rgba(74, 11, 18, 0.22);
+    }
+    [data-theme="night"] .chhand-subbtn.active {
+      background: linear-gradient(135deg, #E8C068 0%, #B88424 100%);
+      color: #160D06;
+    }
+</style>
 </head>
 <body>
 
@@ -10363,8 +10400,8 @@ function buildVarnikCatalogItem(item) {
     id: item.id,
     name: item.name,
     sub: item.sub,
-    def: item.def + "\n• गण-विधान: " + item.ganaFormula + "\n• सूक्ष्म अंतर: " + item.distinction,
-    rule: "• लगावली: " + item.laghuGuruStr + "\n• गण-क्रम: " + item.ganaFormula + "\n• कुल वर्ण: " + item.varnaCount + " | कुल मात्रा: " + item.matraSum,
+    def: item.def + "\\n• गण-विधान: " + item.ganaFormula + "\\n• सूक्ष्म अंतर: " + item.distinction,
+    rule: "• लगावली: " + item.laghuGuruStr + "\\n• गण-क्रम: " + item.ganaFormula + "\\n• कुल वर्ण: " + item.varnaCount + " | कुल मात्रा: " + item.matraSum,
     workLabel: "शास्त्रीय उदाहरण (" + item.varnaCount + " वर्ण • " + item.matraSum + " मात्रा)",
     workText: item.example,
     moreEx: [item.example]
@@ -10372,15 +10409,15 @@ function buildVarnikCatalogItem(item) {
 }
 
 var VARNIK_CHHAND_DATA = [
-  { id: "v_savaiya_matt", name: "मत्तगयंद सवैया (वर्णिक • 23 वर्ण)", sub: "7 भगण (२ १ १) + 1 गुरु-गुरु (२ २) = 23 वर्ण", def: "मत्तगयंद सवैया में सात भगण (२११ × 7) और अंत में दो गुरु (२२) आते हैं (कुल 23 वर्ण, 32 मात्राएँ)।\n• सूक्ष्म अंतर: मदिरा सवैया (22 वर्ण, अंत में 1 गुरु) और चकोर सवैया (23 वर्ण, अंत में गाल २१) से इसका भेद अंतिम वर्ण-विधान से होता है।", rule: "• कुल वर्ण: 23 प्रति चरण (32 मात्रा)।\n• गण सूत्र: भगण(२११) × 7 + गुरु-गुरु(२२)।", workLabel: "गण-वर्ण उदाहरण (23 वर्ण)", workText: "या लकुटी अरु कामरिया पर, राज तिहुँ पुर को तजि डारौं।\nभगण (२११) × 7 + गुरु-गुरु (२२) = 23 वर्ण", moreEx: ["धूरि भरे अति सोहत स्यामजू, तैसी बनी सिर सुंदर चोटी।", "मानुस हौं तो वही रसखानि, बसौं ब्रज गोकुल गाँव के ग्वारन।"] },
-  { id: "v_kavitta", name: "मनहरण कवित्त / घनाक्षरी (वर्णिक • 31 वर्ण)", sub: "16 व 15 वर्ण पर यति • अंत में गुरु (२)", def: "मनहरण कवित्त (घनाक्षरी) में प्रत्येक चरण में 31 वर्ण होते हैं और 16 तथा 15 वर्णों पर यति होती है। चरणांत में प्रायः गुरु वर्ण आता है।", rule: "• कुल वर्ण: 31 प्रति चरण (16 + 15 पर यति)।\n• प्रायः चरणांत गुरु (२) होता है।", workLabel: "वर्ण-यति उदाहरण (31 वर्ण)", workText: "प्यारी गोपिका के संग खेलत हैं रास रंग, मुरली की मधुर तान सुनावत हैं।\n16 वर्ण + 15 वर्ण = 31 वर्ण", moreEx: ["किसको पुकारे यहाँ रोकर अरण्य बीच, चोहे जो करो शरण्य तिहारे हैं।"] },
-  { id: "v_vasanttilaka", name: "वसंततिलका (सम वर्णिक • 14 वर्ण)", sub: "तगण, भगण, जगण, जगण, गुरु, गुरु (14 वर्ण)", def: "वसंततिलका सम वर्णिक छंद है जिसके प्रत्येक चरण में 14 वर्ण होते हैं।", rule: "• कुल वर्ण: 14 प्रति चरण।\n• गण क्रम: तगण + भगण + जगण + जगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (14 वर्ण)", workText: "या कुन्देन्दुतुषारहारधवला या शुभ्रवस्त्रावृता।\nत (२२१) + भ (२११) + ज (१२१) + ज (१२१) + गु (२) + गु (२) = 14 वर्ण", moreEx: ["नान्या स्पृहा रघुपते हृदयेऽस्मदीये सत्यं वदामि च भवानखिलान्तरात्मा।"] },
-  { id: "v_indravajra", name: "इंद्रवज्रा (सम वर्णिक • 11 वर्ण)", sub: "तगण, तगण, जगण, गुरु, गुरु (२२१ • २२१ • १२१ • २ • २)", def: "इंद्रवज्रा 11 वर्णों का सम वर्णिक छंद है। उपेंद्रवज्रा से इसका बारीक अंतर पहले वर्ण का है: इंद्रवज्रा गुरु (तगण) से शुरू होता है जबकि उपेंद्रवज्रा लघु (जगण) से।", rule: "• कुल 11 वर्ण प्रति चरण।\n• गण क्रम: तगण + तगण + जगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (11 वर्ण)", workText: "स्यात् पावकः शीतलतामुपेयात्।\nत (२२१) + त (२२१) + ज (१२१) + गु (२) + गु (२) = 11 वर्ण", moreEx: ["स्याद् वा हिमांशुः कर्कशत्त्वमुग्रम्।", "विद्या ददाति विनयं विनयाद्याति पात्रताम्।"] },
-  { id: "v_upendravajra", name: "उपेंद्रवज्रा (सम वर्णिक • 11 वर्ण)", sub: "जगण, तगण, जगण, गुरु, गुरु (१२१ • २२१ • १२१ • २ • २)", def: "उपेंद्रवज्रा भी 11 वर्णों का सम वर्णिक छंद है, पर इसका आरंभ जगण (१२१) से होता है। इंद्रवज्रा और उपेंद्रवज्रा के चरण मिलाने से 'उपजाति' छंद बनता है।", rule: "• कुल 11 वर्ण प्रति चरण।\n• गण क्रम: जगण + तगण + जगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (11 वर्ण)", workText: "त्वमेव माता च पिता त्वमेव।\nज (१२१) + त (२२१) + ज (१२१) + गु (२) + गु (२) = 11 वर्ण", moreEx: ["त्वमेव विद्या द्रविणं त्वमेव।", "त्वमेव सर्वं मम देव देव।"] },
-  { id: "v_bhujangaprayat", name: "भुजंगप्रयात / भुजंगी (सम वर्णिक • 12 वर्ण)", sub: "4 यगण (१२२ • १२२ • १२२ • १२२)", def: "भुजंगप्रयात (भुजंगी) सम वर्णिक छंद है जिसके प्रत्येक चरण में 4 यगण आते हैं (कुल 12 वर्ण, 20 मात्राएँ)।", rule: "• कुल 12 वर्ण प्रति चरण (20 मात्रा)।\n• गण क्रम: यगण × 4 (१२२ × 4)।", workLabel: "गण सूत्र उदाहरण (12 वर्ण)", workText: "नमामीशमीशान निर्वाणरूपं।\nय (१२२) × 4 = 12 वर्ण", moreEx: ["विभुं व्यापकं ब्रह्मवेदस्वरूपम्।", "निजं निर्गुणं निर्विकल्पं निरीहम्।"] },
-  { id: "v_malini", name: "मालिनी (सम वर्णिक • 15 वर्ण)", sub: "नगण, नगण, मगण, यगण, यगण (15 वर्ण • 8 व 7 पर यति)", def: "मालिनी 15 वर्णों का सम वर्णिक छंद है जिसमें 8 और 7 वर्णों पर यति होती है।", rule: "• कुल 15 वर्ण प्रति चरण (8 + 7 पर यति)।\n• गण क्रम: नगण + नगण + मगण + यगण + यगण।", workLabel: "गण सूत्र उदाहरण (15 वर्ण)", workText: "न (१११) + न (१११) + म (२२२) + य (१२२) + य (१२२) = 15 वर्ण", moreEx: ["प्रियतम करुणा के, नेह से हैं नहाए।"] },
-  { id: "v_shikharini", name: "शिखरिणी (सम वर्णिक • 17 वर्ण)", sub: "यगण, मगण, नगण, सगण, भगण, लघु, गुरु (17 वर्ण • 6 व 11 पर यति)", def: "शिखरिणी 17 वर्णों का सम वर्णिक छंद है जिसमें 6 और 11 वर्णों पर यति होती है।", rule: "• कुल 17 वर्ण प्रति चरण (6 + 11 पर यति)।\n• गण क्रम: यगण + मगण + नगण + सगण + भगण + लघु + गुरु।", workLabel: "गण सूत्र उदाहरण (17 वर्ण)", workText: "य (१२२) + म (२२२) + न (१११) + स (११२) + भ (२११) + ल (१) + गु (२) = 17 वर्ण", moreEx: ["अहो वा किं कुर्यां, कथमिह मया जीवितमिदम्।"] },
-  { id: "v_mandakranta", name: "मन्दाक्रान्ता (सम वर्णिक • 17 वर्ण)", sub: "मगण, भगण, नगण, तगण, तगण, गुरु, गुरु (17 वर्ण • 4, 6, 7 पर यति)", def: "मन्दाक्रान्ता भी 17 वर्णों का छंद है, पर शिखरिणी से इसका गण-क्रम (म, भ, न, त, त, गु, गु) और यति (4, 6, 7) भिन्न होते हैं।", rule: "• कुल 17 वर्ण प्रति चरण (4, 6, 7 पर यति)।\n• गण क्रम: मगण + भगण + नगण + तगण + तगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (17 वर्ण)", workText: "म (२२२) + भ (२११) + न (१११) + त (२२१) + त (२२१) + गु (२) + गु (२) = 17 वर्ण", moreEx: ["कश्चित्कान्ताविरहगुरुणा स्वाधिकारात्प्रमत्तः।"] }
+  { id: "v_savaiya_matt", name: "मत्तगयंद सवैया (वर्णिक • 23 वर्ण)", sub: "7 भगण (२ १ १) + 1 गुरु-गुरु (२ २) = 23 वर्ण", def: "मत्तगयंद सवैया में सात भगण (२११ × 7) और अंत में दो गुरु (२२) आते हैं (कुल 23 वर्ण, 32 मात्राएँ)।\\n• सूक्ष्म अंतर: मदिरा सवैया (22 वर्ण, अंत में 1 गुरु) और चकोर सवैया (23 वर्ण, अंत में गाल २१) से इसका भेद अंतिम वर्ण-विधान से होता है।", rule: "• कुल वर्ण: 23 प्रति चरण (32 मात्रा)।\\n• गण सूत्र: भगण(२११) × 7 + गुरु-गुरु(२२)।", workLabel: "गण-वर्ण उदाहरण (23 वर्ण)", workText: "या लकुटी अरु कामरिया पर, राज तिहुँ पुर को तजि डारौं।\\nभगण (२११) × 7 + गुरु-गुरु (२२) = 23 वर्ण", moreEx: ["धूरि भरे अति सोहत स्यामजू, तैसी बनी सिर सुंदर चोटी।", "मानुस हौं तो वही रसखानि, बसौं ब्रज गोकुल गाँव के ग्वारन।"] },
+  { id: "v_kavitta", name: "मनहरण कवित्त / घनाक्षरी (वर्णिक • 31 वर्ण)", sub: "16 व 15 वर्ण पर यति • अंत में गुरु (२)", def: "मनहरण कवित्त (घनाक्षरी) में प्रत्येक चरण में 31 वर्ण होते हैं और 16 तथा 15 वर्णों पर यति होती है। चरणांत में प्रायः गुरु वर्ण आता है।", rule: "• कुल वर्ण: 31 प्रति चरण (16 + 15 पर यति)।\\n• प्रायः चरणांत गुरु (२) होता है।", workLabel: "वर्ण-यति उदाहरण (31 वर्ण)", workText: "प्यारी गोपिका के संग खेलत हैं रास रंग, मुरली की मधुर तान सुनावत हैं।\\n16 वर्ण + 15 वर्ण = 31 वर्ण", moreEx: ["किसको पुकारे यहाँ रोकर अरण्य बीच, चोहे जो करो शरण्य तिहारे हैं।"] },
+  { id: "v_vasanttilaka", name: "वसंततिलका (सम वर्णिक • 14 वर्ण)", sub: "तगण, भगण, जगण, जगण, गुरु, गुरु (14 वर्ण)", def: "वसंततिलका सम वर्णिक छंद है जिसके प्रत्येक चरण में 14 वर्ण होते हैं।", rule: "• कुल वर्ण: 14 प्रति चरण।\\n• गण क्रम: तगण + भगण + जगण + जगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (14 वर्ण)", workText: "या कुन्देन्दुतुषारहारधवला या शुभ्रवस्त्रावृता।\\nत (२२१) + भ (२११) + ज (१२१) + ज (१२१) + गु (२) + गु (२) = 14 वर्ण", moreEx: ["नान्या स्पृहा रघुपते हृदयेऽस्मदीये सत्यं वदामि च भवानखिलान्तरात्मा।"] },
+  { id: "v_indravajra", name: "इंद्रवज्रा (सम वर्णिक • 11 वर्ण)", sub: "तगण, तगण, जगण, गुरु, गुरु (२२१ • २२१ • १२१ • २ • २)", def: "इंद्रवज्रा 11 वर्णों का सम वर्णिक छंद है। उपेंद्रवज्रा से इसका बारीक अंतर पहले वर्ण का है: इंद्रवज्रा गुरु (तगण) से शुरू होता है जबकि उपेंद्रवज्रा लघु (जगण) से।", rule: "• कुल 11 वर्ण प्रति चरण।\\n• गण क्रम: तगण + तगण + जगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (11 वर्ण)", workText: "स्यात् पावकः शीतलतामुपेयात्।\\nत (२२१) + त (२२१) + ज (१२१) + गु (२) + गु (२) = 11 वर्ण", moreEx: ["स्याद् वा हिमांशुः कर्कशत्त्वमुग्रम्।", "विद्या ददाति विनयं विनयाद्याति पात्रताम्।"] },
+  { id: "v_upendravajra", name: "उपेंद्रवज्रा (सम वर्णिक • 11 वर्ण)", sub: "जगण, तगण, जगण, गुरु, गुरु (१२१ • २२१ • १२१ • २ • २)", def: "उपेंद्रवज्रा भी 11 वर्णों का सम वर्णिक छंद है, पर इसका आरंभ जगण (१२१) से होता है। इंद्रवज्रा और उपेंद्रवज्रा के चरण मिलाने से 'उपजाति' छंद बनता है।", rule: "• कुल 11 वर्ण प्रति चरण।\\n• गण क्रम: जगण + तगण + जगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (11 वर्ण)", workText: "त्वमेव माता च पिता त्वमेव।\\nज (१२१) + त (२२१) + ज (१२१) + गु (२) + गु (२) = 11 वर्ण", moreEx: ["त्वमेव विद्या द्रविणं त्वमेव।", "त्वमेव सर्वं मम देव देव।"] },
+  { id: "v_bhujangaprayat", name: "भुजंगप्रयात / भुजंगी (सम वर्णिक • 12 वर्ण)", sub: "4 यगण (१२२ • १२२ • १२२ • १२२)", def: "भुजंगप्रयात (भुजंगी) सम वर्णिक छंद है जिसके प्रत्येक चरण में 4 यगण आते हैं (कुल 12 वर्ण, 20 मात्राएँ)।", rule: "• कुल 12 वर्ण प्रति चरण (20 मात्रा)।\\n• गण क्रम: यगण × 4 (१२२ × 4)।", workLabel: "गण सूत्र उदाहरण (12 वर्ण)", workText: "नमामीशमीशान निर्वाणरूपं।\\nय (१२२) × 4 = 12 वर्ण", moreEx: ["विभुं व्यापकं ब्रह्मवेदस्वरूपम्।", "निजं निर्गुणं निर्विकल्पं निरीहम्।"] },
+  { id: "v_malini", name: "मालिनी (सम वर्णिक • 15 वर्ण)", sub: "नगण, नगण, मगण, यगण, यगण (15 वर्ण • 8 व 7 पर यति)", def: "मालिनी 15 वर्णों का सम वर्णिक छंद है जिसमें 8 और 7 वर्णों पर यति होती है।", rule: "• कुल 15 वर्ण प्रति चरण (8 + 7 पर यति)।\\n• गण क्रम: नगण + नगण + मगण + यगण + यगण।", workLabel: "गण सूत्र उदाहरण (15 वर्ण)", workText: "न (१११) + न (१११) + म (२२२) + य (१२२) + य (१२२) = 15 वर्ण", moreEx: ["प्रियतम करुणा के, नेह से हैं नहाए।"] },
+  { id: "v_shikharini", name: "शिखरिणी (सम वर्णिक • 17 वर्ण)", sub: "यगण, मगण, नगण, सगण, भगण, लघु, गुरु (17 वर्ण • 6 व 11 पर यति)", def: "शिखरिणी 17 वर्णों का सम वर्णिक छंद है जिसमें 6 और 11 वर्णों पर यति होती है।", rule: "• कुल 17 वर्ण प्रति चरण (6 + 11 पर यति)।\\n• गण क्रम: यगण + मगण + नगण + सगण + भगण + लघु + गुरु।", workLabel: "गण सूत्र उदाहरण (17 वर्ण)", workText: "य (१२२) + म (२२२) + न (१११) + स (११२) + भ (२११) + ल (१) + गु (२) = 17 वर्ण", moreEx: ["अहो वा किं कुर्यां, कथमिह मया जीवितमिदम्।"] },
+  { id: "v_mandakranta", name: "मन्दाक्रान्ता (सम वर्णिक • 17 वर्ण)", sub: "मगण, भगण, नगण, तगण, तगण, गुरु, गुरु (17 वर्ण • 4, 6, 7 पर यति)", def: "मन्दाक्रान्ता भी 17 वर्णों का छंद है, पर शिखरिणी से इसका गण-क्रम (म, भ, न, त, त, गु, गु) और यति (4, 6, 7) भिन्न होते हैं।", rule: "• कुल 17 वर्ण प्रति चरण (4, 6, 7 पर यति)।\\n• गण क्रम: मगण + भगण + नगण + तगण + तगण + गुरु + गुरु।", workLabel: "गण सूत्र उदाहरण (17 वर्ण)", workText: "म (२२२) + भ (२११) + न (१११) + त (२२१) + त (२२१) + गु (२) + गु (२) = 17 वर्ण", moreEx: ["कश्चित्कान्ताविरहगुरुणा स्वाधिकारात्प्रमत्तः।"] }
 ].concat(VARNIK_CHHAND_CATALOG.map(buildVarnikCatalogItem));
 
 function getChhandCatalogIndex() {
@@ -10414,15 +10451,20 @@ function clearChhandCatalogFilter() {
   renderMatraPane();
 }
 
+function setChhandHubTab(subTab) {
+  chhandHubTab = subTab || "ganak";
+  renderMatraPane();
+}
+
 function renderDropTapList(list) {
   var items = getFilteredDropTapList(list || []);
   var filterBar = filterChhandId
-    ? ("<div class=\"active-filter-bar show\" style=\"margin-bottom:10px;\"><span>🎯 चयनित छंद की शास्त्रीय व्याख्या व उदाहरण दिखाया जा रहा है</span><button type=\"button\" class=\"clear-filter-btn\" onclick=\"clearChhandCatalogFilter()\">सभी छंद देखें</button></div>")
+    ? "<div class=\"active-filter-bar show\" style=\"margin-bottom:10px;\"><span>🎯 चयनित छंद की शास्त्रीय व्याख्या व उदाहरण दिखाया जा रहा है</span><button type=\"button\" class=\"clear-filter-btn\" onclick=\"clearChhandCatalogFilter()\">सभी छंद देखें</button></div>"
     : "";
   return filterBar + items.map(function(item) {
     var isOpen = !!openDropTapIds[item.id];
     var moreHtml = (item.moreEx && item.moreEx.length)
-      ? ("<div style=\"margin-top:8px; font-size:12.5px; color:var(--text-muted);\"><strong>अतिरिक्त उदाहरण:</strong><div class=\"chhand-example-box\">" + esc(item.moreEx.join("\n• ")) + "</div></div>")
+      ? "<div style=\"margin-top:8px; font-size:12.5px; color:var(--text-muted);\"><strong>अतिरिक्त उदाहरण:</strong><div class=\"chhand-example-box\">" + esc(item.moreEx.join("\\n• ")) + "</div></div>"
       : "";
     return "<div class=\"chhand-guide-card\" style=\"margin-bottom:10px;\">" +
       "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer;\" onclick=\"openDropTapIds[dec('" + arg(item.id) + "')]=!openDropTapIds[dec('" + arg(item.id) + "')]; renderMatraPane()\">" +
@@ -10435,8 +10477,8 @@ function renderDropTapList(list) {
       (isOpen ? (
         "<div style=\"margin-top:12px; padding-top:10px; border-top:1px dashed var(--border); font-size:13.5px; line-height:1.7;\">" +
           "<div style=\"white-space:pre-line;\">" + esc(item.def || "") + "</div>" +
-          (item.rule ? ("<div style=\"margin-top:8px; background:var(--bg); padding:9px 11px; border-radius:10px; white-space:pre-line; font-size:13px;\"><strong>शास्त्रीय नियम व लगावली:</strong>\n" + esc(item.rule) + "</div>") : "") +
-          (item.workText ? ("<div style=\"margin-top:8px;\"><strong>" + esc(item.workLabel || "उदाहरण") + ":</strong><div class=\"chhand-example-box\">" + esc(item.workText) + "</div></div>") : "") +
+          (item.rule ? "<div style=\"margin-top:8px; background:var(--bg); padding:9px 11px; border-radius:10px; white-space:pre-line; font-size:13px;\"><strong>शास्त्रीय नियम व लगावली:</strong>\\n" + esc(item.rule) + "</div>" : "") +
+          (item.workText ? "<div style=\"margin-top:8px;\"><strong>" + esc(item.workLabel || "उदाहरण") + ":</strong><div class=\"chhand-example-box\">" + esc(item.workText) + "</div></div>" : "") +
           moreHtml +
         "</div>"
       ) : "") +
@@ -10499,7 +10541,7 @@ function analyzeHindiWord(word) {
 }
 
 function analyzeHindiLine(line) {
-  var rawWords = String(line || "").split(/[\s,।॥;!?"'‘’“”()\-—]+/).filter(Boolean);
+  var rawWords = String(line || "").split(/[\\s,।॥;!?"'‘’“”()\\-—]+/).filter(Boolean);
   var tokens = [];
   rawWords.forEach(function(w) {
     var wTokens = analyzeHindiWord(w);
@@ -10522,9 +10564,9 @@ function splitCharanMatras(line) {
 }
 
 function getLineRhymeEnding(line) {
-  var cleaned = String(line || "").replace(/[।॥,.!?;:"'‘’“”\-—]+$/g, "").trim();
+  var cleaned = String(line || "").replace(/[।॥,.!?;:"'‘’“”\\-—]+$/g, "").trim();
   if (!cleaned) return { word: "", key: "" };
-  var words = cleaned.split(/\s+/);
+  var words = cleaned.split(/\\s+/);
   var lastWord = words[words.length - 1] || "";
   var toks = analyzeHindiWord(lastWord);
   var tail = toks.slice(-2).map(function(t) { return t.text; }).join("");
@@ -10563,7 +10605,6 @@ function detectVarnikChhandMatch(lineStats) {
   if (!sameVarna) return null;
   var w = first.tokens.map(function(t) { return String(t.weight); }).join("");
 
-  // Exact match across all cataloged Varnik chhands (including all 46 lagavali patterns)
   for (var i = 0; i < VARNIK_CHHAND_CATALOG.length; i++) {
     var cat = VARNIK_CHHAND_CATALOG[i];
     if (cat.pattern12 === w) {
@@ -10571,13 +10612,12 @@ function detectVarnikChhandMatch(lineStats) {
         id: cat.id,
         name: cat.name,
         status: cat.sub,
-        reason: cat.def + "\n• गण-क्रम: " + cat.ganaFormula,
+        reason: cat.def + "\\n• गण-क्रम: " + cat.ganaFormula,
         distinction: cat.distinction
       };
     }
   }
 
-  // Syllable-count match when lagavali differs slightly (e.g., last syllable variation)
   var countMatches = VARNIK_CHHAND_CATALOG.filter(function(cat) { return cat.varnaCount === vCount; });
   if (countMatches.length === 1) {
     var solo = countMatches[0];
@@ -10595,7 +10635,7 @@ function detectVarnikChhandMatch(lineStats) {
       id: countMatches[0].id,
       name: vCount + " वर्णिक छंद विकल्प (" + countMatches.length + " छंद)",
       status: vCount + " वर्ण • " + first.total + " मात्रा",
-      reason: "इस पंक्ति में " + vCount + " वर्ण हैं। इस वर्ण-संख्या पर निम्नलिखित छंद आते हैं:\n• " + countMatches.map(function(c) { return c.name + " — " + c.laghuGuruStr + " (" + c.distinction + ")"; }).join("\n• "),
+      reason: "इस पंक्ति में " + vCount + " वर्ण हैं। इस वर्ण-संख्या पर निम्नलिखित छंद आते हैं:\\n• " + countMatches.map(function(c) { return c.name + " — " + c.laghuGuruStr + " (" + c.distinction + ")"; }).join("\\n• "),
       distinction: namesList
     };
   }
@@ -10681,7 +10721,6 @@ function detectChhandFromLines(linesArr) {
     };
   }
 
-  // Check Varnik Chhand first when syllable pattern matches classical Varnik rules
   var varnikMatch = detectVarnikChhandMatch(lineStats);
   if (varnikMatch) {
     return {
@@ -10900,7 +10939,7 @@ function buildChhandImprovementSuggestions(linesArr) {
 function updateMatraResultsOnly() {
   var resBox = document.getElementById("matra-results-container");
   if (!resBox) return;
-  var linesArr = (state.matraInput || "").split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
+  var linesArr = (state.matraInput || "").split("\\n").map(function(l) { return l.trim(); }).filter(Boolean);
   var det = detectChhandFromLines(linesArr);
   var suggestions = buildChhandImprovementSuggestions(linesArr);
   var linesHtml = linesArr.map(function(l, idx) {
@@ -10910,7 +10949,7 @@ function updateMatraResultsOnly() {
     var varnikInfo = computeVarnikGanaFormula(an.tokens);
     var lagStr = an.tokens.map(function(t) { return t.weight === 2 ? "गा(२)" : "ल(१)"; }).join(" ");
     var detBtnHtml = det.id
-      ? ("<button type=\"button\" class=\"sm-btn\" style=\"margin-top:6px; border-color:var(--gold);\" onclick=\"openChhandInCatalog(dec('" + arg(det.id) + "'))\">📖 इस छंद का पूर्ण विधान व उदाहरण देखें →</button>")
+      ? "<button type=\"button\" class=\"sm-btn\" style=\"margin-top:6px; border-color:var(--gold);\" onclick=\"openChhandInCatalog(dec('" + arg(det.id) + "'))\">📖 इस छंद का पूर्ण विधान व उदाहरण देखें →</button>"
       : "";
     return "<div class=\"matra-line-box\">" +
       "<div class=\"matra-meta-row\"><span class=\"mini-badge\">पंक्ति " + (idx + 1) + " • कुल " + an.total + " मात्राएँ" + esc(cStr) + " • " + varnikInfo.count + " वर्ण</span><span style=\"font-size:11.5px; color:var(--text-muted);\">लघु = १ • गुरु = २</span></div>" +
@@ -10930,7 +10969,7 @@ function updateMatraResultsOnly() {
           suggestions.map(function(tip) { return "<li style=\"margin-bottom:4px;\">" + esc(tip) + "</li>"; }).join("") +
         "</ul>" +
       "</div>")
-    : (linesArr.length ? ("<div class=\"chhand-guide-card\" style=\"border-color:#22C55E;\"><div style=\"font-size:13px; color:#15803D; font-weight:700;\">✅ शास्त्रीय दृष्टि से उत्तम! सभी पंक्तियाँ मात्रा-क्रम, गण-प्रयोग व छंद-विधान के अनुरूप शुद्ध हैं।</div></div>") : "");
+    : (linesArr.length ? "<div class=\"chhand-guide-card\" style=\"border-color:#22C55E;\"><div style=\"font-size:13px; color:#15803D; font-weight:700;\">✅ शास्त्रीय दृष्टि से उत्तम! सभी पंक्तियाँ मात्रा-क्रम, गण-प्रयोग व छंद-विधान के अनुरूप शुद्ध हैं।</div></div>" : "");
 
   resBox.innerHTML =
     "<div class=\"chhand-detect-card\"><div class=\"chhand-badge-main\">🎭 " + esc(det.name) + "</div>" + (det.statusLabel ? (" <span class=\"mini-badge\">" + esc(det.statusLabel) + "</span>") : "") + "<div style=\"font-size:13px; margin-top:6px; line-height:1.6; color:var(--text); white-space:pre-line;\">" + esc(det.reason) + "</div>" + (det.caution ? ("<div style=\"font-size:12px; margin-top:6px; color:var(--text-muted); line-height:1.5;\">⚠️ <strong>सतर्कता:</strong> " + esc(det.caution) + "</div>") : "") + "</div>" +
@@ -10967,7 +11006,7 @@ function renderMatraPane() {
       "<div class=\"form-box\">" +
         "<h3 class=\"section-title\" style=\"margin-bottom:8px;\">⚖️ छंद, लगावली व गण-प्रयोग गणक</h3>" +
         "<div class=\"field\"><label>अभ्यास हेतु लक्षित छंद चुनें (वैकल्पिक — स्वतः पहचान व सुझाव हेतु)</label>" +
-          "<select onchange=\"state.matraTargetChhand=this.value; updateMatraResultsOnly()\">" +
+          "<select id=\"matra-target-select\" onchange=\"state.matraTargetChhand=this.value; updateMatraResultsOnly()\">" +
             "<option value=\"auto\" " + (tgtCh === "auto" ? "selected" : "") + ">✨ स्वतः छंद पहचान व सुधार सुझाव (कला + गण + मात्रा)</option>" +
             "<option value=\"doha\" " + (tgtCh === "doha" ? "selected" : "") + ">दोहा (13 + 11 मात्राएँ)</option>" +
             "<option value=\"soratha\" " + (tgtCh === "soratha" ? "selected" : "") + ">सोरठा (11 + 13 मात्राएँ)</option>" +
@@ -10979,7 +11018,7 @@ function renderMatraPane() {
           "</select>" +
         "</div>" +
         "<div class=\"field\"><label>शास्त्रीय छंद कोष से किसी छंद की परिभाषा व उदाहरण देखें</label>" +
-          "<select onchange=\"if(this.value){ openChhandInCatalog(this.value); this.value=''; }\">" +
+          "<select id=\"matra-varnik-kosh-select\" onchange=\"if(this.value){ openChhandInCatalog(this.value); this.value=''; }\">" +
             "<option value=\"\">— वर्णिक छंद कोष चुनें (" + VARNIK_CHHAND_CATALOG.length + " छंद) —</option>" +
             quickChhandOpts +
           "</select>" +
