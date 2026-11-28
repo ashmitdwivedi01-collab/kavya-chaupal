@@ -4525,20 +4525,29 @@ function openManchSub(sub) {
 
 function setManchSub(sub) {
   state.manchSub = sub || "events";
+  if (typeof window.restoreManchGridAndTabs === "function") {
+    window.restoreManchGridAndTabs();
+  }
   var tabManch = document.getElementById("tab-manch");
   if (tabManch && state.manchSub === "studio" && !document.getElementById("manch-studio")) {
     var studioDiv = document.createElement("div");
     studioDiv.id = "manch-studio";
     studioDiv.className = "manch-pane";
-    studioDiv.style.display = "none";
+    studioDiv.style.display = "block";
     tabManch.appendChild(studioDiv);
   }
   document.querySelectorAll(".hub-tab-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.sub === state.manchSub); });
   document.querySelectorAll(".manch-pane").forEach(function(p) { p.style.display = "none"; });
   var target = document.getElementById("manch-" + state.manchSub);
   if (target) target.style.display = "block";
-  if (state.manchSub === "studio" && typeof window.renderStudioPane === "function") {
-    window.renderStudioPane();
+  if (state.manchSub === "studio") {
+    if (typeof window.renderStudioPane === "function") {
+      window.renderStudioPane();
+    } else {
+      setTimeout(function() {
+        if (typeof window.renderStudioPane === "function") window.renderStudioPane();
+      }, 120);
+    }
   }
   renderManchHub();
 }
