@@ -6155,8 +6155,10 @@ function ensureMeshPeerConnection(callId, peerEmail, peerName, roleSide, offerTo
       if (ev.track) {
         attachTrackToStream(ev.track);
       }
-      chaupalSocialState.remoteStreamsMap[pEm] = { stream: ms, name: peerName || pEm };
-      chaupalSocialState.peerStatusMap[pEm] = "connected";
+      chaupalSocialState.remoteStreamsMap[pEm] = { stream: ms, name: peerName || pEm, hasRemoteTrack: true };
+      if (chaupalSocialState.peerStatusMap[pEm] === "connected" || chaupalSocialState.peerStatusMap[pEm] === "accepted") {
+        stopOutgoingRingTone();
+      }
       stopOutgoingRingTone();
       attachMediaToDom();
       setTimeout(attachMediaToDom, 200);
@@ -6324,13 +6326,16 @@ function updateCallParticipantsStatusDomOnly() {
 function attachMediaToDom() {
   var locVid = document.getElementById("soc-local-video");
   if (locVid && chaupalSocialState.localStream) {
+    chaupalSocialState.localStream.getVideoTracks().forEach(function(vt) {
+      if (!chaupalSocialState.isCamOff && vt.readyState === "live") vt.enabled = true;
+    });
     if (locVid.srcObject !== chaupalSocialState.localStream) {
       locVid.srcObject = chaupalSocialState.localStream;
     }
     locVid.muted = true;
-    if (locVid.paused) {
-      try { locVid.play().catch(function() {}); } catch (e) {}
-    }
+    locVid.playsInline = true;
+    locVid.autoplay = true;
+    try { locVid.play().catch(function() {}); } catch (e) {}
   }
   var remMap = chaupalSocialState.remoteStreamsMap || {};
   var pConns = chaupalSocialState.peerConnectionsMap || {};
@@ -6345,15 +6350,20 @@ function attachMediaToDom() {
     var st = entry && entry.stream;
     var pcObj = pConns[emKey];
 
-    // Also pull tracks directly from RTCPeerConnection receivers if stream tracks were missed
-    if (pcObj && pcObj.getReceivers) {
+    var peerSt = (chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[emKey]) || "ringing";
+    var isPeerAcceptedOrConnected = (peerSt === "connected" || peerSt === "accepted");
+    var hasRemoteReceivedTrack = !!(entry && entry.hasRemoteTrack);
+
+    // Only pull remote tracks into stream when peer has actually answered/connected or delivered a remote track
+    if (pcObj && pcObj.getReceivers && (isPeerAcceptedOrConnected || hasRemoteReceivedTrack)) {
       if (!st) {
         st = new MediaStream();
-        remMap[emKey] = { stream: st, name: (entry && entry.name) || emKey };
+        remMap[emKey] = { stream: st, name: (entry && entry.name) || emKey, hasRemoteTrack: false };
       }
       pcObj.getReceivers().forEach(function(rcv) {
-        if (rcv && rcv.track && rcv.track.readyState === "live") {
+        if (rcv && rcv.track && rcv.track.readyState === "live" && !rcv.track.muted) {
           rcv.track.enabled = true;
+          remMap[emKey].hasRemoteTrack = true;
           if (st.getTracks().indexOf(rcv.track) === -1) {
             try { st.addTrack(rcv.track); } catch (e) {}
           }
@@ -6361,16 +6371,22 @@ function attachMediaToDom() {
       });
     }
 
-    var aCnt = (st && st.getAudioTracks) ? st.getAudioTracks().filter(function(t) { return t.readyState !== "ended"; }).length : 0;
-    var vCnt = (st && st.getVideoTracks) ? st.getVideoTracks().filter(function(t) { return t.readyState !== "ended"; }).length : 0;
-    var iceSt = (pcObj && (pcObj.iceConnectionState || pcObj.connectionState)) || "new";
-    if ((aCnt > 0 || vCnt > 0) && (iceSt === "new" || iceSt === "checking")) {
-      iceSt = "connected";
-    }
+    var liveAudTracks = (st && st.getAudioTracks) ? st.getAudioTracks().filter(function(t) { return t.readyState === "live" && !t.muted; }) : [];
+    var liveVidTracks = (st && st.getVideoTracks) ? st.getVideoTracks().filter(function(t) { return t.readyState === "live" && !t.muted; }) : [];
+    var aCnt = (isPeerAcceptedOrConnected || (entry && entry.hasRemoteTrack)) ? liveAudTracks.length : 0;
+    var vCnt = (isPeerAcceptedOrConnected || (entry && entry.hasRemoteTrack)) ? liveVidTracks.length : 0;
+    var rawIce = (pcObj && (pcObj.iceConnectionState || pcObj.connectionState)) || "new";
+    var iceSt = (isPeerAcceptedOrConnected && (rawIce === "connected" || rawIce === "completed" || aCnt > 0 || vCnt > 0))
+      ? (rawIce === "completed" ? "completed" : (rawIce === "connected" ? "connected" : (aCnt > 0 || vCnt > 0 ? "connected" : rawIce)))
+      : (rawIce === "connected" || rawIce === "completed" ? "checking" : rawIce);
 
     var dbgEl = document.getElementById("media-dbg-" + safeId);
     if (dbgEl) {
-      dbgEl.textContent = "🔊 ऑडियो:" + aCnt + " | 📹 वीडियो:" + vCnt + " | ICE:" + iceSt;
+      if (!isPeerAcceptedOrConnected && aCnt === 0 && vCnt === 0) {
+        dbgEl.textContent = "🔔 रिंग / प्रतीक्षा | ICE:" + rawIce;
+      } else {
+        dbgEl.textContent = "🔊 ऑडियो:" + aCnt + " | 📹 वीडियो:" + vCnt + " | ICE:" + iceSt;
+      }
     }
 
     if (el && st && st.getTracks && st.getTracks().length > 0) {
@@ -7461,10 +7477,25 @@ function inviteMemberToActiveCall(targetEmailArg, targetNameArg) {
     callId,
     tEmail
   );
+  // Keep existing localStream video & audio tracks intact when adding 3rd+ members
+  if (chaupalSocialState.localStream) {
+    chaupalSocialState.localStream.getTracks().forEach(function(tr) {
+      if (tr.kind === "video" && !chaupalSocialState.isCamOff) tr.enabled = true;
+      if (tr.kind === "audio" && !chaupalSocialState.isMuted) tr.enabled = true;
+    });
+  }
   ensureMeshPeerConnection(callId, tEmail, tName, "caller", true);
   renderChaupalSocial();
-  setTimeout(attachMediaToDom, 60);
-  showToast(tName + " को कॉल में जोड़ा जा रहा है...");
+  setTimeout(function() {
+    var lv = document.getElementById("soc-local-video");
+    if (lv && chaupalSocialState.localStream) {
+      lv.srcObject = chaupalSocialState.localStream;
+      lv.muted = true;
+      try { lv.play().catch(function(){}); } catch(e) {}
+    }
+    if (typeof attachMediaToDom === "function") attachMediaToDom();
+  }, 50);
+  showToast(tName + " को कॉल में आमंत्रित किया गया ✓");
 }
 
 function leaveConferenceCall() {
