@@ -15515,6 +15515,17 @@ window.addEventListener("beforeunload", function() {
 
 <script>
 (function() {
+  function restoreManchGridAndTabs() {
+    var tabManch = document.getElementById("tab-manch");
+    if (!tabManch) return;
+    Array.prototype.forEach.call(tabManch.children, function(ch) {
+      if (ch.id !== "manch-studio") {
+        ch.style.display = "";
+      }
+    });
+  }
+  window.restoreManchGridAndTabs = restoreManchGridAndTabs;
+
   function forceOpenChaupalStudio(ev) {
     try {
       var target = ev && ev.target ? ev.target : null;
@@ -15529,25 +15540,32 @@ window.addEventListener("beforeunload", function() {
       if (tabManch) {
         document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
         tabManch.classList.add("active");
-        if (!document.getElementById("manch-studio")) {
-          var d = document.createElement("div");
-          d.id = "manch-studio";
-          d.className = "manch-pane";
-          tabManch.appendChild(d);
+        Array.prototype.forEach.call(tabManch.children, function(ch) {
+          if (ch.id !== "manch-studio") {
+            ch.style.display = "none";
+          }
+        });
+        var studioBox = document.getElementById("manch-studio");
+        if (!studioBox) {
+          studioBox = document.createElement("div");
+          studioBox.id = "manch-studio";
+          studioBox.className = "manch-pane";
+          tabManch.appendChild(studioBox);
         }
-        document.querySelectorAll(".manch-pane").forEach(function(p) {
-          p.style.display = (p.id === "manch-studio") ? "block" : "none";
-        });
-        document.querySelectorAll(".hub-tab-btn").forEach(function(b) {
-          b.classList.toggle("active", b.dataset && b.dataset.sub === "studio");
-        });
+        studioBox.style.display = "block";
         if (typeof state !== "undefined") {
           state.activeTab = "manch";
           state.manchSub = "studio";
         }
         if (typeof window.renderStudioPane === "function") {
           window.renderStudioPane();
+          if (studioBox.innerHTML.indexOf("← मंच के विकल्प") === -1) {
+            studioBox.innerHTML =
+              "<div style=\"margin-bottom:10px;\"><button type=\"button\" class=\"back-bar\" style=\"margin-bottom:0;\" onclick=\"restoreManchGridAndTabs(); setManchSub('events');\">← मंच के विकल्प (कार्यक्रम / वीडियो / प्रतियोगिता)</button></div>" +
+              studioBox.innerHTML;
+          }
         }
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (e) {}
   }
