@@ -13234,16 +13234,13 @@ window.addEventListener("beforeunload", function() {
       if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
     } catch (e) {}
 
-    if (typeof chaupalSocialState === "undefined") {
+    if (typeof window.chaupalSocialState === "undefined") {
       window.chaupalSocialState = {
-        activeCallSession: { type: "video", target: "काव्य चौपाल कॉल" },
+        activeCallSession: { type: "video", target: "काव्य चौपाल कॉल", startedAt: Date.now() },
         isLiveActive: false,
         livePlatform: "Facebook Live"
       };
-    }
-
-    // If session object wasn't attached yet, initialize a live call session object so button never stops with toast
-    if (!chaupalSocialState.activeCallSession) {
+    } else if (!chaupalSocialState.activeCallSession) {
       chaupalSocialState.activeCallSession = {
         type: "video",
         target: "काव्य चौपाल कॉल",
@@ -13256,9 +13253,10 @@ window.addEventListener("beforeunload", function() {
     var platSel = document.getElementById("soc-live-plat-sel");
 
     var plat = (platSel && platSel.value) ? platSel.value : (chaupalSocialState.livePlatform || "Facebook Live");
-    var fbAcc = (accInp && accInp.value.trim())
-      ? accInp.value.trim()
-      : (chaupalSocialState.fbAccountUrl || ((typeof state !== "undefined" && state.settings && state.settings.socials && state.settings.socials.facebook) || "https://www.facebook.com/KavyaChaupal"));
+    var fallbackFb = (typeof state !== "undefined" && state.settings && state.settings.socials && state.settings.socials.facebook)
+      ? state.settings.socials.facebook
+      : "https://www.facebook.com/KavyaChaupal";
+    var fbAcc = (accInp && accInp.value.trim()) ? accInp.value.trim() : (chaupalSocialState.fbAccountUrl || fallbackFb);
     var streamKey = (keyInp && keyInp.value.trim()) ? keyInp.value.trim() : (chaupalSocialState.liveStreamKey || "");
 
     chaupalSocialState.livePlatform = plat;
@@ -13281,39 +13279,37 @@ window.addEventListener("beforeunload", function() {
       }
     } catch (e) {}
 
-    // Update status badge right inside the FB live bridge panel immediately
-    var panel = document.getElementById("soc-fb-live-bridge-panel");
-    if (panel) {
-      var statusSpan = panel.querySelector("span[style*='font-size:11px']");
-      if (statusSpan) {
-        statusSpan.textContent = "🔴 " + plat + " कनेक्ट व लाइव सक्रिय";
-        statusSpan.style.color = "#86EFAC";
-      }
-      var statusNote = document.getElementById("soc-fb-live-status-note");
-      if (!statusNote) {
-        statusNote = document.createElement("div");
-        statusNote.id = "soc-fb-live-status-note";
-        statusNote.style.cssText = "margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(22,163,74,0.2); border:1px solid #4ADE80; color:#DCFCE7; font-size:12px; line-height:1.45;";
-        panel.appendChild(statusNote);
-      }
-      var safeHref = (fbAcc && fbAcc.indexOf("http") === 0) ? fbAcc : "https://www.facebook.com/live/producer";
+    var statusNote = document.getElementById("soc-fb-live-status-note");
+    var container = document.getElementById("soc-fb-live-bridge-panel") || (accInp && accInp.parentElement && accInp.parentElement.parentElement) || document.getElementById("soc-call-stage-card");
+    if (container && !statusNote) {
+      statusNote = document.createElement("div");
+      statusNote.id = "soc-fb-live-status-note";
+      statusNote.style.cssText = "margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(22,163,74,0.2); border:1px solid #4ADE80; color:#DCFCE7; font-size:12px; line-height:1.45;";
+      container.appendChild(statusNote);
+    }
+
+    var safeHref = "https://www.facebook.com/live/producer";
+    if (fbAcc && fbAcc.indexOf("http") === 0) {
+      safeHref = fbAcc;
+    } else if (fbAcc) {
+      safeHref = "https://www.facebook.com/" + fbAcc.replace(/^@/, "").replace(/^\/+/, "");
+    }
+
+    if (statusNote) {
+      var safeDisp = String(fbAcc).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      var safeAttr = String(safeHref).replace(/"/g, "&quot;");
       statusNote.innerHTML =
-        "✓ खाता लिंक सहेजा गया: <strong>" + String(fbAcc).replace(/</g, "&lt;") + "</strong><br/>" +
-        "<a href="" + safeHref.replace(/"/g, "&quot;") + "" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:6px; padding:6px 11px; border-radius:8px; background:#1877F2; color:#fff; font-weight:700; text-decoration:none;">↗ फ़ेसबुक लाइव पेज / प्रोड्यूसर खोलें</a>";
+        "✓ खाता लिंक सहेजा गया: <strong>" + safeDisp + "</strong><br/>" +
+        "<a href="" + safeAttr + "" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:6px; padding:6px 11px; border-radius:8px; background:#1877F2; color:#fff; font-weight:700; text-decoration:none;">↗ फ़ेसबुक लाइव पेज / प्रोड्यूसर खोलें</a>";
     }
 
     if (typeof showToast === "function") {
       showToast("✓ फ़ेसबुक खाता कनेक्ट हो गया व लाइव सक्रिय है!");
     }
 
-    // Open Facebook Live producer/page in a new tab/window when Facebook Live is selected
     if (plat === "Facebook Live") {
-      var openUrl = (fbAcc && fbAcc.indexOf("http") === 0) ? fbAcc : "https://www.facebook.com/live/producer";
       try {
-        var win = window.open(openUrl, "_blank", "noopener,noreferrer");
-        if (!win) {
-          // If popup blocker prevented window.open, the direct link button inside #soc-fb-live-status-note is already visible!
-        }
+        window.open(safeHref, "_blank", "noopener,noreferrer");
       } catch (e) {}
     }
 
