@@ -16189,7 +16189,6 @@ window.addEventListener("beforeunload", function() {
     } catch (e) {}
   };
 
-  
   window.renderStudioPane = function() {
     var box = document.getElementById("manch-studio");
     if (!box) {
@@ -16200,25 +16199,7 @@ window.addEventListener("beforeunload", function() {
       box.className = "manch-pane";
       tm.appendChild(box);
     }
-    if (!window.chaupalStudioState) {
-      window.chaupalStudioState = {
-        subMode: "live",
-        orientation: "horizontal",
-        fullCover: true,
-        liveFullscreen: false,
-        isLiveOnApp: false,
-        isMicMuted: false,
-        facingMode: "user",
-        liveTitle: "काव्य चौपाल — सजीव काव्य प्रसारण",
-        platform: "काव्य चौपाल ऐप लाइव",
-        liveDurationSec: 0,
-        savedLives: [],
-        customVideos: [],
-        reels: [],
-        liveReactions: []
-      };
-    }
-    var st = window.chaupalStudioState;
+    var st = window.chaupalStudioState || {};
     var mode = st.subMode || "live";
     var ori = st.orientation || "horizontal";
     var isFullCov = (st.fullCover !== false);
@@ -16242,12 +16223,12 @@ window.addEventListener("beforeunload", function() {
       "</div>";
 
     var navHtml =
-      "<div style=\"display:grid; grid-template-columns:repeat(2, 1fr); gap:6px; margin-bottom:14px;\">" +
-        "<button type=\"button\" class=\"social-subbtn " + (mode === "live" ? "active" : "") + "\" style=\"text-align:center;\" onclick=\"setChaupalStudioMode('live')\">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
-        "<button type=\"button\" class=\"social-subbtn " + (mode === "conf_live" ? "active" : "") + "\" style=\"text-align:center;\" onclick=\"setChaupalStudioMode('conf_live')\">📞 कॉन्फ्रेंस कॉल लाइव</button>" +
-        "<button type=\"button\" class=\"social-subbtn " + (mode === "video" ? "active" : "") + "\" style=\"text-align:center;\" onclick=\"setChaupalStudioMode('video')\">🎬 वीडियो डालें</button>" +
-        "<button type=\"button\" class=\"social-subbtn " + (mode === "reel" ? "active" : "") + "\" style=\"text-align:center;\" onclick=\"setChaupalStudioMode('reel')\">✨ रील बनाएँ</button>" +
-        "<button type=\"button\" class=\"social-subbtn " + (mode === "archive" ? "active" : "") + "\" style=\"grid-column:1/-1; text-align:center;\" onclick=\"setChaupalStudioMode('archive')\">💾 लाइव रिकॉर्डिंग व डिलीट (" + (st.savedLives ? st.savedLives.length : 0) + ")</button>" +
+      "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;\">" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "live" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('live')\">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "conf_live" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('conf_live')\">📞 कॉन्फ्रेंस कॉल लाइव</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "video" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('video')\">🎬 वीडियो डालें</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "reel" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('reel')\">✨ रील बनाएँ</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "archive" ? "active" : "") + "\" onclick=\"setChaupalStudioMode('archive')\">💾 लाइव रिकॉर्डिंग व डिलीट (" + (st.savedLives ? st.savedLives.length : 0) + ")</button>" +
       "</div>";
 
     var bodyHtml = "";
