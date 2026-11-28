@@ -8056,13 +8056,23 @@ function renderChaupalSocial() {
               }).join("") +
             "</div>")
           : "") +
-        "<div class=\"form-box\" style=\"background:rgba(255,255,255,0.06); border-color:rgba(247,220,139,0.35); margin-bottom:10px;\">" +
-          "<div style=\"font-size:12.5px; font-weight:700; color:#F7DC8B; margin-bottom:6px;\">📡 सोशल प्लेटफ़ॉर्म लाइव ब्रिज (YouTube / Facebook / RTMP)</div>" +
-          "<div class=\"two-fields\">" +
-            "<div class=\"field\" style=\"margin-bottom:6px;\"><select id=\"soc-live-plat-sel\"><option value=\"YouTube Live\" " + (chaupalSocialState.livePlatform === "YouTube Live" ? "selected" : "") + ">YouTube Live</option><option value=\"Facebook Live\" " + (chaupalSocialState.livePlatform === "Facebook Live" ? "selected" : "") + ">Facebook Live</option><option value=\"Custom RTMP\" " + (chaupalSocialState.livePlatform === "Custom RTMP" ? "selected" : "") + ">Custom RTMP</option></select></div>" +
-            "<div class=\"field\" style=\"margin-bottom:6px;\"><input id=\"soc-live-key-in\" value=\"" + esc(chaupalSocialState.liveStreamKey) + "\" placeholder=\"Stream Key / URL (वैकल्पिक)\" /></div>" +
+        "<div class=\"form-box\" id=\"soc-fb-live-bridge-panel\" style=\"background:rgba(24,119,242,0.14); border:1.5px solid rgba(247,220,139,0.58); margin-bottom:10px;\">" +
+          "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;\">" +
+            "<span style=\"font-size:12.5px; font-weight:700; color:#F7DC8B;\">📘 सीधे फ़ेसबुक खाता जोड़ें व कॉल को लाइव करें (बिना Stream Key के भी)</span>" +
+            "<span style=\"font-size:11px; color:" + (chaupalSocialState.isLiveActive ? "#86EFAC" : "#FCE49C") + "; font-weight:700;\">" + (chaupalSocialState.isLiveActive ? ("🔴 " + esc(chaupalSocialState.livePlatform || "Facebook Live") + " लाइव सक्रिय") : "तैयार") + "</span>" +
           "</div>" +
-          "<button type=\"button\" class=\"action-btn " + (chaupalSocialState.isLiveActive ? "danger" : "gold") + "\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"toggleSocialLiveBroadcast()\">" + (chaupalSocialState.isLiveActive ? "⏹️ लाइव रोकें" : "🔴 सोशल लाइव शुरू करें") + "</button>" +
+          "<div class=\"two-fields\" style=\"margin-bottom:8px;\">" +
+            "<div class=\"field\" style=\"margin-bottom:4px;\"><select id=\"soc-live-plat-sel\" onchange=\"onLiveBridgePlatformChange(this.value)\"><option value=\"Facebook Live\" " + ((chaupalSocialState.livePlatform || "Facebook Live") === "Facebook Live" ? "selected" : "") + ">📘 Facebook Live (सीधा खाता/पेज लिंक)</option><option value=\"YouTube Live\" " + (chaupalSocialState.livePlatform === "YouTube Live" ? "selected" : "") + ">▶️ YouTube Live</option><option value=\"Custom RTMP\" " + (chaupalSocialState.livePlatform === "Custom RTMP" ? "selected" : "") + ">📡 Custom RTMP</option></select></div>" +
+            "<div class=\"field\" style=\"margin-bottom:4px;\"><input id=\"soc-fb-account-in\" type=\"text\" value=\"" + esc(chaupalSocialState.fbAccountUrl || ((state.settings && state.settings.socials && state.settings.socials.facebook) || "https://www.facebook.com/KavyaChaupal")) + "\" placeholder=\"फ़ेसबुक पेज/प्रोफ़ाइल लिंक या नाम\" /></div>" +
+          "</div>" +
+          "<div class=\"field\" id=\"soc-live-key-wrap\" style=\"margin-bottom:8px; display:" + ((chaupalSocialState.livePlatform === "Custom RTMP" || chaupalSocialState.livePlatform === "YouTube Live") ? "block" : "none") + ";\">" +
+            "<input id=\"soc-live-key-in\" type=\"text\" value=\"" + esc(chaupalSocialState.liveStreamKey || "") + "\" placeholder=\"Stream Key / RTMP URL (केवल RTMP या वैकल्पिक उपयोग हेतु)\" />" +
+          "</div>" +
+          "<div style=\"display:flex; gap:7px; flex-wrap:wrap; align-items:center;\">" +
+            "<button type=\"button\" class=\"action-btn gold\" style=\"padding:8px 13px; font-size:12px;\" onclick=\"saveAndGoLiveOnFacebook()\">" + (chaupalSocialState.isLiveActive ? "🔴 फ़ेसबुक लाइव खोलें / अपडेट करें" : "📘 फ़ेसबुक खाता कनेक्ट करें व लाइव करें") + "</button>" +
+            (chaupalSocialState.livePlatform === "Facebook Live" ? ("<button type=\"button\" class=\"sm-btn\" onclick=\"var kw=document.getElementById('soc-live-key-wrap'); if(kw) kw.style.display=(kw.style.display==='none'?'block':'none');\">🔑 Stream Key (वैकल्पिक)</button>") : "") +
+            (chaupalSocialState.isLiveActive ? ("<button type=\"button\" class=\"action-btn danger\" style=\"padding:8px 12px; font-size:12px;\" onclick=\"chaupalSocialState.isLiveActive=false; renderChaupalSocial(); setTimeout(attachMediaToDom,40);\">⏹ लाइव रोकें</button>") : "") +
+          "</div>" +
         "</div>" +
         "<div style=\"display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; align-items:center;\">" +
           "<button type=\"button\" class=\"action-btn gold\" onclick=\"leaveConferenceCall()\">🚪 केवल कॉल से लेफ्ट हों (Leave Call)</button>" +
@@ -13146,6 +13156,72 @@ window.addEventListener("beforeunload", function() {
       window.ensureSmoothAudioAndUnfrozenVideo();
     }
   }, 1200);
+})();
+</script>
+
+
+<script>
+(function() {
+  window.onLiveBridgePlatformChange = function(val) {
+    if (typeof chaupalSocialState !== "undefined") {
+      chaupalSocialState.livePlatform = val || "Facebook Live";
+    }
+    var kw = document.getElementById("soc-live-key-wrap");
+    if (kw) {
+      kw.style.display = (val === "Custom RTMP" || val === "YouTube Live") ? "block" : "none";
+    }
+  };
+
+  // Fast instant ICE / connection recovery so participants join without lag or stalling
+  window.fastJoinAndRecoverAllPeers = function() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    var pcMap = chaupalSocialState.peerConnectionsMap || {};
+    Object.keys(pcMap).forEach(function(peerKey) {
+      var pc = pcMap[peerKey];
+      if (!pc) return;
+      if (typeof window.boostCallAudioQuality === "function") {
+        window.boostCallAudioQuality(pc);
+      }
+      try {
+        if (pc.connectionState === "failed" || pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+          if (typeof pc.restartIce === "function") {
+            pc.restartIce();
+          }
+        }
+      } catch (e) {}
+    });
+    if (typeof window.ensureSmoothAudioAndUnfrozenVideo === "function") {
+      window.ensureSmoothAudioAndUnfrozenVideo();
+    }
+  };
+
+  // Auto-trigger fast connection check right when a call session starts or changes
+  var prevStartDirectCall = window.startDirectCallWithPerson;
+  if (typeof prevStartDirectCall === "function") {
+    window.startDirectCallWithPerson = function() {
+      var r = prevStartDirectCall.apply(this, arguments);
+      setTimeout(window.fastJoinAndRecoverAllPeers, 250);
+      setTimeout(window.fastJoinAndRecoverAllPeers, 1100);
+      return r;
+    };
+  }
+
+  var prevAcceptCall = window.acceptIncomingCall;
+  if (typeof prevAcceptCall === "function") {
+    window.acceptIncomingCall = function() {
+      var r = prevAcceptCall.apply(this, arguments);
+      setTimeout(window.fastJoinAndRecoverAllPeers, 250);
+      setTimeout(window.fastJoinAndRecoverAllPeers, 1100);
+      return r;
+    };
+  }
+
+  // Keep active call smooth every 800ms for instant audio/video sync without freezing
+  setInterval(function() {
+    if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallSession) {
+      window.fastJoinAndRecoverAllPeers();
+    }
+  }, 800);
 })();
 </script>
 
