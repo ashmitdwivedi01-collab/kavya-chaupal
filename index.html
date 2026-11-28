@@ -2022,6 +2022,10 @@
 
       <!-- Quick Royal Gateway -->
       <div class="quick-grid">
+        <div class="quick-tile" onclick="openManchSub('studio')" style="border-color:var(--gold); background:var(--gold-soft);">
+          <div class="quick-ic">🎙️</div>
+          <div class="quick-lbl">चौपाल<br/>स्टूडियो</div>
+        </div>
         <div class="quick-tile" onclick="openManchSub('events')">
           <div class="quick-ic">📅</div>
           <div class="quick-lbl">आगामी<br/>कार्यक्रम</div>
@@ -2162,6 +2166,9 @@
         <button class="hub-tab-btn" data-sub="antakshari" onclick="setManchSub('antakshari')">
           <span class="hic">🔤</span><span>अंताक्षरी</span>
         </button>
+        <button class="hub-tab-btn" data-sub="studio" onclick="setManchSub('studio')" style="border:1.5px solid var(--gold);">
+          <span class="hic">🎙️</span><span>चौपाल स्टूडियो</span>
+        </button>
       </div>
 
       <div id="manch-events" class="manch-pane"></div>
@@ -2170,6 +2177,7 @@
       <div id="manch-ebooks" class="manch-pane" style="display:none;"></div>
       <div id="manch-matra" class="manch-pane" style="display:none;"></div>
       <div id="manch-antakshari" class="manch-pane" style="display:none;"></div>
+      <div id="manch-studio" class="manch-pane" style="display:none;"></div>
     </section>
 
     <!-- TAB 4: ADMINS (एडमिन मण्डल) -->
@@ -5297,7 +5305,7 @@ function sendMemberMessageToAdmin() {
 }
 
 /* ================= MANCH HUB & PDF EBOOK LIBRARY ================= */
-function renderManchHub() { renderEventsPane(); renderVideosPane(); renderCompetitionPane(); renderEbooksPane(); renderMatraPane(); renderAntakshariPane(); }
+function renderManchHub() { renderEventsPane(); renderVideosPane(); renderCompetitionPane(); renderEbooksPane(); renderMatraPane(); renderAntakshariPane(); if (typeof renderStudioPane === 'function') renderStudioPane(); }
 function renderEventsPane() {
   var box = document.getElementById("manch-events"); if (!box) return;
   box.innerHTML = "<div class=\"section-head\" style=\"margin-top:0;\"><h2 class=\"section-title\">📅 आगामी कार्यक्रम</h2><span class=\"section-hint\">" + state.events.length + "</span></div><div class=\"cards-grid\">" + state.events.map(function(e) {
@@ -14822,6 +14830,656 @@ window.addEventListener("beforeunload", function() {
       setTimeout(restoreCallAfterPageRefresh, 400);
     });
   }
+})();
+</script>
+
+
+<script>
+(function() {
+  if (!window.chaupalStudioState) {
+    window.chaupalStudioState = {
+      subMode: "live", // live | video | reel | conf_live | archive
+      liveTitle: "काव्य चौपाल — सजीव काव्य प्रसारण",
+      platform: "App + Facebook + YouTube",
+      fbAccount: "https://www.facebook.com/KavyaChaupal",
+      ytAccount: "https://youtube.com/@kavyachaupal",
+      fbStreamKey: "",
+      ytStreamKey: "",
+      rtmpRelayUrl: "",
+      isLiveOnApp: false,
+      liveStartedAt: 0,
+      livePreviewStream: null,
+      liveRecorder: null,
+      liveChunks: [],
+      savedLives: [],
+      uploadedVideos: [],
+      reelsList: [],
+      reelDraftCaption: "",
+      reelDraftDuration: "30s",
+      reelDraftBg: "royal_crimson",
+      videoDraftTitle: "",
+      videoDraftDesc: "",
+      videoDraftUrl: "",
+      videoDraftCategory: "काव्य पाठ"
+    };
+  }
+
+  function loadStudioStorage() {
+    try {
+      var raw = localStorage.getItem("kc_chaupal_studio_v1");
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.savedLives)) window.chaupalStudioState.savedLives = parsed.savedLives;
+        if (parsed && Array.isArray(parsed.uploadedVideos)) window.chaupalStudioState.uploadedVideos = parsed.uploadedVideos;
+        if (parsed && Array.isArray(parsed.reelsList)) window.chaupalStudioState.reelsList = parsed.reelsList;
+        if (parsed && parsed.fbAccount) window.chaupalStudioState.fbAccount = parsed.fbAccount;
+        if (parsed && parsed.ytAccount) window.chaupalStudioState.ytAccount = parsed.ytAccount;
+        if (parsed && parsed.fbStreamKey) window.chaupalStudioState.fbStreamKey = parsed.fbStreamKey;
+        if (parsed && parsed.ytStreamKey) window.chaupalStudioState.ytStreamKey = parsed.ytStreamKey;
+        if (parsed && parsed.rtmpRelayUrl) window.chaupalStudioState.rtmpRelayUrl = parsed.rtmpRelayUrl;
+      }
+    } catch (e) {}
+  }
+
+  function saveStudioStorage() {
+    try {
+      var s = window.chaupalStudioState;
+      // Keep only metadata/small previews in localStorage so quota never fails
+      var slimLives = (s.savedLives || []).slice(0, 20).map(function(item) {
+        return {
+          id: item.id,
+          title: item.title,
+          platform: item.platform,
+          durationSec: item.durationSec || 0,
+          createdAt: item.createdAt || Date.now(),
+          blobUrl: item.blobUrl || "",
+          fromCall: !!item.fromCall
+        };
+      });
+      var slimVids = (s.uploadedVideos || []).slice(0, 20).map(function(v) {
+        return {
+          id: v.id,
+          title: v.title,
+          category: v.category || "काव्य पाठ",
+          description: v.description || "",
+          url: v.url || "",
+          createdAt: v.createdAt || Date.now()
+        };
+      });
+      var slimReels = (s.reelsList || []).slice(0, 25).map(function(r) {
+        return {
+          id: r.id,
+          caption: r.caption || "",
+          duration: r.duration || "30s",
+          bg: r.bg || "royal_crimson",
+          posterDataUrl: r.posterDataUrl || "",
+          createdAt: r.createdAt || Date.now()
+        };
+      });
+      localStorage.setItem("kc_chaupal_studio_v1", JSON.stringify({
+        savedLives: slimLives,
+        uploadedVideos: slimVids,
+        reelsList: slimReels,
+        fbAccount: s.fbAccount || "",
+        ytAccount: s.ytAccount || "",
+        fbStreamKey: s.fbStreamKey || "",
+        ytStreamKey: s.ytStreamKey || "",
+        rtmpRelayUrl: s.rtmpRelayUrl || ""
+      }));
+    } catch (e) {}
+  }
+
+  loadStudioStorage();
+
+  window.setChaupalStudioMode = function(mode) {
+    window.chaupalStudioState.subMode = mode || "live";
+    window.renderStudioPane();
+  };
+
+  function buildStudioLiveStream(includeConfCall) {
+    var canvas = document.getElementById("kc-studio-live-canvas");
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      canvas.id = "kc-studio-live-canvas";
+      canvas.width = 1280;
+      canvas.height = 720;
+      canvas.style.display = "none";
+      document.body.appendChild(canvas);
+    }
+    var ctx = canvas.getContext("2d");
+    var st = window.chaupalStudioState;
+
+    if (window._kcStudioDrawTimer) {
+      clearInterval(window._kcStudioDrawTimer);
+      window._kcStudioDrawTimer = null;
+    }
+
+    window._kcStudioDrawTimer = setInterval(function() {
+      var W = canvas.width, H = canvas.height;
+      var grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, "#4B0D14");
+      grad.addColorStop(0.55, "#28090D");
+      grad.addColorStop(1, "#120608");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Gold border & header strip
+      ctx.strokeStyle = "#F7DC8B";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(14, 14, W - 28, H - 28);
+
+      ctx.fillStyle = "rgba(0,0,0,0.52)";
+      ctx.fillRect(24, 24, W - 48, 58);
+
+      ctx.fillStyle = "#F7DC8B";
+      ctx.font = "bold 25px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("🎙️ " + (st.liveTitle || "काव्य चौपाल — सजीव प्रसारण"), 40, 61);
+
+      ctx.fillStyle = "#EF4444";
+      ctx.fillRect(W - 210, 34, 170, 38);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 17px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("● LIVE • " + (st.platform || "APP"), W - 125, 59);
+
+      // Gather active camera / conference videos
+      var activeVids = [];
+      var locVid = document.getElementById("soc-local-video");
+      if (locVid && locVid.readyState >= 2 && locVid.videoWidth > 0) {
+        activeVids.push({ el: locVid, label: "प्रस्तोता (Host)" });
+      }
+      document.querySelectorAll("video[id^='soc-rem-vid-']").forEach(function(rv) {
+        if (rv && rv.readyState >= 2 && rv.videoWidth > 0) {
+          activeVids.push({ el: rv, label: rv.getAttribute("data-peer-name") || "कॉल प्रतिभागी" });
+        }
+      });
+
+      var gx = 32, gy = 96, gw = W - 64, gh = H - 134;
+      if (!activeVids.length) {
+        ctx.fillStyle = "#FCE49C";
+        ctx.font = "bold 32px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(
+          includeConfCall
+            ? "कॉन्फ्रेंस कॉल व सजीव मंच तैयार — कैमरा/ऑडियो सक्रिय है"
+            : "चौपाल स्टूडियो सजीव मंच सक्रिय — उच्च गुणवत्ता प्रसारण जारी",
+          W / 2,
+          H / 2 - 12
+        );
+        ctx.fillStyle = "#FFF8EA";
+        ctx.font = "20px sans-serif";
+        ctx.fillText("काव्य चौपाल • साहित्य एवं संवाद का सजीव स्टूडियो", W / 2, H / 2 + 34);
+      } else {
+        var cols = activeVids.length === 1 ? 1 : (activeVids.length <= 4 ? 2 : 3);
+        var rows = Math.ceil(activeVids.length / cols);
+        var gap = 14;
+        var cw = Math.floor((gw - gap * (cols - 1)) / cols);
+        var ch = Math.floor((gh - gap * (rows - 1)) / rows);
+
+        activeVids.forEach(function(item, i) {
+          var r = Math.floor(i / cols);
+          var c = i % cols;
+          var x = gx + c * (cw + gap);
+          var y = gy + r * (ch + gap);
+          ctx.fillStyle = "#0A0506";
+          ctx.fillRect(x, y, cw, ch);
+          try {
+            ctx.drawImage(item.el, x, y, cw, ch);
+          } catch (e) {}
+          ctx.strokeStyle = "#F7DC8B";
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(x, y, cw, ch);
+
+          ctx.fillStyle = "rgba(54,8,14,0.85)";
+          ctx.fillRect(x + 10, y + ch - 40, Math.min(280, cw - 20), 30);
+          ctx.fillStyle = "#FFF8EA";
+          ctx.font = "bold 16px sans-serif";
+          ctx.textAlign = "left";
+          ctx.fillText(item.label, x + 18, y + ch - 19);
+        });
+      }
+    }, 33);
+
+    var outStream = canvas.captureStream(30);
+
+    // Attach local mic/cam or conference remote audio tracks cleanly via Web Audio API
+    try {
+      var AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        if (!window._kcStudioAudioCtx) window._kcStudioAudioCtx = new AudioCtx();
+        var actx = window._kcStudioAudioCtx;
+        if (actx.state === "suspended") actx.resume().catch(function() {});
+        var dest = actx.createMediaStreamDestination();
+
+        if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.localStream) {
+          var lAudio = chaupalSocialState.localStream.getAudioTracks();
+          if (lAudio && lAudio.length) {
+            actx.createMediaStreamSource(chaupalSocialState.localStream).connect(dest);
+          }
+        }
+        if (includeConfCall && typeof chaupalSocialState !== "undefined" && chaupalSocialState.remoteStreamsMap) {
+          Object.keys(chaupalSocialState.remoteStreamsMap).forEach(function(k) {
+            var entry = chaupalSocialState.remoteStreamsMap[k];
+            if (entry && entry.stream && entry.stream.getAudioTracks && entry.stream.getAudioTracks().length) {
+              actx.createMediaStreamSource(entry.stream).connect(dest);
+            }
+          });
+        }
+        dest.stream.getAudioTracks().forEach(function(at) {
+          outStream.addTrack(at);
+        });
+      }
+    } catch (e) {}
+
+    return outStream;
+  }
+
+  window.startChaupalStudioLive = function(includeConfCall) {
+    var st = window.chaupalStudioState;
+    var titleEl = document.getElementById("studio-live-title-in");
+    var platEl = document.getElementById("studio-live-plat-sel");
+    var fbEl = document.getElementById("studio-fb-acc-in");
+    var ytEl = document.getElementById("studio-yt-acc-in");
+    var fbKeyEl = document.getElementById("studio-fb-key-in");
+    var ytKeyEl = document.getElementById("studio-yt-key-in");
+    var relayEl = document.getElementById("studio-rtmp-relay-in");
+
+    if (titleEl && titleEl.value.trim()) st.liveTitle = titleEl.value.trim();
+    if (platEl && platEl.value) st.platform = platEl.value;
+    if (fbEl) st.fbAccount = fbEl.value.trim();
+    if (ytEl) st.ytAccount = ytEl.value.trim();
+    if (fbKeyEl) st.fbStreamKey = fbKeyEl.value.trim();
+    if (ytKeyEl) st.ytStreamKey = ytKeyEl.value.trim();
+    if (relayEl) st.rtmpRelayUrl = relayEl.value.trim();
+
+    if (includeConfCall) {
+      st.platform = "कॉन्फ्रेंस कॉल + " + (st.platform || "App + FB + YT");
+    }
+
+    // Also try acquiring local camera/mic if not yet active so host video/audio is ready
+    if (typeof acquireCallMediaStream === "function" && (typeof chaupalSocialState === "undefined" || !chaupalSocialState.localStream)) {
+      acquireCallMediaStream("video").then(function(ls) {
+        if (ls && typeof chaupalSocialState !== "undefined") {
+          chaupalSocialState.localStream = ls;
+          if (typeof attachMediaToDom === "function") attachMediaToDom();
+        }
+      }).catch(function() {});
+    }
+
+    var stream = buildStudioLiveStream(!!includeConfCall);
+    st.livePreviewStream = stream;
+    st.isLiveOnApp = true;
+    st.liveStartedAt = Date.now();
+    st.liveChunks = [];
+
+    try {
+      if (typeof MediaRecorder !== "undefined") {
+        var mime = "";
+        if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")) {
+          mime = "video/webm;codecs=vp9,opus";
+        } else if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+          mime = "video/webm;codecs=vp8,opus";
+        }
+        var rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+        rec.ondataavailable = function(e) {
+          if (e && e.data && e.data.size > 0) st.liveChunks.push(e.data);
+        };
+        rec.start(1000);
+        st.liveRecorder = rec;
+      }
+    } catch (e) {
+      st.liveRecorder = null;
+    }
+
+    // If RTMP relay URL is configured, push stream to relay
+    if (st.rtmpRelayUrl && (st.rtmpRelayUrl.indexOf("ws://") === 0 || st.rtmpRelayUrl.indexOf("wss://") === 0) && typeof window.startWebSocketRtmpStreamPush === "function") {
+      try { window.startWebSocketRtmpStreamPush(st.rtmpRelayUrl, st.fbStreamKey, st.ytStreamKey); } catch (e) {}
+    }
+
+    // Sync live state to Firestore active call if active
+    try {
+      if (typeof db !== "undefined" && db && typeof ROOT_COL !== "undefined" && typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallDocId) {
+        db.collection(ROOT_COL).doc("active_calls").collection("items").doc(chaupalSocialState.activeCallDocId).set({
+          liveBroadcastActive: true,
+          livePlatform: st.platform,
+          liveBroadcastTitle: st.liveTitle,
+          liveUpdatedAt: Date.now()
+        }, { merge: true }).catch(function() {});
+      }
+    } catch (e) {}
+
+    saveStudioStorage();
+    window.renderStudioPane();
+
+    setTimeout(function() {
+      var pv = document.getElementById("studio-live-preview-video");
+      if (pv && st.livePreviewStream) {
+        pv.srcObject = st.livePreviewStream;
+        pv.play().catch(function() {});
+      }
+    }, 80);
+
+    if (typeof showToast === "function") {
+      showToast("🔴 चौपाल स्टूडियो पर लाइव प्रसारण शुरू हो गया (" + st.platform + ")");
+    }
+  };
+
+  window.stopAndSaveChaupalStudioLive = function(shouldSave) {
+    var st = window.chaupalStudioState;
+    var elapsedSec = st.liveStartedAt ? Math.max(1, Math.round((Date.now() - st.liveStartedAt) / 1000)) : 0;
+
+    var finalize = function() {
+      st.isLiveOnApp = false;
+      if (window._kcStudioDrawTimer) {
+        clearInterval(window._kcStudioDrawTimer);
+        window._kcStudioDrawTimer = null;
+      }
+      if (shouldSave) {
+        var blobUrl = "";
+        if (st.liveChunks && st.liveChunks.length) {
+          var blob = new Blob(st.liveChunks, { type: "video/webm" });
+          blobUrl = URL.createObjectURL(blob);
+          // Also trigger instant local download backup so user never loses high-res stream
+          try {
+            var a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = "Chaupal-Live-" + Date.now() + ".webm";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } catch (e) {}
+        }
+        var recItem = {
+          id: "live_" + Date.now() + "_" + Math.floor(Math.random() * 999),
+          title: st.liveTitle || "काव्य चौपाल — सजीव प्रसारण",
+          platform: st.platform || "App + Facebook + YouTube",
+          durationSec: elapsedSec,
+          createdAt: Date.now(),
+          blobUrl: blobUrl
+        };
+        st.savedLives.unshift(recItem);
+        saveStudioStorage();
+        if (typeof showToast === "function") {
+          showToast("💾 लाइव सत्र सहेजा गया व डाउनलोड शुरू हुआ!");
+        }
+      } else if (typeof showToast === "function") {
+        showToast("⏹ लाइव प्रसारण बंद किया गया");
+      }
+      st.liveRecorder = null;
+      st.liveChunks = [];
+      st.livePreviewStream = null;
+      window.renderStudioPane();
+    };
+
+    if (st.liveRecorder && st.liveRecorder.state !== "inactive") {
+      st.liveRecorder.onstop = finalize;
+      try { st.liveRecorder.stop(); } catch (e) { finalize(); }
+    } else {
+      finalize();
+    }
+  };
+
+  window.deleteSavedLiveRecord = function(liveId) {
+    var st = window.chaupalStudioState;
+    st.savedLives = (st.savedLives || []).filter(function(x) { return x.id !== liveId; });
+    saveStudioStorage();
+    window.renderStudioPane();
+    if (typeof showToast === "function") showToast("🗑️ सहेजा गया लाइव रिकॉर्ड हटाया गया");
+  };
+
+  window.publishStudioVideo = function() {
+    var st = window.chaupalStudioState;
+    var tEl = document.getElementById("studio-vid-title");
+    var cEl = document.getElementById("studio-vid-cat");
+    var uEl = document.getElementById("studio-vid-url");
+    var dEl = document.getElementById("studio-vid-desc");
+
+    var title = tEl ? tEl.value.trim() : "";
+    var cat = cEl ? cEl.value.trim() : "काव्य पाठ";
+    var url = uEl ? uEl.value.trim() : "";
+    var desc = dEl ? dEl.value.trim() : "";
+
+    if (!title) {
+      if (typeof showToast === "function") showToast("कृपया वीडियो का शीर्षक लिखें");
+      return;
+    }
+
+    var newVid = {
+      id: "vid_" + Date.now() + "_" + Math.floor(Math.random() * 999),
+      title: title,
+      category: cat,
+      url: url || "https://youtube.com/@kavyachaupal",
+      description: desc || "चौपाल स्टूडियो से प्रकाशित वीडियो",
+      createdAt: Date.now()
+    };
+
+    st.uploadedVideos.unshift(newVid);
+    if (typeof state !== "undefined" && Array.isArray(state.videos)) {
+      state.videos.unshift(newVid);
+      if (typeof cloudSaveDoc === "function") {
+        cloudSaveDoc("videos", newVid.id, newVid).catch(function() {});
+      }
+    }
+    saveStudioStorage();
+    if (tEl) tEl.value = "";
+    if (uEl) uEl.value = "";
+    if (dEl) dEl.value = "";
+    window.renderStudioPane();
+    if (typeof showToast === "function") showToast("✅ वीडियो स्टूडियो व मंच पर प्रकाशित हो गया!");
+  };
+
+  window.deleteStudioVideo = function(vidId) {
+    var st = window.chaupalStudioState;
+    st.uploadedVideos = (st.uploadedVideos || []).filter(function(v) { return v.id !== vidId; });
+    if (typeof state !== "undefined" && Array.isArray(state.videos)) {
+      state.videos = state.videos.filter(function(v) { return v.id !== vidId; });
+      if (typeof cloudDeleteDoc === "function") cloudDeleteDoc("videos", vidId);
+    }
+    saveStudioStorage();
+    window.renderStudioPane();
+    if (typeof showToast === "function") showToast("🗑️ वीडियो हटाया गया");
+  };
+
+  window.createStudioReel = function() {
+    var st = window.chaupalStudioState;
+    var capEl = document.getElementById("studio-reel-caption");
+    var durEl = document.getElementById("studio-reel-dur");
+    var bgEl = document.getElementById("studio-reel-bg");
+
+    var caption = capEl ? capEl.value.trim() : "";
+    var duration = durEl ? durEl.value : "30s";
+    var bg = bgEl ? bgEl.value : "royal_crimson";
+
+    if (!caption) {
+      if (typeof showToast === "function") showToast("कृपया रील की पंक्तियाँ या संदेश लिखें");
+      return;
+    }
+
+    var posterUrl = "";
+    try {
+      var c = document.getElementById("auto-bhav-canvas") || document.getElementById("bhav-canvas");
+      if (c && typeof window.renderAdaptiveRoyalPosterToCanvas === "function") {
+        var palMap = {
+          royal_crimson: { bg1: "#7B1620", bg2: "#2C070E", accent: "#F7DC8B", textColor: "#FFF8EA" },
+          saffron_gold: { bg1: "#9A3412", bg2: "#431407", accent: "#FDE047", textColor: "#FFFBEB" },
+          midnight_mehfil: { bg1: "#1E293B", bg2: "#090D16", accent: "#F7DC8B", textColor: "#F8FAFC" },
+          emerald_garden: { bg1: "#14532D", bg2: "#052E16", accent: "#FDE68A", textColor: "#F0FDF4" }
+        };
+        var pal = palMap[bg] || palMap.royal_crimson;
+        posterUrl = window.renderAdaptiveRoyalPosterToCanvas(c, {
+          title: "चौपाल रील (" + duration + ")",
+          poet: (typeof getCurrentMemberIdentity === "function" && getCurrentMemberIdentity() && getCurrentMemberIdentity().name) || "काव्य चौपाल",
+          genre: "काव्य रील",
+          moodId: "प्रेरणा व दर्शन",
+          content: caption,
+          maxLines: 5,
+          bg1: pal.bg1,
+          bg2: pal.bg2,
+          accent: pal.accent,
+          textColor: pal.textColor,
+          mime: "image/jpeg",
+          quality: 0.85
+        });
+      }
+    } catch (e) {}
+
+    var reelItem = {
+      id: "reel_" + Date.now() + "_" + Math.floor(Math.random() * 999),
+      caption: caption,
+      duration: duration,
+      bg: bg,
+      posterDataUrl: posterUrl,
+      createdAt: Date.now()
+    };
+
+    st.reelsList.unshift(reelItem);
+    saveStudioStorage();
+    if (capEl) capEl.value = "";
+    window.renderStudioPane();
+    if (typeof showToast === "function") showToast("✨ चौपाल रील तैयार व सहेज ली गई!");
+  };
+
+  window.deleteStudioReel = function(reelId) {
+    var st = window.chaupalStudioState;
+    st.reelsList = (st.reelsList || []).filter(function(r) { return r.id !== reelId; });
+    saveStudioStorage();
+    window.renderStudioPane();
+    if (typeof showToast === "function") showToast("🗑️ रील हटाई गई");
+  };
+
+  window.renderStudioPane = function() {
+    var box = document.getElementById("manch-studio");
+    if (!box) return;
+    var st = window.chaupalStudioState;
+    var mode = st.subMode || "live";
+    var e = (typeof esc === "function") ? esc : function(s) { return String(s || ""); };
+
+    var navHtml =
+      "<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">" +
+        "<button type="button" class="social-subbtn " + (mode === "live" ? "active" : "") + "" onclick="setChaupalStudioMode('live')">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
+        "<button type="button" class="social-subbtn " + (mode === "conf_live" ? "active" : "") + "" onclick="setChaupalStudioMode('conf_live')">📞 कॉन्फ्रेंस कॉल लाइव</button>" +
+        "<button type="button" class="social-subbtn " + (mode === "video" ? "active" : "") + "" onclick="setChaupalStudioMode('video')">🎬 वीडियो डालें</button>" +
+        "<button type="button" class="social-subbtn " + (mode === "reel" ? "active" : "") + "" onclick="setChaupalStudioMode('reel')">✨ रील बनाएँ</button>" +
+        "<button type="button" class="social-subbtn " + (mode === "archive" ? "active" : "") + "" onclick="setChaupalStudioMode('archive')">💾 लाइव रिकॉर्डिंग व डिलीट (" + (st.savedLives ? st.savedLives.length : 0) + ")</button>" +
+      "</div>";
+
+    var bodyHtml = "";
+
+    if (mode === "live" || mode === "conf_live") {
+      var isConf = (mode === "conf_live");
+      var hasActiveCall = (typeof chaupalSocialState !== "undefined" && !!chaupalSocialState.activeCallSession);
+      bodyHtml =
+        "<div class="form-box" style="border:1.5px solid var(--gold);">" +
+          "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;">" +
+            "<h3 class="section-title" style="margin:0;">" + (isConf ? "📞 कॉन्फ्रेंस कॉल को सीधे लाइव करें" : "🔴 चौपाल स्टूडियो — उच्च गुणवत्ता लाइव प्रसारण") + "</h3>" +
+            "<span style="font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--text-muted)") + ";">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी" : "● स्टूडियो तैयार") + "</span>" +
+          "</div>" +
+          (isConf ? ("<div style="margin-bottom:10px; padding:9px 12px; border-radius:12px; background:var(--gold-soft); border:1px solid var(--border); font-size:12.5px;">" +
+            (hasActiveCall
+              ? ("✓ सक्रिय कॉन्फ्रेंस कॉल जुड़ी हुई है: <strong>" + e(chaupalSocialState.activeCallSession.target || "काव्य चौपाल कॉल") + "</strong>")
+              : "💡 कोई कॉन्फ्रेंस कॉल सक्रिय नहीं है — आप यहाँ से सीधे स्टूडियो लाइव शुरू कर सकते हैं या ‘चौपाल सोशल > कॉल’ से कॉल शुरू कर सकते हैं।") +
+          "</div>") : "") +
+          "<div class="two-fields">" +
+            "<div class="field"><label>लाइव शीर्षक</label><input id="studio-live-title-in" type="text" value="" + e(st.liveTitle) + "" /></div>" +
+            "<div class="field"><label>प्रसारण प्लेटफ़ॉर्म</label><select id="studio-live-plat-sel">" +
+              "<option value="App + Facebook + YouTube" " + (st.platform === "App + Facebook + YouTube" ? "selected" : "") + ">🌐 App + Facebook + YouTube</option>" +
+              "<option value="केवल काव्य चौपाल ऐप" " + (st.platform === "केवल काव्य चौपाल ऐप" ? "selected" : "") + ">🪔 केवल काव्य चौपाल ऐप</option>" +
+              "<option value="Facebook Live" " + (st.platform === "Facebook Live" ? "selected" : "") + ">📘 Facebook Live</option>" +
+              "<option value="YouTube Live" " + (st.platform === "YouTube Live" ? "selected" : "") + ">▶️ YouTube Live</option>" +
+            "</select></div>" +
+          "</div>" +
+          "<div class="two-fields">" +
+            "<div class="field"><label>📘 फ़ेसबुक खाता / पेज लिंक</label><input id="studio-fb-acc-in" type="text" value="" + e(st.fbAccount) + "" placeholder="https://www.facebook.com/KavyaChaupal" /></div>" +
+            "<div class="field"><label>▶️ यूट्यूब चैनल लिंक</label><input id="studio-yt-acc-in" type="text" value="" + e(st.ytAccount) + "" placeholder="https://youtube.com/@kavyachaupal" /></div>" +
+          "</div>" +
+          "<div class="two-fields">" +
+            "<div class="field"><label>🔑 Facebook Stream Key</label><input id="studio-fb-key-in" type="password" value="" + e(st.fbStreamKey) + "" placeholder="FB Stream Key (वैकल्पिक)" /></div>" +
+            "<div class="field"><label>🔑 YouTube Stream Key</label><input id="studio-yt-key-in" type="password" value="" + e(st.ytStreamKey) + "" placeholder="YT Stream Key (वैकल्पिक)" /></div>" +
+          "</div>" +
+          "<div class="field"><label>📡 RTMP रिले सर्वर URL (वैकल्पिक)</label><input id="studio-rtmp-relay-in" type="text" value="" + e(st.rtmpRelayUrl) + "" placeholder="wss://... (यदि रिले सर्वर उपलब्ध हो)" /></div>" +
+          "<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">" +
+            (!st.isLiveOnApp
+              ? ("<button type="button" class="action-btn gold" onclick="startChaupalStudioLive(" + (isConf ? "true" : "false") + ")">🔴 अभी लाइव शुरू करें</button>")
+              : ("<button type="button" class="action-btn primary" onclick="stopAndSaveChaupalStudioLive(true)">💾 लाइव सहेजें व रोकें</button>" +
+                 "<button type="button" class="action-btn danger" onclick="stopAndSaveChaupalStudioLive(false)">⏹ बिना सहेजे रोकें</button>")) +
+            (typeof window.openCleanBroadcastStagePopup === "function"
+              ? "<button type="button" class="action-btn" onclick="openCleanBroadcastStagePopup()">📺 16:9 क्लीन स्टेज विंडो</button>"
+              : "") +
+          "</div>" +
+          (st.isLiveOnApp
+            ? "<div style="margin-top:12px; border-radius:14px; overflow:hidden; border:2px solid #EF4444; background:#120608;"><video id="studio-live-preview-video" autoplay playsinline muted style="width:100%; max-height:280px; display:block; object-fit:contain;"></video></div>"
+            : "") +
+        "</div>";
+    } else if (mode === "video") {
+      bodyHtml =
+        "<div class="form-box" style="border:1.5px solid var(--gold);">" +
+          "<h3 class="section-title" style="margin:0 0 10px;">🎬 चौपाल स्टूडियो — नया वीडियो डालें</h3>" +
+          "<div class="two-fields">" +
+            "<div class="field"><label>वीडियो शीर्षक</label><input id="studio-vid-title" type="text" placeholder="जैसे: सावन विशेष काव्य पाठ" /></div>" +
+            "<div class="field"><label>श्रेणी</label><select id="studio-vid-cat"><option>काव्य पाठ</option><option>गोष्ठी / सम्मेलन</option><option>छंद कार्यशाला</option><option>विशेष संवाद</option></select></div>" +
+          "</div>" +
+          "<div class="field"><label>YouTube / वीडियो लिंक</label><input id="studio-vid-url" type="text" placeholder="https://youtube.com/watch?v=... या चैनल लिंक" /></div>" +
+          "<div class="field"><label>विवरण</label><textarea id="studio-vid-desc" placeholder="वीडियो के बारे में संक्षिप्त जानकारी..."></textarea></div>" +
+          "<button type="button" class="action-btn gold" onclick="publishStudioVideo()">✅ वीडियो प्रकाशित करें</button>" +
+        "</div>" +
+        "<div class="section-head"><h3 class="section-title">📂 स्टूडियो में डाले गए वीडियो (" + (st.uploadedVideos ? st.uploadedVideos.length : 0) + ")</h3></div>" +
+        ((st.uploadedVideos && st.uploadedVideos.length)
+          ? st.uploadedVideos.map(function(v) {
+              return "<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">🎬 " + e(v.title) + "</div><div class="admin-item-sub">" + e(v.category) + " • " + e(v.description || "") + "</div></div><div class="admin-item-btns">" +
+                (v.url ? ("<a class="sm-btn" href="" + e(v.url) + "" target="_blank" rel="noopener noreferrer">↗ देखें</a>") : "") +
+                "<button type="button" class="sm-btn del" onclick="deleteStudioVideo(dec('" + encodeURIComponent(v.id) + "'))">🗑️ डिलीट</button>" +
+              "</div></div>";
+            }).join("")
+          : "<div class="empty-box">अभी कोई नया वीडियो नहीं डाला गया है।</div>");
+    } else if (mode === "reel") {
+      bodyHtml =
+        "<div class="form-box" style="border:1.5px solid var(--gold);">" +
+          "<h3 class="section-title" style="margin:0 0 10px;">✨ चौपाल स्टूडियो — त्वरित रील बनाएँ</h3>" +
+          "<div class="two-fields">" +
+            "<div class="field"><label>रील अवधि</label><select id="studio-reel-dur"><option value="15s">15 सेकंड रील</option><option value="30s" selected>30 सेकंड रील</option><option value="60s">60 सेकंड रील</option></select></div>" +
+            "<div class="field"><label>शाही पृष्ठभूमि</label><select id="studio-reel-bg"><option value="royal_crimson">शाही मरून व स्वर्ण</option><option value="saffron_gold">केसरिया ओज</option><option value="midnight_mehfil">रात्रि महफ़िल</option><option value="emerald_garden">प्रकृति हरितिमा</option></select></div>" +
+          "</div>" +
+          "<div class="field"><label>रील की काव्य पंक्तियाँ / संदेश</label><textarea id="studio-reel-caption" placeholder="अपनी रील की 2 से 5 सुंदर पंक्तियाँ लिखें..."></textarea></div>" +
+          "<button type="button" class="action-btn gold" onclick="createStudioReel()">✨ रील कार्ड तैयार करें</button>" +
+        "</div>" +
+        "<div class="cards-grid two-col">" +
+          ((st.reelsList && st.reelsList.length)
+            ? st.reelsList.map(function(r) {
+                return "<div class="poem-card" style="cursor:default;">" +
+                  (r.posterDataUrl ? ("<img src="" + r.posterDataUrl + "" alt="Reel" style="width:100%; border-radius:12px; border:1.5px solid var(--gold); margin-bottom:10px;" />") : "") +
+                  "<div class="poem-card-title">✨ रील • " + e(r.duration) + "</div>" +
+                  "<p class="font-literary" style="white-space:pre-line; margin:6px 0 10px;">" + e(r.caption) + "</p>" +
+                  "<div style="display:flex; gap:7px; flex-wrap:wrap;">" +
+                    (r.posterDataUrl ? ("<a class="sm-btn" href="" + r.posterDataUrl + "" download="Chaupal-Reel-" + r.id + ".jpg">⬇️ डाउनलोड</a>") : "") +
+                    "<button type="button" class="sm-btn del" onclick="deleteStudioReel(dec('" + encodeURIComponent(r.id) + "'))">🗑️ डिलीट</button>" +
+                  "</div>" +
+                "</div>";
+              }).join("")
+            : "<div class="empty-box" style="grid-column:1/-1;">अभी कोई रील नहीं बनाई गई है।</div>") +
+        "</div>";
+    } else if (mode === "archive") {
+      bodyHtml =
+        "<div class="section-head" style="margin-top:0;"><h3 class="section-title">💾 ऐप पर हुए सहेजे गए लाइव प्रसारण</h3><span class="section-hint">" + (st.savedLives ? st.savedLives.length : 0) + "</span></div>" +
+        ((st.savedLives && st.savedLives.length)
+          ? st.savedLives.map(function(item) {
+              var dtTxt = item.createdAt ? new Date(item.createdAt).toLocaleString("hi-IN") : "";
+              return "<div class="admin-list-item"><div class="admin-item-info"><div class="admin-item-title">🔴 " + e(item.title) + "</div><div class="admin-item-sub">प्लेटफ़ॉर्म: " + e(item.platform) + " • अवधि: " + (item.durationSec || 0) + "s • " + e(dtTxt) + "</div></div><div class="admin-item-btns">" +
+                (item.blobUrl ? ("<a class="sm-btn" href="" + e(item.blobUrl) + "" download="" + e(item.title) + ".webm">⬇️ डाउनलोड</a>") : "") +
+                "<button type="button" class="sm-btn del" onclick="deleteSavedLiveRecord(dec('" + encodeURIComponent(item.id) + "'))">🗑️ डिलीट</button>" +
+              "</div></div>";
+            }).join("")
+          : "<div class="empty-box">अभी कोई लाइव प्रसारण सहेजा नहीं गया है। लाइव रोकते समय ‘💾 लाइव सहेजें व रोकें’ चुनें।</div>");
+    }
+
+    box.innerHTML = navHtml + bodyHtml;
+  };
+
+  setTimeout(function() {
+    if (typeof window.renderStudioPane === "function") {
+      window.renderStudioPane();
+    }
+  }, 150);
 })();
 </script>
 
