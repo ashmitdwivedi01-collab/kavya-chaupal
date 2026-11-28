@@ -5757,6 +5757,9 @@ function startChaupalCallSession(modeType, targetLabel, calleeEmailArg, calleeNa
     }
     chaupalSocialState.localStream = stream;
     if (tEmail && tEmail !== me.email) {
+      if (chaupalSocialState._sentOfferLegs) {
+        delete chaupalSocialState._sentOfferLegs[getLegKey(me.email, tEmail)];
+      }
       ensureMeshPeerConnection(callId, tEmail, rawName || tEmail, "caller", true);
     }
     attachMediaToDom();
@@ -6330,23 +6333,48 @@ function attachMediaToDom() {
     }
   }
   var remMap = chaupalSocialState.remoteStreamsMap || {};
-  Object.keys(remMap).forEach(function(emKey) {
+  var pConns = chaupalSocialState.peerConnectionsMap || {};
+  var allPeerKeys = {};
+  Object.keys(remMap).forEach(function(k) { allPeerKeys[k] = true; });
+  Object.keys(pConns).forEach(function(k) { allPeerKeys[k] = true; });
+
+  Object.keys(allPeerKeys).forEach(function(emKey) {
     var safeId = "soc-rem-vid-" + emKey.replace(/[^a-zA-Z0-9]/g, "_");
     var el = document.getElementById(safeId);
-    var st = remMap[emKey] && remMap[emKey].stream;
+    var entry = remMap[emKey];
+    var st = entry && entry.stream;
+    var pcObj = pConns[emKey];
+
+    // Also pull tracks directly from RTCPeerConnection receivers if stream tracks were missed
+    if (pcObj && pcObj.getReceivers) {
+      if (!st) {
+        st = new MediaStream();
+        remMap[emKey] = { stream: st, name: (entry && entry.name) || emKey };
+      }
+      pcObj.getReceivers().forEach(function(rcv) {
+        if (rcv && rcv.track && rcv.track.readyState === "live") {
+          rcv.track.enabled = true;
+          if (st.getTracks().indexOf(rcv.track) === -1) {
+            try { st.addTrack(rcv.track); } catch (e) {}
+          }
+        }
+      });
+    }
+
+    var aCnt = (st && st.getAudioTracks) ? st.getAudioTracks().filter(function(t) { return t.readyState !== "ended"; }).length : 0;
+    var vCnt = (st && st.getVideoTracks) ? st.getVideoTracks().filter(function(t) { return t.readyState !== "ended"; }).length : 0;
+    var iceSt = (pcObj && (pcObj.iceConnectionState || pcObj.connectionState)) || "new";
+    if ((aCnt > 0 || vCnt > 0) && (iceSt === "new" || iceSt === "checking")) {
+      iceSt = "connected";
+    }
+
     var dbgEl = document.getElementById("media-dbg-" + safeId);
     if (dbgEl) {
-      var aCnt = (st && st.getAudioTracks) ? st.getAudioTracks().length : 0;
-      var vCnt = (st && st.getVideoTracks) ? st.getVideoTracks().length : 0;
-      var pcObj = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[emKey];
-      var iceSt = (pcObj && pcObj.iceConnectionState) || "new";
       dbgEl.textContent = "🔊 ऑडियो:" + aCnt + " | 📹 वीडियो:" + vCnt + " | ICE:" + iceSt;
     }
+
     if (el && st && st.getTracks && st.getTracks().length > 0) {
-      var hasLiveVideo = st.getVideoTracks().some(function(vt) {
-        vt.enabled = true;
-        return vt.readyState === "live" && !vt.muted;
-      });
+      st.getVideoTracks().forEach(function(vt) { vt.enabled = true; });
       st.getAudioTracks().forEach(function(at) { at.enabled = true; });
       if (el.srcObject !== st) {
         el.srcObject = st;
@@ -6356,18 +6384,28 @@ function attachMediaToDom() {
       if (el.tagName === "AUDIO") {
         el.muted = false;
         el.volume = 1.0;
+      } else if (el.tagName === "VIDEO") {
+        // Keep video unmuted when audio track is present so voice plays seamlessly alongside video
+        if (aCnt > 0) {
+          el.muted = false;
+          el.volume = 1.0;
+        }
       }
-      if (el.paused || (el.tagName === "VIDEO" && el.videoWidth === 0 && hasLiveVideo)) {
+      if (el.paused) {
         try {
           var p = el.play();
           if (p && p.catch) {
             p.catch(function() {
-              el.muted = true;
-              el.play().then(function() {
-                setTimeout(function() {
-                  try { el.muted = false; el.volume = 1.0; } catch (e) {}
-                }, 200);
-              }).catch(function() {});
+              if (el.tagName === "VIDEO") {
+                el.muted = true;
+                el.play().then(function() {
+                  if (aCnt > 0) {
+                    setTimeout(function() {
+                      try { el.muted = false; el.volume = 1.0; } catch (e) {}
+                    }, 250);
+                  }
+                }).catch(function() {});
+              }
             });
           }
         } catch (e) {}
@@ -6378,27 +6416,27 @@ function attachMediaToDom() {
 
 function toggleCallFullScreen() {
   chaupalSocialState.fullScreenMode = !chaupalSocialState.fullScreenMode;
-  var stageEl = document.getElementById("soc-call-stage-card");
+  // Ensure any stale browser fullscreen is cleanly exited so Android/Chrome doesn't show fullscreen error/toast
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(function() {});
+    }
+  } catch (e) {}
+  try {
+    if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+  } catch (e) {}
+
   if (chaupalSocialState.fullScreenMode) {
-    try {
-      var target = stageEl || document.documentElement;
-      if (target && target.requestFullscreen) {
-        target.requestFullscreen().catch(function() {});
-      }
-    } catch (e) {}
-    showToast("फ़ुल-स्क्रीन कॉल व्यू चालू 🖥️");
+    showToast("फ़ुल-स्क्रीन कॉल व्यू सक्रिय 🖥️");
   } else {
-    try {
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(function() {});
-      }
-    } catch (e) {}
     showToast("सामान्य कॉल व्यू वापस");
   }
   renderChaupalSocial();
   setTimeout(function() {
     if (typeof attachMediaToDom === "function") attachMediaToDom();
-  }, 60);
+  }, 80);
 }
 
 function forceRefreshRemoteMedia() {
@@ -6413,7 +6451,11 @@ function forceRefreshRemoteMedia() {
         try { pc.restartIce(); } catch (e) {}
       }
       if (pc.signalingState === "stable") {
-        ensureMeshPeerConnection(callId, pEm, pEm, myEm > pEm ? "caller" : "callee", true);
+        var offerSide = (myEm > pEm) ? "caller" : "callee";
+        if (chaupalSocialState._sentOfferLegs) {
+          delete chaupalSocialState._sentOfferLegs[getLegKey(myEm, pEm)];
+        }
+        ensureMeshPeerConnection(callId, pEm, pEm, offerSide, myEm > pEm);
       }
     });
   }
@@ -7363,18 +7405,17 @@ function subscribeToActiveCallDoc(callId, isCaller) {
       if (!pEm || pEm === myEmW) return;
       if (p.status !== "connected" && p.status !== "accepted") return;
       var pc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm];
-      var isStuckState = !pc || pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed" || (pc.iceConnectionState === "new" && pc.signalingState === "stable");
+      var hasMediaStream = !!(chaupalSocialState.remoteStreamsMap && chaupalSocialState.remoteStreamsMap[pEm] && chaupalSocialState.remoteStreamsMap[pEm].stream && chaupalSocialState.remoteStreamsMap[pEm].stream.getTracks().length > 0);
+      var isStuckState = !pc || (!hasMediaStream && (pc.iceConnectionState === "new" || pc.iceConnectionState === "checking")) || pc.iceConnectionState === "disconnected" || pc.iceConnectionState === "failed";
       if (isStuckState && (!pc || pc.signalingState === "stable")) {
-        try { if (pc && typeof pc.restartIce === "function") pc.restartIce(); } catch (e) {}
-        var canOfferW = (myEmW > pEm) || ((chaupalSocialState.activeCallSession.callerEmail || "").toLowerCase().trim() === myEmW);
-        if (canOfferW) {
-          var lkW = getLegKey(myEmW, pEm);
-          if (chaupalSocialState._sentOfferLegs) delete chaupalSocialState._sentOfferLegs[lkW];
-          ensureMeshPeerConnection(callId, pEm, p.name || pEm, "caller", true);
+        var shouldOfferW = (myEmW > pEm);
+        if (shouldOfferW && chaupalSocialState._sentOfferLegs) {
+          delete chaupalSocialState._sentOfferLegs[getLegKey(myEmW, pEm)];
         }
+        ensureMeshPeerConnection(callId, pEm, p.name || pEm, shouldOfferW ? "caller" : "callee", shouldOfferW);
       }
     });
-  }, 3000);
+  }, 2500);
 }
 
 function inviteMemberToActiveCall(targetEmailArg, targetNameArg) {
