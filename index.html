@@ -12755,5 +12755,160 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  // Force-apply mute/unmute on local mic tracks & WebRTC audio senders
+  window.applyLocalMicMuteState = function(shouldMute) {
+    if (typeof chaupalSocialState === "undefined") return;
+    chaupalSocialState.isMuted = !!shouldMute;
+    if (chaupalSocialState.localStream && chaupalSocialState.localStream.getAudioTracks) {
+      chaupalSocialState.localStream.getAudioTracks().forEach(function(tr) {
+        tr.enabled = !shouldMute;
+      });
+    }
+    if (chaupalSocialState.peerConnectionsMap) {
+      Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+        var pc = chaupalSocialState.peerConnectionsMap[k];
+        if (pc && pc.getSenders) {
+          pc.getSenders().forEach(function(s) {
+            if (s && s.track && s.track.kind === "audio") {
+              s.track.enabled = !shouldMute;
+            }
+          });
+        }
+      });
+    }
+  };
+
+  // Force-apply remote peer mute state to <audio>/<video> elements and incoming tracks
+  window.enforceAllPeerMuteStates = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    var mutedMap = chaupalSocialState.mutedPeersMap || {};
+    var remMap = chaupalSocialState.remoteStreamsMap || {};
+    Object.keys(mutedMap).forEach(function(pEm) {
+      var isM = !!mutedMap[pEm];
+      var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+      var el = document.getElementById(safeId);
+      if (el) {
+        el.muted = isM;
+      }
+      var entry = remMap[pEm];
+      if (entry && entry.stream && entry.stream.getAudioTracks) {
+        entry.stream.getAudioTracks().forEach(function(at) {
+          at.enabled = !isM;
+        });
+      }
+    });
+  };
+
+  // Override togglePeerMuteControl so muting a peer mutes them locally AND signals their device to mute their mic
+  window.togglePeerMuteControl = function(peerEmail) {
+    var pEm = normEm(peerEmail);
+    if (!pEm || typeof chaupalSocialState === "undefined") return;
+    if (!chaupalSocialState.mutedPeersMap) chaupalSocialState.mutedPeersMap = {};
+    var nextMuted = !chaupalSocialState.mutedPeersMap[pEm];
+    chaupalSocialState.mutedPeersMap[pEm] = nextMuted;
+
+    enforceAllPeerMuteStates();
+
+    var callId = chaupalSocialState.activeCallDocId;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    if (callId && me && typeof getCallSignalsColRef === "function") {
+      var sigCol = getCallSignalsColRef(callId);
+      if (sigCol) {
+        var sigId = "mute_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+        sigCol.doc(sigId).set({
+          id: sigId,
+          type: "peer_mute",
+          fromEmail: me.email,
+          toEmail: pEm,
+          muted: nextMuted,
+          ts: Date.now()
+        }).catch(function() {});
+      }
+    }
+
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "सदस्य का ऑडियो म्यूट किया गया 🔇" : "सदस्य का ऑडियो अनम्यूट किया गया 🔊");
+    }
+    scheduleSmoothSocialRender();
+  };
+
+  // Intercept handleIncomingSignalDoc to handle peer_mute and kicked signals directly
+  var origHandleSig = window.handleIncomingSignalDoc;
+  if (typeof origHandleSig === "function") {
+    window.handleIncomingSignalDoc = function(callId, sig, isCaller) {
+      if (sig && sig.type === "peer_mute") {
+        var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm = me ? normEm(me.email) : "";
+        var toEm = normEm(sig.toEmail);
+        var fromEm = normEm(sig.fromEmail);
+        var sigTs = Number(sig.ts || 0);
+        if (!chaupalSocialState._appliedMuteTs) chaupalSocialState._appliedMuteTs = {};
+        var mKey = (sig.id || (fromEm + "_" + toEm + "_" + sigTs));
+        if (!chaupalSocialState._appliedMuteTs[mKey]) {
+          chaupalSocialState._appliedMuteTs[mKey] = true;
+          var isM = !!sig.muted;
+          if (toEm && myEm && toEm === myEm) {
+            applyLocalMicMuteState(isM);
+            if (typeof showToast === "function") {
+              showToast(isM ? "🔇 कॉल में आपका ऑडियो म्यूट किया गया है" : "🔊 कॉल में आपका ऑडियो अनम्यूट किया गया है");
+            }
+            scheduleSmoothSocialRender();
+          } else if (fromEm && fromEm !== myEm) {
+            if (!chaupalSocialState.mutedPeersMap) chaupalSocialState.mutedPeersMap = {};
+            chaupalSocialState.mutedPeersMap[fromEm] = isM;
+            enforceAllPeerMuteStates();
+            scheduleSmoothSocialRender();
+          }
+        }
+        return;
+      }
+
+      if (sig && sig.type === "kicked") {
+        var me2 = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm2 = me2 ? normEm(me2.email) : "";
+        var toEm2 = normEm(sig.toEmail);
+        if (toEm2 && myEm2 && toEm2 === myEm2) {
+          if (typeof cleanupWebRtcCall === "function") cleanupWebRtcCall(false);
+          if (typeof showToast === "function") showToast("आपको कॉल से हटा दिया गया है");
+          scheduleSmoothSocialRender();
+          return;
+        }
+      }
+
+      return origHandleSig.apply(this, arguments);
+    };
+  }
+
+  // Smooth debounced render so rapid ICE/signal events don't cause UI stutter
+  var _renderDebounceTimer = null;
+  window.scheduleSmoothSocialRender = function() {
+    if (_renderDebounceTimer) clearTimeout(_renderDebounceTimer);
+    _renderDebounceTimer = setTimeout(function() {
+      _renderDebounceTimer = null;
+      if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+      if (typeof attachMediaToDom === "function") attachMediaToDom();
+      enforceAllPeerMuteStates();
+    }, 90);
+  };
+
+  // Ensure attachMediaToDom always enforces peer mute states smoothly without unnecessary restarts
+  var origAttach2 = window.attachMediaToDom;
+  if (typeof origAttach2 === "function") {
+    window.attachMediaToDom = function() {
+      var res = origAttach2.apply(this, arguments);
+      enforceAllPeerMuteStates();
+      return res;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
