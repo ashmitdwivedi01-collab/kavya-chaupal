@@ -1993,6 +1993,7 @@
 
   <!-- ================= TOP MEMBER LOGIN / MY CORNER STRIP ================= -->
   <div class="top-account-strip">
+    <div id="global-active-presence-bar" style="display:none; margin-bottom:8px;"></div>
     <div id="global-active-call-banner" style="display:none; margin-bottom:8px;"></div>
     <div class="top-account-box" id="top-account-bar"></div>
   </div>
@@ -4072,24 +4073,90 @@ function syncLinkedProfilesForCurrentUser(userObj) {
   } catch (e) {}
 }
 
-function registerCurrentUserInSocialDirectory(userObj, matchedPoet) {
-  if (!userObj || !userObj.email) return;
-  var em = userObj.email.toLowerCase().trim();
-  var nm = (matchedPoet && matchedPoet.name) || userObj.displayName || em.split("@")[0];
+var _chaupalHeartbeatTimer = null;
+var _chaupalPresenceAlertedMap = {};
+
+function isMemberCurrentlyActive(u) {
+  if (!u) return false;
+  if (u.isOffline === true) return false;
+  var lastTs = Number(u.lastActiveAt || u.updatedAt || 0);
+  if (!lastTs) return false;
+  return (Date.now() - lastTs) <= 95000;
+}
+
+function getCurrentlyActiveMembers(excludeEmail) {
+  var ex = (excludeEmail || "").toLowerCase().trim();
+  return getAllCallableMembers(ex).filter(function(m) { return !!m.online; });
+}
+
+function notifyActiveMembersUpdate(prevList, nextList) {
+  var prevMap = {};
+  (prevList || []).forEach(function(p) { prevMap[(p.email || "").toLowerCase().trim()] = true; });
+  (nextList || []).forEach(function(m) {
+    var em = (m.email || "").toLowerCase().trim();
+    if (!em || prevMap[em]) return;
+    if (_chaupalPresenceAlertedMap[em]) return;
+    _chaupalPresenceAlertedMap[em] = true;
+    showToast("🟢 " + (m.name || em) + " अभी ऐप पर सक्रिय हैं");
+  });
+}
+
+function sendMemberPresenceHeartbeat(isLeaving) {
+  var uObj = state.currentUser;
+  if (!uObj || !uObj.email) return;
+  var em = uObj.email.toLowerCase().trim();
+  var matchedPoet = (typeof getPoetByEmail === "function") ? getPoetByEmail(em, uObj.displayName) : null;
+  var nm = (matchedPoet && matchedPoet.name) || uObj.displayName || em.split("@")[0];
   var recId = "suser_" + em.replace(/[^a-zA-Z0-9_@.-]/g, "_");
+  var nowTs = Date.now();
   var rec = {
     id: recId,
     email: em,
     name: nm,
     poetId: (matchedPoet && matchedPoet.id) || "",
     city: (matchedPoet && matchedPoet.city) || "",
-    photo: (matchedPoet && matchedPoet.photo) || userObj.photoURL || "",
-    updatedAt: Date.now()
+    photo: (matchedPoet && matchedPoet.photo) || uObj.photoURL || "",
+    isOffline: !!isLeaving,
+    lastActiveAt: isLeaving ? (nowTs - 180000) : nowTs,
+    updatedAt: nowTs
   };
   if (!Array.isArray(state.socialUsers)) state.socialUsers = [];
   var idx = state.socialUsers.findIndex(function(u) { return (u.email || "").toLowerCase().trim() === em; });
   if (idx >= 0) state.socialUsers[idx] = rec; else state.socialUsers.unshift(rec);
   cloudSaveDoc("social_users", recId, rec);
+}
+
+function startPresenceHeartbeatLoop() {
+  if (_chaupalHeartbeatTimer) {
+    clearInterval(_chaupalHeartbeatTimer);
+    _chaupalHeartbeatTimer = null;
+  }
+  sendMemberPresenceHeartbeat(false);
+  _chaupalHeartbeatTimer = setInterval(function() {
+    if (document.visibilityState === "visible" && state.currentUser && state.currentUser.email) {
+      sendMemberPresenceHeartbeat(false);
+    }
+  }, 30000);
+  if (!window._chaupalPresenceHooksBound) {
+    window._chaupalPresenceHooksBound = true;
+    document.addEventListener("visibilitychange", function() {
+      if (document.visibilityState === "visible") {
+        sendMemberPresenceHeartbeat(false);
+        if (typeof renderActivePresenceBar === "function") renderActivePresenceBar();
+      } else {
+        sendMemberPresenceHeartbeat(true);
+      }
+    });
+    window.addEventListener("beforeunload", function() {
+      sendMemberPresenceHeartbeat(true);
+    });
+  }
+}
+
+function registerCurrentUserInSocialDirectory(userObj, matchedPoet) {
+  if (!userObj || !userObj.email) return;
+  sendMemberPresenceHeartbeat(false);
+  startPresenceHeartbeatLoop();
 }
 
 function getAllCallableMembers(excludeEmail) {
@@ -4099,13 +4166,16 @@ function getAllCallableMembers(excludeEmail) {
   (state.socialUsers || []).forEach(function(u) {
     var em = (u.email || "").toLowerCase().trim();
     if (!em || em === ex) return;
+    var activeNow = isMemberCurrentlyActive(u);
+    var prev = map.get(em);
     map.set(em, {
       email: em,
-      name: u.name || em.split("@")[0],
-      city: u.city || "",
-      photo: u.photo || "",
-      poetId: u.poetId || "",
-      online: true
+      name: u.name || (prev && prev.name) || em.split("@")[0],
+      city: u.city || (prev && prev.city) || "",
+      photo: u.photo || (prev && prev.photo) || "",
+      poetId: u.poetId || (prev && prev.poetId) || "",
+      online: activeNow || !!(prev && prev.online),
+      lastActiveAt: Number(u.lastActiveAt || u.updatedAt || 0)
     });
   });
   // 2. Poets with ownerEmail
@@ -4224,6 +4294,44 @@ function savePromotedPoetAsAdmin(poetId) {
   });
 }
 
+function renderActivePresenceBar() {
+  var el = document.getElementById("global-active-presence-bar");
+  if (!el) return;
+  var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+  if (!me) {
+    el.style.display = "none";
+    el.innerHTML = "";
+    return;
+  }
+  var activeList = getCurrentlyActiveMembers(me.email);
+  el.style.display = "block";
+  if (!activeList.length) {
+    el.innerHTML =
+      "<div style=\"padding:8px 12px; border-radius:13px; background:var(--bg-elevated); border:1px solid var(--border); font-size:12px; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;\">" +
+        "<span>🟢 <strong>सक्रिय सदस्य:</strong> अभी आपके अतिरिक्त अन्य कोई सदस्य ऑनलाइन नहीं है (आप सक्रिय हैं)।</span>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"sendMemberPresenceHeartbeat(false); renderActivePresenceBar()\">↻ रिफ्रेश</button>" +
+      "</div>";
+    return;
+  }
+  el.innerHTML =
+    "<div style=\"padding:10px 13px; border-radius:14px; background:linear-gradient(135deg, rgba(21,128,61,0.12) 0%, var(--bg-elevated) 100%); border:1.5px solid #22C55E; box-shadow:var(--shadow);\">" +
+      "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:7px;\">" +
+        "<span style=\"font-size:12.5px; font-weight:700; color:#15803D;\">🟢 अभी ऐप पर सक्रिय (" + activeList.length + " सदस्य)</span>" +
+        "<button type=\"button\" class=\"sm-btn\" style=\"border-color:#22C55E;\" onclick=\"chaupalSocialState.subTab='call'; switchTab('social')\">🎙️ कॉन्फ्रेंस में जोड़ें</button>" +
+      "</div>" +
+      "<div style=\"display:flex; gap:7px; flex-wrap:wrap;\">" +
+        activeList.map(function(m) {
+          return "<div style=\"display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:999px; background:var(--bg); border:1px solid var(--border); font-size:12px;\">" +
+            "<span style=\"width:8px; height:8px; border-radius:50%; background:#22C55E; display:inline-block;\"></span>" +
+            "<strong style=\"cursor:pointer;\" onclick=\"openDirectChatWithPerson(dec('" + arg(m.email) + "'), dec('" + arg(m.name) + "'))\">" + esc(m.name) + "</strong>" +
+            "<button type=\"button\" class=\"sm-btn\" style=\"padding:2px 7px; font-size:11px;\" onclick=\"startDirectCallWithPerson('audio', dec('" + arg(m.email) + "'), dec('" + arg(m.name) + "'))\">🎙️</button>" +
+            "<button type=\"button\" class=\"sm-btn\" style=\"padding:2px 7px; font-size:11px;\" onclick=\"startDirectCallWithPerson('video', dec('" + arg(m.email) + "'), dec('" + arg(m.name) + "'))\">🎥</button>" +
+          "</div>";
+        }).join("") +
+      "</div>" +
+    "</div>";
+}
+
 function renderGlobalActiveCallBanner() {
   var b = document.getElementById("global-active-call-banner");
   if (!b) return;
@@ -4252,6 +4360,7 @@ function renderGlobalActiveCallBanner() {
 }
 
 function renderTopAccountBar() {
+  renderActivePresenceBar();
   renderGlobalActiveCallBanner();
   var bar = document.getElementById("top-account-bar");
   if (!bar) return;
@@ -6944,6 +7053,12 @@ function handleIncomingSignalDoc(callId, sig, isCaller) {
     var offerCollision = (pc.signalingState !== "stable");
     var isPolite = (myEm < otherEm);
     if (offerCollision && !isPolite) {
+      // Wait briefly if impolite side is mid-negotiation so polite side's offer isn't lost
+      setTimeout(function() {
+        if (pc && pc.signalingState === "stable") {
+          handleIncomingSignalDoc(callId, sig, isCaller);
+        }
+      }, 250);
       return;
     }
     chaupalSocialState.lastAppliedOfferTs[lk] = offerTs;
@@ -7102,7 +7217,9 @@ function subscribeToActiveCallDoc(callId, isCaller) {
           closeSinglePeerConnection(pEm);
         } else if (p.status === "accepted" || p.status === "connected") {
           var isInitiator = !!isCaller || ((data.callerEmail || "").toLowerCase().trim() === myEm) || (myEm > pEm);
-          ensureMeshPeerConnection(callId, pEm, p.name || pEm, isInitiator ? "caller" : "callee", isInitiator);
+          var existingPcForPeer = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm];
+          var needOfferSync = !existingPcForPeer || (isInitiator && existingPcForPeer.iceConnectionState === "new" && existingPcForPeer.signalingState === "stable");
+          ensureMeshPeerConnection(callId, pEm, p.name || pEm, isInitiator ? "caller" : "callee", needOfferSync);
         }
       }
     });
@@ -7119,6 +7236,19 @@ function subscribeToActiveCallDoc(callId, isCaller) {
     var isCallScreenOpen = (state.activeTab === "social" && chaupalSocialState.subTab === "call");
     if (prevPartsSig !== nextPartsSig || prevStatus !== nextStatus) {
       chaupalSocialState._lastRenderedCallStatus = nextStatus;
+      if (prevPartsSig !== nextPartsSig) {
+        parts.forEach(function(ptItem) {
+          var ptEm = (ptItem.email || "").toLowerCase().trim();
+          if (!ptEm || ptEm === myEm) return;
+          if (ptItem.status === "connected" || ptItem.status === "accepted") {
+            var shouldReOffer = (myEm > ptEm) || ((data.callerEmail || "").toLowerCase().trim() === myEm);
+            if (shouldReOffer && chaupalSocialState._sentOfferLegs) {
+              delete chaupalSocialState._sentOfferLegs[getLegKey(myEm, ptEm)];
+            }
+            ensureMeshPeerConnection(callId, ptEm, ptItem.name || ptEm, shouldReOffer ? "caller" : "callee", shouldReOffer);
+          }
+        });
+      }
       if (isCallScreenOpen) {
         renderChaupalSocial();
       }
