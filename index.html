@@ -2120,6 +2120,11 @@
         <span class="section-hint" id="poems-count-label"></span>
       </div>
       <div class="cards-grid two-col" id="poems-grid"></div>
+      <div class="section-head" style="margin-top:22px;">
+        <h2 class="section-title">🖼️ अन्य रचनाएँ — भाव चित्र झलक</h2>
+        <span class="section-hint">बाएं से दाएं देखें</span>
+      </div>
+      <div class="h-scroll" id="other-poems-bhav-strip" style="gap:12px; padding-bottom:12px;"></div>
     </section>
 
     <!-- TAB 2: POETS (कवि) -->
@@ -4715,7 +4720,44 @@ function showBirthdayCardPreview() {
   showToast("शुभकामना भाव-चित्र तैयार है 🎨");
 }
 
-function renderAll() {
+var _deferredRenderTimer = null;
+
+function isTextInputActive() {
+  var el = document.activeElement;
+  if (!el) return false;
+  var tag = (el.tagName || "").toUpperCase();
+  if (tag === "TEXTAREA") return true;
+  if (tag === "INPUT") {
+    var tp = (el.type || "text").toLowerCase();
+    return tp !== "checkbox" && tp !== "radio" && tp !== "button" && tp !== "submit" && tp !== "file" && tp !== "range" && tp !== "color";
+  }
+  return false;
+}
+
+if (!window._keypadFocusGuardBound) {
+  window._keypadFocusGuardBound = true;
+  document.addEventListener("focusout", function(ev) {
+    var tgt = ev && ev.target;
+    if (!tgt) return;
+    var tag = (tgt.tagName || "").toUpperCase();
+    if (tag === "INPUT" || tag === "TEXTAREA") {
+      clearTimeout(_deferredRenderTimer);
+      _deferredRenderTimer = setTimeout(function() {
+        if (!isTextInputActive()) renderAll();
+      }, 120);
+    }
+  });
+}
+
+function renderAll(forceRender) {
+  if (!forceRender && isTextInputActive()) {
+    clearTimeout(_deferredRenderTimer);
+    _deferredRenderTimer = setTimeout(function() {
+      if (!isTextInputActive()) renderAll(true);
+    }, 800);
+    return;
+  }
+ {
   reconcileAllPoetAdminLinks();
   var hdrTitle = document.getElementById("hdr-title");
   if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";
@@ -5037,41 +5079,93 @@ function onPoemSearch() {
 }
 function clearPoemSearch() { var inp = document.getElementById("poem-search"); if (inp) inp.value = ""; onPoemSearch(); }
 
+function isPoemInChaupalSahitya(poemId) {
+  var ids = Array.isArray(state.chaupalSahityaIds) ? state.chaupalSahityaIds : [];
+  return ids.indexOf(poemId) !== -1;
+}
+
+function adminSahityaQuickBtnHTML(poemId) {
+  if (!state.adminUnlocked) return "";
+  var picked = isPoemInChaupalSahitya(poemId);
+  var cls = picked ? "sm-btn del" : "btn-approve";
+  var lbl = picked ? "✓ साहित्य में" : "+ चौपाल साहित्य";
+  return "<button type=\"button\" class=\"" + cls + "\" style=\"padding:4px 9px; font-size:11.5px; border-radius:99px;\" onclick=\"event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(poemId) + "'))\">" + lbl + "</button>";
+}
+
 function poemCardHTML(p) {
   var liked = state.favorites.indexOf(p.id) !== -1;
   var dCnt = getTotalDaad(p);
   var cCnt = state.comments.filter(function(c) { return c.poemId === p.id; }).length;
-      var vHiddenP = isViewsHiddenForPoetName(p.poet);
-      var vCntP = Number(p.views || 0);
-      return "<article class=\"poem-card\" onclick=\"openReader(dec(\'" + arg(p.id) + "\'))\">" +
+  var vHiddenP = isViewsHiddenForPoetName(p.poet);
+  var vCntP = Number(p.views || 0);
+  var inSahitya = isPoemInChaupalSahitya(p.id);
+  var imgSrc = p.bhavImage || generateAutoBhavImage(p) || "";
+  return "<article class=\"poem-card\" onclick=\"openReader(dec('" + arg(p.id) + "'))\">" +
     "<div class=\"poem-card-top\">" +
-      "<div style=\"display:flex; gap:5px; flex-wrap:wrap;\">" +
-        "<span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" +
+      "<div style=\"display:flex; gap:5px; flex-wrap:wrap; align-items:center;\">" +
+        "<span class=\"genre-tag\">" + (inSahitya ? "✦ चौपाल साहित्य • " : "") + esc(p.genre || "कविता") + "</span>" +
         (p.mood ? ("<span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") +
-        (!isViewsHiddenForPoetName(p.poet) ? ("<span class=\"mood-tag\">👁️ " + Number(p.views || 0) + " बार देखा गया</span>") : "") +
+        (!vHiddenP ? ("<span class=\"mood-tag\">👁️ " + vCntP + "</span>") : "") +
       "</div>" +
-      "<button type=\"button\" class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec(\'" + arg(p.id) + "\'))\">" + (liked ? "♥" : "♡") + "</button>" +
+      "<div style=\"display:flex; gap:5px; align-items:center;\">" +
+        adminSahityaQuickBtnHTML(p.id) +
+        "<button type=\"button\" class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec('" + arg(p.id) + "'))\">" + (liked ? "♥" : "♡") + "</button>" +
+      "</div>" +
     "</div>" +
-    (p.bhavImage ? ("<img class=\"poem-bhav-banner\" src=\"" + p.bhavImage + "\" alt=\"भाव चित्र\" />") : "") +
+    (imgSrc ? ("<img class=\"poem-bhav-banner\" src=\"" + imgSrc + "\" alt=\"भाव चित्र\" />") : "") +
     "<h3 class=\"poem-card-title\">" + esc(p.title) + "</h3>" +
     "<p class=\"poem-card-excerpt\">" + esc(p.content) + "</p>" +
     "<div class=\"poem-card-foot\">" +
-      "<span class=\"poem-author-link\" onclick=\"event.stopPropagation(); openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</span>" +
-      "<span class=\"read-more-link\">" + (!vHiddenP ? ("👁️ " + vCntP + " • ") : "") + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + (cCnt > 0 ? ("💬 " + cCnt + " • ") : "") + "पढ़ें →</span>" +
+      "<span class=\"poem-author-link\" onclick=\"event.stopPropagation(); openPoetProfile(dec('" + arg(p.poet) + "'))\">✒️ " + esc(p.poet) + "</span>" +
+      "<span class=\"read-more-link\">" + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + (cCnt > 0 ? ("💬 " + cCnt + " • ") : "") + "पढ़ें →</span>" +
     "</div>" +
   "</article>";
+}
+
+function renderOtherPoemsBhavStrip(otherList) {
+  var strip = document.getElementById("other-poems-bhav-strip");
+  if (!strip) return;
+  if (!otherList || !otherList.length) {
+    strip.innerHTML = "<div class=\"empty-box\" style=\"min-width:100%;\">अन्य रचनाएँ यहाँ भाव-चित्र रूप में दिखेंगी।</div>";
+    return;
+  }
+  strip.innerHTML = otherList.map(function(p) {
+    var imgSrc = p.bhavImage || generateAutoBhavImage(p) || "";
+    var picked = isPoemInChaupalSahitya(p.id);
+    return "<div style=\"flex-shrink:0; width:178px; background:var(--bg-elevated); border:1.5px solid var(--border); border-radius:16px; padding:9px; box-shadow:var(--shadow); display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;\" onclick=\"openReader(dec('" + arg(p.id) + "'))\">" +
+      "<div>" +
+        (imgSrc ? ("<img src=\"" + imgSrc + "\" alt=\"" + esc(p.title) + "\" style=\"width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:12px; border:1.5px solid var(--gold); display:block; margin-bottom:7px;\" />") : "") +
+        "<div style=\"font-family:'Yatra One',serif; font-size:15px; color:var(--text); line-height:1.25; margin-bottom:3px;\">" + esc(p.title) + "</div>" +
+        "<div style=\"font-size:11.5px; color:var(--primary); font-weight:600;\">✒️ " + esc(p.poet) + "</div>" +
+      "</div>" +
+      (state.adminUnlocked
+        ? ("<button type=\"button\" class=\"" + (picked ? "sm-btn del" : "btn-approve") + "\" style=\"width:100%; margin-top:7px; padding:5px 8px; font-size:11px;\" onclick=\"event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(p.id) + "'))\">" + (picked ? "✓ साहित्य में" : "+ चौपाल साहित्य") + "</button>")
+        : "") +
+    "</div>";
+  }).join("");
 }
 
 function renderPoemsGrid() {
   var grid = document.getElementById("poems-grid"); if (!grid) return;
   var bar = document.getElementById("active-filter-bar"); var barText = document.getElementById("active-filter-text");
-  var filtered = state.poems.filter(function(p) {
+  var sahityaPool = getChaupalSahityaPoems();
+  var hasExplicitSahitya = Array.isArray(state.chaupalSahityaIds) && state.chaupalSahityaIds.some(function(id) {
+    return (state.poems || []).some(function(p) { return p.id === id; });
+  });
+  var baseList = hasExplicitSahitya ? sahityaPool : (state.poems || []);
+  var filtered = baseList.filter(function(p) {
     if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return false;
     if (state.selectedMoodFilter !== "सभी" && (p.mood || detectPoemMood(p.content)) !== state.selectedMoodFilter) return false;
     if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return false;
     if (state.poemSearch && (p.title + " " + p.poet + " " + p.genre + " " + (p.mood || "") + " " + p.content).toLowerCase().indexOf(state.poemSearch) === -1) return false;
     return true;
   });
+
+  var otherPoems = (state.poems || []).filter(function(p) {
+    return !filtered.some(function(fp) { return fp.id === p.id; });
+  });
+  renderOtherPoemsBhavStrip(otherPoems);
+
   var hasFilter = state.selectedGenre !== "सभी" || state.selectedMoodFilter !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch;
   if (bar) bar.classList.toggle("show", hasFilter);
   if (hasFilter && barText) {
@@ -5082,8 +5176,12 @@ function renderPoemsGrid() {
     if (state.poemSearch) parts.push("खोज: <strong>“" + esc(state.poemSearch) + "”</strong>");
     barText.innerHTML = parts.join(" • ");
   }
-  var lbl = document.getElementById("poems-count-label"); if (lbl) lbl.textContent = filtered.length + " रचनाएँ";
-  if (!filtered.length) { grid.innerHTML = "<div class=\"empty-box\" style=\"grid-column:1/-1;\">कोई रचना उपलब्ध नहीं है।</div>"; return; }
+  var lbl = document.getElementById("poems-count-label");
+  if (lbl) lbl.textContent = (hasExplicitSahitya ? "चौपाल साहित्य: " : "") + filtered.length + " रचनाएँ";
+  if (!filtered.length) {
+    grid.innerHTML = "<div class=\"empty-box\" style=\"grid-column:1/-1;\">अभी ‘चौपाल साहित्य’ में कोई चयनित रचना नहीं मिली।" + (state.adminUnlocked ? " <button type=\"button\" class=\"action-btn gold\" style=\"margin-top:8px;\" onclick=\"openChaupalSahityaCorner()\">📖 चौपाल साहित्य से चुनें</button>" : "") + "</div>";
+    return;
+  }
   grid.innerHTML = filtered.map(poemCardHTML).join("");
 }
 
