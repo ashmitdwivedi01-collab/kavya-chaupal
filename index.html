@@ -12549,5 +12549,211 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  function isParticipantActivelyJoined(p, myEm) {
+    if (!p) return false;
+    var pEm = normEm(p.email);
+    if (!pEm) return false;
+    if (pEm === myEm) return true;
+    if (p.removed === true || p.status === "left" || p.status === "declined" || p.status === "removed") return false;
+    var livePeerSt = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.peerStatusMap && chaupalSocialState.peerStatusMap[pEm]) || "";
+    var pc = (typeof chaupalSocialState !== "undefined" && chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm]) || null;
+    var iceSt = pc ? pc.iceConnectionState : "";
+    var connSt = pc ? pc.connectionState : "";
+    if (iceSt === "failed" || iceSt === "closed" || connSt === "failed" || connSt === "closed") return false;
+    // Show ONLY participants who have actually joined (connected/accepted or WebRTC connected)
+    return (
+      p.status === "connected" ||
+      p.status === "accepted" ||
+      livePeerSt === "connected" ||
+      livePeerSt === "accepted" ||
+      iceSt === "connected" ||
+      iceSt === "completed" ||
+      connSt === "connected"
+    );
+  }
+
+  function isCurrentUserCallCaller() {
+    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return false;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEm(me.email) : "";
+    var cs = chaupalSocialState.activeCallSession;
+    if (cs.callerEmail && normEm(cs.callerEmail) === myEm) return true;
+    var parts = Array.isArray(cs.participants) ? cs.participants : [];
+    var firstPart = parts[0];
+    return !!(firstPart && normEm(firstPart.email) === myEm);
+  }
+
+  window.togglePeerMuteControl = function(peerEmail) {
+    var pEm = normEm(peerEmail);
+    if (!pEm || typeof chaupalSocialState === "undefined") return;
+    if (!chaupalSocialState.mutedPeersMap) chaupalSocialState.mutedPeersMap = {};
+    var nextMuted = !chaupalSocialState.mutedPeersMap[pEm];
+    chaupalSocialState.mutedPeersMap[pEm] = nextMuted;
+
+    var remEntry = chaupalSocialState.remoteStreamsMap && chaupalSocialState.remoteStreamsMap[pEm];
+    if (remEntry && remEntry.stream) {
+      remEntry.stream.getAudioTracks().forEach(function(at) {
+        at.enabled = !nextMuted;
+      });
+    }
+    var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+    var el = document.getElementById(safeId);
+    if (el) {
+      el.muted = nextMuted;
+    }
+
+    // Broadcast mute/unmute signal so the peer also sees/syncs mute state
+    var callId = chaupalSocialState.activeCallDocId;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    if (callId && me && typeof getCallSignalsColRef === "function") {
+      var sigCol = getCallSignalsColRef(callId);
+      if (sigCol) {
+        var sigId = "mute_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+        sigCol.doc(sigId).set({
+          id: sigId,
+          type: "peer_mute",
+          fromEmail: me.email,
+          toEmail: pEm,
+          muted: nextMuted,
+          ts: Date.now()
+        }).catch(function() {});
+      }
+    }
+
+    if (typeof showToast === "function") {
+      showToast(nextMuted ? "सदस्य का ऑडियो म्यूट किया गया 🔇" : "सदस्य का ऑडियो अनम्यूट किया गया 🔊");
+    }
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    if (typeof attachMediaToDom === "function") setTimeout(attachMediaToDom, 40);
+  };
+
+  window.removeParticipantFromActiveCall = function(peerEmail) {
+    var pEm = normEm(peerEmail);
+    if (!pEm || typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
+    if (!isCurrentUserCallCaller()) {
+      if (typeof showToast === "function") showToast("केवल कॉल शुरू करने वाला सदस्य ही किसी को हटा सकता है");
+      return;
+    }
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEm(me.email) : "";
+    if (pEm === myEm) return;
+
+    var cs = chaupalSocialState.activeCallSession;
+    var callId = chaupalSocialState.activeCallDocId;
+    var parts = Array.isArray(cs.participants) ? cs.participants.slice() : [];
+    var targetObj = parts.find(function(x) { return normEm(x.email) === pEm; });
+    var tName = (targetObj && targetObj.name) || pEm;
+
+    parts = parts.filter(function(x) { return normEm(x.email) !== pEm; });
+    cs.participants = parts;
+    if (chaupalSocialState.peerStatusMap) delete chaupalSocialState.peerStatusMap[pEm];
+
+    if (typeof closeSinglePeerConnection === "function") {
+      closeSinglePeerConnection(pEm);
+    }
+
+    var tileId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+    var tileWrap = document.getElementById("tile-wrap-" + tileId);
+    if (tileWrap && tileWrap.parentNode) tileWrap.parentNode.removeChild(tileWrap);
+
+    if (callId && typeof getCallDocRef === "function") {
+      var ref = getCallDocRef(callId);
+      if (ref) {
+        var removedList = Array.isArray(cs.removedEmails) ? cs.removedEmails.slice() : [];
+        if (removedList.indexOf(pEm) === -1) removedList.push(pEm);
+        cs.removedEmails = removedList;
+        ref.set({ participants: parts, removedEmails: removedList }, { merge: true }).catch(function() {});
+      }
+      if (me && typeof getCallSignalsColRef === "function") {
+        var sigCol = getCallSignalsColRef(callId);
+        if (sigCol) {
+          var sigId = "kick_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+          sigCol.doc(sigId).set({
+            id: sigId,
+            type: "kicked",
+            fromEmail: me.email,
+            toEmail: pEm,
+            ts: Date.now()
+          }).catch(function() {});
+        }
+      }
+    }
+
+    if (typeof showToast === "function") showToast(tName + " को कॉल से हटा दिया गया");
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    if (typeof applyAdaptiveConferenceLayout === "function") setTimeout(applyAdaptiveConferenceLayout, 40);
+  };
+
+  // Enforce joined-only filter, mutual mute buttons, and caller add/remove controls on renderChaupalSocial
+  var origRenderSocial = window.renderChaupalSocial;
+  if (typeof origRenderSocial === "function") {
+    window.renderChaupalSocial = function() {
+      var res = origRenderSocial.apply(this, arguments);
+      var stage = document.getElementById("soc-call-stage-card");
+      if (!stage || typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return res;
+
+      var cs = chaupalSocialState.activeCallSession;
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      var myEm = me ? normEm(me.email) : "";
+      var isCallerHost = isCurrentUserCallCaller();
+      var allParts = Array.isArray(cs.participants) ? cs.participants : [];
+
+      // Filter out any unjoined / ringing / non-connected remote tiles from the grid
+      var grid = stage.querySelector(".conf-grid");
+      if (grid) {
+        Array.prototype.slice.call(grid.children || []).forEach(function(tileEl) {
+          var tid = tileEl.id || "";
+          if (tid.indexOf("tile-wrap-soc-rem-vid-") === 0) {
+            var matchedPart = allParts.find(function(p) {
+              var pEm = normEm(p.email);
+              var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+              return ("tile-wrap-" + safeId) === tid;
+            });
+            if (!matchedPart || !isParticipantActivelyJoined(matchedPart, myEm)) {
+              if (tileEl.parentNode) tileEl.parentNode.removeChild(tileEl);
+            } else {
+              // Add per-tile Mute & Host Remove buttons cleanly once
+              var pEm = normEm(matchedPart.email);
+              var isMutedPeer = !!(chaupalSocialState.mutedPeersMap && chaupalSocialState.mutedPeersMap[pEm]);
+              var ctrlBarId = "peer-ctrl-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+              var existingBar = document.getElementById(ctrlBarId);
+              if (!existingBar) {
+                existingBar = document.createElement("div");
+                existingBar.id = ctrlBarId;
+                existingBar.style.cssText = "display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:6px;";
+                tileEl.appendChild(existingBar);
+              }
+              var muteBtnHtml = "<button type=\"button\" class=\"sm-btn\" style=\"padding:3px 8px; font-size:11px;\" onclick=\"event.stopPropagation(); togglePeerMuteControl('" + pEm.replace(/'/g, "") + "')\">" + (isMutedPeer ? "🔇 अनम्यूट" : "🎤 म्यूट करें") + "</button>";
+              var kickBtnHtml = isCallerHost ? ("<button type=\"button\" class=\"sm-btn del\" style=\"padding:3px 8px; font-size:11px;\" onclick=\"event.stopPropagation(); removeParticipantFromActiveCall('" + pEm.replace(/'/g, "") + "')\">✕ हटाएँ</button>") : "";
+              existingBar.innerHTML = muteBtnHtml + kickBtnHtml;
+            }
+          }
+        });
+      }
+
+      // Update displayed participant count to reflect only actively joined members
+      var joinedCount = allParts.filter(function(p) { return isParticipantActivelyJoined(p, myEm); }).length || 1;
+      stage.querySelectorAll("div, span").forEach(function(n) {
+        if (n.children.length === 0 && n.textContent && n.textContent.indexOf("कुल सदस्य:") !== -1) {
+          n.innerHTML = "जुड़े हुए सदस्य: <strong>" + joinedCount + "</strong> • स्थिति: <strong>🟢 कॉन्फ्रेंस सक्रिय</strong>" + (isCallerHost ? " • 👑 कॉल होस्ट" : "");
+        }
+      });
+
+      if (typeof applyAdaptiveConferenceLayout === "function") {
+        setTimeout(applyAdaptiveConferenceLayout, 25);
+      }
+      return res;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
