@@ -16456,6 +16456,19 @@ function renderStudioPane() {
 (function() {
   var _liveTimerInterval = null;
   var _relayCanvasTimer = null;
+  var _broadcasterUnsub = null;
+  var _broadcasterPcs = {};
+  var _viewerPc = null;
+  var _viewerUnsub = null;
+  var _viewerRelayUnsub = null;
+
+  var RTC_CFG = {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" }
+    ]
+  };
 
   function ensureStudioState() {
     var st = window.chaupalStudioState;
@@ -16517,11 +16530,268 @@ function renderStudioPane() {
     }
   }
 
+  function cleanupBroadcasterWebRTC() {
+    try { if (typeof _broadcasterUnsub === "function") _broadcasterUnsub(); } catch (e) {}
+    _broadcasterUnsub = null;
+    Object.keys(_broadcasterPcs).forEach(function(vid) {
+      try { _broadcasterPcs[vid].close(); } catch (e) {}
+    });
+    _broadcasterPcs = {};
+    if (typeof db !== "undefined" && db && typeof ROOT_COL !== "undefined") {
+      db.collection(ROOT_COL).doc("live_webrtc_room").set({
+        active: false,
+        updatedAt: Date.now()
+      }, { merge: true }).catch(function() {});
+    }
+  }
+
+  function cleanupViewerWebRTC() {
+    try { if (typeof _viewerUnsub === "function") _viewerUnsub(); } catch (e) {}
+    _viewerUnsub = null;
+    try { if (typeof _viewerRelayUnsub === "function") _viewerRelayUnsub(); } catch (e) {}
+    _viewerRelayUnsub = null;
+    if (_viewerPc) {
+      try { _viewerPc.close(); } catch (e) {}
+      _viewerPc = null;
+    }
+  }
+
+  function createBroadcasterPeerForViewer(viewerDocId, viewerRef, stream) {
+    if (_broadcasterPcs[viewerDocId]) return _broadcasterPcs[viewerDocId];
+    if (typeof RTCPeerConnection === "undefined") return null;
+    var pc = new RTCPeerConnection(RTC_CFG);
+    _broadcasterPcs[viewerDocId] = pc;
+
+    if (stream && stream.getTracks) {
+      stream.getTracks().forEach(function(track) {
+        try { pc.addTrack(track, stream); } catch (e) {}
+      });
+    }
+
+    pc.onicecandidate = function(ev) {
+      if (ev && ev.candidate) {
+        viewerRef.collection("host_candidates").add({
+          candidate: ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate,
+          createdAt: Date.now()
+        }).catch(function() {});
+      }
+    };
+
+    pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false })
+      .then(function(offer) {
+        return pc.setLocalDescription(offer).then(function() {
+          return viewerRef.set({
+            offer: { type: offer.type, sdp: offer.sdp },
+            hostReady: true,
+            updatedAt: Date.now()
+          }, { merge: true });
+        });
+      })
+      .catch(function() {});
+
+    viewerRef.onSnapshot(function(snap) {
+      if (!snap.exists) return;
+      var d = snap.data() || {};
+      if (d.answer && d.answer.sdp && pc.signalingState !== "stable" && !pc.currentRemoteDescription) {
+        pc.setRemoteDescription(new RTCSessionDescription(d.answer)).catch(function() {});
+      }
+    });
+
+    viewerRef.collection("viewer_candidates").onSnapshot(function(snap) {
+      snap.docChanges().forEach(function(chg) {
+        if (chg.type === "added") {
+          var cd = chg.doc.data() || {};
+          if (cd.candidate) {
+            pc.addIceCandidate(new RTCIceCandidate(cd.candidate)).catch(function() {});
+          }
+        }
+      });
+    });
+
+    return pc;
+  }
+
+  function startBroadcasterWebRTC(st) {
+    cleanupBroadcasterWebRTC();
+    if (!st || !st.cameraStream) return;
+    if (typeof db === "undefined" || !db || typeof ROOT_COL === "undefined") return;
+
+    var roomRef = db.collection(ROOT_COL).doc("live_webrtc_room");
+    roomRef.set({
+      active: true,
+      title: st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण",
+      poet: st.lowerThirdPoet || "काव्य चौपाल",
+      updatedAt: Date.now()
+    }, { merge: true }).catch(function() {});
+
+    _broadcasterUnsub = roomRef.collection("viewers").onSnapshot(function(snap) {
+      if (!st.isLiveOnApp || !st.cameraStream) return;
+      snap.docChanges().forEach(function(chg) {
+        if (chg.type === "added" || ch.type === "modified") {
+          var vd = chg.doc.data() || {};
+          if (vd.active !== false) {
+            createBroadcasterPeerForViewer(chg.doc.id, chg.doc.ref, st.cameraStream);
+          }
+        }
+      });
+    });
+  }
+
+  function connectViewerToLiveStream() {
+    cleanupViewerWebRTC();
+    var st = ensureStudioState();
+    var vidEl = document.getElementById("viewer-live-rtc-video");
+    var phEl = document.getElementById("viewer-live-rtc-placeholder");
+    var qEl = document.getElementById("viewer-live-stream-quality");
+
+    // Case 1: Broadcaster is on this same device/session and has live cameraStream
+    if (st.isLiveOnApp && st.cameraStream) {
+      if (vidEl) {
+        vidEl.srcObject = st.cameraStream;
+        vidEl.muted = false;
+        vidEl.playsInline = true;
+        vidEl.style.display = "block";
+        if (vidEl.play) vidEl.play().catch(function() {
+          vidEl.muted = true;
+          vidEl.play().catch(function() {});
+        });
+      }
+      if (phEl) phEl.style.display = "none";
+      if (qEl) qEl.textContent = "🟢 LIVE Audio + Video (सीधा स्टेज)";
+      return;
+    }
+
+    // Case 2: Listen to live_relay snapshot frames as instant visual backup + WebRTC for real-time audio+video
+    if (typeof db !== "undefined" && db && typeof ROOT_COL !== "undefined") {
+      var roomRef = db.collection(ROOT_COL).doc("live_webrtc_room");
+      var viewerId = "viewer_" + Date.now() + "_" + Math.floor(Math.random() * 9999);
+      var vRef = roomRef.collection("viewers").doc(viewerId);
+
+      vRef.set({
+        active: true,
+        joinedAt: Date.now(),
+        updatedAt: Date.now()
+      }).catch(function() {});
+
+      if (typeof RTCPeerConnection !== "undefined") {
+        var pc = new RTCPeerConnection(RTC_CFG);
+        _viewerPc = pc;
+        var remoteStream = new MediaStream();
+        if (vidEl) {
+          vidEl.srcObject = remoteStream;
+          vidEl.playsInline = true;
+        }
+
+        pc.ontrack = function(ev) {
+          if (ev && ev.streams && ev.streams[0]) {
+            if (vidEl) {
+              vidEl.srcObject = ev.streams[0];
+              vidEl.muted = false;
+              vidEl.style.display = "block";
+              vidEl.play().catch(function() {
+                vidEl.muted = true;
+                vidEl.play().catch(function() {});
+              });
+            }
+            if (phEl) phEl.style.display = "none";
+            if (qEl) qEl.textContent = "🟢 LIVE Real-Time Audio + Video";
+          } else if (ev && ev.track) {
+            remoteStream.addTrack(ev.track);
+            if (vidEl) {
+              vidEl.style.display = "block";
+              vidEl.play().catch(function() {});
+            }
+            if (phEl) phEl.style.display = "none";
+            if (qEl) qEl.textContent = "🟢 LIVE Real-Time Audio + Video";
+          }
+        };
+
+        pc.onicecandidate = function(ev) {
+          if (ev && ev.candidate) {
+            vRef.collection("viewer_candidates").add({
+              candidate: ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate,
+              createdAt: Date.now()
+            }).catch(function() {});
+          }
+        };
+
+        pc.onconnectionstatechange = function() {
+          if (!qEl) return;
+          if (pc.connectionState === "connected") {
+            qEl.textContent = "🟢 LIVE Audio + Video जुड़ा";
+          } else if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+            qEl.textContent = "📡 रिले/लिंक मोड सक्रिय";
+          }
+        };
+
+        _viewerUnsub = vRef.onSnapshot(function(snap) {
+          if (!snap.exists) return;
+          var d = snap.data() || {};
+          if (d.offer && d.offer.sdp && !pc.currentRemoteDescription) {
+            pc.setRemoteDescription(new RTCSessionDescription(d.offer))
+              .then(function() { return pc.createAnswer(); })
+              .then(function(ans) {
+                return pc.setLocalDescription(ans).then(function() {
+                  return vRef.set({
+                    answer: { type: ans.type, sdp: ans.sdp },
+                    updatedAt: Date.now()
+                  }, { merge: true });
+                });
+              })
+              .catch(function() {});
+          }
+        });
+
+        vRef.collection("host_candidates").onSnapshot(function(snap) {
+          snap.docChanges().forEach(function(chg) {
+            if (chg.type === "added") {
+              var cd = chg.doc.data() || {};
+              if (cd.candidate) {
+                pc.addIceCandidate(new RTCIceCandidate(cd.candidate)).catch(function() {});
+              }
+            }
+          });
+        });
+      }
+
+      // Also listen to live_relay frames so viewers see live frames immediately while WebRTC negotiates
+      _viewerRelayUnsub = db.collection(ROOT_COL).doc("live_relay").onSnapshot(function(docSnap) {
+        if (!docSnap.exists) return;
+        var rd = docSnap.data() || {};
+        if (rd.active && rd.frameData && (!vidEl || vidEl.style.display === "none")) {
+          var relayImg = document.getElementById("viewer-live-relay-img");
+          if (relayImg) {
+            relayImg.src = rd.frameData;
+            relayImg.style.display = "block";
+          }
+          if (phEl) phEl.style.display = "none";
+          if (qEl && qEl.textContent.indexOf("🟢") === -1) {
+            qEl.textContent = "🔴 LIVE फ़ीड सक्रिय";
+          }
+        }
+      });
+    }
+
+    setTimeout(function() {
+      var qNow = document.getElementById("viewer-live-stream-quality");
+      var phNow = document.getElementById("viewer-live-rtc-placeholder");
+      if (qNow && qNow.textContent.indexOf("🟢") === -1) {
+        qNow.textContent = "🔴 LIVE प्रसारण जारी";
+      }
+      if (phNow && phNow.style.display !== "none") {
+        phNow.innerHTML =
+          "<div style=\"font-weight:800; color:#F7DC8B; margin-bottom:6px;\">🔴 काव्य चौपाल लाइव प्रसारण जारी</div>" +
+          "<div style=\"font-size:12px; color:#FFFDF7;\">यदि होस्ट के फ़ोन/ब्राउज़र में कैमरा व माइक चालू है, तो लाइव स्ट्रीम यहाँ दिखती है। नीचे दिए गए बटन से YouTube / Facebook / लाइव स्ट्रीम लिंक भी खोल सकते हैं।</div>";
+      }
+    }, 3500);
+  }
+  window.connectViewerToLiveStream = connectViewerToLiveStream;
+
   function startCameraPreview(customFacing, silentToast) {
     var st = ensureStudioState();
     if (customFacing) st.facingMode = customFacing;
     stopCameraTracks(st);
-    st.mediaStatusText = (st.facingMode === "environment" ? "पीछे का कैमरा (Back)" : "आगे का कैमरा (Front)") + " शुरू हो रहा है...";
+    st.mediaStatusText = (st.facingMode === "environment" ? "पीछे का कैमरा (Back)" : "आगे का कैमरा (Front)") + " व माइक शुरू हो रहा है...";
     var statusEl = document.getElementById("studio-live-media-status");
     if (statusEl) statusEl.textContent = st.mediaStatusText;
 
@@ -16542,24 +16812,28 @@ function renderStudioPane() {
       })
       .then(function(stream) {
         st.cameraStream = stream;
+        var hasAudio = stream.getAudioTracks && stream.getAudioTracks().length > 0;
         var camLabel = (st.facingMode === "environment") ? "बैक कैमरा (Back)" : "फ़्रंट कैमरा (Front)";
-        var micLabel = st.isMicMuted ? "माइक बंद" : "माइक चालू";
-        st.mediaStatusText = camLabel + " • " + micLabel + (st.isLiveOnApp ? " (LIVE प्रसारण जारी)" : " (पूर्वावलोकन चालू)");
+        var micLabel = st.isMicMuted ? "माइक म्यूट" : (hasAudio ? "माइक चालू (Audio)" : "माइक उपलब्ध नहीं");
+        st.mediaStatusText = camLabel + " • " + micLabel + (st.isLiveOnApp ? " (LIVE ऑडियो+वीडियो जारी)" : " (पूर्वावलोकन चालू)");
         attachVideoStream(st);
         var statusEl2 = document.getElementById("studio-live-media-status");
         if (statusEl2) statusEl2.textContent = st.mediaStatusText;
         var phEl = document.getElementById("studio-stage-placeholder");
         if (phEl) phEl.style.display = "none";
+        if (st.isLiveOnApp) {
+          startBroadcasterWebRTC(st);
+        }
         if (!silentToast && typeof showToast === "function") {
-          showToast(camLabel + " चालू हो गया ✓");
+          showToast(camLabel + " व " + micLabel + " चालू ✓");
         }
         return true;
       })
       .catch(function(err) {
-        st.mediaStatusText = "कैमरा अनुमति नहीं मिली या कैमरा व्यस्त है";
+        st.mediaStatusText = "कैमरा/माइक अनुमति नहीं मिली या डिवाइस व्यस्त है";
         if (statusEl) statusEl.textContent = st.mediaStatusText;
         if (!silentToast && typeof showToast === "function") {
-          showToast("कैमरा अनुमति दें: " + ((err && err.message) ? err.message.slice(0, 45) : "अनुमति आवश्यक"));
+          showToast("कैमरा/माइक अनुमति दें: " + ((err && err.message) ? err.message.slice(0, 45) : "अनुमति आवश्यक"));
         }
         return false;
       });
@@ -16680,9 +16954,10 @@ function renderStudioPane() {
     syncLiveRecordInApp(st, true);
     startLiveTimer(st);
     startCameraPreview(st.facingMode, true).then(function() {
+      startBroadcasterWebRTC(st);
       startRelayFrames(st);
       if (typeof showToast === "function") {
-        showToast("🔴 लाइव प्रसारण शुरू! Home व मंच पर बैनर सक्रिय है");
+        showToast("🔴 लाइव ऑडियो+वीडियो प्रसारण शुरू! Home व मंच पर बैनर सक्रिय है");
       }
       if (typeof window.openChaupalStudioNow === "function") window.openChaupalStudioNow();
     });
@@ -16706,6 +16981,8 @@ function renderStudioPane() {
     st.pendingEndChoice = false;
     clearInterval(_liveTimerInterval);
     clearInterval(_relayCanvasTimer);
+    cleanupBroadcasterWebRTC();
+    cleanupViewerWebRTC();
     stopCameraTracks(st);
 
     var elapsed = Number(st.liveDurationSec || 0);
@@ -16761,6 +17038,34 @@ function renderStudioPane() {
     if (typeof renderActiveLiveBroadcastBanner === "function") renderActiveLiveBroadcastBanner();
     if (typeof renderManchHub === "function") renderManchHub();
     if (typeof window.openChaupalStudioNow === "function") window.openChaupalStudioNow();
+  };
+
+  // Auto-start WebRTC live stream connection whenever a live video modal is opened
+  var _origOpenVideoModal = window.openVideoModal;
+  window.openVideoModal = function(id) {
+    if (typeof _origOpenVideoModal === "function") _origOpenVideoModal(id);
+    setTimeout(function() {
+      var rtcVid = document.getElementById("viewer-live-rtc-video");
+      var localVid = document.getElementById("viewer-local-stage-video");
+      var st = ensureStudioState();
+      if (localVid && st.cameraStream) {
+        localVid.srcObject = st.cameraStream;
+        localVid.muted = false;
+        localVid.play().catch(function() {
+          localVid.muted = true;
+          localVid.play().catch(function() {});
+        });
+      }
+      if (rtcVid) {
+        connectViewerToLiveStream();
+      }
+    }, 80);
+  };
+
+  var _origCloseVideoModal = window.closeVideoModal;
+  window.closeVideoModal = function(fromPop) {
+    cleanupViewerWebRTC();
+    if (typeof _origCloseVideoModal === "function") _origCloseVideoModal(fromPop);
   };
 
   window.toggleFallbackFullCover = function() {
@@ -16897,7 +17202,7 @@ function renderStudioPane() {
           "<div id=\"studio-stage-placeholder\" style=\"position:relative; flex:1; display:" + (st.cameraStream ? "none" : "flex") + "; flex-direction:column; align-items:center; justify-content:center; padding:14px; text-align:center; color:#FCE49C; background:radial-gradient(circle at 50% 40%, rgba(142,75,10,0.28), rgba(9,5,7,0.88)); z-index:2;\">" +
             "<div style=\"font-size:28px; margin-bottom:6px;\">" + (st.isLiveOnApp ? "🔴" : (ori === "vertical" ? "📱" : "🖥️")) + "</div>" +
             "<div style=\"font-size:14px; font-weight:800; color:#FFFDF7;\">" + String(st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण").replace(/</g,"&lt;") + "</div>" +
-            "<div style=\"font-size:11.5px; color:#F7DC8B; margin-top:4px;\">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी — ऐप के Home व मंच पर बैनर सक्रिय" : "कैमरा देखने के लिए ‘📷 कैमरा पूर्वावलोकन’ या ‘🔴 लाइव शुरू करें’ दबाएँ") + "</div>" +
+            "<div style=\"font-size:11.5px; color:#F7DC8B; margin-top:4px;\">" + (st.isLiveOnApp ? "🔴 LIVE ऑडियो+वीडियो प्रसारण जारी — दर्शक ऐप पर लाइव देख/सुन सकते हैं" : "कैमरा देखने के लिए ‘📷 कैमरा पूर्वावलोकन’ या ‘🔴 लाइव शुरू करें’ दबाएँ") + "</div>" +
           "</div>" +
           "<div style=\"position:relative; z-index:10080; padding:8px; display:flex; flex-direction:column; gap:6px; background:rgba(9,5,7,0.92);\">" +
             "<div style=\"padding:7px 11px; border-radius:11px; background:linear-gradient(90deg, rgba(91,17,24,0.95), rgba(142,75,10,0.92)); border:1px solid rgba(247,220,139,0.75);\">" +
