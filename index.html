@@ -12042,5 +12042,253 @@ window.addEventListener("beforeunload", function() {
   persistCurrentViewState();
 });
   </script>
+
+<script>
+(function() {
+  var MASTER_CALLER = "ashmitdwivedi01@gmail.com";
+
+  function normEm(v) {
+    return String(v || "").toLowerCase().trim();
+  }
+
+  function isMasterCaller(em) {
+    return normEm(em) === MASTER_CALLER;
+  }
+
+  function getMyHoldSet() {
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var k = "kc_hold_list_" + (me && me.email ? normEm(me.email) : "guest");
+    try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { return []; }
+  }
+
+  function saveMyHoldSet(arr) {
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var k = "kc_hold_list_" + (me && me.email ? normEm(me.email) : "guest");
+    try { localStorage.setItem(k, JSON.stringify(arr || [])); } catch (e) {}
+  }
+
+  function isPeerOnHoldByMe(peerEmail) {
+    var p = normEm(peerEmail);
+    if (!p) return false;
+    return getMyHoldSet().indexOf(p) !== -1;
+  }
+
+  window.toggleHoldForPeer = function(peerEmail, peerName) {
+    var p = normEm(peerEmail);
+    if (!p) {
+      if (typeof showToast === "function") showToast("सदस्य ईमेल उपलब्ध नहीं है");
+      return;
+    }
+    var list = getMyHoldSet();
+    var idx = list.indexOf(p);
+    if (idx >= 0) {
+      list.splice(idx, 1);
+      saveMyHoldSet(list);
+      if (typeof showToast === "function") showToast((peerName || p) + " को होल्ड से हटाया गया ✓");
+    } else {
+      list.push(p);
+      saveMyHoldSet(list);
+      if (typeof showToast === "function") showToast("⏸️ " + (peerName || p) + " को होल्ड पर रखा गया (अब कॉल से डिस्टर्ब नहीं होगा)");
+    }
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+  };
+
+  function isFollowingMemberTarget(targetEmail, targetName) {
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    if (!me) return false;
+    var tEm = normEm(targetEmail);
+    if (isMasterCaller(me.email) || isMasterCaller(tEm)) return true;
+    var tObj = (typeof resolvePoetObjByNameOrId === "function") ? resolvePoetObjByNameOrId(targetName, "") : null;
+    if (!tObj && tEm) {
+      tObj = (state.poets || []).find(function(x) { return normEm(x.ownerEmail) === tEm; }) || null;
+    }
+    if (!tObj) return false;
+    var rel = (typeof getFollowRelationState === "function") ? getFollowRelationState(tObj.name, tObj.id) : null;
+    return !!(rel && rel.isFollowing);
+  }
+
+  window.canMemberInitiateCallTo = function(targetEmail, targetName, silentToast) {
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    if (!me) {
+      if (!silentToast && typeof showToast === "function") showToast("कॉल करने के लिए कृपया पहले लॉगिन करें 🔐");
+      return false;
+    }
+    var tEm = normEm(targetEmail);
+    if (isMasterCaller(me.email)) return true;
+    if (isPeerOnHoldByMe(tEm)) {
+      if (!silentToast && typeof showToast === "function") showToast("⏸️ यह सदस्य आपके होल्ड पर है। पहले होल्ड हटाएँ।");
+      return false;
+    }
+    if (isMasterCaller(tEm)) return true;
+    if (!isFollowingMemberTarget(tEm, targetName)) {
+      if (!silentToast && typeof showToast === "function") {
+        showToast("⚠️ कॉल करने से पहले इस सदस्य को फ़ॉलो करना अनिवार्य है।");
+      }
+      return false;
+    }
+    return true;
+  };
+
+  // Prompt phone notification/ring popup when permission is not yet granted
+  window.promptPhoneRingPermissionPopup = function() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") return;
+    var existing = document.getElementById("kc-ring-perm-popup");
+    if (existing) return;
+    var div = document.createElement("div");
+    div.id = "kc-ring-perm-popup";
+    div.style.cssText = "position:fixed; left:14px; right:14px; bottom:84px; z-index:10060; max-width:440px; margin:0 auto; padding:15px 16px; border-radius:18px; background:linear-gradient(145deg,#5B1118,#26080D); color:#FFF9EC; border:2px solid #F7DC8B; box-shadow:0 16px 40px rgba(0,0,0,0.55);";
+    div.innerHTML =
+      "<div style='font-weight:700; font-size:14.5px; color:#F7DC8B; margin-bottom:4px;'>🔔 फ़ोन रिंग व कॉल नोटिफिकेशन चालू करें</div>" +
+      "<div style='font-size:12.5px; line-height:1.5; margin-bottom:10px;'>आने वाली कॉल की रिंग व अलर्ट सीधे आपके फ़ोन पर पाने के लिए नोटिफिकेशन अनुमति ऑन करें।</div>" +
+      "<div style='display:flex; gap:8px; justify-content:flex-end;'>" +
+        "<button type='button' class='sm-btn' onclick='var el=document.getElementById("kc-ring-perm-popup"); if(el)el.remove();'>बाद में</button>" +
+        "<button type='button' class='action-btn gold' style='padding:7px 14px; font-size:12.5px;' onclick='if(typeof enableDevicePushNotifications==="function"){enableDevicePushNotifications();} var el=document.getElementById("kc-ring-perm-popup"); if(el)el.remove();'>🔔 अभी ऑन करें</button>" +
+      "</div>";
+    document.body.appendChild(div);
+  };
+
+  // Reset peer connection state cleanly so re-joining never reuses dead/stale tracks
+  window.resetPeerLegForFreshMedia = function(callId, peerEmail, peerName, shouldOffer) {
+    var pEm = normEm(peerEmail);
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var myEm = me ? normEm(me.email) : "";
+    if (!pEm || !myEm) return;
+    if (typeof closeSinglePeerConnection === "function") {
+      try { closeSinglePeerConnection(pEm); } catch (e) {}
+    }
+    var lk = (typeof getLegKey === "function") ? getLegKey(myEm, pEm) : [myEm, pEm].sort().join("__");
+    if (chaupalSocialState.lastAppliedOfferTs) delete chaupalSocialState.lastAppliedOfferTs[lk];
+    if (chaupalSocialState.lastAppliedAnswerTs) delete chaupalSocialState.lastAppliedAnswerTs[lk];
+    if (chaupalSocialState._sentOfferLegs) delete chaupalSocialState._sentOfferLegs[lk];
+    if (typeof ensureMeshPeerConnection === "function") {
+      ensureMeshPeerConnection(callId, pEm, peerName || pEm, shouldOffer ? "caller" : "callee", !!shouldOffer);
+    }
+    if (typeof attachMediaToDom === "function") {
+      setTimeout(attachMediaToDom, 120);
+      setTimeout(attachMediaToDom, 450);
+    }
+  };
+
+  // Manual reconnect button for active members to ring a left member on demand
+  window.reconnectLeftParticipantInCall = function(peerEmail, peerName) {
+    var callId = chaupalSocialState.activeCallDocId;
+    var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+    var pEm = normEm(peerEmail);
+    if (!callId || !me || !pEm) return;
+    var parts = (chaupalSocialState.activeCallSession && Array.isArray(chaupalSocialState.activeCallSession.participants))
+      ? chaupalSocialState.activeCallSession.participants.slice()
+      : [];
+    var found = false;
+    parts = parts.map(function(p) {
+      if (normEm(p.email) === pEm) {
+        found = true;
+        return Object.assign({}, p, { status: "ringing", reconnectedAt: Date.now() });
+      }
+      return p;
+    });
+    if (!found) {
+      parts.push({ email: pEm, name: peerName || pEm, status: "ringing", reconnectedAt: Date.now() });
+    }
+    chaupalSocialState.activeCallSession.participants = parts;
+    if (!chaupalSocialState.peerStatusMap) chaupalSocialState.peerStatusMap = {};
+    chaupalSocialState.peerStatusMap[pEm] = "ringing";
+    var ref = (typeof getCallDocRef === "function") ? getCallDocRef(callId) : null;
+    if (ref) {
+      ref.set({ participants: parts, status: "ringing" }, { merge: true }).catch(function() {});
+    }
+    if (typeof pushNotification === "function") {
+      pushNotification("🔔 कॉल रिकनेक्ट / रिंग: " + me.name, "आपको सक्रिय कॉल में रिकनेक्ट करने के लिए रिंग भेजी गई है।", "info", callId, pEm);
+    }
+    resetPeerLegForFreshMedia(callId, pEm, peerName || pEm, true);
+    if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+    if (typeof showToast === "function") showToast("🔔 " + (peerName || pEm) + " को रिकनेक्ट रिंग भेजी गई");
+  };
+
+  // Wrap startChaupalCallSession to enforce follow/hold/master rules and prompt phone ring permission
+  var origStartCall = window.startChaupalCallSession;
+  if (typeof origStartCall === "function") {
+    window.startChaupalCallSession = function(modeType, targetLabel, calleeEmailArg, calleeNameArg) {
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      var tEm = (typeof resolveTargetEmailForPerson === "function")
+        ? resolveTargetEmailForPerson(calleeEmailArg || (chaupalSocialState && chaupalSocialState.selectedPeerEmail) || "", calleeNameArg || "")
+        : normEm(calleeEmailArg);
+      if (me && tEm && normEm(tEm) !== normEm(me.email)) {
+        if (!canMemberInitiateCallTo(tEm, calleeNameArg || "", false)) {
+          return;
+        }
+      }
+      promptPhoneRingPermissionPopup();
+      return origStartCall.apply(this, arguments);
+    };
+  }
+
+  // Wrap renderChaupalSocial to add:
+  // 1) "🔄 दोबारा कॉल से जुड़ें" button when user previously left an active conference
+  // 2) "🔔 रिकनेक्ट" button for left participants on call tiles
+  // 3) "⏸️ होल्ड" toggle button & phone ring permission prompt
+  var origRenderSocial = window.renderChaupalSocial;
+  if (typeof origRenderSocial === "function") {
+    window.renderChaupalSocial = function() {
+      var res = origRenderSocial.apply(this, arguments);
+      var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+      var body = document.getElementById("chaupal-social-body");
+      if (!me || !body) return res;
+
+      if ("Notification" in window && Notification.permission !== "granted" && !document.getElementById("kc-inline-ring-bar")) {
+        var ringBar = document.createElement("div");
+        ringBar.id = "kc-inline-ring-bar";
+        ringBar.style.cssText = "margin-bottom:10px; padding:10px 13px; border-radius:14px; background:var(--gold-soft); border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;";
+        ringBar.innerHTML =
+          "<span style='font-size:12.5px; font-weight:700;'>🔔 फ़ोन पर सीधे रिंग व कॉल अलर्ट पाने के लिए नोटिफिकेशन चालू करें</span>" +
+          "<button type='button' class='action-btn gold' style='padding:6px 12px; font-size:12px;' onclick='if(typeof enableDevicePushNotifications==="function")enableDevicePushNotifications();'>🔔 ऑन करें</button>";
+        body.insertBefore(ringBar, body.firstChild);
+      }
+
+      // If not in active call session, check if there is an ongoing call where user left and can click "दोबारा कॉल से जुड़ें"
+      if (!chaupalSocialState.activeCallSession && chaupalSocialState.ongoingConferenceDoc && !document.getElementById("kc-rejoin-left-card")) {
+        var og = chaupalSocialState.ongoingConferenceDoc;
+        var myP = Array.isArray(og.participants) ? og.participants.find(function(p) { return normEm(p.email) === normEm(me.email); }) : null;
+        if (myP && myP.status === "left") {
+          var rejoinDiv = document.createElement("div");
+          rejoinDiv.id = "kc-rejoin-left-card";
+          rejoinDiv.style.cssText = "margin-bottom:12px; padding:13px 15px; border-radius:16px; background:var(--bg-elevated); border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;";
+          rejoinDiv.innerHTML =
+            "<div><div style='font-weight:700; font-size:14px;'>आप इस कॉल से लेफ्ट हुए थे</div><div style='font-size:12px; color:var(--text-muted);'>" + (og.targetLabel || "सक्रिय कॉन्फ्रेंस कॉल") + "</div></div>" +
+            "<button type='button' class='action-btn primary' style='padding:8px 14px; font-size:12.5px;' onclick='if(typeof rejoinConferenceCall==="function")rejoinConferenceCall("" + og.id + "", false)'>🔄 दोबारा कॉल से जुड़ें</button>";
+          body.insertBefore(rejoinDiv, body.firstChild);
+        }
+      }
+
+      // Add "🔔 रिकनेक्ट" button on any tile where peer status is 'left'
+      var cs = chaupalSocialState.activeCallSession;
+      if (cs && Array.isArray(cs.participants)) {
+        cs.participants.forEach(function(rp) {
+          var pEm = normEm(rp.email);
+          if (!pEm || pEm === normEm(me.email)) return;
+          if (rp.status === "left") {
+            var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+            var wrapEl = document.getElementById("tile-wrap-" + safeId);
+            if (wrapEl && !wrapEl.querySelector(".kc-reconnect-btn")) {
+              var btn = document.createElement("button");
+              btn.type = "button";
+              btn.className = "action-btn gold kc-reconnect-btn";
+              btn.style.cssText = "width:100%; margin-top:6px; padding:6px 10px; font-size:12px;";
+              btn.textContent = "🔔 रिकनेक्ट / रिंग भेजें";
+              btn.onclick = function(ev) {
+                if (ev && ev.stopPropagation) ev.stopPropagation();
+                reconnectLeftParticipantInCall(pEm, rp.name || pEm);
+              };
+              wrapEl.appendChild(btn);
+            }
+          }
+        });
+      }
+      return res;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
