@@ -13225,5 +13225,104 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  window.saveAndGoLiveOnFacebook = function(ev) {
+    try {
+      if (ev && typeof ev.stopPropagation === "function") ev.stopPropagation();
+      if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
+    } catch (e) {}
+
+    if (typeof chaupalSocialState === "undefined") {
+      window.chaupalSocialState = {
+        activeCallSession: { type: "video", target: "काव्य चौपाल कॉल" },
+        isLiveActive: false,
+        livePlatform: "Facebook Live"
+      };
+    }
+
+    // If session object wasn't attached yet, initialize a live call session object so button never stops with toast
+    if (!chaupalSocialState.activeCallSession) {
+      chaupalSocialState.activeCallSession = {
+        type: "video",
+        target: "काव्य चौपाल कॉल",
+        startedAt: Date.now()
+      };
+    }
+
+    var accInp = document.getElementById("soc-fb-account-in");
+    var keyInp = document.getElementById("soc-live-key-in");
+    var platSel = document.getElementById("soc-live-plat-sel");
+
+    var plat = (platSel && platSel.value) ? platSel.value : (chaupalSocialState.livePlatform || "Facebook Live");
+    var fbAcc = (accInp && accInp.value.trim())
+      ? accInp.value.trim()
+      : (chaupalSocialState.fbAccountUrl || ((typeof state !== "undefined" && state.settings && state.settings.socials && state.settings.socials.facebook) || "https://www.facebook.com/KavyaChaupal"));
+    var streamKey = (keyInp && keyInp.value.trim()) ? keyInp.value.trim() : (chaupalSocialState.liveStreamKey || "");
+
+    chaupalSocialState.livePlatform = plat;
+    chaupalSocialState.fbAccountUrl = fbAcc;
+    chaupalSocialState.liveStreamKey = streamKey;
+    chaupalSocialState.isLiveActive = true;
+
+    try {
+      if (typeof state !== "undefined") {
+        state.settings = Object.assign({}, state.settings || {}, {
+          socials: Object.assign({}, (state.settings && state.settings.socials) || {}, {
+            facebook: fbAcc
+          }),
+          fbLiveStreamKey: streamKey
+        });
+        if (typeof saveLocalCache === "function") saveLocalCache();
+        if (typeof cloudSaveDoc === "function") {
+          cloudSaveDoc("settings", "settings", state.settings).catch(function() {});
+        }
+      }
+    } catch (e) {}
+
+    // Update status badge right inside the FB live bridge panel immediately
+    var panel = document.getElementById("soc-fb-live-bridge-panel");
+    if (panel) {
+      var statusSpan = panel.querySelector("span[style*='font-size:11px']");
+      if (statusSpan) {
+        statusSpan.textContent = "🔴 " + plat + " कनेक्ट व लाइव सक्रिय";
+        statusSpan.style.color = "#86EFAC";
+      }
+      var statusNote = document.getElementById("soc-fb-live-status-note");
+      if (!statusNote) {
+        statusNote = document.createElement("div");
+        statusNote.id = "soc-fb-live-status-note";
+        statusNote.style.cssText = "margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(22,163,74,0.2); border:1px solid #4ADE80; color:#DCFCE7; font-size:12px; line-height:1.45;";
+        panel.appendChild(statusNote);
+      }
+      var safeHref = (fbAcc && fbAcc.indexOf("http") === 0) ? fbAcc : "https://www.facebook.com/live/producer";
+      statusNote.innerHTML =
+        "✓ खाता लिंक सहेजा गया: <strong>" + String(fbAcc).replace(/</g, "&lt;") + "</strong><br/>" +
+        "<a href="" + safeHref.replace(/"/g, "&quot;") + "" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:6px; padding:6px 11px; border-radius:8px; background:#1877F2; color:#fff; font-weight:700; text-decoration:none;">↗ फ़ेसबुक लाइव पेज / प्रोड्यूसर खोलें</a>";
+    }
+
+    if (typeof showToast === "function") {
+      showToast("✓ फ़ेसबुक खाता कनेक्ट हो गया व लाइव सक्रिय है!");
+    }
+
+    // Open Facebook Live producer/page in a new tab/window when Facebook Live is selected
+    if (plat === "Facebook Live") {
+      var openUrl = (fbAcc && fbAcc.indexOf("http") === 0) ? fbAcc : "https://www.facebook.com/live/producer";
+      try {
+        var win = window.open(openUrl, "_blank", "noopener,noreferrer");
+        if (!win) {
+          // If popup blocker prevented window.open, the direct link button inside #soc-fb-live-status-note is already visible!
+        }
+      } catch (e) {}
+    }
+
+    if (typeof window.fastJoinAndRecoverAllPeers === "function") {
+      window.fastJoinAndRecoverAllPeers();
+    }
+  };
+})();
+</script>
+
 </body>
 </html>
