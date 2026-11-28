@@ -2120,11 +2120,6 @@
         <span class="section-hint" id="poems-count-label"></span>
       </div>
       <div class="cards-grid two-col" id="poems-grid"></div>
-      <div class="section-head" style="margin-top:22px;">
-        <h2 class="section-title">🖼️ अन्य रचनाएँ — भाव चित्र झलक</h2>
-        <span class="section-hint">बाएं से दाएं देखें</span>
-      </div>
-      <div class="h-scroll" id="other-poems-bhav-strip" style="gap:12px; padding-bottom:12px;"></div>
     </section>
 
     <!-- TAB 2: POETS (कवि) -->
@@ -3127,8 +3122,8 @@ if (cached) {
   if (Array.isArray(cached.videos) && cached.videos.length) state.videos = cached.videos;
   if (cached.competition) state.competition = Object.assign({}, DEFAULT_COMPETITION, cached.competition);
   if (Array.isArray(cached.ebooks) && cached.ebooks.length) state.ebooks = cached.ebooks;
-  if (Array.isArray(cached.pendingPoems)) state.pendingPoems = cached.pendingPoems;
-  if (Array.isArray(cached.pendingPoets)) state.pendingPoets = cached.pendingPoets;
+  state.pendingPoems = [];
+  state.pendingPoets = [];
   if (Array.isArray(cached.comments)) state.comments = cached.comments;
   if (Array.isArray(cached.follows)) state.follows = cached.follows;
   if (Array.isArray(cached.chaupalSahityaIds)) state.chaupalSahityaIds = cached.chaupalSahityaIds;
@@ -3269,7 +3264,7 @@ function initFirebaseSync() {
         }
         state[stateKey] = list;
         saveLocalCache();
-        renderAll();
+        if (!isUserTypingInForm()) renderAll();
       }
     });
   };
@@ -4720,44 +4715,19 @@ function showBirthdayCardPreview() {
   showToast("शुभकामना भाव-चित्र तैयार है 🎨");
 }
 
-var _deferredRenderTimer = null;
-
-function isTextInputActive() {
-  var el = document.activeElement;
-  if (!el) return false;
-  var tag = (el.tagName || "").toUpperCase();
-  if (tag === "TEXTAREA") return true;
-  if (tag === "INPUT") {
-    var tp = (el.type || "text").toLowerCase();
-    return tp !== "checkbox" && tp !== "radio" && tp !== "button" && tp !== "submit" && tp !== "file" && tp !== "range" && tp !== "color";
+function isUserTypingInForm() {
+  var ae = document.activeElement;
+  if (!ae) return false;
+  var tag = (ae.tagName || "").toUpperCase();
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+    if (ae.type === "checkbox" || ae.type === "radio" || ae.type === "button" || ae.type === "submit") return false;
+    return true;
   }
-  return false;
+  return !!ae.isContentEditable;
 }
 
-if (!window._keypadFocusGuardBound) {
-  window._keypadFocusGuardBound = true;
-  document.addEventListener("focusout", function(ev) {
-    var tgt = ev && ev.target;
-    if (!tgt) return;
-    var tag = (tgt.tagName || "").toUpperCase();
-    if (tag === "INPUT" || tag === "TEXTAREA") {
-      clearTimeout(_deferredRenderTimer);
-      _deferredRenderTimer = setTimeout(function() {
-        if (!isTextInputActive()) renderAll();
-      }, 120);
-    }
-  });
-}
-
-function renderAll(forceRender) {
-  if (!forceRender && isTextInputActive()) {
-    clearTimeout(_deferredRenderTimer);
-    _deferredRenderTimer = setTimeout(function() {
-      if (!isTextInputActive()) renderAll(true);
-    }, 800);
-    return;
-  }
- {
+function renderAll() {
+  if (isUserTypingInForm()) return;
   reconcileAllPoetAdminLinks();
   var hdrTitle = document.getElementById("hdr-title");
   if (hdrTitle) hdrTitle.textContent = state.settings.appName || "काव्य चौपाल";
@@ -4786,11 +4756,10 @@ function renderAll(forceRender) {
   }
 
   var unreadMsgs = state.messages.filter(function(m) { return !m.adminReply; }).length;
-  var pendTotal = (state.pendingPoems ? state.pendingPoems.length : 0) + (state.pendingPoets ? state.pendingPoets.length : 0) + unreadMsgs;
   var pendBadge = document.getElementById("hdr-pending-badge");
   if (pendBadge) {
-    pendBadge.textContent = pendTotal;
-    pendBadge.classList.toggle("show", pendTotal > 0);
+    pendBadge.textContent = unreadMsgs;
+    pendBadge.classList.toggle("show", unreadMsgs > 0);
   }
 
   renderTopAccountBar();
@@ -4806,7 +4775,12 @@ function renderAll(forceRender) {
   if (state.activePoetName) renderPoetDetail(state.activePoetName);
   renderManchHub();
   renderFavorites();
-  renderMyCorner();
+  if (document.getElementById("tab-corner") && document.getElementById("tab-corner").classList.contains("active")) {
+    renderMyCorner();
+  }
+  if (document.getElementById("tab-sahitya") && document.getElementById("tab-sahitya").classList.contains("active")) {
+    renderChaupalSahityaCorner();
+  }
   renderAdminsDirectory();
   if (state.activeAdminId) renderAdminDetail(state.activeAdminId);
   renderSocialLinks();
@@ -5079,93 +5053,41 @@ function onPoemSearch() {
 }
 function clearPoemSearch() { var inp = document.getElementById("poem-search"); if (inp) inp.value = ""; onPoemSearch(); }
 
-function isPoemInChaupalSahitya(poemId) {
-  var ids = Array.isArray(state.chaupalSahityaIds) ? state.chaupalSahityaIds : [];
-  return ids.indexOf(poemId) !== -1;
-}
-
-function adminSahityaQuickBtnHTML(poemId) {
-  if (!state.adminUnlocked) return "";
-  var picked = isPoemInChaupalSahitya(poemId);
-  var cls = picked ? "sm-btn del" : "btn-approve";
-  var lbl = picked ? "✓ साहित्य में" : "+ चौपाल साहित्य";
-  return "<button type=\"button\" class=\"" + cls + "\" style=\"padding:4px 9px; font-size:11.5px; border-radius:99px;\" onclick=\"event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(poemId) + "'))\">" + lbl + "</button>";
-}
-
 function poemCardHTML(p) {
   var liked = state.favorites.indexOf(p.id) !== -1;
   var dCnt = getTotalDaad(p);
   var cCnt = state.comments.filter(function(c) { return c.poemId === p.id; }).length;
-  var vHiddenP = isViewsHiddenForPoetName(p.poet);
-  var vCntP = Number(p.views || 0);
-  var inSahitya = isPoemInChaupalSahitya(p.id);
-  var imgSrc = p.bhavImage || generateAutoBhavImage(p) || "";
-  return "<article class=\"poem-card\" onclick=\"openReader(dec('" + arg(p.id) + "'))\">" +
+      var vHiddenP = isViewsHiddenForPoetName(p.poet);
+      var vCntP = Number(p.views || 0);
+      return "<article class=\"poem-card\" onclick=\"openReader(dec(\'" + arg(p.id) + "\'))\">" +
     "<div class=\"poem-card-top\">" +
-      "<div style=\"display:flex; gap:5px; flex-wrap:wrap; align-items:center;\">" +
-        "<span class=\"genre-tag\">" + (inSahitya ? "✦ चौपाल साहित्य • " : "") + esc(p.genre || "कविता") + "</span>" +
+      "<div style=\"display:flex; gap:5px; flex-wrap:wrap;\">" +
+        "<span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" +
         (p.mood ? ("<span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") +
-        (!vHiddenP ? ("<span class=\"mood-tag\">👁️ " + vCntP + "</span>") : "") +
+        (!isViewsHiddenForPoetName(p.poet) ? ("<span class=\"mood-tag\">👁️ " + Number(p.views || 0) + " बार देखा गया</span>") : "") +
       "</div>" +
-      "<div style=\"display:flex; gap:5px; align-items:center;\">" +
-        adminSahityaQuickBtnHTML(p.id) +
-        "<button type=\"button\" class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec('" + arg(p.id) + "'))\">" + (liked ? "♥" : "♡") + "</button>" +
-      "</div>" +
+      "<button type=\"button\" class=\"fav-mini " + (liked ? "liked" : "") + "\" onclick=\"event.stopPropagation(); toggleFavorite(dec(\'" + arg(p.id) + "\'))\">" + (liked ? "♥" : "♡") + "</button>" +
     "</div>" +
-    (imgSrc ? ("<img class=\"poem-bhav-banner\" src=\"" + imgSrc + "\" alt=\"भाव चित्र\" />") : "") +
+    (p.bhavImage ? ("<img class=\"poem-bhav-banner\" src=\"" + p.bhavImage + "\" alt=\"भाव चित्र\" />") : "") +
     "<h3 class=\"poem-card-title\">" + esc(p.title) + "</h3>" +
     "<p class=\"poem-card-excerpt\">" + esc(p.content) + "</p>" +
     "<div class=\"poem-card-foot\">" +
-      "<span class=\"poem-author-link\" onclick=\"event.stopPropagation(); openPoetProfile(dec('" + arg(p.poet) + "'))\">✒️ " + esc(p.poet) + "</span>" +
-      "<span class=\"read-more-link\">" + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + (cCnt > 0 ? ("💬 " + cCnt + " • ") : "") + "पढ़ें →</span>" +
+      "<span class=\"poem-author-link\" onclick=\"event.stopPropagation(); openPoetProfile(dec(\'" + arg(p.poet) + "\'))\">✒️ " + esc(p.poet) + "</span>" +
+      "<span class=\"read-more-link\">" + (!vHiddenP ? ("👁️ " + vCntP + " • ") : "") + (dCnt > 0 ? ("👏 " + dCnt + " • ") : "") + (cCnt > 0 ? ("💬 " + cCnt + " • ") : "") + "पढ़ें →</span>" +
     "</div>" +
   "</article>";
-}
-
-function renderOtherPoemsBhavStrip(otherList) {
-  var strip = document.getElementById("other-poems-bhav-strip");
-  if (!strip) return;
-  if (!otherList || !otherList.length) {
-    strip.innerHTML = "<div class=\"empty-box\" style=\"min-width:100%;\">अन्य रचनाएँ यहाँ भाव-चित्र रूप में दिखेंगी।</div>";
-    return;
-  }
-  strip.innerHTML = otherList.map(function(p) {
-    var imgSrc = p.bhavImage || generateAutoBhavImage(p) || "";
-    var picked = isPoemInChaupalSahitya(p.id);
-    return "<div style=\"flex-shrink:0; width:178px; background:var(--bg-elevated); border:1.5px solid var(--border); border-radius:16px; padding:9px; box-shadow:var(--shadow); display:flex; flex-direction:column; justify-content:space-between; cursor:pointer;\" onclick=\"openReader(dec('" + arg(p.id) + "'))\">" +
-      "<div>" +
-        (imgSrc ? ("<img src=\"" + imgSrc + "\" alt=\"" + esc(p.title) + "\" style=\"width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:12px; border:1.5px solid var(--gold); display:block; margin-bottom:7px;\" />") : "") +
-        "<div style=\"font-family:'Yatra One',serif; font-size:15px; color:var(--text); line-height:1.25; margin-bottom:3px;\">" + esc(p.title) + "</div>" +
-        "<div style=\"font-size:11.5px; color:var(--primary); font-weight:600;\">✒️ " + esc(p.poet) + "</div>" +
-      "</div>" +
-      (state.adminUnlocked
-        ? ("<button type=\"button\" class=\"" + (picked ? "sm-btn del" : "btn-approve") + "\" style=\"width:100%; margin-top:7px; padding:5px 8px; font-size:11px;\" onclick=\"event.stopPropagation(); toggleChaupalSahityaPoem(dec('" + arg(p.id) + "'))\">" + (picked ? "✓ साहित्य में" : "+ चौपाल साहित्य") + "</button>")
-        : "") +
-    "</div>";
-  }).join("");
 }
 
 function renderPoemsGrid() {
   var grid = document.getElementById("poems-grid"); if (!grid) return;
   var bar = document.getElementById("active-filter-bar"); var barText = document.getElementById("active-filter-text");
-  var sahityaPool = getChaupalSahityaPoems();
-  var hasExplicitSahitya = Array.isArray(state.chaupalSahityaIds) && state.chaupalSahityaIds.some(function(id) {
-    return (state.poems || []).some(function(p) { return p.id === id; });
-  });
-  var baseList = hasExplicitSahitya ? sahityaPool : (state.poems || []);
-  var filtered = baseList.filter(function(p) {
+  var filtered = state.poems.filter(function(p) {
     if (state.selectedGenre !== "सभी" && p.genre !== state.selectedGenre) return false;
     if (state.selectedMoodFilter !== "सभी" && (p.mood || detectPoemMood(p.content)) !== state.selectedMoodFilter) return false;
     if (state.selectedPoetFilter !== "सभी" && p.poet !== state.selectedPoetFilter) return false;
     if (state.poemSearch && (p.title + " " + p.poet + " " + p.genre + " " + (p.mood || "") + " " + p.content).toLowerCase().indexOf(state.poemSearch) === -1) return false;
     return true;
   });
-
-  var otherPoems = (state.poems || []).filter(function(p) {
-    return !filtered.some(function(fp) { return fp.id === p.id; });
-  });
-  renderOtherPoemsBhavStrip(otherPoems);
-
   var hasFilter = state.selectedGenre !== "सभी" || state.selectedMoodFilter !== "सभी" || state.selectedPoetFilter !== "सभी" || !!state.poemSearch;
   if (bar) bar.classList.toggle("show", hasFilter);
   if (hasFilter && barText) {
@@ -5176,12 +5098,8 @@ function renderPoemsGrid() {
     if (state.poemSearch) parts.push("खोज: <strong>“" + esc(state.poemSearch) + "”</strong>");
     barText.innerHTML = parts.join(" • ");
   }
-  var lbl = document.getElementById("poems-count-label");
-  if (lbl) lbl.textContent = (hasExplicitSahitya ? "चौपाल साहित्य: " : "") + filtered.length + " रचनाएँ";
-  if (!filtered.length) {
-    grid.innerHTML = "<div class=\"empty-box\" style=\"grid-column:1/-1;\">अभी ‘चौपाल साहित्य’ में कोई चयनित रचना नहीं मिली।" + (state.adminUnlocked ? " <button type=\"button\" class=\"action-btn gold\" style=\"margin-top:8px;\" onclick=\"openChaupalSahityaCorner()\">📖 चौपाल साहित्य से चुनें</button>" : "") + "</div>";
-    return;
-  }
+  var lbl = document.getElementById("poems-count-label"); if (lbl) lbl.textContent = filtered.length + " रचनाएँ";
+  if (!filtered.length) { grid.innerHTML = "<div class=\"empty-box\" style=\"grid-column:1/-1;\">कोई रचना उपलब्ध नहीं है।</div>"; return; }
   grid.innerHTML = filtered.map(poemCardHTML).join("");
 }
 
@@ -9290,214 +9208,180 @@ function renderAdminStudio() {
       "<div style=\"font-size:42px; margin-bottom:6px;\">👑</div>" +
       "<h3 class=\"font-royal\" style=\"font-size:24px; margin:0 0 6px; color:var(--primary);\">एडमिन खाता एवं पिन प्रवेश</h3>" +
       "<p style=\"font-size:12.5px; color:var(--text-muted); margin:0 0 12px;\">Google लॉगिन से, या ईमेल-पासवर्ड अथवा पिन से सीधे खोलें।</p>" +
-      "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle(\'admin\')\"><span>🔐</span><span>Google से एडमिन खाता लॉगिन करें</span></button>" +
+      "<button class=\"google-auth-btn\" onclick=\"signInWithGoogle('admin')\"><span>🔐</span><span>Google से एडमिन खाता लॉगिन करें</span></button>" +
       "<div class=\"auth-divider\">— या एडमिन ईमेल व पासवर्ड से लॉगिन करें —</div>" +
-      "<div id=\"adm-auth-feedback\" style=\"display:none; padding:10px 12px; border-radius:11px; border:1px solid; font-size:12.5px; font-weight:600; margin-bottom:10px; line-height:1.5; text-align:left;\"></div>" + "<div class=\"field\" style=\"text-align:left;\"><label>एडमिन ईमेल</label><input id=\"adm-login-email\" type=\"email\" value=\"" + esc(state.settings.adminEmail || "") + "\" placeholder=\"आपका एडमिन ईमेल\" /></div>" + "<div class=\"field\" style=\"text-align:left;\"><label>पासवर्ड</label><input id=\"adm-login-pass\" type=\"password\" placeholder=\"खाता पासवर्ड\" onkeydown=\"if(event.key==='Enter') signInAdminEmailPass()\" />" + "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-top:7px; font-size:12.5px;\"><label style=\"display:inline-flex; align-items:center; gap:6px; margin:0; color:var(--text); font-weight:600; cursor:pointer;\"><input type=\"checkbox\" style=\"width:auto; margin:0;\" onchange=\"togglePasswordVisibility('adm-login-pass', this)\" /> पासवर्ड दिखाएँ</label><button type=\"button\" class=\"sm-btn\" onclick=\"sendForgotPasswordReset('adm-login-email', 'adm-auth-feedback')\">🔑 फॉरगेट पासवर्ड</button></div></div>" + "<div style=\"margin-bottom:14px;\"><button type=\"button\" class=\"action-btn gold\" style=\"width:100%;\" onclick=\"signInAdminEmailPass()\">ईमेल-पासवर्ड से एडमिन लॉगिन</button></div>" + "<div class=\"auth-divider\">— या त्वरित पिन से खोलें —</div>" + "<input id=\"admin-pin-input\" type=\"password\" inputmode=\"numeric\" placeholder=\"पिन लिखें...\" style=\"max-width:220px; text-align:center; font-size:20px; letter-spacing:6px; padding:10px; border-radius:12px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); margin-bottom:12px;\" onkeydown=\"if(event.key==='Enter') unlockAdmin()\" />" + "<div><button type=\"button\" class=\"action-btn primary\" onclick=\"unlockAdmin()\">पिन से स्टूडियो खोलें →</button></div>" + "</div>";
+      "<div id=\"adm-auth-feedback\" style=\"display:none; padding:10px 12px; border-radius:11px; border:1px solid; font-size:12.5px; font-weight:600; margin-bottom:10px; line-height:1.5; text-align:left;\"></div>" +
+      "<div class=\"field\" style=\"text-align:left;\"><label>एडमिन ईमेल</label><input id=\"adm-login-email\" type=\"email\" value=\"" + esc(state.settings.adminEmail || "") + "\" placeholder=\"आपका एडमिन ईमेल\" /></div>" +
+      "<div class=\"field\" style=\"text-align:left;\"><label>पासवर्ड</label><input id=\"adm-login-pass\" type=\"password\" placeholder=\"खाता पासवर्ड\" onkeydown=\"if(event.key==='Enter') signInAdminEmailPass()\" />" +
+      "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-top:7px; font-size:12.5px;\"><label style=\"display:inline-flex; align-items:center; gap:6px; margin:0; color:var(--text); font-weight:600; cursor:pointer;\"><input type=\"checkbox\" style=\"width:auto; margin:0;\" onchange=\"togglePasswordVisibility('adm-login-pass', this)\" /> पासवर्ड दिखाएँ</label><button type=\"button\" class=\"sm-btn\" onclick=\"sendForgotPasswordReset('adm-login-email', 'adm-auth-feedback')\">🔑 फॉरगेट पासवर्ड</button></div></div>" +
+      "<div style=\"margin-bottom:14px;\"><button type=\"button\" class=\"action-btn gold\" style=\"width:100%;\" onclick=\"signInAdminEmailPass()\">ईमेल-पासवर्ड से एडमिन लॉगिन</button></div>" +
+      "<div class=\"auth-divider\">— या त्वरित पिन से खोलें —</div>" +
+      "<input id=\"admin-pin-input\" type=\"password\" inputmode=\"numeric\" placeholder=\"पिन लिखें...\" style=\"max-width:220px; text-align:center; font-size:20px; letter-spacing:6px; padding:10px; border-radius:12px; border:1.5px solid var(--gold); background:var(--bg); color:var(--text); margin-bottom:12px;\" onkeydown=\"if(event.key==='Enter') unlockAdmin()\" />" +
+      "<div><button type=\"button\" class=\"action-btn primary\" onclick=\"unlockAdmin()\">पिन से स्टूडियो खोलें →</button></div>" +
+      "</div>";
     return;
   }
 
+  var sahityaIds = Array.isArray(state.chaupalSahityaIds) ? state.chaupalSahityaIds : [];
   var contentHtml = "";
-  if (state.adminTab === "approvals") {
-    var poemsQ = state.pendingPoems.map(function(p) {
-      return "<div class=\"pending-card\">" +
-        "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
-          "<div><span class=\"genre-tag\">" + esc(p.genre || "कविता") + "</span>" + (p.mood ? (" <span class=\"mood-tag\">" + esc(p.mood) + "</span>") : "") + "</div>" +
-          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poem\', dec(\'" + arg(p.id) + "\'))\">👁️ पूर्ण प्रिव्यू देखें</button>" +
-        "</div>" +
-        "<div class=\"font-royal\" style=\"font-size:19px; color:var(--primary); margin-top:6px;\">" + esc(p.title) + "</div>" +
-        "<div class=\"pending-meta\"><span>✒️ <strong>" + esc(p.poet) + "</strong></span>" + (p.ownerEmail ? ("<span>✉️ " + esc(p.ownerEmail) + "</span>") : "") + "</div>" +
-        (p.bhavImage ? ("<img src=\"" + p.bhavImage + "\" style=\"width:130px; border-radius:11px; border:1.5px solid var(--gold); margin-top:6px; cursor:pointer;\" onclick=\"openAdminSubmissionPreview(\'poem\', dec(\'" + arg(p.id) + "\'))\" />") : "") +
-        "<div class=\"pending-poem-preview\">" + esc(p.content) + "</div>" +
-        "<div class=\"pending-actions\">" +
-          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poem\', dec(\'" + arg(p.id) + "\'))\">👁️ प्रिव्यू व संपादन</button>" +
-          "<button class=\"btn-approve\" onclick=\"approvePendingPoem(dec(\'" + arg(p.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button>" +
-          "<button class=\"btn-reject\" onclick=\"rejectPendingPoem(dec(\'" + arg(p.id) + "\'))\">❌ अस्वीकार</button>" +
-        "</div>" +
-      "</div>";
-    }).join("") || "<div class=\"empty-box\">कोई लंबित रचना नहीं है।</div>";
 
-    var poetsQ = state.pendingPoets.map(function(pt) {
-      return "<div class=\"pending-card\">" +
-        "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;\">" +
-          "<div style=\"display:flex; align-items:center; gap:10px;\">" +
-            (pt.photo ? ("<img src=\"" + pt.photo + "\" style=\"width:56px; height:56px; border-radius:14px; object-fit:cover; border:1.5px solid var(--gold);\" />") : "<div class=\"avatar-md\" style=\"width:52px; height:52px; font-size:18px;\">" + esc(initials(pt.name)) + "</div>") +
-            "<div>" +
-              "<div class=\"font-royal\" style=\"font-size:19px; color:var(--primary);\">" + esc(pt.name) + "</div>" +
-              "<div class=\"pending-meta\"><span>📍 " + esc(pt.city || "") + "</span>" + (pt.occupation ? ("<span>💼 " + esc(pt.occupation) + "</span>") : "") + (pt.mainGenres ? ("<span>❖ " + esc(pt.mainGenres) + "</span>") : "") + (pt.mobile ? ("<span>🔒 मो.: <strong>" + esc(pt.mobile) + "</strong></span>") : "") + (pt.ownerEmail ? ("<span>✉️ " + esc(pt.ownerEmail) + "</span>") : "") + "</div>" +
+  if (state.adminTab === "sahitya_pick") {
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\">📖 चौपाल साहित्य चयन (Home फ़्लैश हेतु)</h4>" +
+        "<div style=\"font-size:12.5px; color:var(--text-muted); margin-bottom:10px;\">डाली गई सभी रचनाओं में से छाँटकर ‘चौपाल साहित्य’ में जोड़ें या हटाएँ। Home पृष्ठ पर इन्हीं में से रचनाएँ फ्लैश होंगी।</div>" +
+        (state.poems || []).map(function(p) {
+          var picked = sahityaIds.indexOf(p.id) !== -1;
+          return "<div class=\"admin-list-item\">" +
+            "<div class=\"admin-item-info\">" +
+              "<div class=\"admin-item-title\">" + esc(p.title) + " <span class=\"mini-badge\">" + esc(p.genre || "काव्य") + "</span></div>" +
+              "<div class=\"admin-item-sub\">✒️ " + esc(p.poet) + " • " + esc(String(p.content || "").replace(/\n+/g, " ").slice(0, 85)) + "</div>" +
             "</div>" +
-          "</div>" +
-          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poet\', dec(\'" + arg(pt.id) + "\'))\">👁️ पूर्ण प्रिव्यू देखें</button>" +
-        "</div>" +
-        (pt.quote ? ("<div class=\"pending-poem-preview\" style=\"margin-top:8px;\">“" + esc(pt.quote) + "”</div>") : "") +
-        (pt.special ? ("<div style=\"font-size:13px; color:var(--text-muted); margin-top:6px;\">" + esc(pt.special) + "</div>") : "") +
-        "<div class=\"pending-actions\">" +
-          "<button class=\"sm-btn\" onclick=\"openAdminSubmissionPreview(\'poet\', dec(\'" + arg(pt.id) + "\'))\">👁️ प्रिव्यू व संपादन</button>" +
-          "<button class=\"btn-approve\" onclick=\"approvePendingPoet(dec(\'" + arg(pt.id) + "\'))\">✅ स्वीकृत व प्रकाशित करें</button>" +
-          "<button class=\"btn-reject\" onclick=\"rejectPendingPoet(dec(\'" + arg(pt.id) + "\'))\">❌ अस्वीकार</button>" +
-        "</div>" +
+            "<div class=\"admin-item-btns\">" +
+              "<button type=\"button\" class=\"" + (picked ? "sm-btn del" : "btn-approve") + "\" onclick=\"toggleChaupalSahityaPoem(dec('" + arg(p.id) + "')); renderAdminStudio();\">" + (picked ? "✓ चौपाल साहित्य में (हटाएँ)" : "+ चौपाल साहित्य में जोड़ें") + "</button>" +
+            "</div>" +
+          "</div>";
+        }).join("") +
       "</div>";
-    }).join("") || "<div class=\"empty-box\">कोई लंबित कवि परिचय नहीं है।</div>";
-    contentHtml = "<h4 class=\"section-title\">📜 लंबित रचनाएँ (" + state.pendingPoems.length + ")</h4>" + poemsQ + "<h4 class=\"section-title\" style=\"margin-top:14px;\">✒️ लंबित कवि परिचय (" + state.pendingPoets.length + ")</h4>" + poetsQ;
   } else if (state.adminTab === "messages") {
-    contentHtml = "<h4 class=\"section-title\">✉️ सदस्यों से प्राप्त संदेश (" + state.messages.length + ")</h4>" +
+    contentHtml = "<h4 class=\"section-title\">✉️ सदस्य संवाद एवं संदेश</h4>" +
       (state.messages.length ? state.messages.map(function(m) {
-        return "<div class=\"pending-card\">" +
-          "<div style=\"display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;\">" +
-            "<span class=\"genre-tag\">" + esc(m.subject || "संदेश") + "</span>" +
-            "<span style=\"font-size:11.5px; color:var(--text-muted);\">" + formatTimeHi(m.createdAt) + "</span>" +
-          "</div>" +
-          "<div style=\"font-weight:700; margin-top:6px; color:var(--primary);\">✒️ " + esc(m.senderName) + " <span style=\"font-weight:400; font-size:12px; color:var(--text-muted);\">(" + esc(m.senderEmail) + ")</span></div>" +
-          "<div class=\"pending-poem-preview\">" + esc(m.body) + "</div>" +
-          "<div class=\"field\" style=\"margin-bottom:8px;\"><label>एडमिन उत्तर लिखें</label><textarea id=\"reply-in-" + m.id + "\" style=\"min-height:60px;\">" + esc(m.adminReply || "") + "</textarea></div>" +
-          "<div style=\"display:flex; gap:8px;\">" +
-            "<button class=\"btn-approve\" onclick=\"replyToMemberMessage(dec(\'" + arg(m.id) + "\'))\">📤 उत्तर भेजें</button>" +
-            "<button class=\"btn-reject\" onclick=\"deleteMemberMessage(dec(\'" + arg(m.id) + "\'))\">हटाएँ</button>" +
-          "</div>" +
+        return "<div class=\"msg-bubble-card\">" +
+          "<div style=\"display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap;\"><strong>" + esc(m.senderName || m.senderEmail) + "</strong><span class=\"mini-badge\">" + esc(m.subject || "संदेश") + "</span></div>" +
+          "<div style=\"font-size:11.5px; color:var(--text-muted); margin-bottom:6px;\">" + esc(m.senderEmail || "") + " • " + formatTimeHi(m.createdAt) + "</div>" +
+          "<div class=\"comment-body\">" + esc(m.message) + "</div>" +
+          (m.adminReply ? ("<div class=\"admin-reply-box\"><strong>एडमिन उत्तर:</strong> " + esc(m.adminReply) + "</div>") : "") +
+          "<div class=\"field\" style=\"margin-top:9px; margin-bottom:6px;\"><textarea id=\"adm-reply-" + esc(m.id) + "\" placeholder=\"सदस्य को उत्तर लिखें...\" style=\"min-height:60px;\">" + esc(m.adminReply || "") + "</textarea></div>" +
+          "<button type=\"button\" class=\"action-btn gold\" style=\"padding:7px 12px; font-size:12px;\" onclick=\"replyToMemberMessage(dec('" + arg(m.id) + "'))\">💬 उत्तर भेजें</button>" +
         "</div>";
-      }).join("") : "<div class=\"empty-box\">सदस्यों का कोई संदेश अभी प्राप्त नहीं हुआ है।</div>");
+      }).join("") : "<div class=\"empty-box\">अभी कोई संदेश प्राप्त नहीं हुआ है।</div>");
   } else if (state.adminTab === "poems") {
     var ep = state.editingPoemId ? state.poems.find(function(x) { return x.id === state.editingPoemId; }) : null;
-    var genres = getAllGenres(); var poets = getAllPoetObjects();
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ep ? "✏️ रचना संपादित करें" : "➕ नई रचना जोड़ें (स्वतः भाव चित्र सहित)") + "</h4>" +
-      "<div class=\"field\"><label>शीर्षक *</label><input id=\"f-poem-title\" value=\"" + esc(ep ? ep.title : "") + "\" /></div>" +
-      "<div class=\"field\"><label>कवि चुनें / लिखें *</label><input id=\"f-poem-poet\" list=\"adm-poet-dl\" value=\"" + esc(ep ? ep.poet : "") + "\" /><datalist id=\"adm-poet-dl\">" + poets.map(function(pt) { return "<option value=\"" + esc(pt.name) + "\">"; }).join("") + "</datalist></div>" +
-      "<div class=\"two-fields\">" +
-        "<div class=\"field\"><label>विधा (ड्रॉप-डाउन) *</label><select id=\"f-poem-genre\">" + genres.map(function(g) { return "<option value=\"" + esc(g) + "\" " + ((ep && ep.genre === g) ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
-        "<div class=\"field\"><label>मुख्य भाव (AI भाव-चित्र हेतु) *</label><select id=\"f-poem-mood\">" + MOOD_OPTIONS.map(function(m) { return "<option value=\"" + esc(m.id) + "\" " + ((ep && ep.mood === m.id) ? "selected" : "") + ">" + esc(m.label) + "</option>"; }).join("") + "</select></div>" +
+    var poetNames = getAllPoetObjects().map(function(x) { return x.name; });
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\">" + (ep ? "✏️ रचना संपादित करें" : "➕ नई रचना प्रकाशित करें") + "</h4>" +
+        "<div class=\"field\"><label>रचना का शीर्षक *</label><input id=\"f-poem-title\" value=\"" + esc(ep ? ep.title : "") + "\" placeholder=\"शीर्षक लिखें...\" /></div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>कवि का नाम *</label><input id=\"f-poem-poet\" list=\"poet-datalist\" value=\"" + esc(ep ? ep.poet : "") + "\" placeholder=\"कवि चुनें या लिखें...\" /><datalist id=\"poet-datalist\">" + poetNames.map(function(n) { return "<option value=\"" + esc(n) + "\"></option>"; }).join("") + "</datalist></div>" +
+          "<div class=\"field\"><label>विधा *</label><select id=\"f-poem-genre\">" + getAllGenres().map(function(g) { return "<option value=\"" + esc(g) + "\" " + (ep && ep.genre === g ? "selected" : "") + ">" + esc(g) + "</option>"; }).join("") + "</select></div>" +
+        "</div>" +
+        "<div class=\"field\"><label>रचना का मुख्य भाव (स्वतः भाव-चित्र हेतु)</label><select id=\"f-poem-mood\">" + MOOD_OPTIONS.map(function(m) { return "<option value=\"" + esc(m.id) + "\" " + (ep && ep.mood === m.id ? "selected" : "") + ">" + esc(m.label) + "</option>"; }).join("") + "</select></div>" +
+        "<div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"f-poem-content\" placeholder=\"यहाँ रचना लिखें...\">" + esc(ep ? ep.content : "") + "</textarea></div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
+          "<button type=\"button\" class=\"action-btn primary\" onclick=\"savePoemFromAdmin()\">" + (ep ? "अपडेट करें" : "प्रकाशित करें") + "</button>" +
+          (ep ? ("<button type=\"button\" class=\"action-btn\" onclick=\"state.editingPoemId=null; renderAdminStudio()\">रद्द करें</button>") : "") +
+        "</div>" +
       "</div>" +
-      "<div class=\"field\"><label>संपूर्ण रचना *</label><textarea id=\"f-poem-content\">" + esc(ep ? ep.content : "") + "</textarea></div>" +
-      "<button class=\"action-btn primary\" onclick=\"savePoemForm()\">💾 सहेजें, भाव चित्र बनाएँ व पब्लिश करें</button></div>" + state.poems.map(function(p) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(p.title) + "</div><div class=\"admin-item-sub\">" + esc(p.poet) + " • " + esc(p.genre) + (p.mood ? (" • " + esc(p.mood)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editPoem(dec(\'" + arg(p.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoem(dec(\'" + arg(p.id) + "\'))\">हटाएँ</button></div></div>";
-    }).join("");
+      "<h4 class=\"section-title\">प्रकाशित रचनाएँ (" + state.poems.length + ")</h4>" +
+      state.poems.map(function(p) {
+        var isPicked = sahityaIds.indexOf(p.id) !== -1;
+        return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(p.title) + " <span class=\"mini-badge\">" + esc(p.genre) + "</span>" + (isPicked ? " <span class=\"mini-badge\">✦ चौपाल साहित्य</span>" : "") + "</div><div class=\"admin-item-sub\">✒️ " + esc(p.poet) + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"" + (isPicked ? "sm-btn del" : "sm-btn") + "\" onclick=\"toggleChaupalSahityaPoem(dec('" + arg(p.id) + "')); renderAdminStudio();\">" + (isPicked ? "चौपाल साहित्य से हटाएँ" : "+ चौपाल साहित्य") + "</button><button type=\"button\" class=\"sm-btn\" onclick=\"editPoemInAdmin(dec('" + arg(p.id) + "'))\">संपादित</button><button type=\"button\" class=\"sm-btn del\" onclick=\"deletePoemInAdmin(dec('" + arg(p.id) + "'))\">हटाएँ</button></div></div>";
+      }).join("");
   } else if (state.adminTab === "poets") {
     var ept = state.editingPoetId ? state.poets.find(function(x) { return x.id === state.editingPoetId; }) : null;
-    var curPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ept ? "✏️ कवि संपादित करें" : "➕ नया कवि जोड़ें") + "</h4>" +
-      "<div class=\"field\"><label>नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" /></div>" +
-      "<div class=\"two-fields\"><div class=\"field\"><label>जन्म तिथि / वर्ष</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? (ept.birth || "") : "") + "\" placeholder=\"जैसे: 11 जनवरी 1987\" /></div><div class=\"field\"><label>मृत्यु तिथि (वैकल्पिक — दिवंगत हेतु)</label><input id=\"f-poet-death\" value=\"" + esc(ept ? (ept.death || "") : "") + "\" placeholder=\"जीवित हों तो खाली छोड़ें\" /></div></div>" +
-      buildLocationCascadeHTML("adm-birth", "🏡 जन्म स्थान (देश • प्रदेश • शहर)", ept ? (ept.birthPlace || "") : "", ept ? ept.birthPlaceObj : null) +
-      buildLocationCascadeHTML("adm-curr", "📍 वर्तमान स्थान (देश • प्रदेश • शहर)", ept ? (ept.city || "") : "", ept ? ept.cityObj : null) +
-      "<div class=\"two-fields\"><div class=\"field\"><label>शिक्षा</label><input id=\"f-poet-edu\" value=\"" + esc(ept ? (ept.education || "") : "") + "\" /></div><div class=\"field\"><label>भूमिका / सम्प्रति</label><input id=\"f-poet-occ\" list=\"role-dl\" value=\"" + esc(ept ? (ept.occupation || "") : "") + "\" /><datalist id=\"role-dl\">" + ROLE_OPTIONS.map(function(r) { return "<option value=\"" + esc(r) + "\">"; }).join("") + "</datalist></div></div>" +
-      "<div class=\"field\"><label>मोबाइल (केवल एडमिन के लिए)</label><input id=\"f-poet-mobile\" value=\"" + esc(ept ? (ept.mobile || "") : "") + "\" /></div>" +
-      buildMultiGenreSelectorHTML("adm-poet", ept ? (ept.mainGenres || "") : "") +
-      "<div class=\"field\"><label>प्रकाशित कृतियाँ</label><input id=\"f-poet-pubs\" value=\"" + esc(ept ? (ept.publications || "") : "") + "\" /></div>" +
-      "<div class=\"field\"><label>प्रमुख सम्मान</label><input id=\"f-poet-awards\" value=\"" + esc(ept ? (ept.awards || "") : "") + "\" /></div>" +
-      "<div class=\"field\"><label>काव्य-मुद्रा</label><textarea id=\"f-poet-quote\" style=\"min-height:56px;\">" + esc(ept ? (ept.quote || "") : "") + "</textarea></div>" +
-      "<div class=\"field\"><label>विशेष / परिचय</label><textarea id=\"f-poet-special\" style=\"min-height:60px;\">" + esc(ept ? (ept.special || ept.bio || "") : "") + "</textarea></div>" +
-      "<div class=\"field\"><label>कवि चित्र (Photo)</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempPoetPhoto', 'poet-photo-prev', 320)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"poet-photo-prev\">" + (curPhoto ? ("<img src=\"" + curPhoto + "\">") : "✒️") + "</div><span style=\"font-size:12px; color:var(--text-muted);\">प्रोफ़ाइल के लिए स्पष्ट कवि चित्र चुनें</span></div></div>" +
-      "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer; color:var(--text);\"><input type=\"checkbox\" id=\"f-poet-hide-views\" " + ((ept && ept.hideViews) ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>👁️ मेरी कविता व प्रोफ़ाइल की ‘देखे जाने की संख्या’ (Views) छिपाएँ</span></label></div>" +
-      "<button type=\"button\" class=\"action-btn primary\" onclick=\"savePoetForm()\">💾 कवि सहेजें</button></div>" + state.poets.map(function(pt) {
-      var linkedAdm = state.admins.find(function(a) { return a.linkedPoetId === pt.id || (a.name || "").trim() === (pt.name || "").trim(); });
-      var promoFormHtml = (state.promotingPoetId === pt.id) ? (
-        "<div class=\"form-box\" style=\"margin-top:6px; margin-bottom:10px; border-color:var(--gold);\">" +
-          "<h5 class=\"section-title\" style=\"font-size:15px; margin-bottom:8px;\">👑 ‘" + esc(pt.name) + "’ को एडमिन में शामिल करें (कवि प्रोफ़ाइल सुरक्षित)</h5>" +
-          "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:8px;\">कवि की पूर्व प्रोफ़ाइल, चित्र व विवरण स्वतः संबद्ध रहेंगे—केवल एडमिन पद व दायित्व भरें:</div>" +
-          "<div class=\"two-fields\">" +
-            "<div class=\"field\"><label>एडमिन पद *</label><input id=\"f-promo-desig\" value=\"" + esc(linkedAdm ? linkedAdm.designation : "") + "\" placeholder=\"जैसे: सह-संयोजक / संचालक\" /></div>" +
-            "<div class=\"field\"><label>प्रदर्शन क्रम</label><input id=\"f-promo-order\" type=\"number\" value=\"" + esc(linkedAdm && linkedAdm.order ? linkedAdm.order : (state.admins.length + 1)) + "\" /></div>" +
-          "</div>" +
-          "<div class=\"field\"><label>एडमिन दायित्व / भूमिका</label><input id=\"f-promo-role\" value=\"" + esc(linkedAdm ? linkedAdm.role : (pt.occupation || "")) + "\" placeholder=\"जैसे: गोष्ठी संचालन व रचना संयोजन\" /></div>" +
-          "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
-            "<button type=\"button\" class=\"btn-approve\" onclick=\"savePromotedPoetAsAdmin(dec('" + arg(pt.id) + "'))\">✅ एडमिन में शामिल करें</button>" +
-            "<button type=\"button\" class=\"sm-btn\" onclick=\"cancelPromotePoetToAdmin()\">रद्द करें</button>" +
-          "</div>" +
-        "</div>"
-      ) : "";
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + (linkedAdm ? (" <span class=\"mini-badge\">👑 " + esc(linkedAdm.designation) + "</span>") : "") + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + (pt.ownerEmail ? (" • ✉️ " + esc(pt.ownerEmail)) : "") + (pt.mobile ? (" • 🔒 मो.: " + esc(pt.mobile)) : "") + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"startPromotePoetToAdmin(dec('" + arg(pt.id) + "'))\">" + (linkedAdm ? "👑 एडमिन पद बदलें" : "👑 एडमिन में शामिल करें") + "</button><button class=\"sm-btn\" onclick=\"editPoet(dec('" + arg(pt.id) + "'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deletePoet(dec('" + arg(pt.id) + "'))\">हटाएँ</button></div></div>" + promoFormHtml;
-    }).join("");
+    var curPtPhoto = state.tempPoetPhoto || (ept ? ept.photo : "");
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\">" + (ept ? "✏️ कवि प्रोफ़ाइल संपादित करें" : "➕ नई कवि प्रोफ़ाइल जोड़ें") + "</h4>" +
+        "<div class=\"field\"><label>कवि चित्र अपलोड करें</label><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\">" + (curPtPhoto ? ("<img src=\"" + curPtPhoto + "\">") : "✒️") + "</div><div style=\"flex:1;\"><input type=\"file\" accept=\"image/*\" onchange=\"handlePhotoUpload(event, 'poet')\" />" + (curPtPhoto ? ("<button type=\"button\" class=\"sm-btn del\" style=\"margin-top:6px;\" onclick=\"clearUploadedPhoto('poet')\">चित्र हटाएँ</button>") : "") + "</div></div></div>" +
+        "<div class=\"field\"><label>कवि का नाम *</label><input id=\"f-poet-name\" value=\"" + esc(ept ? ept.name : "") + "\" placeholder=\"कवि का पूरा नाम...\" /></div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>वर्तमान शहर *</label><input id=\"f-poet-city\" list=\"city-datalist\" value=\"" + esc(ept ? ept.city : "") + "\" placeholder=\"शहर लिखें या चुनें...\" /><datalist id=\"city-datalist\">" + CITY_OPTIONS.map(function(c) { return "<option value=\"" + esc(c) + "\"></option>"; }).join("") + "</datalist></div>" +
+          "<div class=\"field\"><label>जन्म तिथि</label><input id=\"f-poet-birth\" value=\"" + esc(ept ? ept.birth : "") + "\" placeholder=\"जैसे: 11 जनवरी 1987\" /></div>" +
+        "</div>" +
+        "<div class=\"field\"><label>साहित्यिक परिचय</label><textarea id=\"f-poet-bio\" placeholder=\"परिचय लिखें...\">" + esc(ept ? ept.bio : "") + "</textarea></div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\"><button type=\"button\" class=\"action-btn primary\" onclick=\"savePoetFromAdmin()\">" + (ept ? "अपडेट करें" : "सहेजें") + "</button>" + (ept ? ("<button type=\"button\" class=\"action-btn\" onclick=\"state.editingPoetId=null; state.tempPoetPhoto=''; renderAdminStudio()\">रद्द करें</button>") : "") + "</div>" +
+      "</div>" +
+      state.poets.map(function(pt) {
+        return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(pt.name) + "</div><div class=\"admin-item-sub\">📍 " + esc(pt.city || "") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"sm-btn\" onclick=\"editPoetInAdmin(dec('" + arg(pt.id) + "'))\">संपादित</button><button type=\"button\" class=\"sm-btn del\" onclick=\"deletePoetInAdmin(dec('" + arg(pt.id) + "'))\">हटाएँ</button></div></div>";
+      }).join("");
   } else if (state.adminTab === "admins") {
-    var ea = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
-    var curPhotoA = state.tempAdminPhoto || (ea ? ea.photo : "");
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">" + (ea ? "✏️ एडमिन संपादित करें (कवि प्रोफ़ाइल से स्वतः सिंक)" : "➕ नया एडमिन जोड़ें (कवि प्रोफ़ाइल भी स्वतः बनेगी/जुड़ेगी)") + "</h4><div class=\"field\"><label>नाम *</label><input id=\"f-adm-name\" value=\"" + esc(ea ? ea.name : "") + "\" /></div><div class=\"two-fields\"><div class=\"field\"><label>पद *</label><input id=\"f-adm-desig\" value=\"" + esc(ea ? ea.designation : "") + "\" /></div><div class=\"field\"><label>ईमेल (कवि व एडमिन खाता सिंक हेतु)</label><input id=\"f-adm-email\" type=\"email\" value=\"" + esc(ea ? (ea.ownerEmail || "") : "") + "\" placeholder=\"name@gmail.com\" /></div></div><div class=\"field\"><label>स्थान</label><input id=\"f-adm-city\" value=\"" + esc(ea ? (ea.city || "") : "") + "\" /></div><div class=\"field\"><label>दायित्व / परिचय</label><textarea id=\"f-adm-role\" style=\"min-height:60px;\">" + esc(ea ? (ea.role || "") : "") + "</textarea></div><div class=\"field\"><label>फ़ोटो</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempAdminPhoto', 'adm-photo-prev', 280)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" id=\"adm-photo-prev\">" + (curPhotoA ? ("<img src=\"" + curPhotoA + "\">") : "👑") + "</div></div></div><button class=\"action-btn primary\" onclick=\"saveAdminMemberForm()\">💾 एडमिन व कवि प्रोफ़ाइल सिंक कर सहेजें</button></div>" + state.admins.map(function(a) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(a.name) + "</div><div class=\"admin-item-sub\">" + esc(a.designation) + "</div></div><div class=\"admin-item-btns\"><button class=\"sm-btn\" onclick=\"editAdminMember(dec(\'" + arg(a.id) + "\'))\">संपादित</button><button class=\"sm-btn del\" onclick=\"deleteAdminMember(dec(\'" + arg(a.id) + "\'))\">हटाएँ</button></div></div>";
-    }).join("");
-  } else if (state.adminTab === "events") {
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">➕ नया कार्यक्रम</h4><div class=\"field\"><label>नाम *</label><input id=\"f-evt-title\" /></div><div class=\"two-fields\"><div class=\"field\"><label>तिथि</label><input id=\"f-evt-date\" /></div><div class=\"field\"><label>समय</label><input id=\"f-evt-time\" /></div></div><div class=\"field\"><label>विवरण</label><textarea id=\"f-evt-desc\"></textarea></div><button class=\"action-btn primary\" onclick=\"saveEventForm()\">💾 कार्यक्रम सहेजें</button></div>" + state.events.map(function(e) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(e.title) + "</div></div><button class=\"sm-btn del\" onclick=\"deleteEvent(dec(\'" + arg(e.id) + "\'))\">हटाएँ</button></div>";
-    }).join("");
-  } else if (state.adminTab === "videos") {
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">➕ नया YouTube वीडियो</h4><div class=\"field\"><label>शीर्षक *</label><input id=\"f-vid-title\" /></div><div class=\"field\"><label>YouTube लिंक *</label><input id=\"f-vid-url\" /></div><button class=\"action-btn primary\" onclick=\"saveVideoForm()\">💾 वीडियो सहेजें</button></div>" + state.videos.map(function(v) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(v.title) + "</div></div><button class=\"sm-btn del\" onclick=\"deleteVideo(dec(\'" + arg(v.id) + "\'))\">हटाएँ</button></div>";
-    }).join("");
-  } else if (state.adminTab === "competition") {
-    var c = state.competition || DEFAULT_COMPETITION;
-    contentHtml = "<div class=\"form-box\"><h4 class=\"section-title\" style=\"margin-bottom:10px;\">🏆 प्रतियोगिता अपडेट</h4><div class=\"field\"><label>शीर्षक</label><input id=\"f-cmp-title\" value=\"" + esc(c.title) + "\" /></div><div class=\"two-fields\"><div class=\"field\"><label>🥇 प्रथम</label><input id=\"f-cmp-p1\" value=\"" + esc(c.prize1) + "\" /></div><div class=\"field\"><label>🥈 द्वितीय</label><input id=\"f-cmp-p2\" value=\"" + esc(c.prize2) + "\" /></div></div><div class=\"field\"><label>🥉 तृतीय</label><input id=\"f-cmp-p3\" value=\"" + esc(c.prize3) + "\" /></div><button class=\"action-btn primary\" onclick=\"saveCompetitionForm()\">💾 सहेजें</button></div>";
+    var ead = state.editingAdminId ? state.admins.find(function(x) { return x.id === state.editingAdminId; }) : null;
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\">" + (ead ? "✏️ एडमिन प्रोफ़ाइल संपादित करें" : "➕ नया एडमिन सदस्य जोड़ें") + "</h4>" +
+        "<div class=\"field\"><label>नाम *</label><input id=\"f-adm-name\" value=\"" + esc(ead ? ead.name : "") + "\" placeholder=\"पूरा नाम...\" /></div>" +
+        "<div class=\"field\"><label>पद / दायित्व *</label><input id=\"f-adm-desig\" value=\"" + esc(ead ? ead.designation : "") + "\" placeholder=\"जैसे: संयोजक / संचालक\" /></div>" +
+        "<div class=\"field\"><label>शहर</label><input id=\"f-adm-city\" list=\"city-datalist\" value=\"" + esc(ead ? ead.city : "") + "\" /></div>" +
+        "<div class=\"field\"><label>परिचय</label><textarea id=\"f-adm-bio\">" + esc(ead ? ead.bio : "") + "</textarea></div>" +
+        "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\"><button type=\"button\" class=\"action-btn primary\" onclick=\"saveAdminFromAdmin()\">" + (ead ? "अपडेट करें" : "सहेजें") + "</button>" + (ead ? ("<button type=\"button\" class=\"action-btn\" onclick=\"state.editingAdminId=null; state.tempAdminPhoto=''; renderAdminStudio()\">रद्द करें</button>") : "") + "</div>" +
+      "</div>" +
+      state.admins.map(function(a) {
+        return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(a.name) + "</div><div class=\"admin-item-sub\">" + esc(a.designation) + " • " + esc(a.city || "") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"sm-btn\" onclick=\"editAdminInAdmin(dec('" + arg(a.id) + "'))\">संपादित</button><button type=\"button\" class=\"sm-btn del\" onclick=\"deleteAdminInAdmin(dec('" + arg(a.id) + "'))\">हटाएँ</button></div></div>";
+      }).join("");
   } else if (state.adminTab === "ebooks") {
     contentHtml =
       "<div class=\"form-box\">" +
-        "<h4 class=\"section-title\" style=\"margin-bottom:10px;\">📚 पुस्तक लाइब्रेरी में नई PDF पुस्तक जोड़ें</h4>" +
-        "<div class=\"field\"><label>पुस्तक का नाम *</label><input id=\"f-eb-title\" placeholder=\"जैसे: गीतांजलि काव्य संकलन\" /></div>" +
-        "<div class=\"two-fields\">" +
-          "<div class=\"field\"><label>लेखक / संपादक *</label><input id=\"f-eb-author\" placeholder=\"कवि / लेखक का नाम\" /></div>" +
-          "<div class=\"field\"><label>श्रेणी (ड्रॉप-डाउन)</label><select id=\"f-eb-cat\">" + EBOOK_CATEGORY_OPTIONS.map(function(cat) { return "<option value=\"" + esc(cat) + "\">" + esc(cat) + "</option>"; }).join("") + "</select></div>" +
-        "</div>" +
-        "<div class=\"field\"><label>संक्षिप्त परिचय</label><textarea id=\"f-eb-desc\" style=\"min-height:60px;\" placeholder=\"पुस्तक के विषय में दो पंक्तियाँ...\"></textarea></div>" +
-        "<div class=\"field\"><label>📄 PDF फ़ाइल अपलोड करें (सीधे फोन/कंप्यूटर से)</label><input type=\"file\" accept=\"application/pdf,.pdf\" onchange=\"handlePdfUpload(this)\" /><div id=\"pdf-file-status\" style=\"font-size:12px; color:var(--primary); margin-top:4px; font-weight:600;\">" + (state.tempEbookPdfName ? ("✅ चुना गया: " + esc(state.tempEbookPdfName)) : "अधिकतम साइज: 100 MB (1,02,400 KB) तक — या नीचे Google Drive / वेब PDF लिंक दें") + "</div></div>" +
-        "<div class=\"field\"><label>बाहरी PDF / ड्राइव लिंक (वैकल्पिक)</label><input id=\"f-eb-link\" placeholder=\"https://...\" /></div>" +
-        "<button class=\"action-btn primary\" onclick=\"saveEbookForm()\">💾 लाइब्रेरी में जोड़ें</button>" +
-      "</div>" + state.ebooks.map(function(b) {
-      return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(b.title) + ((b.pdfUrl || b.pdfData || b.link) ? " 📄✓" : " 📱(केवल यह डिवाइस)") + "</div><div class=\"admin-item-sub\">" + esc(b.author || "") + " • " + esc(b.category || "") + "</div></div><button class=\"sm-btn del\" onclick=\"deleteEbook(dec(\'" + arg(b.id) + "\'))\">हटाएँ</button></div>";
-    }).join("");
-  } else if (state.adminTab === "certificate") {
+        "<h4 class=\"section-title\">📚 नई पुस्तक / पीडीएफ ई-बुक जोड़ें</h4>" +
+        "<div class=\"field\"><label>पुस्तक का शीर्षक *</label><input id=\"f-eb-title\" placeholder=\"पुस्तक का नाम...\" /></div>" +
+        "<div class=\"field\"><label>लेखक / संपादक *</label><input id=\"f-eb-author\" placeholder=\"लेखक या संपादक का नाम...\" /></div>" +
+        "<div class=\"field\"><label>PDF फ़ाइल अपलोड करें</label><input type=\"file\" accept=\"application/pdf,.pdf\" onchange=\"handleEbookPdfUpload(event)\" /></div>" +
+        "<div class=\"field\"><label>विवरण</label><textarea id=\"f-eb-desc\"></textarea></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" onclick=\"addEbookFromAdmin()\">पुस्तक जोड़ें</button>" +
+      "</div>" +
+      state.ebooks.map(function(b) {
+        return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(b.title) + "</div><div class=\"admin-item-sub\">" + esc(b.author) + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"sm-btn del\" onclick=\"deleteEbookInAdmin(dec('" + arg(b.id) + "'))\">हटाएँ</button></div></div>";
+      }).join("");
+  } else if (state.adminTab === "events") {
     contentHtml =
       "<div class=\"form-box\">" +
-      "<h4 class=\"section-title\" style=\"margin-bottom:8px;\">🏅 शाही साहित्यिक सम्मान-पत्र स्टूडियो</h4>" +
-      "<div class=\"field\"><label>सम्मान-पत्र शीर्षक</label><input id=\"cert-title-in\" value=\"" + esc(state.certTitle) + "\" oninput=\"state.certTitle=this.value; drawCertificateCanvas(false)\" /></div>" +
-      "<div class=\"field\"><label>सम्मानित रचनाकार का नाम *</label><input id=\"cert-name-in\" value=\"" + esc(state.certName) + "\" placeholder=\"जैसे: सुश्री विनीता श्रीवास्तव\" oninput=\"state.certName=this.value; drawCertificateCanvas(false)\" /></div>" +
-      "<div class=\"field\"><label>सम्मान / उपाधि</label><input id=\"cert-award-in\" value=\"" + esc(state.certAward) + "\" oninput=\"state.certAward=this.value; drawCertificateCanvas(false)\" /></div>" +
-      "<div class=\"field\"><label>प्रशस्ति वचन</label><textarea id=\"cert-reason-in\" style=\"min-height:62px;\" oninput=\"state.certReason=this.value; drawCertificateCanvas(false)\">" + esc(state.certReason) + "</textarea></div>" +
-      "<div class=\"two-fields\"><div class=\"field\"><label>दिनांक</label><input id=\"cert-date-in\" value=\"" + esc(state.certDate) + "\" oninput=\"state.certDate=this.value; drawCertificateCanvas(false)\" /></div><div class=\"field\"><label>हस्ताक्षर / संयोजक</label><input id=\"cert-sign-in\" value=\"" + esc(state.certSign) + "\" oninput=\"state.certSign=this.value; drawCertificateCanvas(false)\" /></div></div>" +
-      "<img id=\"cert-preview-img\" class=\"cert-preview-img\" alt=\"सम्मान-पत्र\" />" +
-      "<div style=\"text-align:center;\"><button class=\"action-btn gold\" onclick=\"drawCertificateCanvas(true)\">⬇️ HD सम्मान-पत्र (PNG) डाउनलोड करें</button></div>" +
+        "<h4 class=\"section-title\">📅 नया कार्यक्रम जोड़ें</h4>" +
+        "<div class=\"field\"><label>कार्यक्रम का नाम *</label><input id=\"f-evt-title\" /></div>" +
+        "<div class=\"two-fields\"><div class=\"field\"><label>तिथि</label><input id=\"f-evt-date\" /></div><div class=\"field\"><label>समय</label><input id=\"f-evt-time\" /></div></div>" +
+        "<div class=\"field\"><label>विवरण</label><textarea id=\"f-evt-desc\"></textarea></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" onclick=\"addEventFromAdmin()\">कार्यक्रम जोड़ें</button>" +
+      "</div>" +
+      state.events.map(function(ev) {
+        return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + esc(ev.title) + "</div><div class=\"admin-item-sub\">" + esc(ev.date || "") + " • " + esc(ev.time || "") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"sm-btn del\" onclick=\"deleteEventInAdmin(dec('" + arg(ev.id) + "'))\">हटाएँ</button></div></div>";
+      }).join("");
+  } else if (state.adminTab === "videos") {
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\">🎬 नया वीडियो / लाइव लिंक जोड़ें</h4>" +
+        "<div class=\"field\"><label>शीर्षक *</label><input id=\"f-vid-title\" /></div>" +
+        "<div class=\"field\"><label>YouTube / वीडियो लिंक *</label><input id=\"f-vid-url\" /></div>" +
+        "<div class=\"field\"><label>विवरण</label><textarea id=\"f-vid-desc\"></textarea></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" onclick=\"addVideoFromAdmin()\">वीडियो जोड़ें</button>" +
+      "</div>" +
+      state.videos.map(function(v) {
+        return "<div class=\"admin-list-item\"><div class=\"admin-item-info\"><div class=\"admin-item-title\">" + (v.isLive ? "🔴 LIVE • " : "") + esc(v.title) + "</div><div class=\"admin-item-sub\">" + esc(v.url || "") + "</div></div><div class=\"admin-item-btns\"><button type=\"button\" class=\"sm-btn del\" onclick=\"deleteVideoInAdmin(dec('" + arg(v.id) + "'))\">हटाएँ</button></div></div>";
+      }).join("");
+  } else if (state.adminTab === "competition") {
+    var c = state.competition || DEFAULT_COMPETITION;
+    contentHtml =
+      "<div class=\"form-box\">" +
+        "<h4 class=\"section-title\">🏆 प्रतियोगिता विवरण</h4>" +
+        "<div class=\"field\"><label>शीर्षक</label><input id=\"f-comp-title\" value=\"" + esc(c.title) + "\" /></div>" +
+        "<div class=\"two-fields\"><div class=\"field\"><label>प्रथम पुरस्कार</label><input id=\"f-comp-p1\" value=\"" + esc(c.prize1) + "\" /></div><div class=\"field\"><label>द्वितीय पुरस्कार</label><input id=\"f-comp-p2\" value=\"" + esc(c.prize2) + "\" /></div></div>" +
+        "<div class=\"field\"><label>नियम</label><textarea id=\"f-comp-rules\">" + esc(c.rules) + "</textarea></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" onclick=\"saveCompetitionFromAdmin()\">प्रतियोगिता सहेजें</button>" +
       "</div>";
-    setTimeout(function() { drawCertificateCanvas(false); }, 30);
-  } else {
-    var s = state.settings; var curLogo = state.tempLogoData || s.logo || "";
+  } else if (state.adminTab === "settings") {
+    var s = state.settings || DEFAULT_SETTINGS;
     contentHtml =
       "<div class=\"form-box\">" +
-        "<h4 class=\"section-title\" style=\"margin-bottom:10px;\">⚙️ लोगो, एडमिन ईमेल व पिन</h4>" +
-        "<div class=\"field\"><label>लोगो अपलोड करें</label><input type=\"file\" accept=\"image/*\" onchange=\"handleImageUpload(this, 'tempLogoData', 'adm-logo-prev', 320, true)\" /><div class=\"photo-preview-row\"><div class=\"photo-preview-thumb\" style=\"border-radius:50%;\" id=\"adm-logo-prev\">" + (curLogo ? ("<img src=\"" + curLogo + "\">") : "🪔") + "</div></div></div>" +
+        "<h4 class=\"section-title\">⚙️ मंच सेटिंग्स</h4>" +
         "<div class=\"field\"><label>ऐप का नाम</label><input id=\"f-set-name\" value=\"" + esc(s.appName) + "\" /></div>" +
-        "<div class=\"field\"><label>पंजीकृत एडमिन ईमेल</label><input id=\"f-set-adm-email\" type=\"email\" value=\"" + esc(s.adminEmail || "") + "\" /></div>" +
-        "<div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin) + "\" /></div>" +
-        "<div class=\"field\"><label>✨ Google Gemini मुफ़्त API Key (वैकल्पिक — इन-ऐप AI उत्तर हेतु)</label><input id=\"f-set-gemini-key\" type=\"password\" value=\"" + esc(s.geminiApiKey || "") + "\" placeholder=\"AIza... (यदि खाली छोड़ें तो मुफ़्त बैकअप AI स्वतः चलेगा)\" /></div>" +
-      "</div>" +
-      "<div class=\"form-box\" style=\"border-color:var(--gold);\">" +
-        "<h4 class=\"section-title\" style=\"margin-bottom:6px;\">📡 LiveKit / SFU व कस्टम TURN रिले सेटअप</h4>" +
-        "<div style=\"font-size:12px; color:var(--text-muted); margin-bottom:10px;\">देशभर के अलग-अलग मोबाइल नेटवर्क व बड़ी कॉन्फ्रेंस के लिए अपना LiveKit/SFU सर्वर या कस्टम TURN रिले यहाँ जोड़ें (वैकल्पिक — खाली रहने पर निःशुल्क अंतर्निहित रिले स्वतः चलेगा)।</div>" +
-        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer;\"><input type=\"checkbox\" id=\"f-set-sfu-enabled\" " + (s.sfuEnabled ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>SFU / LiveKit मीडिया सर्वर सक्रिय करें</span></label></div>" +
-        "<div class=\"two-fields\">" +
-          "<div class=\"field\"><label>मीडिया मोड / प्रदाता</label><select id=\"f-set-sfu-provider\"><option value=\"auto-sfu-mesh\" " + ((s.sfuProvider || "auto-sfu-mesh") === "auto-sfu-mesh" ? "selected" : "") + ">ऑटो (SFU + P2P रिले)</option><option value=\"livekit\" " + (s.sfuProvider === "livekit" ? "selected" : "") + ">LiveKit Cloud / Self-Hosted</option><option value=\"mediasoup\" " + (s.sfuProvider === "mediasoup" ? "selected" : "") + ">mediasoup / Custom SFU</option></select></div>" +
-          "<div class=\"field\"><label>SFU / LiveKit WebSocket URL</label><input id=\"f-set-sfu-url\" value=\"" + esc(s.sfuEndpoint || "") + "\" placeholder=\"wss://your-project.livekit.cloud\" /></div>" +
-        "</div>" +
-        "<div class=\"two-fields\">" +
-          "<div class=\"field\"><label>Token Endpoint URL (वैकल्पिक)</label><input id=\"f-set-sfu-token-url\" value=\"" + esc(s.sfuTokenEndpoint || "") + "\" placeholder=\"https://.../get-livekit-token\" /></div>" +
-          "<div class=\"field\"><label>Static Token / API Key</label><input id=\"f-set-sfu-key\" type=\"password\" value=\"" + esc(s.sfuApiKey || "") + "\" placeholder=\"टोकन या कुंजी\" /></div>" +
-        "</div>" +
-        "<div class=\"field\"><label>कस्टम TURN Server URL (Coturn / Metered)</label><input id=\"f-set-turn-url\" value=\"" + esc(s.customTurnUrl || "") + "\" placeholder=\"turn:your-turn.example.com:3478?transport=tcp\" /></div>" +
-        "<div class=\"two-fields\">" +
-          "<div class=\"field\"><label>TURN Username</label><input id=\"f-set-turn-user\" value=\"" + esc(s.customTurnUsername || "") + "\" placeholder=\"username\" /></div>" +
-          "<div class=\"field\"><label>TURN Credential / Password</label><input id=\"f-set-turn-pass\" type=\"password\" value=\"" + esc(s.customTurnCredential || "") + "\" placeholder=\"password\" /></div>" +
-        "</div>" +
-        "<div class=\"field\"><label style=\"display:inline-flex; align-items:center; gap:7px; cursor:pointer;\"><input type=\"checkbox\" id=\"f-set-force-relay\" " + (s.forceTurnRelay ? "checked" : "") + " style=\"width:auto; margin:0;\" /><span>सख्त फ़ायरवॉल मोड (केवल TURN रिले मार्ग उपयोग करें)</span></label></div>" +
-      "</div>" +
-      "<button class=\"action-btn primary\" style=\"width:100%;\" onclick=\"saveSettingsForm()\">💾 सभी सेटिंग्स सहेजें</button>";
+        "<div class=\"field\"><label>टैगलाइन</label><input id=\"f-set-tag\" value=\"" + esc(s.tagline) + "\" /></div>" +
+        "<div class=\"field\"><label>एडमिन पिन</label><input id=\"f-set-pin\" value=\"" + esc(s.adminPin || "1234") + "\" /></div>" +
+        "<div class=\"field\"><label>परिचय</label><textarea id=\"f-set-about\">" + esc(s.aboutText) + "</textarea></div>" +
+        "<button type=\"button\" class=\"action-btn primary\" onclick=\"saveSettingsFromAdmin()\">सेटिंग्स सहेजें</button>" +
+      "</div>";
   }
 
-  var unreadMsgs = state.messages.filter(function(m) { return !m.adminReply; }).length;
   body.innerHTML =
     "<div class=\"admin-tabs\">" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "approvals" ? "active" : "") + "\" onclick=\"setAdminTab(\'approvals\')\">⏳ स्वीकृति (" + (state.pendingPoems.length + state.pendingPoets.length) + ")</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "messages" ? "active" : "") + "\" onclick=\"setAdminTab(\'messages\')\">✉️ संदेश (" + unreadMsgs + ")</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "poems" ? "active" : "") + "\" onclick=\"setAdminTab(\'poems\')\">📜 रचनाएँ</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "poets" ? "active" : "") + "\" onclick=\"setAdminTab(\'poets\')\">✒️ कवि</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "admins" ? "active" : "") + "\" onclick=\"setAdminTab(\'admins\')\">👑 एडमिन</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "ebooks" ? "active" : "") + "\" onclick=\"setAdminTab(\'ebooks\')\">📚 लाइब्रेरी</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "events" ? "active" : "") + "\" onclick=\"setAdminTab(\'events\')\">📅 कार्यक्रम</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "videos" ? "active" : "") + "\" onclick=\"setAdminTab(\'videos\')\">🎬 वीडियो</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "competition" ? "active" : "") + "\" onclick=\"setAdminTab(\'competition\')\">🏆 प्रतियोगिता</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "certificate" ? "active" : "") + "\" onclick=\"setAdminTab(\'certificate\')\">🏅 सम्मान-पत्र</button>" +
-    "<button class=\"admin-tab-btn " + (state.adminTab === "settings" ? "active" : "") + "\" onclick=\"setAdminTab(\'settings\')\">⚙️ सेटिंग्स</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "sahitya_pick" ? "active" : "") + "\" onclick=\"setAdminTab('sahitya_pick')\">📖 चौपाल साहित्य (" + sahityaIds.length + ")</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "poems" ? "active" : "") + "\" onclick=\"setAdminTab('poems')\">📜 रचनाएँ</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "poets" ? "active" : "") + "\" onclick=\"setAdminTab('poets')\">✒️ कवि</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "admins" ? "active" : "") + "\" onclick=\"setAdminTab('admins')\">👑 एडमिन</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "messages" ? "active" : "") + "\" onclick=\"setAdminTab('messages')\">✉️ संदेश</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "ebooks" ? "active" : "") + "\" onclick=\"setAdminTab('ebooks')\">📚 लाइब्रेरी</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "events" ? "active" : "") + "\" onclick=\"setAdminTab('events')\">📅 कार्यक्रम</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "videos" ? "active" : "") + "\" onclick=\"setAdminTab('videos')\">🎬 वीडियो</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "competition" ? "active" : "") + "\" onclick=\"setAdminTab('competition')\">🏆 प्रतियोगिता</button>" +
+      "<button class=\"admin-tab-btn " + (state.adminTab === "settings" ? "active" : "") + "\" onclick=\"setAdminTab('settings')\">⚙️ सेटिंग्स</button>" +
     "</div>" + contentHtml;
 }
 
