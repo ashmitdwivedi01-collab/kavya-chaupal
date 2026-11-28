@@ -16475,7 +16475,7 @@ function renderStudioPane() {
     if (!st.lowerThirdCity) st.lowerThirdCity = "लखनऊ";
     if (!st.lowerThirdPoem) st.lowerThirdPoem = "सजीव काव्य पाठ";
     if (!st.guestPoetName) st.guestPoetName = "";
-    if (!st.mediaStatusText) st.mediaStatusText = "कैमरा/माइक तैयार — ‘📷 कैमरा चलाएँ’ या ‘🔴 लाइव शुरू करें’ दबाएँ";
+    if (!st.mediaStatusText) st.mediaStatusText = "कैमरा/माइक तैयार — ‘📷 कैमरा’ या ‘🔴 लाइव शुरू करें’ दबाएँ";
     if (!Array.isArray(st.savedLives)) st.savedLives = [];
     if (!st.pendingEndChoice) st.pendingEndChoice = false;
     return st;
@@ -16701,7 +16701,6 @@ function renderStudioPane() {
   };
 
   window.finalizeEndLiveAction = function(actionMode) {
-    // actionMode: "publish_app" | "save_archive" | "delete"
     var st = ensureStudioState();
     st.isLiveOnApp = false;
     st.pendingEndChoice = false;
@@ -16723,7 +16722,6 @@ function renderStudioPane() {
       savedAt: Date.now()
     };
 
-    // Remove temporary 'live_broadcast_current' active banner item first
     if (typeof state !== "undefined" && Array.isArray(state.videos)) {
       state.videos = state.videos.filter(function(v) { return v && v.id !== "live_broadcast_current"; });
     }
@@ -16813,14 +16811,14 @@ function renderStudioPane() {
     var endChoiceOverlayHtml = "";
     if (st.pendingEndChoice) {
       endChoiceOverlayHtml =
-        "<div style="position:relative; z-index:10090; margin-bottom:8px; padding:12px; border-radius:14px; background:rgba(28,8,13,0.96); border:2px solid #F7DC8B; color:#FFFDF7;">" +
-          "<div style="font-size:13px; font-weight:800; color:#FCE49C; margin-bottom:6px;">⏹️ लाइव समाप्त करने का विकल्प चुनें:</div>" +
-          "<div style="font-size:11.5px; color:rgba(255,253,247,0.85); margin-bottom:10px;">क्या आप इस लाइव सत्र को ऐप पर प्रसारित/प्रकाशित करना चाहते हैं, रिकॉर्डिंग में सहेजना चाहते हैं, या डिलीट करना चाहते हैं?</div>" +
-          "<div style="display:flex; gap:6px; flex-wrap:wrap;">" +
-            "<button type="button" class="btn-approve" style="padding:7px 11px; font-size:12px;" onclick="finalizeEndLiveAction('publish_app')">📺 ऐप पर प्रसारित करें</button>" +
-            "<button type="button" class="action-btn gold" style="padding:7px 11px; font-size:12px;" onclick="finalizeEndLiveAction('save_archive')">💾 रिकॉर्डिंग में सहेजें</button>" +
-            "<button type="button" class="btn-reject" style="padding:7px 11px; font-size:12px;" onclick="finalizeEndLiveAction('delete')">🗑️ डिलीट करें</button>" +
-            "<button type="button" class="sm-btn" style="padding:7px 10px; font-size:12px;" onclick="cancelEndLiveChoice()">रद्द करें</button>" +
+        "<div style=\"position:relative; z-index:10090; margin-bottom:8px; padding:12px; border-radius:14px; background:rgba(28,8,13,0.96); border:2px solid #F7DC8B; color:#FFFDF7;\">" +
+          "<div style=\"font-size:13px; font-weight:800; color:#FCE49C; margin-bottom:6px;\">⏹️ लाइव समाप्त करने का विकल्प चुनें:</div>" +
+          "<div style=\"font-size:11.5px; color:rgba(255,253,247,0.85); margin-bottom:10px;\">क्या आप इस लाइव सत्र को ऐप पर प्रसारित/प्रकाशित करना चाहते हैं, रिकॉर्डिंग में सहेजना चाहते हैं, या डिलीट करना चाहते हैं?</div>" +
+          "<div style=\"display:flex; gap:6px; flex-wrap:wrap;\">" +
+            "<button type=\"button\" class=\"btn-approve\" style=\"padding:7px 11px; font-size:12px;\" onclick=\"finalizeEndLiveAction('publish_app')\">📺 ऐप पर प्रसारित करें</button>" +
+            "<button type=\"button\" class=\"action-btn gold\" style=\"padding:7px 11px; font-size:12px;\" onclick=\"finalizeEndLiveAction('save_archive')\">💾 रिकॉर्डिंग में सहेजें</button>" +
+            "<button type=\"button\" class=\"btn-reject\" style=\"padding:7px 11px; font-size:12px;\" onclick=\"finalizeEndLiveAction('delete')\">🗑️ डिलीट करें</button>" +
+            "<button type=\"button\" class=\"sm-btn\" style=\"padding:7px 10px; font-size:12px;\" onclick=\"cancelEndLiveChoice()\">रद्द करें</button>" +
           "</div>" +
         "</div>";
     }
@@ -16828,117 +16826,117 @@ function renderStudioPane() {
     var archiveSectionHtml = "";
     if (mode === "archive") {
       archiveSectionHtml =
-        "<div class="form-box" style="border:1.5px solid var(--gold); margin-bottom:14px;">" +
-          "<h3 class="section-title" style="margin:0 0 10px;">💾 लाइव रिकॉर्डिंग व डिलीट (" + st.savedLives.length + ")</h3>" +
+        "<div class=\"form-box\" style=\"border:1.5px solid var(--gold); margin-bottom:14px;\">" +
+          "<h3 class=\"section-title\" style=\"margin:0 0 10px;\">💾 लाइव रिकॉर्डिंग व डिलीट (" + st.savedLives.length + ")</h3>" +
           (st.savedLives.length
             ? st.savedLives.map(function(rec) {
-                return "<div class="admin-list-item">" +
-                  "<div class="admin-item-info">" +
-                    "<div class="admin-item-title">" + String(rec.title || "").replace(/</g,"&lt;") + "</div>" +
-                    "<div class="admin-item-sub">✒️ " + String(rec.poet || "") + " • " + String(rec.platform || "") + " • " + String(rec.durationText || "") + "</div>" +
+                return "<div class=\"admin-list-item\">" +
+                  "<div class=\"admin-item-info\">" +
+                    "<div class=\"admin-item-title\">" + String(rec.title || "").replace(/</g,"&lt;") + "</div>" +
+                    "<div class=\"admin-item-sub\">✒️ " + String(rec.poet || "") + " • " + String(rec.platform || "") + " • " + String(rec.durationText || "") + "</div>" +
                   "</div>" +
-                  "<div class="admin-item-btns">" +
-                    (rec.url ? ("<a class="sm-btn" href="" + String(rec.url).replace(/"/g,"&quot;") + "" target="_blank" rel="noopener">खोलें ↗</a>") : "") +
-                    "<button type="button" class="sm-btn del" onclick="deleteSavedLiveRecording('" + rec.id + "')">🗑️ डिलीट</button>" +
+                  "<div class=\"admin-item-btns\">" +
+                    (rec.url ? ("<a class=\"sm-btn\" href=\"" + String(rec.url).replace(/"/g,"&quot;") + "\" target=\"_blank\" rel=\"noopener\">खोलें ↗</a>") : "") +
+                    "<button type=\"button\" class=\"sm-btn del\" onclick=\"deleteSavedLiveRecording('" + rec.id + "')\">🗑️ डिलीट</button>" +
                   "</div>" +
                 "</div>";
               }).join("")
-            : "<div class="empty-box">अभी कोई लाइव रिकॉर्डिंग सहेजी नहीं गई है। लाइव समाप्त करते समय आप ‘रिकॉर्डिंग में सहेजें’ या ‘ऐप पर प्रसारित करें’ चुन सकते हैं।</div>") +
+            : "<div class=\"empty-box\">अभी कोई लाइव रिकॉर्डिंग सहेजी नहीं गई है। लाइव समाप्त करते समय आप ‘रिकॉर्डिंग में सहेजें’ या ‘ऐप पर प्रसारित करें’ चुन सकते हैं।</div>") +
         "</div>";
     }
 
     studioBox.innerHTML =
-      "<div style="display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px;">" +
-        "<button type="button" class="back-bar" style="margin-bottom:0;" onclick="restoreManchGridAndTabs(); setManchSub('events');">← मंच के सभी विकल्प</button>" +
-        "<button type="button" class="sm-btn" onclick="restoreManchGridAndTabs(); setManchSub('events');">📅 कार्यक्रम</button>" +
-        "<button type="button" class="sm-btn" onclick="restoreManchGridAndTabs(); setManchSub('videos');">🎬 वीडियो</button>" +
-        "<button type="button" class="sm-btn" onclick="restoreManchGridAndTabs(); setManchSub('competition');">🏆 प्रतियोगिता</button>" +
-        "<button type="button" class="sm-btn" onclick="restoreManchGridAndTabs(); setManchSub('ebooks');">📚 लाइब्रेरी</button>" +
-        "<button type="button" class="sm-btn" onclick="restoreManchGridAndTabs(); setManchSub('matra');">⚖️ मात्रा गणक</button>" +
-        "<button type="button" class="sm-btn" onclick="restoreManchGridAndTabs(); setManchSub('antakshari');">🔤 अंताक्षरी</button>" +
+      "<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px;\">" +
+        "<button type=\"button\" class=\"back-bar\" style=\"margin-bottom:0;\" onclick=\"restoreManchGridAndTabs(); setManchSub('events');\">← मंच के सभी विकल्प</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('events');\">📅 कार्यक्रम</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('videos');\">🎬 वीडियो</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('competition');\">🏆 प्रतियोगिता</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('ebooks');\">📚 लाइब्रेरी</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('matra');\">⚖️ मात्रा गणक</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('antakshari');\">🔤 अंताक्षरी</button>" +
       "</div>" +
-      "<div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;">" +
-        "<button type="button" class="social-subbtn " + (mode === "live" ? "active" : "") + "" onclick="window.chaupalStudioState.subMode='live'; openChaupalStudioNow();">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
-        "<button type="button" class="social-subbtn " + (mode === "archive" ? "active" : "") + "" onclick="window.chaupalStudioState.subMode='archive'; openChaupalStudioNow();">💾 लाइव रिकॉर्डिंग व डिलीट (" + st.savedLives.length + ")</button>" +
+      "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;\">" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "live" ? "active" : "") + "\" onclick=\"window.chaupalStudioState.subMode='live'; openChaupalStudioNow();\">🔴 ऐप पर लाइव (FB/YT/RTMP)</button>" +
+        "<button type=\"button\" class=\"social-subbtn " + (mode === "archive" ? "active" : "") + "\" onclick=\"window.chaupalStudioState.subMode='archive'; openChaupalStudioNow();\">💾 लाइव रिकॉर्डिंग व डिलीट (" + st.savedLives.length + ")</button>" +
       "</div>" +
       archiveSectionHtml +
-      "<div class="form-box" style="border:1.5px solid var(--gold);">" +
-        "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;">" +
-          "<h3 class="section-title" style="margin:0;">🔴 चौपाल स्टूडियो — लाइव प्रसारण कक्ष</h3>" +
-          "<span style="font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--primary)") + ";">" + (st.isLiveOnApp ? "🔴 LIVE जारी" : "● लाइव के लिए तैयार") + "</span>" +
+      "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
+        "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
+          "<h3 class=\"section-title\" style=\"margin:0;\">🔴 चौपाल स्टूडियो — लाइव प्रसारण कक्ष</h3>" +
+          "<span style=\"font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--primary)") + ";\">" + (st.isLiveOnApp ? "🔴 LIVE जारी" : "● लाइव के लिए तैयार") + "</span>" +
         "</div>" +
-        "<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:9px 11px; border-radius:12px; background:var(--bg); border:1px solid var(--border);">" +
-          "<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">" +
-            "<span style="font-size:12px; font-weight:700; color:var(--primary);">📐 फ़्रेम:</span>" +
-            "<button type="button" class="social-subbtn " + (ori === "horizontal" ? "active" : "") + "" style="padding:5px 10px; font-size:11.5px;" onclick="window.chaupalStudioState.orientation='horizontal'; openChaupalStudioNow();">🖥️ होरिजेंटल (16:9)</button>" +
-            "<button type="button" class="social-subbtn " + (ori === "vertical" ? "active" : "") + "" style="padding:5px 10px; font-size:11.5px;" onclick="window.chaupalStudioState.orientation='vertical'; openChaupalStudioNow();">📱 वर्टिकल (9:16)</button>" +
+        "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:9px 11px; border-radius:12px; background:var(--bg); border:1px solid var(--border);\">" +
+          "<div style=\"display:flex; gap:6px; flex-wrap:wrap; align-items:center;\">" +
+            "<span style=\"font-size:12px; font-weight:700; color:var(--primary);\">📐 फ़्रेम:</span>" +
+            "<button type=\"button\" class=\"social-subbtn " + (ori === "horizontal" ? "active" : "") + "\" style=\"padding:5px 10px; font-size:11.5px;\" onclick=\"window.chaupalStudioState.orientation='horizontal'; openChaupalStudioNow();\">🖥️ होरिजेंटल (16:9)</button>" +
+            "<button type=\"button\" class=\"social-subbtn " + (ori === "vertical" ? "active" : "") + "\" style=\"padding:5px 10px; font-size:11.5px;\" onclick=\"window.chaupalStudioState.orientation='vertical'; openChaupalStudioNow();\">📱 वर्टिकल (9:16)</button>" +
           "</div>" +
-          "<div style="display:flex; gap:6px; flex-wrap:wrap;">" +
-            "<button type="button" class="sm-btn" onclick="startCameraPreview();">📷 कैमरा पूर्वावलोकन</button>" +
-            "<button type="button" class="sm-btn" onclick="switchStudioCameraNow();">🔄 " + camLabelShort + "</button>" +
-            "<button type="button" class="sm-btn" onclick="toggleFallbackFullCover();">" + (isFullCov ? "⛶ फुल-कवर चालू" : "📐 फिट मोड") + "</button>" +
-            "<button type="button" class="sm-btn" onclick="toggleFallbackStageFullscreen();">" + (isStageFs ? "↙ सामान्य स्क्रीन" : "⛶ पूरी स्क्रीन") + "</button>" +
+          "<div style=\"display:flex; gap:6px; flex-wrap:wrap;\">" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"startCameraPreview();\">📷 कैमरा पूर्वावलोकन</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"switchStudioCameraNow();\">🔄 " + camLabelShort + "</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"toggleFallbackFullCover();\">" + (isFullCov ? "⛶ फुल-कवर चालू" : "📐 फिट मोड") + "</button>" +
+            "<button type=\"button\" class=\"sm-btn\" onclick=\"toggleFallbackStageFullscreen();\">" + (isStageFs ? "↙ सामान्य स्क्रीन" : "⛶ पूरी स्क्रीन") + "</button>" +
           "</div>" +
         "</div>" +
-        "<div id="studio-live-media-status" style="margin-bottom:10px; padding:8px 11px; border-radius:10px; background:var(--bg); border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--primary);">" +
+        "<div id=\"studio-live-media-status\" style=\"margin-bottom:10px; padding:8px 11px; border-radius:10px; background:var(--bg); border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--primary);\">" +
           String(st.mediaStatusText || "").replace(/</g,"&lt;") +
         "</div>" +
-        "<div id="studio-live-stage-box" style="" + (isStageFs
+        "<div id=\"studio-live-stage-box\" style=\"" + (isStageFs
           ? "position:fixed; inset:0; z-index:10060; width:100vw; height:100vh; padding:12px 10px 84px 10px; background:#090507; display:flex; flex-direction:column; justify-content:space-between;"
-          : ("position:relative; " + (ori === "vertical" ? "aspect-ratio:9/16; max-width:390px; min-height:430px; margin:0 auto 12px;" : "aspect-ratio:16/9; width:100%; min-height:230px; margin-bottom:12px;") + " border-radius:16px; overflow:hidden; background:#090507; border:2px solid var(--gold);")) + "">" +
-          "<div style="position:relative; z-index:10080; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; padding:7px 9px; border-radius:12px; background:rgba(20,10,13,0.9); border:1px solid rgba(247,220,139,0.65);">" +
-            "<span style="font-size:11.5px; font-weight:800; color:#FCE49C;">" + (st.isLiveOnApp ? ("🔴 LIVE • <span id='studio-live-timer'>" + (st.liveDurationSec || 0) + "</span>s") : ("● " + camLabelShort)) + "</span>" +
-            "<div style="display:flex; gap:5px; flex-wrap:wrap;">" +
-              "<button type="button" class="sm-btn" style="padding:4px 8px; font-size:11px;" onclick="switchStudioCameraNow();">🔄 कैमरा बदलें</button>" +
-              (st.isLiveOnApp ? "<button type="button" class="action-btn danger" style="padding:4px 9px; font-size:11px;" onclick="requestEndLiveChoice();">⏹️ लाइव समाप्त करें</button>" : "") +
-              (isStageFs ? "<button type="button" class="action-btn gold" style="padding:4px 10px; font-size:11px; font-weight:800;" onclick="toggleFallbackStageFullscreen();">↙ सामान्य स्क्रीन</button>" : "") +
+          : ("position:relative; " + (ori === "vertical" ? "aspect-ratio:9/16; max-width:390px; min-height:430px; margin:0 auto 12px;" : "aspect-ratio:16/9; width:100%; min-height:230px; margin-bottom:12px;") + " border-radius:16px; overflow:hidden; background:#090507; border:2px solid var(--gold);")) + "\">" +
+          "<div style=\"position:relative; z-index:10080; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; padding:7px 9px; border-radius:12px; background:rgba(20,10,13,0.9); border:1px solid rgba(247,220,139,0.65);\">" +
+            "<span style=\"font-size:11.5px; font-weight:800; color:#FCE49C;\">" + (st.isLiveOnApp ? ("🔴 LIVE • <span id='studio-live-timer'>" + (st.liveDurationSec || 0) + "</span>s") : ("● " + camLabelShort)) + "</span>" +
+            "<div style=\"display:flex; gap:5px; flex-wrap:wrap;\">" +
+              "<button type=\"button\" class=\"sm-btn\" style=\"padding:4px 8px; font-size:11px;\" onclick=\"switchStudioCameraNow();\">🔄 कैमरा बदलें</button>" +
+              (st.isLiveOnApp ? "<button type=\"button\" class=\"action-btn danger\" style=\"padding:4px 9px; font-size:11px;\" onclick=\"requestEndLiveChoice();\">⏹️ लाइव समाप्त करें</button>" : "") +
+              (isStageFs ? "<button type=\"button\" class=\"action-btn gold\" style=\"padding:4px 10px; font-size:11px; font-weight:800;\" onclick=\"toggleFallbackStageFullscreen();\">↙ सामान्य स्क्रीन</button>" : "") +
             "</div>" +
           "</div>" +
           endChoiceOverlayHtml +
-          "<video id="studio-live-preview-video" autoplay playsinline muted style="position:absolute; inset:0; width:100%; height:100%; object-fit:" + (isFullCov ? "cover" : "contain") + "; background:#090507; display:" + (st.cameraStream ? "block" : "none") + "; z-index:1;"></video>" +
-          "<div id="studio-stage-placeholder" style="position:relative; flex:1; display:" + (st.cameraStream ? "none" : "flex") + "; flex-direction:column; align-items:center; justify-content:center; padding:14px; text-align:center; color:#FCE49C; background:radial-gradient(circle at 50% 40%, rgba(142,75,10,0.28), rgba(9,5,7,0.88)); z-index:2;">" +
-            "<div style="font-size:28px; margin-bottom:6px;">" + (st.isLiveOnApp ? "🔴" : (ori === "vertical" ? "📱" : "🖥️")) + "</div>" +
-            "<div style="font-size:14px; font-weight:800; color:#FFFDF7;">" + String(st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण").replace(/</g,"&lt;") + "</div>" +
-            "<div style="font-size:11.5px; color:#F7DC8B; margin-top:4px;">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी — ऐप के Home व मंच पर बैनर सक्रिय" : "कैमरा देखने के लिए ‘📷 कैमरा पूर्वावलोकन’ या ‘🔴 लाइव शुरू करें’ दबाएँ") + "</div>" +
+          "<video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"position:absolute; inset:0; width:100%; height:100%; object-fit:" + (isFullCov ? "cover" : "contain") + "; background:#090507; display:" + (st.cameraStream ? "block" : "none") + "; z-index:1;\"></video>" +
+          "<div id=\"studio-stage-placeholder\" style=\"position:relative; flex:1; display:" + (st.cameraStream ? "none" : "flex") + "; flex-direction:column; align-items:center; justify-content:center; padding:14px; text-align:center; color:#FCE49C; background:radial-gradient(circle at 50% 40%, rgba(142,75,10,0.28), rgba(9,5,7,0.88)); z-index:2;\">" +
+            "<div style=\"font-size:28px; margin-bottom:6px;\">" + (st.isLiveOnApp ? "🔴" : (ori === "vertical" ? "📱" : "🖥️")) + "</div>" +
+            "<div style=\"font-size:14px; font-weight:800; color:#FFFDF7;\">" + String(st.liveTitle || "काव्य चौपाल — सजीव काव्य प्रसारण").replace(/</g,"&lt;") + "</div>" +
+            "<div style=\"font-size:11.5px; color:#F7DC8B; margin-top:4px;\">" + (st.isLiveOnApp ? "🔴 LIVE प्रसारण जारी — ऐप के Home व मंच पर बैनर सक्रिय" : "कैमरा देखने के लिए ‘📷 कैमरा पूर्वावलोकन’ या ‘🔴 लाइव शुरू करें’ दबाएँ") + "</div>" +
           "</div>" +
-          "<div style="position:relative; z-index:10080; padding:8px; display:flex; flex-direction:column; gap:6px; background:rgba(9,5,7,0.92);">" +
-            "<div style="padding:7px 11px; border-radius:11px; background:linear-gradient(90deg, rgba(91,17,24,0.95), rgba(142,75,10,0.92)); border:1px solid rgba(247,220,139,0.75);">" +
-              "<div style="font-size:13.5px; font-weight:800; color:#F7DC8B;">✒️ " + String(st.lowerThirdPoet || "काव्य चौपाल") + (st.lowerThirdCity ? (" (" + String(st.lowerThirdCity) + ")") : "") + "</div>" +
-              "<div style="font-size:11px; color:#FCE49C;">📜 " + String(st.lowerThirdPoem || "सजीव काव्य पाठ") + (st.guestPoetName ? (" • 🤝 सह-कवि: " + String(st.guestPoetName)) : "") + "</div>" +
+          "<div style=\"position:relative; z-index:10080; padding:8px; display:flex; flex-direction:column; gap:6px; background:rgba(9,5,7,0.92);\">" +
+            "<div style=\"padding:7px 11px; border-radius:11px; background:linear-gradient(90deg, rgba(91,17,24,0.95), rgba(142,75,10,0.92)); border:1px solid rgba(247,220,139,0.75);\">" +
+              "<div style=\"font-size:13.5px; font-weight:800; color:#F7DC8B;\">✒️ " + String(st.lowerThirdPoet || "काव्य चौपाल") + (st.lowerThirdCity ? (" (" + String(st.lowerThirdCity) + ")") : "") + "</div>" +
+              "<div style=\"font-size:11px; color:#FCE49C;\">📜 " + String(st.lowerThirdPoem || "सजीव काव्य पाठ") + (st.guestPoetName ? (" • 🤝 सह-कवि: " + String(st.guestPoetName)) : "") + "</div>" +
             "</div>" +
-            "<div style="display:flex; gap:4px; flex-wrap:nowrap; overflow-x:auto; align-items:center; justify-content:space-between; padding:6px; border-radius:12px; background:rgba(20,10,13,0.98); border:1px solid rgba(247,220,139,0.55);">" +
-              "<div style="display:flex; gap:4px; flex-wrap:nowrap; align-items:center;">" +
+            "<div style=\"display:flex; gap:4px; flex-wrap:nowrap; overflow-x:auto; align-items:center; justify-content:space-between; padding:6px; border-radius:12px; background:rgba(20,10,13,0.98); border:1px solid rgba(247,220,139,0.55);\">" +
+              "<div style=\"display:flex; gap:4px; flex-wrap:nowrap; align-items:center;\">" +
                 (!st.isLiveOnApp
-                  ? ("<button type="button" class="action-btn primary" style="padding:5px 9px; font-size:11px; white-space:nowrap;" onclick="startChaupalStudioLive();">🔴 लाइव शुरू करें</button>")
-                  : ("<button type="button" class="action-btn danger" style="padding:5px 9px; font-size:11px; white-space:nowrap;" onclick="requestEndLiveChoice();">⏹️ लाइव रोकें</button>")) +
-                "<button type="button" class="sm-btn" style="padding:5px 7px; font-size:11px; white-space:nowrap;" onclick="startCameraPreview();">📷 कैमरा</button>" +
-                "<button type="button" class="sm-btn" style="padding:5px 7px; font-size:11px; white-space:nowrap;" onclick="switchStudioCameraNow();">🔄 कैमरा बदलें</button>" +
-                "<button type="button" class="sm-btn" style="padding:5px 7px; font-size:11px; white-space:nowrap;" onclick="window.chaupalStudioState.isMicMuted=!window.chaupalStudioState.isMicMuted; openChaupalStudioNow();">" + (st.isMicMuted ? "🔇 बंद" : "🎤 चालू") + "</button>" +
-                "<button type="button" class="sm-btn" style="padding:5px 7px; font-size:11px; white-space:nowrap;" onclick="toggleFallbackOrientation();">" + (ori === "vertical" ? "🖥️ 16:9" : "📱 9:16") + "</button>" +
-                "<button type="button" class="sm-btn" style="padding:5px 7px; font-size:11px; white-space:nowrap;" onclick="toggleFallbackStageFullscreen();">" + (isStageFs ? "↙ सामान्य" : "⛶ फुल") + "</button>" +
+                  ? ("<button type=\"button\" class=\"action-btn primary\" style=\"padding:5px 9px; font-size:11px; white-space:nowrap;\" onclick=\"startChaupalStudioLive();\">🔴 लाइव शुरू करें</button>")
+                  : ("<button type=\"button\" class=\"action-btn danger\" style=\"padding:5px 9px; font-size:11px; white-space:nowrap;\" onclick=\"requestEndLiveChoice();\">⏹️ लाइव रोकें</button>")) +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px; white-space:nowrap;\" onclick=\"startCameraPreview();\">📷 कैमरा</button>" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px; white-space:nowrap;\" onclick=\"switchStudioCameraNow();\">🔄 कैमरा बदलें</button>" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px; white-space:nowrap;\" onclick=\"window.chaupalStudioState.isMicMuted=!window.chaupalStudioState.isMicMuted; openChaupalStudioNow();\">" + (st.isMicMuted ? "🔇 बंद" : "🎤 चालू") + "</button>" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px; white-space:nowrap;\" onclick=\"toggleFallbackOrientation();\">" + (ori === "vertical" ? "🖥️ 16:9" : "📱 9:16") + "</button>" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px; white-space:nowrap;\" onclick=\"toggleFallbackStageFullscreen();\">" + (isStageFs ? "↙ सामान्य" : "⛶ फुल") + "</button>" +
               "</div>" +
-              "<div style="display:flex; gap:3px; flex-shrink:0;">" +
-                "<button type="button" class="sm-btn" style="padding:4px 6px; font-size:11px;" onclick="if(typeof sendStudioStageDaad==='function'){sendStudioStageDaad('👏','वाह-वाह');}">👏</button>" +
-                "<button type="button" class="sm-btn" style="padding:4px 6px; font-size:11px;" onclick="if(typeof sendStudioStageDaad==='function'){sendStudioStageDaad('🌹','अद्भुत');}">🌹</button>" +
-                "<button type="button" class="sm-btn" style="padding:4px 6px; font-size:11px;" onclick="if(typeof sendStudioStageDaad==='function'){sendStudioStageDaad('🪔','नमन');}">🪔</button>" +
+              "<div style=\"display:flex; gap:3px; flex-shrink:0;\">" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:4px 6px; font-size:11px;\" onclick=\"if(typeof sendStudioStageDaad==='function'){sendStudioStageDaad('👏','वाह-वाह');}\">👏</button>" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:4px 6px; font-size:11px;\" onclick=\"if(typeof sendStudioStageDaad==='function'){sendStudioStageDaad('🌹','अद्भुत');}\">🌹</button>" +
+                "<button type=\"button\" class=\"sm-btn\" style=\"padding:4px 6px; font-size:11px;\" onclick=\"if(typeof sendStudioStageDaad==='function'){sendStudioStageDaad('🪔','नमन');}\">🪔</button>" +
               "</div>" +
             "</div>" +
           "</div>" +
         "</div>" +
-        "<div class="field"><label>लाइव प्रसारण शीर्षक</label><input id="studio-live-title" value="" + String(st.liveTitle || "").replace(/"/g,"&quot;") + "" placeholder="लाइव कार्यक्रम का शीर्षक लिखें..." /></div>" +
-        "<div class="two-fields">" +
-          "<div class="field"><label>लाइव प्लेटफ़ॉर्म</label><select id="studio-live-platform"><option value="काव्य चौपाल ऐप लाइव">काव्य चौपाल ऐप लाइव</option><option value="YouTube Live">YouTube Live</option><option value="Facebook Live">Facebook Live</option><option value="RTMP कस्टम सर्वर">RTMP कस्टम सर्वर</option></select></div>" +
-          "<div class="field"><label>लाइव लिंक / RTMP URL (वैकल्पिक)</label><input id="studio-live-url" value="" + String(st.liveStreamUrl || "").replace(/"/g,"&quot;") + "" placeholder="लाइव लिंक (वैकल्पिक)" /></div>" +
+        "<div class=\"field\"><label>लाइव प्रसारण शीर्षक</label><input id=\"studio-live-title\" value=\"" + String(st.liveTitle || "").replace(/"/g,"&quot;") + "\" placeholder=\"लाइव कार्यक्रम का शीर्षक लिखें...\" /></div>" +
+        "<div class=\"two-fields\">" +
+          "<div class=\"field\"><label>लाइव प्लेटफ़ॉर्म</label><select id=\"studio-live-platform\"><option value=\"काव्य चौपाल ऐप लाइव\">काव्य चौपाल ऐप लाइव</option><option value=\"YouTube Live\">YouTube Live</option><option value=\"Facebook Live\">Facebook Live</option><option value=\"RTMP कस्टम सर्वर\">RTMP कस्टम सर्वर</option></select></div>" +
+          "<div class=\"field\"><label>लाइव लिंक / RTMP URL (वैकल्पिक)</label><input id=\"studio-live-url\" value=\"" + String(st.liveStreamUrl || "").replace(/"/g,"&quot;") + "\" placeholder=\"लाइव लिंक (वैकल्पिक)\" /></div>" +
         "</div>" +
-        "<div class="form-box" style="background:var(--bg); padding:11px; margin-bottom:0;">" +
-          "<div style="font-size:12.5px; font-weight:700; color:var(--primary); margin-bottom:8px;">📺 सजीव लोअर-थर्ड व अतिथि पट्टी (Live Name Plate)</div>" +
-          "<div class="two-fields">" +
-            "<div class="field" style="margin-bottom:8px;"><label>प्रस्तुतकर्ता / कवि नाम</label><input id="studio-lt-poet" value="" + String(st.lowerThirdPoet || "").replace(/"/g,"&quot;") + "" /></div>" +
-            "<div class="field" style="margin-bottom:8px;"><label>शहर / स्थान</label><input id="studio-lt-city" value="" + String(st.lowerThirdCity || "").replace(/"/g,"&quot;") + "" /></div>" +
+        "<div class=\"form-box\" style=\"background:var(--bg); padding:11px; margin-bottom:0;\">" +
+          "<div style=\"font-size:12.5px; font-weight:700; color:var(--primary); margin-bottom:8px;\">📺 सजीव लोअर-थर्ड व अतिथि पट्टी (Live Name Plate)</div>" +
+          "<div class=\"two-fields\">" +
+            "<div class=\"field\" style=\"margin-bottom:8px;\"><label>प्रस्तुतकर्ता / कवि नाम</label><input id=\"studio-lt-poet\" value=\"" + String(st.lowerThirdPoet || "").replace(/"/g,"&quot;") + "\" /></div>" +
+            "<div class=\"field\" style=\"margin-bottom:8px;\"><label>शहर / स्थान</label><input id=\"studio-lt-city\" value=\"" + String(st.lowerThirdCity || "").replace(/"/g,"&quot;") + "\" /></div>" +
           "</div>" +
-          "<div class="two-fields">" +
-            "<div class="field" style="margin-bottom:0;"><label>रचना / सत्र विवरण</label><input id="studio-lt-poem" value="" + String(st.lowerThirdPoem || "").replace(/"/g,"&quot;") + "" /></div>" +
-            "<div class="field" style="margin-bottom:0;"><label>सह-कवि / अतिथि (वैकल्पिक)</label><input id="studio-lt-guest" value="" + String(st.guestPoetName || "").replace(/"/g,"&quot;") + "" /></div>" +
+          "<div class=\"two-fields\">" +
+            "<div class=\"field\" style=\"margin-bottom:0;\"><label>रचना / सत्र विवरण</label><input id=\"studio-lt-poem\" value=\"" + String(st.lowerThirdPoem || "").replace(/"/g,"&quot;") + "\" /></div>" +
+            "<div class=\"field\" style=\"margin-bottom:0;\"><label>सह-कवि / अतिथि (वैकल्पिक)</label><input id=\"studio-lt-guest\" value=\"" + String(st.guestPoetName || "").replace(/"/g,"&quot;") + "\" /></div>" +
           "</div>" +
         "</div>" +
       "</div>";
@@ -16949,28 +16947,39 @@ function renderStudioPane() {
   }
 
   function openChaupalStudioNow() {
-    var tabManch = document.getElementById("tab-manch");
-    if (tabManch) {
-      document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
-      tabManch.classList.add("active");
-      Array.prototype.forEach.call(tabManch.children, function(ch) {
-        if (ch.id !== "manch-studio" && !ch.classList.contains("hub-tabs")) {
-          ch.style.display = "none";
+    try {
+      var sp = document.getElementById("splash-screen");
+      if (sp) sp.classList.add("hide");
+      document.querySelectorAll(".modal-overlay.open").forEach(function(m) { m.classList.remove("open"); });
+      var tabManch = document.getElementById("tab-manch");
+      if (tabManch) {
+        document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
+        tabManch.classList.add("active");
+        Array.prototype.forEach.call(tabManch.children, function(ch) {
+          if (ch.id !== "manch-studio" && !ch.classList.contains("hub-tabs")) {
+            ch.style.display = "none";
+          }
+        });
+        var studioBox = document.getElementById("manch-studio");
+        if (!studioBox) {
+          studioBox = document.createElement("div");
+          studioBox.id = "manch-studio";
+          studioBox.className = "manch-pane";
+          tabManch.appendChild(studioBox);
         }
-      });
-      var studioBox = document.getElementById("manch-studio");
-      if (!studioBox) {
-        studioBox = document.createElement("div");
-        studioBox.id = "manch-studio";
-        studioBox.className = "manch-pane";
-        tabManch.appendChild(studioBox);
+        studioBox.style.display = "block";
+        if (typeof state !== "undefined") {
+          state.activeTab = "manch";
+          state.manchSub = "studio";
+        }
+        renderFallbackStudioUI(studioBox);
       }
-      studioBox.style.display = "block";
-      if (typeof state !== "undefined") {
-        state.activeTab = "manch";
-        state.manchSub = "studio";
+    } catch (e) {
+      var sb = document.getElementById("manch-studio");
+      if (sb) {
+        sb.style.display = "block";
+        sb.innerHTML = "<div class=\"form-box\"><h3>🎙️ चौपाल स्टूडियो</h3><button type=\"button\" class=\"action-btn primary\" onclick=\"startChaupalStudioLive()\">🔴 लाइव शुरू करें</button> <button type=\"button\" class=\"sm-btn\" onclick=\"switchStudioCameraNow()\">🔄 कैमरा बदलें</button></div>";
       }
-      renderFallbackStudioUI(studioBox);
     }
   }
   window.openChaupalStudioNow = openChaupalStudioNow;
@@ -16978,24 +16987,25 @@ function renderStudioPane() {
   function forceOpenChaupalStudio(ev) {
     try {
       var target = ev && ev.target ? ev.target : null;
+      if (!target) return;
+      if (target.nodeType === 3) target = target.parentElement;
       var matched = false;
-      if (target) {
-        var el = target.closest ? target.closest('[data-sub="studio"], [onclick*="studio"]') : null;
+      if (target && typeof target.closest === "function") {
+        var el = target.closest('[data-sub="studio"], [onclick*="studio"]');
         if (el) matched = true;
-        else if ((target.textContent || "").indexOf("चौपाल स्टूडियो") !== -1) matched = true;
+      }
+      if (!matched && target && typeof target.textContent === "string" && target.textContent.indexOf("चौपाल स्टूडियो") !== -1) {
+        matched = true;
       }
       if (!matched) return;
       openChaupalStudioNow();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
-      var sb = document.getElementById("manch-studio");
-      if (sb) {
-        sb.style.display = "block";
-        renderFallbackStudioUI(sb);
-      }
+      openChaupalStudioNow();
     }
   }
   document.addEventListener("click", forceOpenChaupalStudio, true);
+  document.addEventListener("touchend", forceOpenChaupalStudio, true);
 })();
 </script>
 
