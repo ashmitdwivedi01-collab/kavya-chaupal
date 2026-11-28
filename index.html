@@ -4492,6 +4492,10 @@ function switchTab(tabName, fromPop) {
   var target = document.getElementById("tab-" + tabName);
   if (target) target.classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(function(b) { b.classList.toggle("active", b.dataset.tab === tabName); });
+  if (tabName === "manch" && !fromPop && state.manchSub === "studio") {
+    state.manchSub = "events";
+    setManchSub("events");
+  }
   if (tabName === "poets") {
     state.activePoetName = null;
     document.getElementById("poets-list-view").style.display = "block";
@@ -15338,6 +15342,9 @@ window.addEventListener("beforeunload", function() {
   if (!window.chaupalStudioState) {
     window.chaupalStudioState = {
       subMode: "live",
+      orientation: "horizontal",
+      fullCover: true,
+      liveFullscreen: false,
       isLiveOnApp: false,
       isMicMuted: false,
       facingMode: "user",
@@ -16152,6 +16159,36 @@ window.addEventListener("beforeunload", function() {
     }
   };
 
+  
+  window.setStudioOrientation = function(ori) {
+    var st = window.chaupalStudioState || {};
+    st.orientation = (ori === "vertical") ? "vertical" : "horizontal";
+    if (typeof window.renderStudioPane === "function") window.renderStudioPane();
+    if (typeof showToast === "function") {
+      showToast(st.orientation === "vertical" ? "📱 वर्टिकल (9:16) लाइव मोड चुना गया" : "🖥️ होरिजेंटल (16:9) लाइव मोड चुना गया");
+    }
+  };
+
+  window.toggleStudioFullCover = function() {
+    var st = window.chaupalStudioState || {};
+    st.fullCover = (st.fullCover === false) ? true : false;
+    if (typeof window.renderStudioPane === "function") window.renderStudioPane();
+  };
+
+  window.toggleStudioLiveFullscreen = function() {
+    var st = window.chaupalStudioState || {};
+    st.liveFullscreen = !st.liveFullscreen;
+    if (typeof window.renderStudioPane === "function") window.renderStudioPane();
+    try {
+      var stage = document.getElementById("studio-live-stage-box");
+      if (st.liveFullscreen && stage && stage.requestFullscreen) {
+        stage.requestFullscreen().catch(function() {});
+      } else if (!st.liveFullscreen && document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function() {});
+      }
+    } catch (e) {}
+  };
+
   window.renderStudioPane = function() {
     var box = document.getElementById("manch-studio");
     if (!box) {
@@ -16162,8 +16199,11 @@ window.addEventListener("beforeunload", function() {
       box.className = "manch-pane";
       tm.appendChild(box);
     }
-    var st = window.chaupalStudioState;
+    var st = window.chaupalStudioState || {};
     var mode = st.subMode || "live";
+    var ori = st.orientation || "horizontal";
+    var isFullCov = (st.fullCover !== false);
+    var isStageFs = !!st.liveFullscreen;
     var e = function(s) {
       return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     };
@@ -16172,7 +16212,15 @@ window.addEventListener("beforeunload", function() {
     };
 
     var backBarHtml =
-      "<div style=\"margin-bottom:10px;\"><button type=\"button\" class=\"back-bar\" style=\"margin-bottom:0;\" onclick=\"if(typeof window.restoreManchGridAndTabs==='function'){window.restoreManchGridAndTabs();} if(typeof setManchSub==='function'){setManchSub('events');}\">← मंच के विकल्प (कार्यक्रम / वीडियो / प्रतियोगिता)</button></div>";
+      "<div style=\"display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px;\">" +
+        "<button type=\"button\" class=\"back-bar\" style=\"margin-bottom:0;\" onclick=\"if(typeof window.restoreManchGridAndTabs==='function'){window.restoreManchGridAndTabs();} if(typeof setManchSub==='function'){setManchSub('events');}\">← मंच के सभी विकल्प</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('events');\">📅 कार्यक्रम</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('videos');\">🎬 वीडियो</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('competition');\">🏆 प्रतियोगिता</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('ebooks');\">📚 लाइब्रेरी</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('matra');\">⚖️ मात्रा गणक</button>" +
+        "<button type=\"button\" class=\"sm-btn\" onclick=\"restoreManchGridAndTabs(); setManchSub('antakshari');\">🔤 अंताक्षरी</button>" +
+      "</div>";
 
     var navHtml =
       "<div style=\"display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;\">" +
@@ -16189,26 +16237,75 @@ window.addEventListener("beforeunload", function() {
       var isConf = (mode === "conf_live");
       var hasActiveCall = (typeof chaupalSocialState !== "undefined" && !!chaupalSocialState.activeCallSession);
       var callTargetName = hasActiveCall ? (chaupalSocialState.activeCallSession.target || "सक्रिय सदस्य") : "";
+      var stageAspect = (ori === "vertical") ? "aspect-ratio:9/16; max-width:390px; margin:0 auto 12px;" : "aspect-ratio:16/9; width:100%; margin-bottom:12px;";
+      var stageBoxStyle = isStageFs
+        ? "position:fixed; inset:0; z-index:10060; width:100vw; height:100vh; max-width:none; margin:0; border-radius:0; background:#090507; border:none; overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;"
+        : ("position:relative; " + stageAspect + " min-height:" + (ori === "vertical" ? "430px" : "230px") + "; border-radius:16px; overflow:hidden; background:#090507; border:2px solid var(--gold);");
+
       bodyHtml =
         "<div class=\"form-box\" style=\"border:1.5px solid var(--gold);\">" +
           "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px;\">" +
             "<h3 class=\"section-title\" style=\"margin:0;\">" + (isConf ? "📞 कॉन्फ्रेंस कॉल — ऐप पर लाइव" : "🔴 चौपाल स्टूडियो — हाईटेक सजीव मंच") + "</h3>" +
             "<span style=\"font-size:12px; font-weight:700; color:" + (st.isLiveOnApp ? "#16A34A" : "var(--text-muted)") + ";\">" + (st.isLiveOnApp ? "🔴 LIVE जारी" : "● तैयार") + "</span>" +
           "</div>" +
+
+          "<div style=\"display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:10px; padding:9px 11px; border-radius:12px; background:var(--bg); border:1px solid var(--border);\">" +
+            "<div style=\"display:flex; gap:6px; flex-wrap:wrap; align-items:center;\">" +
+              "<span style=\"font-size:12px; font-weight:700; color:var(--primary);\">📐 फ़्रेम:</span>" +
+              "<button type=\"button\" class=\"social-subbtn " + (ori === "horizontal" ? "active" : "") + "\" style=\"padding:5px 10px; font-size:11.5px;\" onclick=\"setStudioOrientation('horizontal')\">🖥️ होरिजेंटल (16:9)</button>" +
+              "<button type=\"button\" class=\"social-subbtn " + (ori === "vertical" ? "active" : "") + "\" style=\"padding:5px 10px; font-size:11.5px;\" onclick=\"setStudioOrientation('vertical')\">📱 वर्टिकल (9:16)</button>" +
+            "</div>" +
+            "<div style=\"display:flex; gap:6px; flex-wrap:wrap;\">" +
+              "<button type=\"button\" class=\"sm-btn\" onclick=\"toggleStudioFullCover()\">" + (isFullCov ? "⛶ फुल-कवर चालू" : "📐 फिट मोड") + "</button>" +
+              "<button type=\"button\" class=\"sm-btn\" onclick=\"toggleStudioLiveFullscreen()\">" + (isStageFs ? "↙ सामान्य स्क्रीन" : "⛶ पूरी स्क्रीन") + "</button>" +
+            "</div>" +
+          "</div>" +
+
           "<div style=\"margin-bottom:12px; padding:10px 12px; border-radius:12px; background:var(--bg); border:1px solid var(--border); font-size:12.5px; line-height:1.55;\">" +
             "<div>📱 <strong>ऑडियो / वीडियो:</strong> <span id=\"studio-live-media-status\" style=\"font-weight:700; color:var(--primary);\">" + e(st.mediaStatusText || "फ़ोन के कैमरा व माइक का उपयोग होगा") + "</span></div>" +
             "<div style=\"margin-top:4px;\">📞 <strong>कॉल स्थिति:</strong> " + (hasActiveCall
               ? ("<span style=\"color:#15803D; font-weight:700;\">सक्रिय कॉल — " + e(callTargetName) + "</span>")
               : "सजीव प्रसारण शुरू होते ही ऐप के Home व मंच पर लाइव बैनर दिखेगा।") + "</div>" +
           "</div>" +
-          "<div style=\"position:relative; margin-bottom:12px; border-radius:16px; overflow:hidden; background:#140B0D; border:1.5px solid var(--gold);\">" +
-            "<video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"width:100%; max-height:280px; object-fit:cover; display:" + (st.isLiveOnApp || st.cameraStream ? "block" : "none") + ";\"></video>" +
-            "<div id=\"studio-live-daad-layer\" style=\"position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:5px; align-items:flex-end; pointer-events:none;\"></div>" +
-            "<div id=\"studio-live-lower-third-overlay\" style=\"padding:9px 13px; background:linear-gradient(90deg, rgba(91,17,24,0.92), rgba(142,75,10,0.88)); border-top:1.5px solid #F7DC8B;\">" +
-              "<div style=\"font-size:15px; font-weight:800; color:#F7DC8B;\">✒️ " + e(st.lowerThirdPoet || "काव्य चौपाल") + (st.lowerThirdCity ? (" <span style='font-size:12px; color:#FFFDF7;'>(" + e(st.lowerThirdCity) + ")</span>") : "") + "</div>" +
-              "<div style=\"font-size:12px; color:#FCE49C;\">📜 " + e(st.lowerThirdPoem || "सजीव काव्य पाठ") + (st.guestPoetName ? (" • 🤝 सह-कवि: " + e(st.guestPoetName)) : "") + "</div>" +
+
+          "<div id=\"studio-live-stage-box\" style=\"" + stageBoxStyle + "\">" +
+            "<video id=\"studio-live-preview-video\" autoplay playsinline muted style=\"width:100%; height:100%; object-fit:" + (isFullCov ? "cover" : "contain") + "; background:#090507; display:" + (st.isLiveOnApp || st.cameraStream ? "block" : "none") + ";\"></video>" +
+            (!st.isLiveOnApp && !st.cameraStream
+              ? ("<div style=\"position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; text-align:center; color:#FCE49C;\"><div style=\"font-size:32px; margin-bottom:6px;\">" + (ori === "vertical" ? "📱" : "🖥️") + "</div><div style=\"font-size:13.5px; font-weight:700;\">" + (ori === "vertical" ? "वर्टिकल (9:16) फुल-स्क्रीन लाइव स्टेज" : "होरिजेंटल (16:9) फुल-स्क्रीन लाइव स्टेज") + "</div><div style=\"font-size:11.5px; color:rgba(255,249,236,0.75); margin-top:4px;\">नीचे ‘🔴 लाइव शुरू करें’ दबाते ही कैमरा व ऑन-स्क्रीन कंट्रोल दिखेंगे</div></div>")
+              : "") +
+
+            "<div style=\"position:absolute; top:10px; left:10px; right:10px; display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:wrap; pointer-events:none; z-index:4;\">" +
+              "<span style=\"display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(15,6,9,0.72); border:1px solid rgba(247,220,139,0.65); color:#FCE49C; font-size:11.5px; font-weight:800;\">" + (st.isLiveOnApp ? "🔴 LIVE • <span id='studio-live-timer'>" + (st.liveDurationSec || 0) + "</span>s" : (ori === "vertical" ? "📱 9:16" : "🖥️ 16:9")) + "</span>" +
+              "<span style=\"padding:4px 10px; border-radius:999px; background:rgba(15,6,9,0.72); border:1px solid rgba(247,220,139,0.45); color:#FFF9EC; font-size:11px; font-weight:700;\">" + (isFullCov ? "FULL COVER" : "FIT") + "</span>" +
+            "</div>" +
+
+            "<div id=\"studio-live-daad-layer\" style=\"position:absolute; top:48px; right:10px; display:flex; flex-direction:column; gap:5px; align-items:flex-end; pointer-events:none; z-index:4;\"></div>" +
+
+            "<div style=\"position:absolute; left:8px; right:8px; bottom:8px; z-index:5; display:flex; flex-direction:column; gap:7px;\">" +
+              "<div id=\"studio-live-lower-third-overlay\" style=\"padding:7px 11px; border-radius:11px; background:linear-gradient(90deg, rgba(91,17,24,0.9), rgba(142,75,10,0.88)); border:1px solid rgba(247,220,139,0.75);\">" +
+                "<div style=\"font-size:13.5px; font-weight:800; color:#F7DC8B;\">✒️ " + e(st.lowerThirdPoet || "काव्य चौपाल") + (st.lowerThirdCity ? (" <span style='font-size:11px; color:#FFFDF7;'>(" + e(st.lowerThirdCity) + ")</span>") : "") + "</div>" +
+                "<div style=\"font-size:11px; color:#FCE49C;\">📜 " + e(st.lowerThirdPoem || "सजीव काव्य पाठ") + (st.guestPoetName ? (" • 🤝 सह-कवि: " + e(st.guestPoetName)) : "") + "</div>" +
+              "</div>" +
+
+              "<div style=\"display:flex; gap:5px; flex-wrap:wrap; align-items:center; justify-content:space-between; padding:6px 8px; border-radius:12px; background:rgba(12,6,8,0.82); border:1px solid rgba(247,220,139,0.55);\">" +
+                "<div style=\"display:flex; gap:5px; flex-wrap:wrap; align-items:center;\">" +
+                  (!st.isLiveOnApp
+                    ? ("<button type=\"button\" class=\"action-btn primary\" style=\"padding:6px 10px; font-size:11.5px;\" onclick=\"startChaupalStudioLive(" + (isConf ? "true" : "false") + ")\">🔴 लाइव</button>")
+                    : ("<button type=\"button\" class=\"action-btn gold\" style=\"padding:6px 9px; font-size:11.5px;\" onclick=\"stopChaupalStudioLive(true)\">💾 सहेजें व रोकें</button><button type=\"button\" class=\"action-btn danger\" style=\"padding:6px 9px; font-size:11.5px;\" onclick=\"stopChaupalStudioLive(false)\">⏹️ रोकें</button>")) +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:6px 8px; font-size:11.5px;\" onclick=\"toggleStudioMicMute()\">" + (st.isMicMuted ? "🔇" : "🎤") + "</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:6px 8px; font-size:11.5px;\" onclick=\"switchStudioCameraFacing()\">🔄</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:6px 8px; font-size:11.5px;\" onclick=\"setStudioOrientation('" + (ori === "vertical" ? "horizontal" : "vertical") + "')\">" + (ori === "vertical" ? "🖥️" : "📱") + "</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:6px 8px; font-size:11.5px;\" onclick=\"toggleStudioLiveFullscreen()\">" + (isStageFs ? "↙" : "⛶") + "</button>" +
+                "</div>" +
+                "<div style=\"display:flex; gap:4px;\">" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px;\" onclick=\"sendStudioStageDaad('👏', 'वाह-वाह')\">👏</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px;\" onclick=\"sendStudioStageDaad('🌹', 'अद्भुत')\">🌹</button>" +
+                  "<button type=\"button\" class=\"sm-btn\" style=\"padding:5px 7px; font-size:11px;\" onclick=\"sendStudioStageDaad('🪔', 'नमन')\">🪔</button>" +
+                "</div>" +
+              "</div>" +
             "</div>" +
           "</div>" +
+
           "<div class=\"field\"><label>लाइव प्रसारण शीर्षक</label><input id=\"studio-live-title\" value=\"" + e(st.liveTitle || "") + "\" placeholder=\"लाइव कार्यक्रम का शीर्षक लिखें...\" /></div>" +
           "<div class=\"two-fields\">" +
             "<div class=\"field\"><label>लाइव प्लेटफ़ॉर्म</label>" +
@@ -16234,7 +16331,7 @@ window.addEventListener("beforeunload", function() {
             "</div>" +
             "<button type=\"button\" class=\"sm-btn\" onclick=\"updateStudioLowerThird()\">✓ लोअर-थर्ड लाइव अपडेट करें</button>" +
           "</div>" +
-          (st.isLiveOnApp ? ("<div style=\"font-size:13px; color:#16A34A; font-weight:700; margin-bottom:10px;\">⏱️ लाइव समय: <span id=\"studio-live-timer\">" + (st.liveDurationSec || 0) + "</span> सेकंड</div>") : "") +
+          (st.isLiveOnApp ? ("<div style=\"font-size:13px; color:#16A34A; font-weight:700; margin-bottom:10px;\">⏱️ लाइव समय: <span id=\"studio-live-timer-sub\">" + (st.liveDurationSec || 0) + "</span> सेकंड</div>") : "") +
           "<div style=\"display:flex; gap:8px; flex-wrap:wrap;\">" +
             (!st.isLiveOnApp
               ? ("<button type=\"button\" class=\"action-btn primary\" onclick=\"startChaupalStudioLive(" + (isConf ? "true" : "false") + ")\">🔴 लाइव शुरू करें</button>")
@@ -16307,7 +16404,8 @@ window.addEventListener("beforeunload", function() {
       setTimeout(function() { attachStreamToPreviewVideo(activeStream); }, 40);
     }
   };
-})();
+
+  })();
 </script>
 
 
