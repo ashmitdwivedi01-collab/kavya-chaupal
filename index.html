@@ -9959,7 +9959,7 @@ function detectChhandFromLines(linesArr) {
       statusLabel: "16 मात्रा प्रति चरण",
       name: "चौपाई छंद (सम मात्रिक)",
       reason: "प्रत्येक चरण में ठीक 16-16 मात्राएँ हैं।",
-      caution: "चौपाई में चरण के अंत में दो गुरु (२ २) या जगण (१ २ १) से बचें।"
+      caution: "चौपाई के प्रत्येक चरण में 16 मात्राएँ होती हैं और चरणांत में जगण (१ २ १) या तगण (२ २ १) से बचने का विधान माना जाता है।"
     };
   }
   if (lineStats.every(function(st) { return st.total === 24; })) {
@@ -10088,10 +10088,51 @@ function computeVarnikGanaFormula(tokens) {
   return { count: tokens.length, ganaStr: ganas.join(" • ") };
 }
 
+function computeVarnikGanaFormula(tokens) {
+  var GANA_MAP = {
+    "122": "यगण (१ २ २)",
+    "222": "मगण (२ २ २)",
+    "221": "तगण (२ २ १)",
+    "212": "रगण (२ १ २)",
+    "121": "जगण (१ २ १)",
+    "211": "भगण (२ १ १)",
+    "111": "नगण (१ १ १)",
+    "112": "सगण (१ १ २)"
+  };
+  var wStr = tokens.map(function(t) { return String(t.weight); }).join("");
+  var ganas = [];
+  for (var i = 0; i + 3 <= wStr.length; i += 3) {
+    var trip = wStr.slice(i, i + 3);
+    ganas.push(GANA_MAP[trip] || trip);
+  }
+  var rem = wStr.slice(Math.floor(wStr.length / 3) * 3);
+  if (rem) {
+    ganas.push(rem.split("").map(function(c) { return c === "2" ? "गुरु (२)" : "लघु (१)"; }).join(" + "));
+  }
+  return { count: tokens.length, ganaStr: ganas.join(" • ") };
+}
+
+function getSuggestedTargetChhand(lineStats) {
+  var targetId = (typeof state !== "undefined" && state.matraTargetChhand) ? state.matraTargetChhand : "auto";
+  if (targetId && targetId !== "auto") return targetId;
+  if (!lineStats || !lineStats.length) return "";
+  var avg = lineStats.reduce(function(s, x) { return s + x.total; }, 0) / lineStats.length;
+  var commaLines = lineStats.filter(function(x) { return x.charans.length === 2; });
+  if (commaLines.length > 0 && Math.abs(avg - 24) <= 4) {
+    var avgC1 = commaLines.reduce(function(s, x) { return s + x.charans[0]; }, 0) / commaLines.length;
+    return (avgC1 <= 11.8) ? "soratha" : "doha";
+  }
+  if (Math.abs(avg - 16) <= 3) return "chaupai";
+  if (Math.abs(avg - 24) <= 3) return "rola";
+  if (Math.abs(avg - 26) <= 3) return "gitika";
+  if (Math.abs(avg - 28) <= 3) return "harigitika";
+  if (commaLines.length > 0 && Math.abs(avg - 19) <= 3) return "barvai";
+  return "";
+}
+
 function buildChhandImprovementSuggestions(linesArr) {
   if (!linesArr || !linesArr.length) return [];
   var tips = [];
-  var targetId = (typeof state !== "undefined" && state.matraTargetChhand) ? state.matraTargetChhand : "auto";
 
   var lineStats = linesArr.map(function(ln) {
     var an = analyzeHindiLine(ln);
@@ -10100,87 +10141,62 @@ function buildChhandImprovementSuggestions(linesArr) {
     return { text: ln, total: an.total, tokens: an.tokens, charanObjs: chObjs, charans: ch };
   });
 
-  if (targetId === "auto") {
-    var avg = lineStats.reduce(function(s, x) { return s + x.total; }, 0) / lineStats.length;
-    var hasComma = lineStats.some(function(x) { return x.charans.length === 2; });
-    if (hasComma && Math.abs(avg - 24) <= 4) {
-      var firstAvg = lineStats.filter(function(x) { return x.charans.length === 2; }).reduce(function(s, x) { return s + x.charans[0]; }, 0) / Math.max(1, lineStats.filter(function(x) { return x.charans.length === 2; }).length);
-      targetId = (firstAvg <= 11.8) ? "soratha" : "doha";
-    } else if (Math.abs(avg - 16) <= 3) {
-      targetId = "chaupai";
-    } else if (Math.abs(avg - 24) <= 3) {
-      targetId = "rola";
-    } else if (Math.abs(avg - 26) <= 3) {
-      targetId = "gitika";
-    } else if (Math.abs(avg - 28) <= 3) {
-      targetId = "harigitika";
-    } else if (hasComma && Math.abs(avg - 19) <= 3) {
-      targetId = "barvai";
-    }
-  }
+  var targetId = getSuggestedTargetChhand(lineStats);
 
   lineStats.forEach(function(st, idx) {
     var pNo = idx + 1;
-    var lastTwo = st.tokens.slice(-2).map(function(t) { return t.weight; }).join("");
     var lastThree = st.tokens.slice(-3).map(function(t) { return t.weight; }).join("");
 
     if (targetId === "doha") {
       if (st.charans.length < 2) {
-        tips.push("पंक्ति " + pNo + ": दोहा के विषम (13) व सम (11) चरण स्पष्ट करने हेतु बीच में अल्पविराम (,) लगाएँ।");
+        tips.push("पंक्ति " + pNo + ": दोहा के विषम (13 मात्रा) व सम (11 मात्रा) चरण स्पष्ट करने हेतु बीच में अल्पविराम (,) लगाएँ।");
       } else {
         var d1 = st.charans[0] - 13;
         var d2 = st.charans[1] - 11;
         if (d1 !== 0) {
-          tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): 13 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं (" + (d1 > 0 ? (d1 + " मात्रा कम करें") : (Math.abs(d1) + " मात्रा बढ़ाएँ")) + ")।");
+          tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): दोहा में 13 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं (" + (d1 > 0 ? (d1 + " मात्रा कम करें") : (Math.abs(d1) + " मात्रा बढ़ाएँ")) + ")।");
         }
         if (d2 !== 0) {
-          tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): 11 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं (" + (d2 > 0 ? (d2 + " मात्रा कम करें") : (Math.abs(d2) + " मात्रा बढ़ाएँ")) + ")।");
-        }
-        var c2Toks = st.charanObjs[1].tokens;
-        var c2End = c2Toks.slice(-2).map(function(t) { return t.weight; }).join("");
-        if (d1 === 0 && d2 === 0 && c2End !== "21") {
-          tips.push("पंक्ति " + pNo + ": 13 + 11 मात्राएँ सही हैं; परम्परागत लय हेतु सम चरण के अंत में गुरु-लघु (२ १) का अभ्यास भी देखें।");
+          tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): दोहा में 11 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं (" + (d2 > 0 ? (d2 + " मात्रा कम करें") : (Math.abs(d2) + " मात्रा बढ़ाएँ")) + ")।");
         }
       }
     } else if (targetId === "soratha") {
       if (st.charans.length < 2) {
-        tips.push("पंक्ति " + pNo + ": सोरठा में प्रथम (11) व द्वितीय (13) चरण अलग करने हेतु अल्पविराम (,) लगाएँ।");
+        tips.push("पंक्ति " + pNo + ": सोरठा में प्रथम (11 मात्रा) व द्वितीय (13 मात्रा) चरण अलग करने हेतु अल्पविराम (,) लगाएँ।");
       } else {
         var s1 = st.charans[0] - 11;
         var s2 = st.charans[1] - 13;
-        if (s1 !== 0) tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): सोरठा में 11 मात्राएँ चाहिए, अभी " + st.charans[0] + " हैं (" + (s1 > 0 ? (s1 + " कम करें") : (Math.abs(s1) + " बढ़ाएँ")) + ")।");
-        if (s2 !== 0) tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): सोरठा में 13 मात्राएँ चाहिए, अभी " + st.charans[1] + " हैं (" + (s2 > 0 ? (s2 + " कम करें") : (Math.abs(s2) + " बढ़ाएँ")) + ")।");
+        if (s1 !== 0) tips.push("पंक्ति " + pNo + " — प्रथम चरण (“" + st.charanObjs[0].text + "”): सोरठा में 11 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं (" + (s1 > 0 ? (s1 + " मात्रा कम करें") : (Math.abs(s1) + " मात्रा बढ़ाएँ")) + ")।");
+        if (s2 !== 0) tips.push("पंक्ति " + pNo + " — द्वितीय चरण (“" + st.charanObjs[1].text + "”): सोरठा में 13 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं (" + (s2 > 0 ? (s2 + " मात्रा कम करें") : (Math.abs(s2) + " मात्रा बढ़ाएँ")) + ")।");
       }
     } else if (targetId === "chaupai") {
       var diffC = st.total - 16;
       if (diffC !== 0) {
         tips.push("पंक्ति " + pNo + ": चौपाई के प्रत्येक चरण में 16 मात्राएँ होनी चाहिए, अभी " + st.total + " हैं (" + (diffC > 0 ? (diffC + " मात्रा कम करें") : (Math.abs(diffC) + " मात्रा बढ़ाएँ")) + ")।");
       }
-      // Accurate classical prosody rule for Chaupai: avoid Jagana (1-2-1) or Tagana (2-2-1) at चरणांत
       if (lastThree === "121" || lastThree === "221") {
-        tips.push("पंक्ति " + pNo + ": चौपाई के चरणांत में जगण (१ २ १) या तगण (२ २ १) से बचें; चरणांत संतुलित रखें।");
+        tips.push("पंक्ति " + pNo + ": चौपाई के चरणांत में जगण (१ २ १) या तगण (२ २ १) आने से लय में खटक आ सकती है; अंत में गुरु या सम-लय रखें।");
       }
     } else if (targetId === "rola") {
       var diffR = st.total - 24;
-      if (diffR !== 0) tips.push("पंक्ति " + pNo + ": रोला में कुल 24 मात्राएँ (11 + 13 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffR > 0 ? (diffR + " कम करें") : (Math.abs(diffR) + " बढ़ाएँ")) + ")।");
+      if (diffR !== 0) tips.push("पंक्ति " + pNo + ": रोला में कुल 24 मात्राएँ (11 + 13 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffR > 0 ? (diffR + " मात्रा कम करें") : (Math.abs(diffR) + " मात्रा बढ़ाएँ")) + ")।");
     } else if (targetId === "gitika") {
       var diffG = st.total - 26;
-      if (diffG !== 0) tips.push("पंक्ति " + pNo + ": गीतिका में कुल 26 मात्राएँ (14 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffG > 0 ? (diffG + " कम करें") : (Math.abs(diffG) + " बढ़ाएँ")) + ")।");
-      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": गीतिका के चरणांत में लघु-गुरु (१ २) रखने से गेयता सुधरती है।");
+      if (diffG !== 0) tips.push("पंक्ति " + pNo + ": गीतिका में कुल 26 मात्राएँ (14 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffG > 0 ? (diffG + " मात्रा कम करें") : (Math.abs(diffG) + " मात्रा बढ़ाएँ")) + ")।");
     } else if (targetId === "harigitika") {
       var diffH = st.total - 28;
-      if (diffH !== 0) tips.push("पंक्ति " + pNo + ": हरिगीतिका में कुल 28 मात्राएँ (16 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffH > 0 ? (diffH + " कम करें") : (Math.abs(diffH) + " बढ़ाएँ")) + ")।");
-      if (lastTwo !== "12") tips.push("पंक्ति " + pNo + ": हरिगीतिका के चरणांत में लघु-गुरु (१ २) का विधान रहता है।");
+      if (diffH !== 0) tips.push("पंक्ति " + pNo + ": हरिगीतिका में कुल 28 मात्राएँ (16 + 12 पर यति) होनी चाहिए, अभी " + st.total + " हैं (" + (diffH > 0 ? (diffH + " मात्रा कम करें") : (Math.abs(diffH) + " मात्रा बढ़ाएँ")) + ")।");
     } else if (targetId === "barvai") {
       if (st.charans.length < 2) {
         tips.push("पंक्ति " + pNo + ": बरवै में 12 + 7 मात्राओं के बीच अल्पविराम (,) लगाएँ।");
       } else {
-        if (st.charans[0] !== 12) tips.push("पंक्ति " + pNo + " (प्रथम चरण): बरवै में 12 मात्राएँ होनी चाहिए (अभी " + st.charans[0] + ")।");
-        if (st.charans[1] !== 7) tips.push("पंक्ति " + pNo + " (द्वितीय चरण): बरवै में 7 मात्राएँ होनी चाहिए (अभी " + st.charans[1] + ")।");
+        if (st.charans[0] !== 12) tips.push("पंक्ति " + pNo + " — प्रथम चरण: बरवै में 12 मात्राएँ होनी चाहिए, अभी " + st.charans[0] + " हैं।");
+        if (st.charans[1] !== 7) tips.push("पंक्ति " + pNo + " — द्वितीय चरण: बरवै में 7 मात्राएँ होनी चाहिए, अभी " + st.charans[1] + " हैं।");
       }
     }
   });
 
+  // Rhyme (तुक / अंत्यानुप्रास) check for paired lines
   for (var k = 0; k + 1 < linesArr.length; k += 2) {
     var r1 = getLineRhymeEnding(linesArr[k]);
     var r2 = getLineRhymeEnding(linesArr[k + 1]);
