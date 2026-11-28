@@ -5555,7 +5555,9 @@ function renderVideosPane() {
   }).join("") + "</div>";
 }
 function openVideoPlayer(id) {
-  var v = (state.videos || []).find(function(x) { return x && x.id === id; });
+  var v = (typeof state !== "undefined" && Array.isArray(state.videos))
+    ? state.videos.find(function(x) { return x && x.id === id; })
+    : null;
   var st = window.chaupalStudioState || {};
   if (!v && (id === "live_broadcast_current" || st.isLiveOnApp)) {
     v = {
@@ -5569,13 +5571,14 @@ function openVideoPlayer(id) {
   }
   if (!v) return;
 
+  var modalEl = document.getElementById("video-modal");
   var bodyEl = document.getElementById("video-modal-body");
   var titleEl = document.getElementById("video-modal-title");
   if (titleEl) titleEl.textContent = v.title || "🎬 काव्य चौपाल प्रसारण";
-  if (!bodyEl) return;
+  if (!bodyEl || !modalEl) return;
 
   var rawUrl = String(v.url || "").trim();
-  var vidId = extractYouTubeId(rawUrl);
+  var vidId = typeof extractYouTubeId === "function" ? extractYouTubeId(rawUrl) : "";
   var lowerUrl = rawUrl.toLowerCase();
   var isFb = lowerUrl.indexOf("facebook.com/") !== -1 || lowerUrl.indexOf("fb.watch/") !== -1;
   var isDirectMedia = rawUrl.indexOf("blob:") === 0 || rawUrl.indexOf("data:video/") === 0 || /\.(mp4|webm|ogg|m3u8)(\?|$)/i.test(rawUrl);
@@ -5609,16 +5612,19 @@ function openVideoPlayer(id) {
     playerHtml =
       "<div style=\"padding:18px; border-radius:16px; background:var(--bg-elevated); border:1.5px solid var(--gold); margin-bottom:12px; text-align:center;\">" +
         "<div style=\"font-size:15px; font-weight:700; color:var(--primary); margin-bottom:6px;\">" + (v.isLive ? "🔴 सजीव प्रसारण सक्रिय है" : "🎬 प्रसारण विवरण") + "</div>" +
-        "<div style=\"font-size:13px; color:var(--text-muted); margin-bottom:12px;\">" + (rawUrl ? ("लिंक: " + esc(rawUrl)) : "सजीव सत्र की जानकारी यहाँ उपलब्ध है।") + "</div>" +
-        (rawUrl ? ("<a class=\"action-btn gold\" href=\"" + esc(rawUrl) + "\" target=\"_blank\" rel=\"noopener noreferrer\">📺 प्रसारण लिंक खोलें ↗</a>") : "") +
+        "<div style=\"font-size:13px; color:var(--text-muted); margin-bottom:12px;\">" + (rawUrl ? ("लिंक: " + esc(rawUrl)) : "होस्ट ने अभी कोई YouTube/Facebook लिंक नहीं डाला है — कृपया होस्ट का लाइव लिंक यहाँ डालें या YouTube/Facebook चैनल खोलें।") + "</div>" +
+        "<div style=\"display:flex; gap:8px; justify-content:center; flex-wrap:wrap;\">" +
+          (rawUrl ? ("<a class=\"action-btn gold\" href=\"" + esc(rawUrl) + "\" target=\"_blank\" rel=\"noopener noreferrer\">📺 प्रसारण लिंक खोलें ↗</a>") : "") +
+          "<a class=\"action-btn primary\" href=\"https://youtube.com/@kavyachaupal\" target=\"_blank\" rel=\"noopener noreferrer\">▶ YouTube चैनल खोलें</a>" +
+        "</div>" +
       "</div>";
   }
 
   var daadBarHtml =
     "<div class=\"daad-bar\" style=\"margin-top:10px;\">" +
-      "<button type=\"button\" class=\"daad-btn\" onclick=\"sendStudioStageDaad('👏', 'वाह-वाह')\">👏 वाह-वाह</button>" +
-      "<button type=\"button\" class=\"daad-btn\" onclick=\"sendStudioStageDaad('🌹', 'अद्भुत')\">🌹 अद्भुत</button>" +
-      "<button type=\"button\" class=\"daad-btn\" onclick=\"sendStudioStageDaad('🪔', 'नमन')\">🪔 नमन</button>" +
+      "<button type=\"button\" class=\"daad-btn\" onclick=\"if(typeof sendStudioStageDaad==='function')sendStudioStageDaad('👏', 'वाह-वाह')\">👏 वाह-वाह</button>" +
+      "<button type=\"button\" class=\"daad-btn\" onclick=\"if(typeof sendStudioStageDaad==='function')sendStudioStageDaad('🌹', 'अद्भुत')\">🌹 अद्भुत</button>" +
+      "<button type=\"button\" class=\"daad-btn\" onclick=\"if(typeof sendStudioStageDaad==='function')sendStudioStageDaad('🪔', 'नमन')\">🪔 नमन</button>" +
     "</div>";
 
   bodyEl.innerHTML =
@@ -5639,9 +5645,19 @@ function openVideoPlayer(id) {
     }, 50);
   }
 
-  if (!document.getElementById("video-modal").classList.contains("open")) pushAppView("video");
-  document.getElementById("video-modal").classList.add("open");
+  try {
+    if (!modalEl.classList.contains("open") && typeof pushAppView === "function") {
+      pushAppView("video");
+    }
+  } catch (e) {}
+  modalEl.classList.add("open");
 }
+
+function openVideoModal(id) {
+  openVideoPlayer(id);
+}
+window.openVideoModal = openVideoModal;
+window.openVideoPlayer = openVideoPlayer;
 function closeVideoModal(fromPop) { var b = document.getElementById("video-modal-body"); if (b) b.innerHTML = ""; closeModal("video-modal", fromPop); }
 function renderCompetitionPane() {
   var box = document.getElementById("manch-competition"); if (!box) return;
