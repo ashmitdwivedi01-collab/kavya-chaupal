@@ -13324,5 +13324,220 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  // 1. Override attachMediaToDom so remote audio & video tracks bind IMMEDIATELY without waiting for !track.muted
+  window.attachMediaToDom = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    var locVid = document.getElementById("soc-local-video");
+    if (locVid && chaupalSocialState.localStream) {
+      chaupalSocialState.localStream.getVideoTracks().forEach(function(vt) {
+        if (!chaupalSocialState.isCamOff && vt.readyState === "live") vt.enabled = true;
+      });
+      if (locVid.srcObject !== chaupalSocialState.localStream) {
+        locVid.srcObject = chaupalSocialState.localStream;
+      }
+      locVid.muted = true;
+      locVid.playsInline = true;
+      locVid.autoplay = true;
+      if (locVid.paused) {
+        try { locVid.play().catch(function() {}); } catch (e) {}
+      }
+    }
+
+    var remMap = chaupalSocialState.remoteStreamsMap || {};
+    var pConns = chaupalSocialState.peerConnectionsMap || {};
+    var allPeerKeys = {};
+    Object.keys(remMap).forEach(function(k) { allPeerKeys[k] = true; });
+    Object.keys(pConns).forEach(function(k) { allPeerKeys[k] = true; });
+
+    Object.keys(allPeerKeys).forEach(function(emKey) {
+      var safeId = "soc-rem-vid-" + emKey.replace(/[^a-zA-Z0-9]/g, "_");
+      var el = document.getElementById(safeId);
+      var entry = remMap[emKey];
+      var st = entry && entry.stream;
+      var pcObj = pConns[emKey];
+
+      if (pcObj && pcObj.getReceivers) {
+        if (!st) {
+          st = new MediaStream();
+          remMap[emKey] = { stream: st, name: (entry && entry.name) || emKey, hasRemoteTrack: false };
+        }
+        pcObj.getReceivers().forEach(function(rcv) {
+          if (rcv && rcv.track && rcv.track.readyState === "live") {
+            rcv.track.enabled = true;
+            remMap[emKey].hasRemoteTrack = true;
+            if (st.getTracks().indexOf(rcv.track) === -1) {
+              try { st.addTrack(rcv.track); } catch (e) {}
+            }
+          }
+        });
+      }
+
+      var aCnt = (st && st.getAudioTracks) ? st.getAudioTracks().length : 0;
+      var vCnt = (st && st.getVideoTracks) ? st.getVideoTracks().length : 0;
+      var rawIce = pcObj ? (pcObj.iceConnectionState || "new") : "new";
+      var rawConn = pcObj ? (pcObj.connectionState || "") : "";
+      var iceSt = (rawConn === "connected" || rawIce === "connected" || rawIce === "completed")
+        ? "connected"
+        : rawIce;
+
+      var dbgEl = document.getElementById("media-dbg-" + safeId);
+      if (dbgEl) {
+        dbgEl.textContent = "🔊 ऑडियो:" + aCnt + " | 📹 वीडियो:" + vCnt + " | ICE:" + iceSt;
+      }
+
+      if (el && st && st.getTracks && st.getTracks().length > 0) {
+        st.getVideoTracks().forEach(function(vt) { vt.enabled = true; });
+        st.getAudioTracks().forEach(function(at) { at.enabled = true; });
+        if (el.srcObject !== st) {
+          el.srcObject = st;
+        }
+        el.playsInline = true;
+        el.autoplay = true;
+        el.muted = false;
+        el.volume = 1.0;
+        if (el.paused) {
+          try {
+            var p = el.play();
+            if (p && p.catch) {
+              p.catch(function() {
+                if (el.tagName === "VIDEO") {
+                  el.muted = true;
+                  try { el.play().catch(function() {}); } catch (e2) {}
+                }
+              });
+            }
+          } catch (e) {}
+        }
+      }
+    });
+
+    if (typeof updateCallParticipantsStatusDomOnly === "function") {
+      updateCallParticipantsStatusDomOnly();
+    }
+  };
+
+  // 2. Prevent unnecessary offer resets while ICE is actively negotiating ("checking" or "new" within grace period)
+  var origEnsureMesh = window.ensureMeshPeerConnection;
+  if (typeof origEnsureMesh === "function") {
+    window.ensureMeshPeerConnection = function(callId, peerEmail, peerName, roleSide, offerToCreate) {
+      var pEm = (peerEmail || "").toLowerCase().trim();
+      var existingPc = chaupalSocialState.peerConnectionsMap && chaupalSocialState.peerConnectionsMap[pEm];
+      if (existingPc && offerToCreate) {
+        var ice = existingPc.iceConnectionState;
+        var sig = existingPc.signalingState;
+        // If already connected/completed/checking or awaiting answer, do NOT wipe out the offer!
+        if (ice === "connected" || ice === "completed" || ice === "checking" || sig !== "stable") {
+          // Just attach any new local tracks cleanly without overwriting Firestore offer/answer
+          if (chaupalSocialState.localStream && existingPc.getSenders) {
+            var senders = existingPc.getSenders();
+            chaupalSocialState.localStream.getTracks().forEach(function(tr) {
+              var sameKindSender = senders.find(function(s) { return s.track && s.track.kind === tr.kind; });
+              if (sameKindSender && typeof sameKindSender.replaceTrack === "function") {
+                try { sameKindSender.replaceTrack(tr); } catch (e) {}
+              } else if (!senders.some(function(s) { return s.track && s.track.id === tr.id; })) {
+                try { existingPc.addTrack(tr, chaupalSocialState.localStream); } catch (e) {}
+              }
+            });
+          }
+          window.attachMediaToDom();
+          return existingPc;
+        }
+      }
+      var pc = origEnsureMesh.apply(this, arguments);
+      if (pc && !pc._turboListenersAttached) {
+        pc._turboListenersAttached = true;
+        pc.addEventListener("icegatheringstatechange", function() {
+          window.attachMediaToDom();
+        });
+        pc.addEventListener("signalingstatechange", function() {
+          window.attachMediaToDom();
+        });
+        pc.addEventListener("track", function() {
+          window.attachMediaToDom();
+          setTimeout(window.attachMediaToDom, 150);
+          setTimeout(window.attachMediaToDom, 500);
+        });
+      }
+      return pc;
+    };
+  }
+
+  // 3. Turbo-charge startChaupalCallSession: start RTCPeerConnection + Offer + ICE gathering IMMEDIATELY in parallel with camera/mic
+  var origStartSession = window.startChaupalCallSession;
+  if (typeof origStartSession === "function") {
+    window.startChaupalCallSession = function(modeType, targetLabel, calleeEmailArg, calleeNameArg) {
+      var res = origStartSession.apply(this, arguments);
+      setTimeout(function() {
+        if (!chaupalSocialState.activeCallSession || !chaupalSocialState.activeCallDocId) return;
+        var callId = chaupalSocialState.activeCallDocId;
+        var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm = (me && me.email) || "";
+        var parts = chaupalSocialState.activeCallSession.participants || [];
+        parts.forEach(function(p) {
+          var pEm = (p.email || "").toLowerCase().trim();
+          if (pEm && pEm !== myEm) {
+            // Create PeerConnection & send initial SDP offer immediately without waiting for getUserMedia
+            window.ensureMeshPeerConnection(callId, pEm, p.name || pEm, "caller", true);
+          }
+        });
+      }, 40);
+      return res;
+    };
+  }
+
+  // 4. Turbo-charge acceptIncomingCall: subscribe to signals & candidates IMMEDIATELY (0ms) instead of waiting for ref.get()
+  var origAcceptIncoming = window.acceptIncomingCall;
+  if (typeof origAcceptIncoming === "function") {
+    window.acceptIncomingCall = function(explicitCallId, ev) {
+      var inc = chaupalSocialState.incomingCallDoc || chaupalSocialState.ongoingConferenceDoc || null;
+      var callId = explicitCallId || (inc && inc.id) || (typeof pendingIncomingRingCall !== "undefined" && pendingIncomingRingCall && pendingIncomingRingCall.id);
+      var res = origAcceptIncoming.apply(this, arguments);
+      if (callId && typeof subscribeToActiveCallDoc === "function") {
+        // Subscribe immediately so any pending offer & ICE candidates from caller are processed right away
+        subscribeToActiveCallDoc(callId, false);
+        var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm = (me && me.email) || "";
+        var parts = (chaupalSocialState.activeCallSession && chaupalSocialState.activeCallSession.participants) || [];
+        parts.forEach(function(p) {
+          var pEm = (p.email || "").toLowerCase().trim();
+          if (pEm && pEm !== myEm) {
+            window.ensureMeshPeerConnection(callId, pEm, p.name || pEm, "callee", false);
+          }
+        });
+      }
+      return res;
+    };
+  }
+
+  // 5. Avoid full DOM rebuild of #chaupal-social-body when an active call is already mounted (prevents video blackouts)
+  var origRenderChaupalSocial = window.renderChaupalSocial;
+  if (typeof origRenderChaupalSocial === "function") {
+    window.renderChaupalSocial = function(forceRebuild) {
+      var stage = document.getElementById("soc-call-stage-card");
+      var isCallActiveOnScreen = !forceRebuild &&
+        stage &&
+        typeof state !== "undefined" && state.activeTab === "social" &&
+        typeof chaupalSocialState !== "undefined" && chaupalSocialState.subTab === "call" &&
+        chaupalSocialState.activeCallSession;
+
+      if (isCallActiveOnScreen) {
+        // Update status labels and media streams in-place without destroying <video> or input focus
+        if (typeof updateCallParticipantsStatusDomOnly === "function") {
+          updateCallParticipantsStatusDomOnly();
+        }
+        window.attachMediaToDom();
+        return;
+      }
+      var r = origRenderChaupalSocial.apply(this, arguments);
+      setTimeout(window.attachMediaToDom, 30);
+      return r;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
