@@ -1889,7 +1889,21 @@
     .social-thread-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 15px; padding: 12px; max-height: 290px; overflow-y: auto; margin-bottom: 10px; }
     .social-msg-bubble { padding: 9px 12px; border-radius: 13px; background: var(--bg-elevated); border: 1px solid var(--border); margin-bottom: 8px; }
     .social-msg-bubble.mine { background: var(--gold-soft); border-color: var(--gold); }
-    .call-stage-card { background: linear-gradient(155deg, #4B0D14 0%, #24130C 100%); color: #FFF8EA; border: 2px solid var(--gold); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-strong); }
+    .call-stage-card { background: linear-gradient(155deg, #4B0D14 0%, #24130C 100%); color: #FFF8EA; border: 2px solid var(--gold); border-radius: 20px; padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-strong); transition: all 0.25s ease; }
+    .call-stage-card.fullscreen-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 9950;
+      margin: 0;
+      border-radius: 0;
+      border: none;
+      overflow-y: auto;
+      padding: 18px 14px 28px;
+      background: radial-gradient(circle at 50% 12%, rgba(247, 220, 139, 0.14), transparent 55%), linear-gradient(160deg, #2D070D 0%, #160B08 100%);
+    }
+    .call-stage-card.fullscreen-stage video {
+      height: 220px !important;
+    }
     .conf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0 12px; }
     @media (min-width: 600px) { .conf-grid { grid-template-columns: repeat(3, 1fr); } }
     .conf-tile { background: rgba(255, 255, 255, 0.06); border: 1.5px solid rgba(252, 225, 152, 0.35); border-radius: 14px; padding: 12px 10px; text-align: center; }
@@ -5600,7 +5614,8 @@ var chaupalSocialState = {
   incomingUnsubscribe: null,
   processedCandidateIds: {},
   isMuted: false,
-  isCamOff: false
+  isCamOff: false,
+  fullScreenMode: false
 };
 
 var RTC_ICE_CONFIG = {
@@ -6361,6 +6376,31 @@ function attachMediaToDom() {
   });
 }
 
+function toggleCallFullScreen() {
+  chaupalSocialState.fullScreenMode = !chaupalSocialState.fullScreenMode;
+  var stageEl = document.getElementById("soc-call-stage-card");
+  if (chaupalSocialState.fullScreenMode) {
+    try {
+      var target = stageEl || document.documentElement;
+      if (target && target.requestFullscreen) {
+        target.requestFullscreen().catch(function() {});
+      }
+    } catch (e) {}
+    showToast("फ़ुल-स्क्रीन कॉल व्यू चालू 🖥️");
+  } else {
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function() {});
+      }
+    } catch (e) {}
+    showToast("सामान्य कॉल व्यू वापस");
+  }
+  renderChaupalSocial();
+  setTimeout(function() {
+    if (typeof attachMediaToDom === "function") attachMediaToDom();
+  }, 60);
+}
+
 function forceRefreshRemoteMedia() {
   var callId = chaupalSocialState.activeCallDocId;
   var me = getCurrentMemberIdentity();
@@ -6969,6 +7009,8 @@ function cleanupWebRtcCall(keepCallDocAlive) {
   chaupalSocialState.lastAppliedAnswerTs = {};
   chaupalSocialState._sentOfferLegs = {};
   chaupalSocialState.activeCallSession = null;
+  chaupalSocialState.fullScreenMode = false;
+  try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){}); } catch(e) {}
   chaupalSocialState.activeCallDocId = null;
   chaupalSocialState.isMuted = false;
   chaupalSocialState.isCamOff = false;
@@ -7914,11 +7956,15 @@ function renderChaupalSocial() {
         "</div>" +
       "</div>";
 
+    var isFs = !!chaupalSocialState.fullScreenMode;
     callStageHtml =
-      "<div class=\"call-stage-card\">" +
+      "<div id=\"soc-call-stage-card\" class=\"call-stage-card" + (isFs ? " fullscreen-stage" : "") + "\">" +
         "<div style=\"display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;\">" +
           "<span class=\"genre-tag\">" + (chaupalSocialState.isLiveActive ? ("🔴 लाइव: " + esc(chaupalSocialState.livePlatform)) : (cs.type === "audio" ? "🎙️ ऑडियो कॉन्फ्रेंस (" + (activeParts.length || 1) + " सदस्य)" : "🎥 वीडियो कॉन्फ्रेंस (" + (activeParts.length || 1) + " सदस्य)")) + "</span>" +
-          "<span style=\"font-size:12px; color:#FCE49C;\">" + esc(netLabel) + "</span>" +
+          "<div style=\"display:flex; align-items:center; gap:6px; flex-wrap:wrap;\">" +
+            "<span style=\"font-size:12px; color:#FCE49C;\">" + esc(netLabel) + "</span>" +
+            "<button type=\"button\" class=\"action-btn gold\" style=\"padding:5px 11px; font-size:12px;\" onclick=\"toggleCallFullScreen()\">" + (isFs ? "🗗 सामान्य व्यू" : "⛶ फ़ुल स्क्रीन") + "</button>" +
+          "</div>" +
         "</div>" +
         "<h4 class=\"font-royal\" style=\"font-size:19px; color:#F7DC8B; margin:8px 0 4px;\">" + esc(cs.target) + "</h4>" +
         "<div style=\"font-size:12px; color:#FCE49C; margin-bottom:8px;\">कुल सदस्य: <strong>" + (activeParts.length || 1) + "</strong> • स्थिति: <strong>" + esc(cs.status === "connected" ? "🟢 कॉन्फ्रेंस सक्रिय" : "🔔 रिंग / प्रतीक्षा...") + "</strong></div>" +
