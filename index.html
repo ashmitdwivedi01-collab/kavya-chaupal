@@ -13172,56 +13172,198 @@ window.addEventListener("beforeunload", function() {
     }
   };
 
-  // Fast instant ICE / connection recovery so participants join without lag or stalling
-  window.fastJoinAndRecoverAllPeers = function() {
-    if (typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return;
-    var pcMap = chaupalSocialState.peerConnectionsMap || {};
-    Object.keys(pcMap).forEach(function(peerKey) {
-      var pc = pcMap[peerKey];
-      if (!pc) return;
-      if (typeof window.boostCallAudioQuality === "function") {
-        window.boostCallAudioQuality(pc);
-      }
-      try {
-        if (pc.connectionState === "failed" || pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
-          if (typeof pc.restartIce === "function") {
-            pc.restartIce();
-          }
+  window.saveAndGoLiveOnFacebook = function(ev) {
+    try {
+      if (ev && typeof ev.stopPropagation === "function") ev.stopPropagation();
+      if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
+    } catch (e) {}
+
+    if (typeof window.chaupalSocialState === "undefined") {
+      window.chaupalSocialState = {
+        activeCallSession: { type: "video", target: "काव्य चौपाल कॉल", startedAt: Date.now() },
+        isLiveActive: false,
+        livePlatform: "Facebook Live"
+      };
+    } else if (!chaupalSocialState.activeCallSession) {
+      chaupalSocialState.activeCallSession = {
+        type: "video",
+        target: "काव्य चौपाल कॉल",
+        startedAt: Date.now()
+      };
+    }
+
+    var accInp = document.getElementById("soc-fb-account-in");
+    var keyInp = document.getElementById("soc-live-key-in");
+    var platSel = document.getElementById("soc-live-plat-sel");
+
+    var plat = (platSel && platSel.value) ? platSel.value : (chaupalSocialState.livePlatform || "Facebook Live");
+    var fallbackFb = (typeof state !== "undefined" && state.settings && state.settings.socials && state.settings.socials.facebook)
+      ? state.settings.socials.facebook
+      : "https://www.facebook.com/KavyaChaupal";
+    var fbAcc = (accInp && accInp.value.trim()) ? accInp.value.trim() : (chaupalSocialState.fbAccountUrl || fallbackFb);
+    var streamKey = (keyInp && keyInp.value.trim()) ? keyInp.value.trim() : (chaupalSocialState.liveStreamKey || "");
+
+    chaupalSocialState.livePlatform = plat;
+    chaupalSocialState.fbAccountUrl = fbAcc;
+    chaupalSocialState.liveStreamKey = streamKey;
+    chaupalSocialState.isLiveActive = true;
+
+    try {
+      if (typeof state !== "undefined") {
+        state.settings = Object.assign({}, state.settings || {}, {
+          socials: Object.assign({}, (state.settings && state.settings.socials) || {}, {
+            facebook: fbAcc
+          }),
+          fbLiveStreamKey: streamKey
+        });
+        if (typeof saveLocalCache === "function") saveLocalCache();
+        if (typeof cloudSaveDoc === "function") {
+          cloudSaveDoc("settings", "settings", state.settings).catch(function() {});
         }
+      }
+    } catch (e) {}
+
+    var statusNote = document.getElementById("soc-fb-live-status-note");
+    var container = document.getElementById("soc-fb-live-bridge-panel") || (accInp && accInp.parentElement && accInp.parentElement.parentElement) || document.getElementById("soc-call-stage-card");
+    if (container && !statusNote) {
+      statusNote = document.createElement("div");
+      statusNote.id = "soc-fb-live-status-note";
+      statusNote.style.cssText = "margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(22,163,74,0.2); border:1px solid #4ADE80; color:#DCFCE7; font-size:12px; line-height:1.45;";
+      container.appendChild(statusNote);
+    }
+
+    var safeHref = "https://www.facebook.com/live/producer";
+    if (fbAcc && fbAcc.indexOf("http") === 0) {
+      safeHref = fbAcc;
+    } else if (fbAcc) {
+      safeHref = "https://www.facebook.com/" + fbAcc.replace(/^@/, "").replace(/^\/+/, "");
+    }
+
+    if (statusNote) {
+      var safeDisp = String(fbAcc).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      var safeAttr = String(safeHref).replace(/"/g, "&quot;");
+      statusNote.innerHTML =
+        "✓ खाता लिंक सहेजा गया: <strong>" + safeDisp + "</strong><br/>" +
+        "<a href="" + safeAttr + "" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:6px; padding:6px 11px; border-radius:8px; background:#1877F2; color:#fff; font-weight:700; text-decoration:none;">↗ फ़ेसबुक लाइव पेज / प्रोड्यूसर खोलें</a>";
+    }
+
+    if (typeof showToast === "function") {
+      showToast("✓ फ़ेसबुक खाता कनेक्ट हो गया व लाइव सक्रिय है!");
+    }
+
+    if (plat === "Facebook Live") {
+      try {
+        window.open(safeHref, "_blank", "noopener,noreferrer");
       } catch (e) {}
-    });
-    if (typeof window.ensureSmoothAudioAndUnfrozenVideo === "function") {
-      window.ensureSmoothAudioAndUnfrozenVideo();
     }
   };
 
-  // Auto-trigger fast connection check right when a call session starts or changes
-  var prevStartDirectCall = window.startDirectCallWithPerson;
-  if (typeof prevStartDirectCall === "function") {
-    window.startDirectCallWithPerson = function() {
-      var r = prevStartDirectCall.apply(this, arguments);
-      setTimeout(window.fastJoinAndRecoverAllPeers, 250);
-      setTimeout(window.fastJoinAndRecoverAllPeers, 1100);
-      return r;
+  window.boostCallAudioQuality = function(pc) {
+    if (!pc || !pc.getSenders) return;
+    pc.getSenders().forEach(function(sender) {
+      if (!sender || !sender.track || sender.track.kind !== "audio") return;
+      try {
+        var params = sender.getParameters ? sender.getParameters() : {};
+        if (!params.encodings || !params.encodings.length) {
+          params.encodings = [{}];
+        }
+        params.encodings[0].priority = "high";
+        params.encodings[0].networkPriority = "high";
+        params.encodings[0].maxBitrate = 96000;
+        params.encodings[0].dtx = false;
+        sender.setParameters(params).catch(function() {});
+      } catch (e) {}
+    });
+  };
+
+  window.ensureSmoothAudioAndUnfrozenVideo = function() {
+    if (typeof chaupalSocialState === "undefined") return;
+    var mutedMap = chaupalSocialState.mutedPeersMap || {};
+    var remMap = chaupalSocialState.remoteStreamsMap || {};
+
+    Object.keys(remMap).forEach(function(pEm) {
+      var isMutedPeer = !!mutedMap[pEm];
+      var safeId = "soc-rem-vid-" + pEm.replace(/[^a-zA-Z0-9]/g, "_");
+      var el = document.getElementById(safeId);
+      var entry = remMap[pEm];
+      var st = entry && entry.stream;
+
+      if (st) {
+        if (st.getAudioTracks) {
+          st.getAudioTracks().forEach(function(at) {
+            at.enabled = !isMutedPeer;
+          });
+        }
+        if (st.getVideoTracks) {
+          st.getVideoTracks().forEach(function(vt) {
+            if (!chaupalSocialState.isCamOff && vt.readyState === "live") {
+              vt.enabled = true;
+            }
+          });
+        }
+      }
+      if (el) {
+        if (st && el.srcObject !== st) {
+          el.srcObject = st;
+        }
+        el.muted = isMutedPeer;
+        el.volume = isMutedPeer ? 0 : 1;
+        el.playsInline = true;
+        el.autoplay = true;
+        if (el.paused) {
+          try { el.play().catch(function() {}); } catch (e) {}
+        }
+      }
+    });
+  };
+
+  var origRenderSocialFb = window.renderChaupalSocial;
+  if (typeof origRenderSocialFb === "function") {
+    window.renderChaupalSocial = function() {
+      var res = origRenderSocialFb.apply(this, arguments);
+      var stage = document.getElementById("soc-call-stage-card");
+      if (!stage || typeof chaupalSocialState === "undefined" || !chaupalSocialState.activeCallSession) return res;
+
+      var fbBoxId = "soc-fb-live-bridge-panel";
+      if (!document.getElementById(fbBoxId)) {
+        var defaultFbUrl = (typeof state !== "undefined" && state.settings && state.settings.socials && state.settings.socials.facebook) || "https://www.facebook.com/KavyaChaupal";
+        var savedKey = (typeof state !== "undefined" && state.settings && state.settings.fbLiveStreamKey) || chaupalSocialState.liveStreamKey || "";
+        var curFbVal = chaupalSocialState.fbAccountUrl || defaultFbUrl;
+
+        var panel = document.createElement("div");
+        panel.id = fbBoxId;
+        panel.style.cssText = "margin-top:10px; padding:12px; border-radius:14px; background:rgba(24,119,242,0.14); border:1.5px solid rgba(247,220,139,0.55);";
+        panel.innerHTML =
+          "<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;">" +
+            "<span style="font-size:12.5px; font-weight:700; color:#F7DC8B;">📘 फ़ेसबुक खाता जोड़ें व कॉल को लाइव करें</span>" +
+            "<span style="font-size:11px; color:" + (chaupalSocialState.isLiveActive ? "#86EFAC" : "#FCE49C") + "; font-weight:700;">" + (chaupalSocialState.isLiveActive ? "🔴 फ़ेसबुक लाइव सक्रिय" : "तैयार") + "</span>" +
+          "</div>" +
+          "<div style="display:grid; grid-template-columns:1fr; gap:7px; margin-bottom:8px;">" +
+            "<input id="soc-fb-account-in" type="text" value="" + String(curFbVal).replace(/"/g, "&quot;") + "" placeholder="फ़ेसबुक पेज या प्रोफ़ाइल लिंक (जैसे: https://www.facebook.com/KavyaChaupal)" style="padding:8px 10px; border-radius:10px; border:1px solid rgba(247,220,139,0.5); background:#180B0E; color:#FFF8EA; font-size:12.5px; width:100%;" />" +
+            "<input id="soc-live-key-in" type="password" value="" + String(savedKey).replace(/"/g, "&quot;") + "" placeholder="फ़ेसबुक लाइव स्ट्रीम की (Stream Key - वैकल्पिक)" style="padding:8px 10px; border-radius:10px; border:1px solid rgba(247,220,139,0.5); background:#180B0E; color:#FFF8EA; font-size:12.5px; width:100%;" />" +
+          "</div>" +
+          "<div style="display:flex; gap:7px; flex-wrap:wrap;">" +
+            "<button type="button" class="action-btn gold" style="padding:7px 12px; font-size:12px;" onclick="saveAndGoLiveOnFacebook(event)">" + (chaupalSocialState.isLiveActive ? "🔴 फ़ेसबुक लाइव अपडेट / खोलें" : "📘 खाता जोड़ें व फ़ेसबुक लाइव करें") + "</button>" +
+            (chaupalSocialState.isLiveActive ? "<button type="button" class="action-btn danger" style="padding:7px 12px; font-size:12px;" onclick="chaupalSocialState.isLiveActive=false; if(typeof scheduleSmoothSocialRender==='function')scheduleSmoothSocialRender(); else if(typeof renderChaupalSocial==='function')renderChaupalSocial();">⏹ लाइव रोकें</button>" : "") +
+          "</div>";
+        stage.appendChild(panel);
+      }
+
+      if (chaupalSocialState.peerConnectionsMap) {
+        Object.keys(chaupalSocialState.peerConnectionsMap).forEach(function(k) {
+          window.boostCallAudioQuality(chaupalSocialState.peerConnectionsMap[k]);
+        });
+      }
+      window.ensureSmoothAudioAndUnfrozenVideo();
+      return res;
     };
   }
 
-  var prevAcceptCall = window.acceptIncomingCall;
-  if (typeof prevAcceptCall === "function") {
-    window.acceptIncomingCall = function() {
-      var r = prevAcceptCall.apply(this, arguments);
-      setTimeout(window.fastJoinAndRecoverAllPeers, 250);
-      setTimeout(window.fastJoinAndRecoverAllPeers, 1100);
-      return r;
-    };
-  }
-
-  // Keep active call smooth every 800ms for instant audio/video sync without freezing
   setInterval(function() {
     if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallSession) {
-      window.fastJoinAndRecoverAllPeers();
+      window.ensureSmoothAudioAndUnfrozenVideo();
     }
-  }, 800);
+  }, 1200);
 })();
 </script>
 
@@ -13531,6 +13673,101 @@ window.addEventListener("beforeunload", function() {
       setTimeout(window.attachMediaToDom, 30);
       return r;
     };
+  }
+
+  // 6. Persist active call ID across screen/page refresh & restore media/tracks automatically
+  var CALL_PERSIST_KEY = "kc_active_call_doc_v1";
+  function persistCallDocId() {
+    try {
+      if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallDocId && chaupalSocialState.activeCallSession) {
+        sessionStorage.setItem(CALL_PERSIST_KEY, JSON.stringify({
+          callId: chaupalSocialState.activeCallDocId,
+          type: chaupalSocialState.activeCallSession.type || "video",
+          target: chaupalSocialState.activeCallSession.target || "काव्य चौपाल कॉल",
+          ts: Date.now()
+        }));
+      } else {
+        sessionStorage.removeItem(CALL_PERSIST_KEY);
+      }
+    } catch (e) {}
+  }
+
+  setInterval(function() {
+    persistCallDocId();
+    if (typeof chaupalSocialState !== "undefined" && chaupalSocialState.activeCallSession && typeof window.attachMediaToDom === "function") {
+      window.attachMediaToDom();
+    }
+  }, 1000);
+
+  function restoreCallAfterPageRefresh() {
+    try {
+      var raw = sessionStorage.getItem(CALL_PERSIST_KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (!saved || !saved.callId || (Date.now() - (saved.ts || 0)) > 7200000) return;
+      if (typeof db === "undefined" || !db || typeof ROOT_COL === "undefined") return;
+      db.collection(ROOT_COL).doc("active_calls").collection("items").doc(saved.callId).get().then(function(snap) {
+        if (!snap.exists) {
+          sessionStorage.removeItem(CALL_PERSIST_KEY);
+          return;
+        }
+        var d = snap.data() || {};
+        if (d.status === "ended") {
+          sessionStorage.removeItem(CALL_PERSIST_KEY);
+          return;
+        }
+        if (typeof chaupalSocialState !== "undefined") {
+          chaupalSocialState.activeCallDocId = saved.callId;
+          chaupalSocialState.activeCallSession = Object.assign({
+            id: saved.callId,
+            type: d.callType || saved.type || "video",
+            target: d.targetLabel || saved.target || "काव्य चौपाल कॉल",
+            status: d.status || "connected",
+            participants: d.participants || []
+          }, chaupalSocialState.activeCallSession || {});
+          if (Array.isArray(d.participants)) {
+            chaupalSocialState.peerStatusMap = chaupalSocialState.peerStatusMap || {};
+            d.participants.forEach(function(p) {
+              var pEm = normEm(p.email);
+              if (pEm) chaupalSocialState.peerStatusMap[pEm] = p.status || "connected";
+            });
+          }
+        }
+        if (typeof subscribeToActiveCallDoc === "function") {
+          subscribeToActiveCallDoc(saved.callId, false);
+        }
+        if (typeof acquireCallMediaStream === "function" && (!chaupalSocialState.localStream || !chaupalSocialState.localStream.active)) {
+          acquireCallMediaStream(d.callType || saved.type || "video").then(function(st) {
+            if (st && typeof chaupalSocialState !== "undefined") {
+              chaupalSocialState.localStream = st;
+            }
+            if (typeof window.attachMediaToDom === "function") window.attachMediaToDom();
+          }).catch(function() {});
+        }
+        var me = (typeof getCurrentMemberIdentity === "function") ? getCurrentMemberIdentity() : null;
+        var myEm = me ? normEm(me.email) : "";
+        (d.participants || []).forEach(function(p) {
+          var pEm = normEm(p.email);
+          if (pEm && pEm !== myEm && typeof window.ensureMeshPeerConnection === "function") {
+            window.ensureMeshPeerConnection(saved.callId, pEm, p.name || pEm, (myEm > pEm) ? "caller" : "callee", myEm > pEm);
+          }
+        });
+        if (typeof renderChaupalSocial === "function") renderChaupalSocial();
+        if (typeof window.attachMediaToDom === "function") {
+          window.attachMediaToDom();
+          setTimeout(window.attachMediaToDom, 400);
+          setTimeout(window.attachMediaToDom, 1200);
+        }
+      }).catch(function() {});
+    } catch (e) {}
+  }
+
+  if (document.readyState === "complete") {
+    setTimeout(restoreCallAfterPageRefresh, 400);
+  } else {
+    window.addEventListener("load", function() {
+      setTimeout(restoreCallAfterPageRefresh, 400);
+    });
   }
 })();
 </script>
