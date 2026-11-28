@@ -15512,5 +15512,48 @@ window.addEventListener("beforeunload", function() {
 })();
 </script>
 
+
+<script>
+(function() {
+  function forceOpenChaupalStudio(ev) {
+    try {
+      var target = ev && ev.target ? ev.target : null;
+      var matched = false;
+      if (target) {
+        var el = target.closest ? target.closest('[data-sub="studio"], [onclick*="studio"]') : null;
+        if (el) matched = true;
+        else if ((target.textContent || "").indexOf("चौपाल स्टूडियो") !== -1) matched = true;
+      }
+      if (!matched) return;
+      var tabManch = document.getElementById("tab-manch");
+      if (tabManch) {
+        document.querySelectorAll(".tab-view").forEach(function(v) { v.classList.remove("active"); });
+        tabManch.classList.add("active");
+        if (!document.getElementById("manch-studio")) {
+          var d = document.createElement("div");
+          d.id = "manch-studio";
+          d.className = "manch-pane";
+          tabManch.appendChild(d);
+        }
+        document.querySelectorAll(".manch-pane").forEach(function(p) {
+          p.style.display = (p.id === "manch-studio") ? "block" : "none";
+        });
+        document.querySelectorAll(".hub-tab-btn").forEach(function(b) {
+          b.classList.toggle("active", b.dataset && b.dataset.sub === "studio");
+        });
+        if (typeof state !== "undefined") {
+          state.activeTab = "manch";
+          state.manchSub = "studio";
+        }
+        if (typeof window.renderStudioPane === "function") {
+          window.renderStudioPane();
+        }
+      }
+    } catch (e) {}
+  }
+  document.addEventListener("click", forceOpenChaupalStudio, true);
+})();
+</script>
+
 </body>
 </html>
